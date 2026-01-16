@@ -3,140 +3,186 @@ type: knowledge
 created: 2026-01-16
 updated: 2026-01-16
 tags: [coocr-htr, roadmap, milestones]
-status: complete
+status: active
 ---
 
 # Implementation Plan
 
-Roadmap from the current Prototype v2 to the complete application.
-
-**Date:** 2026-01-16
-**Status:** ✅ All milestones completed
+**Status:** Phase 2 in progress
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
-## Final Status
+---
 
-All planned features have been implemented and deployed.
+## Phase 1: Core Application ✅ COMPLETE
 
-### Implemented Features
-
-| Component | Status | Location |
-|-----------|--------|----------|
-| 3-Column Layout | ✅ Done | `index.html` |
-| Design System Tokens | ✅ Done | `css/variables.css` |
-| Glass Morphism UI | ✅ Done | `css/*.css` (8 modular files) |
-| Central State (EventTarget) | ✅ Done | `js/state.js` |
-| Document Viewer + SVG Regions | ✅ Done | `js/viewer.js` |
-| Transcription Editor Grid | ✅ Done | `js/editor.js` |
-| Triple Synchronization | ✅ Done | `js/*.js` |
-| Zoom Controls | ✅ Done | `js/viewer.js` |
-| Mobile Warning | ✅ Done | `index.html` |
-| LLM API Integration | ✅ Done | `js/services/llm.js` |
-| Image Upload | ✅ Done | `js/components/upload.js` |
-| API Key Dialog | ✅ Done | `js/components/dialogs.js` |
-| Rule-Based Validation | ✅ Done | `js/services/validation.js` |
-| LLM-Judge Validation | ✅ Done | `js/services/llm.js` |
-| Export (TXT/JSON/Markdown) | ✅ Done | `js/services/export.js` |
-| LocalStorage Persistence | ✅ Done | `js/services/storage.js` |
-| Inline Editing | ✅ Done | `js/editor.js` |
-| Undo/Redo | ✅ Done | `js/editor.js` |
-| PAGE-XML Import | ✅ Done | `js/services/parsers/page-xml.js` |
-| Demo Loader | ✅ Done | `js/components/upload.js` |
-| Guided Workflow | ✅ Done | `js/main.js` |
-| Flexible Editor Modes | ✅ Done | `js/editor.js` |
+| Feature | Status | Location |
+|---------|--------|----------|
+| 3-Column Layout | ✅ | `index.html` |
+| Design System (8 CSS files) | ✅ | `css/*.css` |
+| Central State (EventTarget) | ✅ | `js/state.js` |
+| Document Viewer + SVG Regions | ✅ | `js/viewer.js` |
+| Pan/Zoom/Fit Controls | ✅ | `js/viewer.js` |
+| Transcription Editor (lines/grid) | ✅ | `js/editor.js` |
+| Triple Synchronization | ✅ | `js/*.js` |
+| LLM Integration (5 providers) | ✅ | `js/services/llm.js` |
+| Gemini 3 Optimization | ✅ | `js/services/llm.js` |
+| Rule-Based Validation | ✅ | `js/services/validation.js` |
+| LLM-Judge Validation | ✅ | `js/services/llm.js` |
+| Export (TXT/JSON/MD) | ✅ | `js/services/export.js` |
+| PAGE-XML Import | ✅ | `js/services/parsers/page-xml.js` |
+| METS-XML Parser | ✅ | `js/services/parsers/mets-xml.js` |
+| Demo Loader | ✅ | `js/services/samples.js` |
+| Guided Workflow | ✅ | `js/main.js` |
+| Inline Editing + Undo/Redo | ✅ | `js/editor.js` |
+| Settings + Help Dialogs | ✅ | `js/components/dialogs.js` |
+| Logo Integration | ✅ | `assets/logo*.png` |
+| GitHub Pages Deployment | ✅ | dhcraft.org/co-ocr-htr |
 
 ---
 
-## Completed Milestones
+## Phase 2: Multi-Page & Documentation 🔄 IN PROGRESS
 
-### Phase 1: Core Services ✅
+### 2.1 Unterseiten (Help & About) ⏳
 
-- [x] LLMService class with unified interface
-- [x] Gemini provider
-- [x] OpenAI provider
-- [x] Anthropic provider
-- [x] DeepSeek provider
-- [x] Ollama provider (local)
-- [x] StorageService (LocalStorage)
-- [x] API key management
+| Task | Status | File |
+|------|--------|------|
+| `help.html` erstellen | ⏳ | `docs/help.html` |
+| `about.html` erstellen | ⏳ | `docs/about.html` |
+| `pages.css` Shared Styles | ⏳ | `docs/css/pages.css` |
+| Header-Links aktualisieren | ⏳ | `docs/index.html` |
 
-### Phase 2: Dialogs & Upload ✅
+**Help-Seite Inhalt:**
+- Quick Start (3 Schritte)
+- Workflow-Erklärung
+- Keyboard Shortcuts
+- API Key Anleitung
+- Troubleshooting/FAQ
 
-- [x] API Key dialog with provider tabs
-- [x] Image upload (file picker + drag & drop)
-- [x] PAGE-XML import (Transkribus compatible)
-- [x] Demo document loader
+**About-Seite Inhalt:**
+- Projekt-Beschreibung
+- Methodologie (Critical Expert in the Loop)
+- Technologie-Stack
+- Credits/Team
+- Lizenz
+- Links (GitHub, Knowledge Base)
 
-### Phase 3: LLM Transcription ✅
+### 2.2 Multi-Page Navigation ⏳
 
-- [x] Transcribe button with loading state
-- [x] Configurable prompts
-- [x] Response parsing to segments
-- [x] Bounding box extraction from PAGE-XML
+| Task | Status | File |
+|------|--------|------|
+| State erweitern (pages[], currentPageIndex) | ⏳ | `js/state.js` |
+| Page Navigation UI | ⏳ | `index.html`, `js/viewer.js` |
+| Page Navigation CSS | ⏳ | `css/viewer.css` |
+| Samples Service Multi-Page | ⏳ | `js/services/samples.js` |
+| Upload Multi-File (Ordner) | ⏳ | `js/components/upload.js` |
+| METS-XML Integration | ⏳ | `js/services/samples.js` |
+| Editor pro Seite | ⏳ | `js/editor.js` |
+| Keyboard: ←/→ Navigation | ⏳ | `js/viewer.js` |
 
-### Phase 4: Rule-Based Validation ✅
+**UI-Element:**
+```
+◀ Prev │ Page 3 / 83 │ Next ▶
+```
 
-- [x] Validation engine with regex rules
-- [x] Date format detection
-- [x] Currency recognition
-- [x] Uncertainty marker detection
-- [x] Dynamic validation panel
+**Datenquellen:**
+1. Ordner mit Bildern (alphabetisch sortiert)
+2. METS-XML (strukturiert mit Metadaten)
 
-### Phase 5: LLM-Judge Validation ✅
+### 2.3 Demo-Daten erweitern ⏳
 
-- [x] Perspective selection (Paleographic, Linguistic, Structural, Domain)
-- [x] LLM-as-judge implementation
-- [x] Categorical confidence display
-
-### Phase 6: Export & Persistence ✅
-
-- [x] Plain text export
-- [x] JSON export
-- [x] Markdown export
-- [x] Download trigger
-
-### Phase 7: Polish & UX ✅
-
-- [x] Inline editing (double-click)
-- [x] Undo/Redo (Ctrl+Z, Ctrl+Shift+Z)
-- [x] Keyboard shortcuts
-- [x] Guided workflow with step hints
-- [x] Flexible editor modes (lines/grid)
-
-### Phase 8: Deployment ✅
-
-- [x] GitHub Pages deployment
-- [x] Demo samples with PAGE-XML
-- [x] Live at dhcraft.org/co-ocr-htr
+| Sample | Typ | Seiten | Status |
+|--------|-----|--------|--------|
+| Wecker Antidotarium | Multi-Page | 83 | ⏳ |
+| Stefan Zweig (METS) | Multi-Page | 3 | ⏳ |
+| Raitbuch (bestehend) | Single | 1 | ✅ |
+| HSA Brief (bestehend) | Single | 1 | ✅ |
 
 ---
 
-## Architecture Summary
+## Phase 3: Batch-Processing 📋 PLANNED
+
+| Task | Status | Beschreibung |
+|------|--------|--------------|
+| Batch-Transkription | 📋 | Alle Seiten automatisch transkribieren |
+| Progress-Anzeige | 📋 | "Page 5/83 transcribed..." |
+| Batch-Export | 📋 | Alle Seiten als ZIP exportieren |
+| Validierung pro Seite | 📋 | Validierungsstatus pro Seite anzeigen |
+
+---
+
+## Phase 4: Polish & Release 📋 PLANNED
+
+| Task | Status | Beschreibung |
+|------|--------|--------------|
+| PAGE-XML Export | 📋 | Koordinaten + Text exportieren |
+| Vitest Unit Tests | 📋 | Kritische Services testen |
+| E2E Test | 📋 | Vollständiger Workflow-Test |
+| Performance Audit | 📋 | Lighthouse, große Dokumente |
+| README vervollständigen | 📋 | Screenshots, GIF-Demo |
+
+---
+
+## Architektur (aktuell)
 
 ```
 docs/
-├── index.html           # Single page application
-├── css/                 # Modular CSS (8 files)
-│   ├── variables.css    # Design tokens
-│   ├── base.css         # Reset, typography
-│   ├── layout.css       # Grid system
-│   ├── components.css   # Buttons, cards
-│   ├── viewer.css       # Document viewer
-│   ├── editor.css       # Transcription table
-│   ├── validation.css   # Validation panel
-│   └── dialogs.css      # Modal dialogs
-└── js/
-    ├── state.js         # Central state (EventTarget pattern)
-    ├── viewer.js        # Document viewer with SVG regions
-    ├── editor.js        # Inline editable table
-    ├── components/      # Dialogs, Upload, Transcription, Validation
-    └── services/        # LLM, Storage, Validation, Export, Parsers
+├── index.html              # Haupt-App
+├── help.html               # NEU: Hilfe-Seite
+├── about.html              # NEU: About-Seite
+├── css/
+│   ├── variables.css       # Design Tokens
+│   ├── base.css            # Reset, Typography
+│   ├── layout.css          # Grid, Panels
+│   ├── components.css      # Buttons, Inputs
+│   ├── dialogs.css         # Modal Dialogs
+│   ├── editor.css          # Transcription Editor
+│   ├── viewer.css          # Document Viewer
+│   ├── validation.css      # Validation Panel
+│   └── pages.css           # NEU: Shared für Unterseiten
+├── js/
+│   ├── main.js             # Entry Point
+│   ├── state.js            # Central State
+│   ├── viewer.js           # Pan/Zoom/Fit/Regions
+│   ├── editor.js           # Lines/Grid Editor
+│   ├── ui.js               # UI Interactions
+│   ├── components/
+│   │   ├── dialogs.js
+│   │   ├── upload.js
+│   │   ├── transcription.js
+│   │   └── validation.js
+│   └── services/
+│       ├── llm.js          # 5 Provider + Gemini 3
+│       ├── storage.js
+│       ├── validation.js
+│       ├── export.js
+│       ├── samples.js
+│       └── parsers/
+│           ├── page-xml.js
+│           └── mets-xml.js # NEU
+├── samples/
+│   ├── index.json
+│   ├── raitbuch/
+│   ├── wecker/             # NEU: Multi-Page
+│   └── hsa-letter/
+└── assets/
+    ├── logo.png
+    └── logo-icon.png
 ```
 
 ---
 
-**References:**
-- [ARCHITECTURE](ARCHITECTURE.md) for system design
-- [VALIDATION](VALIDATION.md) for validation rules
-- [DATA-SCHEMA](DATA-SCHEMA.md) for data structures
-- [JOURNAL](JOURNAL.md) for development history
+## Legende
+
+| Symbol | Bedeutung |
+|--------|-----------|
+| ✅ | Abgeschlossen |
+| ⏳ | In Arbeit |
+| 📋 | Geplant |
+
+---
+
+**Referenzen:**
+- [ARCHITECTURE](ARCHITECTURE.md) - Technische Details
+- [VALIDATION](VALIDATION.md) - Validierungsregeln
+- [DATA-SCHEMA](DATA-SCHEMA.md) - Datenstrukturen
+- [JOURNAL](JOURNAL.md) - Entwicklungshistorie
