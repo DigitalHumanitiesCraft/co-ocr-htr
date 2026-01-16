@@ -1,0 +1,131 @@
+
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:vi="http://gams.uni-graz.at/viewer" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <mets:dmdSec ID="DMD.1">
+    <mets:mdWrap MDTYPE="MODS" MIMETYPE="text/xml">
+      <mets:xmlData>
+        <mods:mods xmlns:mods="http://www.loc.gov/mods/v3">
+          <mods:titleInfo>
+            <mods:title>Abwesenheitsnotiz II, SZ-SAM/L18</mods:title>
+            <mods:note type="signature">SZ-SAM/L18</mods:note>
+          </mods:titleInfo>
+          <mods:name type="personal">
+            <mods:displayForm>Zweig, Stefan</mods:displayForm>
+            <mods:role>
+              <mods:roleTerm type="text">author</mods:roleTerm>
+            </mods:role>
+          </mods:name>
+          <mods:language>
+            <mods:languageTerm type="text">Deutsch</mods:languageTerm>
+            <mods:languageTerm authority="iso639-1" type="code">de</mods:languageTerm>
+          </mods:language>
+          <mods:originInfo>
+            <mods:dateIssued></mods:dateIssued>
+          </mods:originInfo>
+          <mods:subject>
+            <mods:genre></mods:genre>
+          </mods:subject>
+          <mods:identifier type="urn">info:fedora/o:szd.151</mods:identifier>
+        </mods:mods>
+      </mets:xmlData>
+    </mets:mdWrap>
+  </mets:dmdSec>
+  <mets:amdSec ID="AMD.1">
+    <mets:rightsMD ID="RMD.1">
+      <mets:mdWrap MDTYPE="OTHER" MIMETYPE="text/xml" OTHERMDTYPE="DVRIGHTS">
+        <mets:xmlData>
+          <dv:rights xmlns:dv="http://dfg-viewer.de/">
+            <dv:owner>Literaturarchiv Salzburg, https://stefanzweig.digital, CC-BY</dv:owner>
+            <dv:ownerContact></dv:ownerContact>
+            <dv:ownerLogo></dv:ownerLogo>
+            <dv:ownerSiteURL></dv:ownerSiteURL>
+          </dv:rights>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:rightsMD>
+    <mets:digiprovMD ID="PMD.1">
+      <mets:mdWrap MDTYPE="OTHER" MIMETYPE="text/xml" OTHERMDTYPE="DVLINKS">
+        <mets:xmlData>
+          <dv:links xmlns:dv="http://dfg-viewer.de/">
+            <dv:reference></dv:reference>
+            <dv:presentation></dv:presentation>
+          </dv:links>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:digiprovMD>
+  </mets:amdSec>
+  <mets:fileSec>
+    <mets:fileGrp USE="DEFAULT">
+      <mets:file ID="IMG.1" MIMETYPE="image/jpeg">
+        <mets:FLocat LOCTYPE="URL" xlink:href="http://gams.uni-graz.at/o:szd.151/IMG.1"></mets:FLocat>
+        <mets:FContent>
+          <mets:xmlData>
+            <x:xmpmeta xmlns:x="adobe:ns:meta/">
+              <exif:PixelXDimension xmlns:exif="http://ns.adobe.com/exif/1.0/">4912</exif:PixelXDimension>
+              <exif:PixelYDimension xmlns:exif="http://ns.adobe.com/exif/1.0/">7360</exif:PixelYDimension>
+            </x:xmpmeta>
+          </mets:xmlData>
+        </mets:FContent>
+      </mets:file>
+      <mets:file ID="IMG.2" MIMETYPE="image/jpeg">
+        <mets:FLocat LOCTYPE="URL" xlink:href="http://gams.uni-graz.at/o:szd.151/IMG.2"></mets:FLocat>
+        <mets:FContent>
+          <mets:xmlData>
+            <x:xmpmeta xmlns:x="adobe:ns:meta/">
+              <exif:PixelXDimension xmlns:exif="http://ns.adobe.com/exif/1.0/">4912</exif:PixelXDimension>
+              <exif:PixelYDimension xmlns:exif="http://ns.adobe.com/exif/1.0/">7360</exif:PixelYDimension>
+            </x:xmpmeta>
+          </mets:xmlData>
+        </mets:FContent>
+      </mets:file>
+      <mets:file ID="IMG.3" MIMETYPE="image/jpeg">
+        <mets:FLocat LOCTYPE="URL" xlink:href="http://gams.uni-graz.at/o:szd.151/IMG.3"></mets:FLocat>
+        <mets:FContent>
+          <mets:xmlData>
+            <x:xmpmeta xmlns:x="adobe:ns:meta/">
+              <exif:PixelXDimension xmlns:exif="http://ns.adobe.com/exif/1.0/">4912</exif:PixelXDimension>
+              <exif:PixelYDimension xmlns:exif="http://ns.adobe.com/exif/1.0/">7360</exif:PixelYDimension>
+            </x:xmpmeta>
+          </mets:xmlData>
+        </mets:FContent>
+      </mets:file>
+    </mets:fileGrp>
+    <mets:fileGrp USE="THUMBS">
+      <mets:file ID="TBN.1" MIMETYPE="image/jpeg">
+        <mets:FLocat LOCTYPE="URL" xlink:href="http://gams.uni-graz.at/o:szd.151/TBN.1"></mets:FLocat>
+      </mets:file>
+      <mets:file ID="TBN.2" MIMETYPE="image/jpeg">
+        <mets:FLocat LOCTYPE="URL" xlink:href="http://gams.uni-graz.at/o:szd.151/TBN.2"></mets:FLocat>
+      </mets:file>
+      <mets:file ID="TBN.3" MIMETYPE="image/jpeg">
+        <mets:FLocat LOCTYPE="URL" xlink:href="http://gams.uni-graz.at/o:szd.151/TBN.3"></mets:FLocat>
+      </mets:file>
+    </mets:fileGrp>
+  </mets:fileSec>
+  <mets:structMap TYPE="PHYSICAL">
+    <mets:div ID="PHY.1" TYPE="physSequence">
+      <mets:div CONTENTIDS="http://gams.uni-graz.at/o:szd.151/IMG.1" ID="DIV.1" ORDER="1" TYPE="page">
+        <mets:fptr FILEID="IMG.1"></mets:fptr>
+        <mets:fptr FILEID="TBN.1"></mets:fptr>
+      </mets:div>
+      <mets:div CONTENTIDS="http://gams.uni-graz.at/o:szd.151/IMG.2" ID="DIV.2" ORDER="2" TYPE="page">
+        <mets:fptr FILEID="IMG.2"></mets:fptr>
+        <mets:fptr FILEID="TBN.2"></mets:fptr>
+      </mets:div>
+      <mets:div CONTENTIDS="http://gams.uni-graz.at/o:szd.151/IMG.3" ID="DIV.3" ORDER="3" TYPE="page">
+        <mets:fptr FILEID="IMG.3"></mets:fptr>
+        <mets:fptr FILEID="TBN.3"></mets:fptr>
+      </mets:div>
+    </mets:div>
+  </mets:structMap>
+  <mets:structMap TYPE="LOGICAL">
+    <mets:div ADMID="AMD.1" DMDID="DMD.1" ID="LOG.1" TYPE="monograph">
+      <mets:div ID="U.1" TYPE="Abwesenheitsnotiz II"></mets:div>
+      <mets:div ID="U.2" TYPE="Farbreferenz/Schluss"></mets:div>
+    </mets:div>
+  </mets:structMap>
+  <mets:structLink>
+    <mets:smLink xlink:from="U.1" xlink:to="DIV.1"></mets:smLink>
+    <mets:smLink xlink:from="U.1" xlink:to="DIV.2"></mets:smLink>
+    <mets:smLink xlink:from="U.2" xlink:to="DIV.3"></mets:smLink>
+  </mets:structLink>
+</mets:mets>
