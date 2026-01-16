@@ -187,13 +187,25 @@
         <section class="panel glass-panel" style="grid-column: 2;">
             <div class="panel-header">
                 <span>Transcription</span>
-                <div style="display: flex; gap: 4px;">
-                    <button class="icon-btn icon-sm" title="Undo"><svg viewBox="0 0 24 24" fill="none"
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <button class="btn btn-primary btn-sm" id="btnTranscribe" title="Transcribe document with LLM">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 4px;">
+                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
+                        </svg>
+                        <span class="btn-text">Transcribe</span>
+                        <span class="btn-spinner" style="display: none;">
+                            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
+                            </svg>
+                        </span>
+                    </button>
+                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <button class="icon-btn icon-sm" id="btnUndo" title="Undo" disabled><svg viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <path d="M9 14 4 9 9 4" />
                             <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
                         </svg></button>
-                    <button class="icon-btn icon-sm" title="Redo"><svg viewBox="0 0 24 24" fill="none"
+                    <button class="icon-btn icon-sm" id="btnRedo" title="Redo" disabled><svg viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
                             <path d="M15 4 20 9 15 14" />
@@ -315,6 +327,285 @@
         </footer>
 
     </div>
+
+    <!-- DIALOGS -->
+
+    <!-- API Key Dialog -->
+    <dialog id="apiKeyDialog" class="dialog">
+        <div class="dialog-header">
+            <h2 class="dialog-title">API Configuration</h2>
+            <button class="dialog-close" data-close-dialog aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="dialog-tabs" role="tablist">
+            <button class="dialog-tab active" role="tab" data-provider="gemini" aria-selected="true">
+                Gemini
+                <span class="provider-status" data-status="unconfigured"></span>
+            </button>
+            <button class="dialog-tab" role="tab" data-provider="openai" aria-selected="false">
+                OpenAI
+                <span class="provider-status" data-status="unconfigured"></span>
+            </button>
+            <button class="dialog-tab" role="tab" data-provider="anthropic" aria-selected="false">
+                Anthropic
+                <span class="provider-status" data-status="unconfigured"></span>
+            </button>
+            <button class="dialog-tab" role="tab" data-provider="deepseek" aria-selected="false">
+                DeepSeek
+                <span class="provider-status" data-status="unconfigured"></span>
+            </button>
+            <button class="dialog-tab" role="tab" data-provider="ollama" aria-selected="false">
+                Ollama
+                <span class="provider-status" data-status="unconfigured"></span>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <!-- Gemini Panel -->
+            <div class="dialog-tab-panel active" data-panel="gemini" role="tabpanel">
+                <p class="provider-description">
+                    Google Gemini API. Get your API key from
+                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+                </p>
+                <div class="input-wrapper">
+                    <label for="geminiApiKey">API Key</label>
+                    <div class="input-with-toggle">
+                        <input type="password" id="geminiApiKey" placeholder="AIza..." autocomplete="off">
+                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
+                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <label for="geminiModel">Model</label>
+                    <select id="geminiModel">
+                        <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash (Recommended)</option>
+                        <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- OpenAI Panel -->
+            <div class="dialog-tab-panel" data-panel="openai" role="tabpanel" hidden>
+                <p class="provider-description">
+                    OpenAI API. Get your API key from
+                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI Platform</a>.
+                </p>
+                <div class="input-wrapper">
+                    <label for="openaiApiKey">API Key</label>
+                    <div class="input-with-toggle">
+                        <input type="password" id="openaiApiKey" placeholder="sk-..." autocomplete="off">
+                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
+                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <label for="openaiModel">Model</label>
+                    <select id="openaiModel">
+                        <option value="gpt-4o-mini" selected>GPT-4o Mini (Recommended)</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Anthropic Panel -->
+            <div class="dialog-tab-panel" data-panel="anthropic" role="tabpanel" hidden>
+                <p class="provider-description">
+                    Anthropic Claude API. Get your API key from
+                    <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>.
+                </p>
+                <div class="input-wrapper">
+                    <label for="anthropicApiKey">API Key</label>
+                    <div class="input-with-toggle">
+                        <input type="password" id="anthropicApiKey" placeholder="sk-ant-..." autocomplete="off">
+                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
+                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <label for="anthropicModel">Model</label>
+                    <select id="anthropicModel">
+                        <option value="claude-3-5-haiku-latest" selected>Claude 3.5 Haiku (Recommended)</option>
+                        <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
+                        <option value="claude-3-opus-latest">Claude 3 Opus</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- DeepSeek Panel -->
+            <div class="dialog-tab-panel" data-panel="deepseek" role="tabpanel" hidden>
+                <p class="provider-description">
+                    DeepSeek API. Get your API key from
+                    <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek Platform</a>.
+                </p>
+                <div class="input-wrapper">
+                    <label for="deepseekApiKey">API Key</label>
+                    <div class="input-with-toggle">
+                        <input type="password" id="deepseekApiKey" placeholder="sk-..." autocomplete="off">
+                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
+                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <label for="deepseekModel">Model</label>
+                    <select id="deepseekModel">
+                        <option value="deepseek-chat" selected>DeepSeek Chat</option>
+                        <option value="deepseek-coder">DeepSeek Coder</option>
+                    </select>
+                </div>
+                <p class="provider-note">
+                    Note: DeepSeek API does not support vision. Use Ollama with DeepSeek-VL for image transcription.
+                </p>
+            </div>
+
+            <!-- Ollama Panel -->
+            <div class="dialog-tab-panel" data-panel="ollama" role="tabpanel" hidden>
+                <p class="provider-description">
+                    Local LLM via Ollama. Install from
+                    <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>
+                    and run <code>ollama serve</code>.
+                </p>
+                <div class="input-wrapper">
+                    <label for="ollamaEndpoint">Endpoint</label>
+                    <input type="text" id="ollamaEndpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
+                </div>
+                <div class="input-wrapper">
+                    <label for="ollamaModel">Model</label>
+                    <div class="input-with-button">
+                        <input type="text" id="ollamaModel" value="llava" placeholder="llava">
+                        <button type="button" class="btn btn-secondary" id="ollamaRefreshModels">Refresh</button>
+                    </div>
+                </div>
+                <div class="provider-note">
+                    Recommended models for vision: <code>llava</code>, <code>llava:13b</code>, <code>bakllava</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" id="testApiConnection">Test Connection</button>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveApiKeys">Save</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Export Dialog -->
+    <dialog id="exportDialog" class="dialog">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Export Transcription</h2>
+            <button class="dialog-close" data-close-dialog aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <div class="export-formats">
+                <label class="export-format-option">
+                    <input type="radio" name="exportFormat" value="txt" checked>
+                    <div class="format-card">
+                        <span class="format-icon">TXT</span>
+                        <div class="format-info">
+                            <span class="format-name">Plain Text</span>
+                            <span class="format-desc">Tab-separated values, simple and portable</span>
+                        </div>
+                    </div>
+                </label>
+
+                <label class="export-format-option">
+                    <input type="radio" name="exportFormat" value="json">
+                    <div class="format-card">
+                        <span class="format-icon">JSON</span>
+                        <div class="format-info">
+                            <span class="format-name">JSON</span>
+                            <span class="format-desc">Full data with metadata and validation</span>
+                        </div>
+                    </div>
+                </label>
+
+                <label class="export-format-option">
+                    <input type="radio" name="exportFormat" value="md">
+                    <div class="format-card">
+                        <span class="format-icon">MD</span>
+                        <div class="format-info">
+                            <span class="format-name">Markdown</span>
+                            <span class="format-desc">Formatted table with validation notes</span>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="export-options">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="exportIncludeValidation" checked>
+                    <span>Include validation results</span>
+                </label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="exportIncludeMetadata">
+                    <span>Include metadata (timestamp, provider, model)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <div class="dialog-actions">
+                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                <button type="button" class="btn btn-primary" id="downloadExport">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <!-- SCRIPTS -->
     <script type="module" src="js/main.js"></script>

@@ -198,6 +198,13 @@ class AppState extends EventTarget {
     this.data.image.height = height;
   }
 
+  /**
+   * Alias for setDocumentDimensions
+   */
+  setImageDimensions(width, height) {
+    this.setDocumentDimensions(width, height);
+  }
+
   // ============================================
   // Image (Legacy compatibility)
   // ============================================
@@ -260,6 +267,15 @@ class AppState extends EventTarget {
       segmentCount: data.segments?.length || 0
     });
     this._scheduleAutoSave();
+  }
+
+  /**
+   * Set regions directly (from PAGE-XML import or manual definition)
+   * @param {Array} regions - Array of region objects
+   */
+  setRegions(regions) {
+    this.data.regions = regions;
+    this._emit('regionsChanged', { count: regions.length });
   }
 
   /**
