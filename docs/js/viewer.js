@@ -57,13 +57,13 @@ export function initViewer() {
     const state = appState.getState();
     renderRegions(state.regions);
 
-    // Zoom Controls
+    // Zoom Controls - use appState.zoom getter for current value
     document.getElementById('zoomIn')?.addEventListener('click', () => {
-        appState.setZoom(state.zoom + 10);
+        appState.setZoom(appState.zoom + 10);
     });
 
     document.getElementById('zoomOut')?.addEventListener('click', () => {
-        if (state.zoom > 10) appState.setZoom(state.zoom - 10);
+        if (appState.zoom > 25) appState.setZoom(appState.zoom - 10);
     });
 }
 

@@ -175,13 +175,13 @@ class TranscriptionManager {
             this.transcribeBtn.classList.add('loading');
             if (btnText) btnText.style.display = 'none';
             if (btnSpinner) btnSpinner.style.display = 'inline-flex';
-            appState.setUI({ isLoading: true, loadingMessage: 'Transcribing...' });
+            appState.setLoading(true, 'Transcribing...');
         } else {
             this.transcribeBtn.disabled = false;
             this.transcribeBtn.classList.remove('loading');
             if (btnText) btnText.style.display = 'inline';
             if (btnSpinner) btnSpinner.style.display = 'none';
-            appState.setUI({ isLoading: false, loadingMessage: '' });
+            appState.setLoading(false);
         }
     }
 

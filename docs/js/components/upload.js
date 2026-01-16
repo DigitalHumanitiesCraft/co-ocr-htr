@@ -191,7 +191,7 @@ class UploadManager {
         }
 
         // Show loading state
-        appState.setUI({ isLoading: true, loadingMessage: 'Loading file...' });
+        appState.setLoading(true, 'Loading file...');
 
         try {
             if (this.isImageFile(file)) {
@@ -203,7 +203,7 @@ class UploadManager {
             console.error('Error handling file:', error);
             dialogManager.showToast(`Failed to load file: ${error.message}`, 'error');
         } finally {
-            appState.setUI({ isLoading: false, loadingMessage: null });
+            appState.setLoading(false);
         }
     }
 

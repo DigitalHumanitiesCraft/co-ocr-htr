@@ -61,6 +61,7 @@ async function initApp() {
     initViewer();
     initEditor();
     initUI();
+    validationPanel.init();
 
     // Dialogs are auto-initialized via module import
 

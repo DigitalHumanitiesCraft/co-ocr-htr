@@ -174,7 +174,7 @@ class DialogManager {
         if (!dialog) return;
 
         dialog.showModal();
-        appState.setUI({ activeDialog: name });
+        appState.openDialog(name);
 
         // Focus first input
         const firstInput = dialog.querySelector('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"])');
@@ -193,7 +193,7 @@ class DialogManager {
         if (!dialog) return;
 
         dialog.close();
-        appState.setUI({ activeDialog: null });
+        appState.closeDialog();
     }
 
     /**
