@@ -132,13 +132,20 @@
                         </a>
                     </div>
                 </div>
-                <button class="icon-btn icon-md" title="Help">
+                <a href="help.html" class="icon-btn icon-md" title="Help">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-                </button>
+                </a>
+                <a href="about.html" class="icon-btn icon-md" title="About">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </a>
             </div>
         </header>
 
@@ -194,6 +201,21 @@
                     </div>
                 </div>
 
+                <!-- Page Navigation (hidden for single-page documents) -->
+                <div class="page-navigation" id="pageNavigation" style="display: none;">
+                    <button class="icon-btn icon-sm" id="btnPrevPage" title="Previous Page" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <span class="page-info" id="pageInfo">Page 1 / 1</span>
+                    <button class="icon-btn icon-sm" id="btnNextPage" title="Next Page" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
                 <!-- Floating Toolbar -->
                 <div class="viewer-toolbar glass">
                     <button class="icon-btn icon-sm" title="Zoom Out" id="zoomOut"><svg viewBox="0 0 24 24" fill="none"
@@ -208,7 +230,7 @@
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg></button>
-                    <div style="width: 1px; height: 16px; background: var(--border-default); margin: 0 4px;"></div>
+                    <div class="divider-vertical"></div>
                     <button class="icon-btn icon-sm" title="Fit Width">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="15 3 21 3 21 9"></polyline>

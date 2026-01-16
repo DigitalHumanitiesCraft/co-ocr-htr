@@ -182,6 +182,37 @@ export function initViewer() {
     });
 
     // ============================================
+    // PAGE NAVIGATION
+    // ============================================
+
+    const pageNavigation = document.getElementById('pageNavigation');
+    const pageInfo = document.getElementById('pageInfo');
+    const btnPrevPage = document.getElementById('btnPrevPage');
+    const btnNextPage = document.getElementById('btnNextPage');
+
+    function updatePageNavigation() {
+        const pageCount = appState.getPageCount();
+        const currentIndex = appState.data.currentPageIndex;
+
+        if (pageCount > 1) {
+            pageNavigation.style.display = 'flex';
+            pageInfo.textContent = `Page ${currentIndex + 1} / ${pageCount}`;
+            btnPrevPage.disabled = currentIndex === 0;
+            btnNextPage.disabled = currentIndex >= pageCount - 1;
+        } else {
+            pageNavigation.style.display = 'none';
+        }
+    }
+
+    btnPrevPage?.addEventListener('click', () => {
+        appState.prevPage();
+    });
+
+    btnNextPage?.addEventListener('click', () => {
+        appState.nextPage();
+    });
+
+    // ============================================
     // STATE EVENTS
     // ============================================
 
@@ -189,17 +220,38 @@ export function initViewer() {
     appState.addEventListener('documentLoaded', (e) => {
         showDocument(e.detail.filename);
         resetView();
+        updatePageNavigation();
         // Re-render regions (will be empty after setDocument clears them)
         const currentState = appState.getState();
         renderRegions(currentState.regions);
     });
 
+    // React to pages loaded (multi-page documents)
+    appState.addEventListener('pagesLoaded', (e) => {
+        console.log(`[Viewer] Pages loaded: ${e.detail.count}`);
+        updatePageNavigation();
+    });
+
+    // React to page changes
+    appState.addEventListener('pageChanged', (e) => {
+        console.log(`[Viewer] Page changed to ${e.detail.index + 1}/${e.detail.total}`);
+        showDocument(e.detail.filename);
+        resetView();
+        updatePageNavigation();
+        // Regions will be updated via imageChanged event
+    });
+
     // React to image changes
     appState.addEventListener('imageChanged', (e) => {
+        if (!e.detail.url) return;
         img.src = e.detail.url;
+        showDocument(appState.data.document.filename);
         // Auto-fit when image loads
         img.onload = () => {
             fitToContainer('contain');
+            // Render regions after image loads
+            const currentState = appState.getState();
+            renderRegions(currentState.regions);
         };
     });
 
@@ -215,8 +267,6 @@ export function initViewer() {
         const regionEl = document.querySelector(`.region-box[data-line="${e.detail.line}"]`);
         if (regionEl) {
             regionEl.classList.add('selected');
-            // Optionally: zoom to selection
-            // zoomToRegion(e.detail.line);
         }
     });
 
@@ -264,9 +314,21 @@ export function initViewer() {
             fitToContainer('contain');
             e.preventDefault();
         }
+        // Arrow left/right for page navigation
+        if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.metaKey && appState.isMultiPage()) {
+            appState.prevPage();
+            e.preventDefault();
+        }
+        if (e.key === 'ArrowRight' && !e.ctrlKey && !e.metaKey && appState.isMultiPage()) {
+            appState.nextPage();
+            e.preventDefault();
+        }
     });
 
-    console.log('[Viewer] Ready - Pan: drag, Zoom: wheel/+/-, Fit: f, Reset: 0');
+    // Initialize page navigation
+    updatePageNavigation();
+
+    console.log('[Viewer] Ready - Pan: drag, Zoom: wheel/+/-, Fit: f, Reset: 0, Pages: ←/→');
 }
 
 function renderRegions(regions) {

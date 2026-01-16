@@ -1,9 +1,24 @@
 {
   "samples": [
     {
+      "id": "wecker-multipage",
+      "name": "Antidotarium (1617) - 6 Seiten",
+      "description": "Medizinisches Fachbuch mit PAGE-XML Transkription (Multi-Page Demo)",
+      "language": "Latein",
+      "type": "print",
+      "pages": [
+        { "id": "p010", "image": "wecker/0010_p010.jpg", "pageXml": "wecker/0010_p010.xml" },
+        { "id": "p011", "image": "wecker/0011_p011.jpg", "pageXml": "wecker/0011_p011.xml" },
+        { "id": "p012", "image": "wecker/0012_p012.jpg", "pageXml": "wecker/0012_p012.xml" },
+        { "id": "p013", "image": "wecker/0013_p013.jpg", "pageXml": "wecker/0013_p013.xml" },
+        { "id": "p014", "image": "wecker/0014_p014.jpg", "pageXml": "wecker/0014_p014.xml" },
+        { "id": "p015", "image": "wecker/0015_p015.jpg", "pageXml": "wecker/0015_p015.xml" }
+      ]
+    },
+    {
       "id": "wecker-p015",
       "name": "Antidotarium (1617), S. 15",
-      "description": "Medizinisches Fachbuch - Vollständige PAGE-XML Transkription",
+      "description": "Medizinisches Fachbuch - Einzelseite mit PAGE-XML",
       "language": "Latein",
       "type": "print",
       "image": "wecker/0015_p015.jpg",
@@ -12,7 +27,7 @@
     {
       "id": "raitbuch-0v1r",
       "name": "Raitbuch 2, fol. 0v-1r",
-      "description": "Oberösterreichisches Rechnungsbuch - Nur Bild (keine Transkription)",
+      "description": "Oberösterreichisches Rechnungsbuch - Nur Bild",
       "language": "Frühneuhochdeutsch",
       "type": "table",
       "image": "raitbuch/fol-0v-1r.jpg"
@@ -20,7 +35,7 @@
     {
       "id": "hsa-letter-2261",
       "name": "HSA Brief 2261",
-      "description": "Handschriftlicher Brief - Nur Bild (Ground Truth als Referenz)",
+      "description": "Handschriftlicher Brief - Nur Bild",
       "language": "Deutsch/Französisch",
       "type": "letter",
       "image": "hsa-letter/image.jpg"

@@ -2,10 +2,12 @@
  * Samples Service
  *
  * Loads demo samples from the samples/ directory
+ * Supports single-page and multi-page documents
  */
 
 import { appState } from '../state.js';
 import { pageXMLParser } from './parsers/page-xml.js';
+import { metsXMLParser } from './parsers/mets-xml.js';
 
 const SAMPLES_BASE = 'samples/';
 
@@ -57,6 +59,19 @@ class SamplesService {
             throw new Error(`Sample not found: ${sampleId}`);
         }
 
+        // Check if multi-page sample
+        if (sample.pages && sample.pages.length > 0) {
+            return this.loadMultiPageSample(sample);
+        }
+
+        // Single-page sample
+        return this.loadSinglePageSample(sample);
+    }
+
+    /**
+     * Load a single-page sample
+     */
+    async loadSinglePageSample(sample) {
         // Load image
         const imageUrl = `${SAMPLES_BASE}${sample.image}`;
         const imageResponse = await fetch(imageUrl);
@@ -99,6 +114,86 @@ class SamplesService {
                 }
             } catch (error) {
                 console.warn('Failed to load PAGE-XML:', error);
+            }
+        }
+
+        return sample;
+    }
+
+    /**
+     * Load a multi-page sample
+     */
+    async loadMultiPageSample(sample) {
+        console.log(`[Samples] Loading multi-page sample: ${sample.id} (${sample.pages.length} pages)`);
+
+        const pages = [];
+
+        for (let i = 0; i < sample.pages.length; i++) {
+            const pageDef = sample.pages[i];
+            const imageUrl = `${SAMPLES_BASE}${pageDef.image}`;
+
+            try {
+                const imageResponse = await fetch(imageUrl);
+                if (!imageResponse.ok) {
+                    console.warn(`Failed to load page ${i + 1}: ${imageResponse.status}`);
+                    continue;
+                }
+
+                const imageBlob = await imageResponse.blob();
+                const dataUrl = await this.blobToDataUrl(imageBlob);
+                const dimensions = await this.getImageDimensions(dataUrl);
+
+                const page = {
+                    id: pageDef.id || `page-${i + 1}`,
+                    filename: pageDef.image.split('/').pop(),
+                    dataUrl: dataUrl,
+                    width: dimensions.width,
+                    height: dimensions.height,
+                    pageXml: pageDef.pageXml || null,
+                    order: i + 1
+                };
+
+                // Load PAGE-XML for this page if available
+                if (pageDef.pageXml) {
+                    try {
+                        const xmlUrl = `${SAMPLES_BASE}${pageDef.pageXml}`;
+                        const xmlResponse = await fetch(xmlUrl);
+                        if (xmlResponse.ok) {
+                            page.pageXmlContent = await xmlResponse.text();
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to load PAGE-XML for page ${i + 1}:`, error);
+                    }
+                }
+
+                pages.push(page);
+            } catch (error) {
+                console.warn(`Failed to load page ${i + 1}:`, error);
+            }
+        }
+
+        if (pages.length === 0) {
+            throw new Error('No pages could be loaded');
+        }
+
+        // Set pages in state
+        appState.setPages(pages);
+
+        // Load transcription for first page if PAGE-XML available
+        const firstPage = pages[0];
+        if (firstPage.pageXmlContent) {
+            try {
+                const parsed = pageXMLParser.parse(firstPage.pageXmlContent);
+                if (parsed.segments?.length > 0) {
+                    appState.setTranscription({
+                        segments: parsed.segments,
+                        columns: parsed.columns || [],
+                        provider: 'PAGE-XML Import',
+                        model: 'Transkribus'
+                    });
+                }
+            } catch (error) {
+                console.warn('Failed to parse PAGE-XML for first page:', error);
             }
         }
 

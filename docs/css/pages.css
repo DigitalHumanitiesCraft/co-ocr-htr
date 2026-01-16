@@ -1,0 +1,453 @@
+/**
+ * pages.css - Shared Styles for Help & About Pages
+ * coOCR/HTR Design System v2.1
+ */
+
+/* ==========================================================================
+   PAGE LAYOUT
+   ========================================================================== */
+
+.page-container {
+    min-height: 100vh;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.page-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-6);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.page-header .logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+    font-size: var(--text-lg);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.page-header .logo-image {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+}
+
+.page-header .back-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    transition: color 0.15s ease;
+}
+
+.page-header .back-link:hover {
+    color: var(--accent-secondary);
+}
+
+.page-header .back-link svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================================================
+   PAGE CONTENT
+   ========================================================================== */
+
+.page-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6);
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+    color: var(--text-primary);
+}
+
+.page-subtitle {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-8);
+}
+
+/* ==========================================================================
+   SECTIONS
+   ========================================================================== */
+
+.page-section {
+    margin-bottom: var(--space-8);
+}
+
+.page-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+    color: var(--text-primary);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-muted);
+}
+
+.section-content {
+    line-height: 1.7;
+}
+
+.section-content p {
+    margin-bottom: var(--space-3);
+}
+
+.section-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   STEPS / WORKFLOW
+   ========================================================================== */
+
+.steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step-counter;
+}
+
+.steps-list li {
+    position: relative;
+    padding-left: 48px;
+    margin-bottom: var(--space-4);
+    counter-increment: step-counter;
+}
+
+.steps-list li::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--accent-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--text-sm);
+}
+
+.steps-list li strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+}
+
+.steps-list li p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+/* ==========================================================================
+   KEYBOARD SHORTCUTS
+   ========================================================================== */
+
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-3);
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.shortcut-item kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    padding: var(--space-1) var(--space-2);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.shortcut-item .shortcut-desc {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   MARKERS LEGEND
+   ========================================================================== */
+
+.markers-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.marker-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.marker-indicator {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+.marker-indicator.uncertain {
+    background: rgba(196, 151, 58, 0.2);
+    color: var(--uncertain);
+}
+
+.marker-indicator.illegible {
+    background: rgba(184, 92, 74, 0.2);
+    color: var(--problematic);
+}
+
+.marker-item .marker-desc {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   FAQ / ACCORDION
+   ========================================================================== */
+
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.faq-item {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.faq-question {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-tertiary);
+    border: none;
+    text-align: left;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.15s ease;
+}
+
+.faq-question:hover {
+    background: var(--bg-tertiary-hover);
+}
+
+.faq-question svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.faq-item.open .faq-question svg {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    display: none;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-secondary);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.faq-item.open .faq-answer {
+    display: block;
+}
+
+/* ==========================================================================
+   CARDS (for About page)
+   ========================================================================== */
+
+.info-card {
+    padding: var(--space-4);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-4);
+}
+
+.info-card:last-child {
+    margin-bottom: 0;
+}
+
+.info-card-title {
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    color: var(--text-primary);
+}
+
+.info-card-content {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ==========================================================================
+   TECH STACK
+   ========================================================================== */
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-3);
+}
+
+.tech-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+}
+
+.tech-item .tech-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-primary);
+}
+
+/* ==========================================================================
+   LINKS
+   ========================================================================== */
+
+.links-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.link-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.link-item:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(74, 124, 155, 0.1);
+}
+
+.link-item svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-primary);
+}
+
+.link-item .link-text {
+    flex: 1;
+}
+
+.link-item .link-title {
+    font-weight: 500;
+    font-size: var(--text-sm);
+}
+
+.link-item .link-desc {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.page-footer {
+    padding: var(--space-6);
+    text-align: center;
+    border-top: 1px solid var(--border-muted);
+    margin-top: var(--space-8);
+}
+
+.page-footer p {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.page-footer a {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+.page-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .page-content {
+        padding: var(--space-6) var(--space-4);
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .shortcuts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tech-grid {
+        grid-template-columns: 1fr;
+    }
+}

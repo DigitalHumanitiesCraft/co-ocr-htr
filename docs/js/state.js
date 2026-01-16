@@ -25,17 +25,22 @@ class AppState extends EventTarget {
     super();
 
     this.data = {
-      // Document info
+      // Document info (current page)
       document: {
         id: null,
         filename: '',
         mimeType: '',
-        dataUrl: '',        // Base64 image data
+        dataUrl: '',        // Base64 image data (current page)
         width: 0,
-        height: 0,
-        pages: 1,
-        currentPage: 1
+        height: 0
       },
+
+      // Multi-page support
+      pages: [],            // Array of page objects: { id, filename, dataUrl, width, height, pageXml? }
+      currentPageIndex: 0,  // 0-based index
+
+      // Per-page transcriptions: { [pageId]: { segments, columns, provider, model } }
+      pageTranscriptions: {},
 
       // Legacy image (for backward compatibility with viewer.js)
       image: {
@@ -44,10 +49,10 @@ class AppState extends EventTarget {
         height: 0
       },
 
-      // Bounding box regions (from LLM or PAGE-XML)
+      // Bounding box regions (from LLM or PAGE-XML) - current page only
       regions: [],
 
-      // Transcription data
+      // Transcription data (current page)
       transcription: {
         id: null,
         provider: '',       // gemini, openai, anthropic, deepseek, ollama
@@ -186,6 +191,171 @@ class AppState extends EventTarget {
    */
   setImageDimensions(width, height) {
     this.setDocumentDimensions(width, height);
+  }
+
+  // ============================================
+  // Multi-Page Management
+  // ============================================
+
+  /**
+   * Set multiple pages (from folder upload or METS-XML)
+   * @param {Array} pages - Array of page objects
+   */
+  setPages(pages) {
+    this.data.pages = pages.map((page, index) => ({
+      id: page.id || generateId(),
+      filename: page.filename || `page-${index + 1}`,
+      dataUrl: page.dataUrl || page.image,
+      width: page.width || 0,
+      height: page.height || 0,
+      pageXml: page.pageXml || null,
+      order: page.order || index + 1
+    }));
+
+    this.data.currentPageIndex = 0;
+    this.data.pageTranscriptions = {};
+
+    // Load first page
+    if (this.data.pages.length > 0) {
+      this._loadPage(0);
+    }
+
+    this._emit('pagesLoaded', {
+      count: this.data.pages.length,
+      pages: this.data.pages.map(p => ({ id: p.id, filename: p.filename }))
+    });
+  }
+
+  /**
+   * Navigate to a specific page
+   * @param {number} index - 0-based page index
+   */
+  goToPage(index) {
+    if (index < 0 || index >= this.data.pages.length) return;
+    if (index === this.data.currentPageIndex) return;
+
+    // Save current page transcription
+    this._saveCurrentPageTranscription();
+
+    // Load new page
+    this._loadPage(index);
+  }
+
+  /**
+   * Go to next page
+   */
+  nextPage() {
+    this.goToPage(this.data.currentPageIndex + 1);
+  }
+
+  /**
+   * Go to previous page
+   */
+  prevPage() {
+    this.goToPage(this.data.currentPageIndex - 1);
+  }
+
+  /**
+   * Get current page info
+   */
+  getCurrentPage() {
+    return this.data.pages[this.data.currentPageIndex] || null;
+  }
+
+  /**
+   * Get total page count
+   */
+  getPageCount() {
+    return this.data.pages.length;
+  }
+
+  /**
+   * Check if multi-page document
+   */
+  isMultiPage() {
+    return this.data.pages.length > 1;
+  }
+
+  /**
+   * Internal: Load a specific page
+   */
+  _loadPage(index) {
+    const page = this.data.pages[index];
+    if (!page) return;
+
+    this.data.currentPageIndex = index;
+
+    // Update document info
+    this.data.document = {
+      id: page.id,
+      filename: page.filename,
+      mimeType: page.mimeType || 'image/jpeg',
+      dataUrl: page.dataUrl,
+      width: page.width,
+      height: page.height
+    };
+
+    // Update legacy image
+    this.data.image.url = page.dataUrl;
+    this.data.image.width = page.width;
+    this.data.image.height = page.height;
+
+    // Load page transcription if exists
+    const savedTranscription = this.data.pageTranscriptions[page.id];
+    if (savedTranscription) {
+      this.data.transcription = {
+        ...this.data.transcription,
+        ...savedTranscription,
+        lines: this._segmentsToLines(savedTranscription.segments || [])
+      };
+      this.data.regions = savedTranscription.regions || [];
+    } else {
+      // Reset transcription for new page
+      this.data.transcription = {
+        id: null,
+        provider: '',
+        model: '',
+        raw: '',
+        segments: [],
+        columns: [],
+        lines: []
+      };
+      this.data.regions = [];
+    }
+
+    // Reset validation
+    this.data.validation = {
+      status: 'idle',
+      rules: [],
+      llmJudge: null,
+      perspective: this.data.validation.perspective
+    };
+
+    this._emit('pageChanged', {
+      index,
+      pageId: page.id,
+      filename: page.filename,
+      total: this.data.pages.length
+    });
+    this._emit('imageChanged', { url: page.dataUrl });
+  }
+
+  /**
+   * Internal: Save current page transcription
+   */
+  _saveCurrentPageTranscription() {
+    const page = this.data.pages[this.data.currentPageIndex];
+    if (!page) return;
+
+    if (this.data.transcription.segments?.length > 0) {
+      this.data.pageTranscriptions[page.id] = {
+        segments: this.data.transcription.segments,
+        columns: this.data.transcription.columns,
+        provider: this.data.transcription.provider,
+        model: this.data.transcription.model,
+        regions: this.data.regions
+      };
+    }
   }
 
   // ============================================

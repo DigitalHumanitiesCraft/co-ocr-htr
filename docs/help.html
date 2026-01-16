@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="coOCR/HTR Help - User guide for the historical document transcription workbench">
+    <title>Help - coOCR/HTR</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body>
+    <div class="page-container">
+
+        <!-- HEADER (shared structure) -->
+        <header class="page-header">
+            <a href="index.html" class="logo">
+                <img src="assets/logo-icon.png" alt="coOCR/HTR Logo" class="logo-image">
+                coOCR/HTR
+            </a>
+            <a href="index.html" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to App
+            </a>
+        </header>
+
+        <!-- CONTENT -->
+        <main class="page-content">
+            <h1 class="page-title">Help</h1>
+            <p class="page-subtitle">User guide for the coOCR/HTR Workbench</p>
+
+            <!-- Quick Start -->
+            <section class="page-section">
+                <h2 class="section-title">Quick Start</h2>
+                <ol class="steps-list">
+                    <li>
+                        <strong>Load a Document</strong>
+                        <p>Click "Upload" to select an image, or choose a demo from the dropdown. PAGE-XML files with existing transcriptions are also supported.</p>
+                    </li>
+                    <li>
+                        <strong>Configure API Key</strong>
+                        <p>Click the key icon to enter your API key for Gemini, OpenAI, Anthropic, DeepSeek, or configure a local Ollama server.</p>
+                    </li>
+                    <li>
+                        <strong>Transcribe</strong>
+                        <p>Click "Transcribe" to send the image to your selected LLM. The transcription appears in the middle panel.</p>
+                    </li>
+                    <li>
+                        <strong>Validate & Edit</strong>
+                        <p>Review validation results in the right panel. Double-click any cell to edit. Mark uncertain readings with [?].</p>
+                    </li>
+                    <li>
+                        <strong>Export</strong>
+                        <p>Click the export icon to download your transcription as plain text, JSON, or Markdown.</p>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- Keyboard Shortcuts -->
+            <section class="page-section">
+                <h2 class="section-title">Keyboard Shortcuts</h2>
+                <div class="shortcuts-grid">
+                    <div class="shortcut-item">
+                        <kbd>+</kbd> / <kbd>-</kbd>
+                        <span class="shortcut-desc">Zoom in / out</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>0</kbd>
+                        <span class="shortcut-desc">Reset zoom to 100%</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>F</kbd>
+                        <span class="shortcut-desc">Fit document to view</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>&#8593;</kbd> / <kbd>&#8595;</kbd>
+                        <span class="shortcut-desc">Navigate lines</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Enter</kbd>
+                        <span class="shortcut-desc">Start editing selected cell</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Esc</kbd>
+                        <span class="shortcut-desc">Cancel editing</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Tab</kbd>
+                        <span class="shortcut-desc">Next cell (in grid mode)</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>Z</kbd>
+                        <span class="shortcut-desc">Undo</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd>
+                        <span class="shortcut-desc">Redo</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Confidence Markers -->
+            <section class="page-section">
+                <h2 class="section-title">Confidence Markers</h2>
+                <p class="section-content">Use these markers in your transcriptions to indicate uncertainty:</p>
+                <div class="markers-list" style="margin-top: var(--space-3);">
+                    <div class="marker-item">
+                        <span class="marker-indicator uncertain">[?]</span>
+                        <span class="marker-desc">Uncertain reading - you can read something but aren't sure</span>
+                    </div>
+                    <div class="marker-item">
+                        <span class="marker-indicator illegible">[illegible]</span>
+                        <span class="marker-desc">Cannot be read - text is damaged, faded, or unclear</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Keys -->
+            <section class="page-section">
+                <h2 class="section-title">Getting API Keys</h2>
+                <div class="section-content">
+                    <div class="info-card">
+                        <h3 class="info-card-title">Google Gemini</h3>
+                        <div class="info-card-content">
+                            <p>Free tier available. Get your key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3 class="info-card-title">OpenAI</h3>
+                        <div class="info-card-content">
+                            <p>Paid API. Create an account and get your key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI Platform</a>.</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3 class="info-card-title">Anthropic</h3>
+                        <div class="info-card-content">
+                            <p>Paid API. Sign up at <a href="https://console.anthropic.com/" target="_blank" rel="noopener">Anthropic Console</a>.</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3 class="info-card-title">DeepSeek</h3>
+                        <div class="info-card-content">
+                            <p>Affordable API. Get your key at <a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek Platform</a>.</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3 class="info-card-title">Ollama (Local)</h3>
+                        <div class="info-card-content">
+                            <p>Free and private. Install <a href="https://ollama.ai/" target="_blank" rel="noopener">Ollama</a>, then run <code>ollama pull llava</code> for vision support.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ -->
+            <section class="page-section">
+                <h2 class="section-title">Troubleshooting</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                            Why is my transcription empty or wrong?
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Check if your API key is valid and has sufficient quota. Also ensure the image is clear and not too large (under 10MB recommended). Some historical handwriting may be challenging for LLMs - try a different provider.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                            How do I use PAGE-XML files?
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Upload an image first, then upload the corresponding PAGE-XML file. The transcription and bounding boxes will be imported automatically. This format is compatible with Transkribus exports.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                            Are my API keys stored securely?
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-answer">
+                            <p>API keys are stored in your browser's LocalStorage with basic obfuscation. This is sufficient for personal use but not recommended on shared or public computers. Your keys are never sent to our servers - all API calls go directly to the providers.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                            Can I use this offline?
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Partially. The interface works offline, but transcription requires an internet connection unless you use Ollama locally. Your work is auto-saved to the browser, so you won't lose progress.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER (shared structure) -->
+        <footer class="page-footer">
+            <p>coOCR/HTR Workbench &middot; <a href="about.html">About</a> &middot; <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr" target="_blank" rel="noopener">GitHub</a></p>
+        </footer>
+
+    </div>
+</body>
+
+</html>
