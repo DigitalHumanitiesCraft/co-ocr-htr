@@ -54,12 +54,12 @@ describe('LLMService', () => {
 
     it('should return default model when none set', () => {
       const model = service.getCurrentModel();
-      expect(model).toBe('gemini-2.0-flash');
+      expect(model).toBe('gemini-3.0-flash-preview');
     });
 
     it('should return custom model when set', () => {
-      service.setModel('gemini-1.5-pro');
-      expect(service.getCurrentModel()).toBe('gemini-1.5-pro');
+      service.setModel('gemini-3.0-pro-preview');
+      expect(service.getCurrentModel()).toBe('gemini-3.0-pro-preview');
     });
   });
 
