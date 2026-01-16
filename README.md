@@ -45,12 +45,20 @@ No build step required.
 ```
 docs/
 ├── index.html              # Main application
-├── css/
+├── css/                    # Modular CSS (8 files)
 │   ├── variables.css       # Design tokens
-│   └── styles.css          # Glass morphism UI
+│   ├── base.css            # Reset, typography
+│   ├── layout.css          # Grid, header
+│   ├── components.css      # Buttons, cards
+│   ├── viewer.css          # Document viewer
+│   ├── editor.css          # Transcription table
+│   ├── validation.css      # Validation panel
+│   └── dialogs.css         # Modal dialogs
 ├── js/
 │   ├── main.js             # Entry point
 │   ├── state.js            # Central state (EventTarget)
+│   ├── viewer.js           # Document viewer
+│   ├── editor.js           # Transcription editor
 │   ├── components/
 │   │   ├── dialogs.js      # Modal dialogs
 │   │   ├── upload.js       # File upload
@@ -67,13 +75,13 @@ docs/
 
 ## Supported Providers
 
-| Provider | Model | Vision Support |
-|----------|-------|----------------|
-| Gemini | gemini-2.0-flash | Yes |
-| OpenAI | gpt-4o-mini | Yes |
-| Anthropic | claude-3-5-haiku | Yes |
-| DeepSeek | deepseek-chat | No |
-| Ollama | llava, bakllava | Yes |
+| Provider | Models | Vision Support |
+|----------|--------|----------------|
+| Gemini | gemini-3.0-flash-preview, gemini-3.0-pro-preview | Yes |
+| OpenAI | gpt-4o-mini, gpt-4o, o1 | Yes |
+| Anthropic | claude-sonnet-4, claude-opus-4 | Yes |
+| DeepSeek | deepseek-chat, deepseek-reasoner | No |
+| Ollama | llava, llama3.2-vision | Yes |
 
 ## Documentation
 
