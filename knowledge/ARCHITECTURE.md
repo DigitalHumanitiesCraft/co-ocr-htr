@@ -50,7 +50,7 @@ Systemdesign für coOCR/HTR. Client-only, kein Backend.
 ### Aktuelle Implementierung (Prototyp v2)
 
 ```
-newer prototpye/
+prototype/
 ├── index.html              # Entry Point (322 LOC)
 ├── css/
 │   ├── variables.css       # Design System Tokens (52 LOC)
@@ -60,16 +60,21 @@ newer prototpye/
 │   ├── state.js            # Zentraler State mit EventTarget (61 LOC)
 │   ├── viewer.js           # Document Viewer Logik (67 LOC)
 │   ├── editor.js           # Transcription Editor (77 LOC)
-│   └── ui.js               # UI Interaktionen (40 LOC)
+│   ├── ui.js               # UI Interaktionen (40 LOC)
+│   ├── components/         # UI-Komponenten
+│   ├── services/           # Business Logic
+│   └── utils/              # Hilfsfunktionen
+├── tests/                  # Vitest Tests
 ├── assets/
 │   └── mock-document.jpg   # Test-Dokument
-└── docs/                   # Projektdokumentation
+├── package.json            # Vitest Dependency
+└── vitest.config.js        # Test-Konfiguration
 ```
 
 ### Zielstruktur (Vollständig)
 
 ```
-src/
+prototype/
 ├── index.html              # Entry Point
 ├── css/
 │   ├── variables.css       # Design System Tokens

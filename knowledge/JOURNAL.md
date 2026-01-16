@@ -338,13 +338,101 @@ TranskribusMetadata@status → confidence
 
 ### Commit
 
-Commit `???` - Data-Dokumentation hinzugefügt
+Commit `40a6d9c` - Data-Dokumentation hinzugefügt
 
 ### Offene Punkte
 
 - [ ] PAGE-XML Import-Service implementieren
 - [ ] Koordinaten-Konvertierung testen
 - [ ] Beispiel-Import mit Raitbuch 2
+
+---
+
+---
+
+## 2026-01-16 | Session 4: Vollständige Implementierung gestartet
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Phase 1: Anforderungsklärung
+
+**Auftrag:** Vollständigen Implementierungsplan erstellen mit Milestones.
+
+**Benutzerentscheidungen:**
+
+| Frage | Antwort |
+|-------|---------|
+| LLM-Provider | Gemini 2.5 Flash, GPT-4.5 Mini, Haiku 4.5, DeepSeek (lokal+API) |
+| API-Key Speicherung | LocalStorage (einfach) |
+| Datenformate | Bilder + PAGE-XML |
+| Export-Formate | .txt, .json, .md (PAGE-XML als Ausbaustufe) |
+| Validierung | Regelbasiert + LLM-Judge parallel |
+| Tests | Vitest für kritische Services |
+| Ordner-Umbenennung | `newer prototpye` → `prototype` |
+| Test-Framework | Vitest (Entscheidung Claude) |
+| DeepSeek | Beide Optionen (API + Ollama lokal) |
+| Deployment | GitHub Pages + lokale file:// Nutzung |
+
+### Phase 2: Milestone 0 - Vorbereitung
+
+**Tasks erledigt:**
+
+| Task | Status |
+|------|--------|
+| Ordner `newer prototpye` → `prototype` umbenennen | ✅ |
+| Projektstruktur erstellen (`js/services/`, `js/components/`, `tests/`) | ✅ |
+| `package.json` mit Vitest erstellen | ✅ |
+| `vitest.config.js` erstellen | ✅ |
+| IMPLEMENTATION-PLAN.md Pfade aktualisieren | ✅ |
+| ARCHITECTURE.md Pfade aktualisieren | ✅ |
+
+### Aktuelle Projektstruktur
+
+```
+coocr-htr/
+├── README.md
+├── CLAUDE.md
+├── knowledge/
+│   ├── INDEX.md
+│   ├── METHODOLOGY.md
+│   ├── DESIGN-SYSTEM.md
+│   ├── ARCHITECTURE.md
+│   ├── VALIDATION.md
+│   ├── DATA-SCHEMA.md
+│   ├── IMPLEMENTATION-PLAN.md
+│   └── JOURNAL.md
+├── src/
+│   └── index.html              # Prototyp v1 (Legacy)
+├── prototype/                  # Prototyp v2 (Aktiv) ← UMBENANNT
+│   ├── index.html
+│   ├── css/
+│   │   ├── variables.css
+│   │   └── styles.css
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── state.js
+│   │   ├── viewer.js
+│   │   ├── editor.js
+│   │   ├── ui.js
+│   │   ├── components/         ← NEU
+│   │   ├── services/           ← NEU
+│   │   │   └── parsers/        ← NEU
+│   │   └── utils/              ← NEU
+│   ├── tests/                  ← NEU
+│   ├── assets/
+│   │   └── mock-document.jpg
+│   ├── package.json            ← NEU
+│   └── vitest.config.js        ← NEU
+└── data/
+```
+
+### Nächste Schritte
+
+- [ ] Milestone 0 abschließen (Git Commit)
+- [ ] Milestone 1: Core Services implementieren
+  - Storage Service
+  - State-Erweiterung
+  - LLM Service mit allen Providern
 
 ---
 

@@ -1,0 +1,25 @@
+{
+  "name": "coocr-htr",
+  "version": "0.1.0",
+  "description": "Browser-based OCR/HTR workbench with expert-in-the-loop validation",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "serve": "npx serve ."
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "ocr",
+    "htr",
+    "handwriting",
+    "transcription",
+    "historical-documents",
+    "digital-humanities"
+  ],
+  "author": "",
+  "license": "MIT"
+}
