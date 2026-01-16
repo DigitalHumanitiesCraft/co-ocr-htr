@@ -348,6 +348,29 @@ button {
     /* Use Sans for UI readability */
     font-size: var(--text-sm);
     color: var(--text-primary);
+    cursor: default;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s, outline 0.15s;
+}
+
+.editor-cell[data-line] {
+    cursor: text;
+}
+
+.editor-cell[data-line]:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.editor-cell.editing {
+    background: rgba(var(--accent-rgb), 0.1);
+    outline: 1px solid var(--accent-primary);
+    white-space: normal;
+    overflow: visible;
+    min-width: 100px;
+}
+
+.editor-cell.editing:focus {
+    outline: 2px solid var(--accent-primary);
 }
 
 .editor-cell.header {
@@ -356,6 +379,11 @@ button {
     font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    cursor: default;
+}
+
+.editor-cell.header:hover {
+    background: transparent;
 }
 
 .line-num {
