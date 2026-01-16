@@ -3,7 +3,7 @@
 Roadmap vom aktuellen Prototyp v2 zur vollständigen Anwendung.
 
 **Stand:** 2026-01-16
-**Basis:** `newer prototpye/` (Modularer Prototyp)
+**Basis:** `prototype/` (Modularer Prototyp)
 
 ## Aktueller Status
 
