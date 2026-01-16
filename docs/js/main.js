@@ -11,6 +11,7 @@ import { initUI } from './ui.js';
 import { dialogManager } from './components/dialogs.js';
 import { uploadManager } from './components/upload.js';
 import { transcriptionManager } from './components/transcription.js';
+import { validationPanel } from './components/validation.js';
 
 // Services
 import { storage } from './services/storage.js';
