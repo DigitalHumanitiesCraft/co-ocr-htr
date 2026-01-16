@@ -7,7 +7,9 @@ Browser-based experimentation environment for integrating domain experts into OC
 - **Multi-provider LLM Integration**: Gemini, OpenAI, Anthropic, DeepSeek, Ollama (local)
 - **Hybrid Validation**: Deterministic rules + LLM-as-judge with multiple perspectives
 - **Expert-in-the-Loop**: Critical expert validation workflow
+- **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
 - **PAGE-XML Import**: Compatible with Transkribus exports
+- **Guided Workflow**: Step-by-step hints and progress tracking
 - **Export Formats**: Plain text, JSON, Markdown
 - **No Dependencies**: Vanilla JavaScript, runs in any modern browser
 
@@ -102,6 +104,7 @@ npm test
 - [x] Milestone 6: UX (Inline-edit, Undo/Redo, Shortcuts)
 - [x] Milestone 6.5: Bugfixes & Demo-Loader
 - [x] Milestone 7: GitHub Pages Deployment
+- [x] Milestone 8: Flexible Editor & Guided Workflow
 
 ## License
 
