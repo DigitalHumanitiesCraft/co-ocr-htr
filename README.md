@@ -13,17 +13,28 @@ Browser-based experimentation environment for integrating domain experts into OC
 
 ## Quick Start
 
-### GitHub Pages
-Visit the [live demo](https://your-username.github.io/co-ocr-htr/) (requires API key configuration)
+### Live Demo
 
-### Local Usage
-1. Clone the repository
-2. Open `docs/index.html` in a browser
-3. Click the key icon to configure your API key
-4. Upload a document image or PAGE-XML file
-5. Click "Transcribe" to run LLM transcription
-6. Review validation results in the right panel
-7. Export your results
+**[Try coOCR/HTR](https://digitalhumanitiecraft.github.io/co-ocr-htr/)**
+
+1. Click "Load Demo" to try with sample data
+2. Or click the key icon to configure your own API key
+3. Upload a document image or PAGE-XML file
+4. Click "Transcribe" to run LLM transcription
+5. Review validation results in the right panel
+6. Export your results
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/DigitalHumanitiesCraft/co-ocr-htr.git
+
+# Serve locally (any static server works)
+npx serve docs -l 3000
+
+# Open http://localhost:3000
+```
 
 No build step required.
 
@@ -87,9 +98,10 @@ npm test
 - [x] Milestone 2: Dialogs & Upload
 - [x] Milestone 3: LLM Transcription
 - [x] Milestone 4: Validation (Rules + LLM-Judge)
-- [ ] Milestone 5: Export
-- [ ] Milestone 6: UX (Inline-edit, Undo/Redo)
-- [ ] Milestone 7: Polish & Release
+- [x] Milestone 5: Export (TXT, JSON, Markdown)
+- [x] Milestone 6: UX (Inline-edit, Undo/Redo, Shortcuts)
+- [x] Milestone 6.5: Bugfixes & Demo-Loader
+- [x] Milestone 7: GitHub Pages Deployment
 
 ## License
 
