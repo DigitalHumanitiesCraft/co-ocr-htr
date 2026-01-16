@@ -1,6 +1,13 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, navigation, moc]
+status: complete
+---
+
 # coOCR/HTR Knowledge Base
 
-Zentraler Wissensordner für das coOCR/HTR-Projekt. Jedes Dokument hat einen definierten Scope und verweist auf verwandte Dokumente.
+Zentraler Wissensordner fuer das coOCR/HTR-Projekt. Jedes Dokument hat einen definierten Scope und verweist auf verwandte Dokumente.
 
 ## Dokumentenstruktur
 

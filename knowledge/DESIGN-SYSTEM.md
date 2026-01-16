@@ -1,6 +1,13 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, design-system, css]
+status: complete
+---
+
 # Design System
 
-UI/UX-Spezifikation für coOCR/HTR. Alle Werte sind verbindlich.
+UI/UX-Spezifikation fuer coOCR/HTR. Alle Werte sind verbindlich.
 
 **Abhängigkeit:** [METHODOLOGY](METHODOLOGY.md) (Begründung für Farbcodierung, Kategorien)
 

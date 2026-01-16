@@ -1,3 +1,10 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, journal, development-log]
+status: complete
+---
+
 # Entwicklungsjournal
 
 Chronologische Dokumentation der Projektentwicklung.
