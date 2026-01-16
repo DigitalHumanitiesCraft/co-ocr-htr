@@ -673,4 +673,107 @@ docs/
 
 ---
 
+## 2026-01-16 | Session 6: Milestone 7 - Demo-Loader und Polish
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Problemstellung
+
+**Auftrag:** Placeholder-Bild durch echte Demo-Funktionalitaet ersetzen. Daten aus `data/` Ordner sollen ladbar sein.
+
+**Herausforderung:**
+- `data/` liegt ausserhalb `docs/` und ist daher nicht per Browser erreichbar
+- GitHub Pages serviert nur aus `docs/`
+
+### Loesung: Demo-Loader System
+
+**Architekturentscheidung:** Ausgewaehlte Beispieldaten nach `docs/samples/` kopieren.
+
+| Aktion | Ergebnis |
+|--------|----------|
+| `docs/samples/` erstellt | Ordnerstruktur fuer Demos |
+| `docs/samples/index.json` | Manifest mit Metadaten |
+| `docs/js/services/samples.js` | Sample-Loader Service |
+| Beispieldaten kopiert | raitbuch, letter, karteikarte |
+
+### Samples Manifest
+
+```json
+{
+  "samples": [
+    {
+      "id": "raitbuch-0v1r",
+      "name": "Raitbuch 2, fol. 0v-1r",
+      "description": "Oberoesterreichisches Kirchenamt-Rechnungsbuch",
+      "image": "raitbuch/fol-0v-1r.jpg",
+      "pageXml": "raitbuch/fol-0v-1r.xml"
+    },
+    ...
+  ]
+}
+```
+
+### UI-Erweiterungen
+
+**Tasks erledigt:**
+
+| Task | Status | Datei |
+|------|--------|-------|
+| Samples Dropdown im Header | Fertig | `index.html` |
+| Viewer Empty State | Fertig | `index.html` |
+| Empty State Buttons | Fertig | `main.js` |
+| Samples Menu CSS | Fertig | `styles.css` |
+| Empty State CSS | Fertig | `styles.css` |
+| viewer.js documentLoaded Handler | Fertig | `viewer.js` |
+
+**CSS-Refactoring:**
+
+| Problem | Loesung |
+|---------|---------|
+| Fehlende `--accent-rgb` Variable | Hinzugefuegt in `variables.css` |
+| Alte onclick-Handler | Entfernt, IDs hinzugefuegt |
+
+### Neue UI-Elemente
+
+**Empty State (Viewer):**
+- Icon, Titel, Beschreibung
+- "Load Demo" Button (oeffnet Samples Menu)
+- "Upload Image" Button (triggert Upload)
+
+**Samples Dropdown:**
+- Button im Header "Demo"
+- Dropdown mit allen verfuegbaren Samples
+- Click laedt Sample via samplesService
+
+### Projektstruktur Update
+
+```
+docs/
+├── samples/                    # NEU
+│   ├── index.json
+│   ├── raitbuch/
+│   │   ├── fol-0v-1r.jpg
+│   │   └── fol-0v-1r.xml
+│   ├── letter/
+│   │   └── image.jpg
+│   └── karteikarte/
+│       └── image.jpg
+├── js/
+│   ├── services/
+│   │   └── samples.js          # NEU
+│   ├── viewer.js               # Erweitert
+│   └── main.js                 # Erweitert
+└── css/
+    ├── variables.css           # --accent-rgb hinzugefuegt
+    └── styles.css              # Samples Menu + Empty State CSS
+```
+
+### Naechste Schritte
+
+- [ ] Browser-Test der Demo-Funktionalitaet
+- [ ] GitHub Pages aktivieren
+- [ ] README mit Deploy-Anleitung
+
+---
+
 *Format: YYYY-MM-DD | Session N: Titel*

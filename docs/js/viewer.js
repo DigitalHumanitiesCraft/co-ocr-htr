@@ -1,6 +1,5 @@
 /**
- * vibing/js/viewer.js
- * Document Viewer Logic
+ * coOCR/HTR - Document Viewer Logic
  */
 import { appState } from './state.js';
 
@@ -8,11 +7,35 @@ export function initViewer() {
     const img = document.getElementById('docImage');
     const svg = document.getElementById('regionsOverlay');
     const zoomLabel = document.getElementById('zoomLabel');
+    const imageWrapper = document.getElementById('imageWrapper');
+    const emptyState = document.getElementById('viewerEmptyState');
+    const headerDocInfo = document.getElementById('headerDocInfo');
+    const headerFilename = document.getElementById('headerFilename');
 
     if (!img || !svg) {
         console.error("Viewer elements not found");
         return;
     }
+
+    // Helper: Show document view, hide empty state
+    function showDocument(filename) {
+        if (emptyState) emptyState.classList.add('hidden');
+        if (imageWrapper) imageWrapper.style.display = 'block';
+        if (headerDocInfo) headerDocInfo.style.display = 'flex';
+        if (headerFilename && filename) headerFilename.textContent = filename;
+    }
+
+    // Helper: Show empty state, hide document view
+    function showEmptyState() {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (imageWrapper) imageWrapper.style.display = 'none';
+        if (headerDocInfo) headerDocInfo.style.display = 'none';
+    }
+
+    // React to document load
+    appState.addEventListener('documentLoaded', (e) => {
+        showDocument(e.detail.filename);
+    });
 
     // React to state changes
     appState.addEventListener('imageChanged', (e) => {

@@ -18,6 +18,7 @@ import { storage } from './services/storage.js';
 import { llmService } from './services/llm.js';
 import { exportService } from './services/export.js';
 import { pageXMLParser } from './services/parsers/page-xml.js';
+import { samplesService } from './services/samples.js';
 import { appState } from './state.js';
 
 /**
@@ -91,7 +92,92 @@ async function initApp() {
         }
     });
 
+    // Initialize samples menu
+    await initSamplesMenu();
+
+    // Connect empty state buttons
+    initEmptyStateButtons();
+
     console.log('coOCR/HTR: Initialized');
+}
+
+/**
+ * Connect empty state buttons to actions
+ */
+function initEmptyStateButtons() {
+    const btnLoadDemo = document.getElementById('btnLoadDemo');
+    const btnUploadEmpty = document.getElementById('btnUploadEmpty');
+    const samplesBtn = document.getElementById('btnSamples');
+    const btnUpload = document.getElementById('btnUpload');
+
+    // "Load Demo" button opens the samples menu
+    if (btnLoadDemo && samplesBtn) {
+        btnLoadDemo.addEventListener('click', () => {
+            samplesBtn.click();
+        });
+    }
+
+    // "Upload Image" button triggers upload dialog
+    if (btnUploadEmpty && btnUpload) {
+        btnUploadEmpty.addEventListener('click', () => {
+            btnUpload.click();
+        });
+    }
+}
+
+/**
+ * Initialize samples dropdown menu
+ */
+async function initSamplesMenu() {
+    const samplesBtn = document.getElementById('btnSamples');
+    const samplesMenu = document.getElementById('samplesMenu');
+
+    if (!samplesBtn || !samplesMenu) return;
+
+    // Load samples manifest
+    const samples = await samplesService.getSamples();
+
+    if (samples.length === 0) {
+        samplesBtn.style.display = 'none';
+        return;
+    }
+
+    // Populate menu
+    samplesMenu.innerHTML = samples.map(sample => `
+        <button class="samples-menu-item" data-sample-id="${sample.id}">
+            <span class="sample-name">${sample.name}</span>
+            <span class="sample-desc">${sample.description}</span>
+        </button>
+    `).join('');
+
+    // Toggle menu
+    samplesBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        samplesMenu.classList.toggle('visible');
+    });
+
+    // Close menu on outside click
+    document.addEventListener('click', () => {
+        samplesMenu.classList.remove('visible');
+    });
+
+    // Handle sample selection
+    samplesMenu.addEventListener('click', async (e) => {
+        const item = e.target.closest('.samples-menu-item');
+        if (!item) return;
+
+        const sampleId = item.dataset.sampleId;
+        samplesMenu.classList.remove('visible');
+
+        try {
+            dialogManager.showToast('Loading sample...', 'info');
+            const sample = await samplesService.loadSample(sampleId);
+            dialogManager.showToast(`Loaded: ${sample.name}`, 'success');
+        } catch (error) {
+            console.error('Failed to load sample:', error);
+            dialogManager.showToast(`Failed to load sample: ${error.message}`, 'error');
+        }
+    });
 }
 
 // Start application when DOM is ready
