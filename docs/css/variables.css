@@ -1,36 +1,50 @@
 :root {
-  /* Color Palette - Dark Mode */
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --bg-tertiary-hover: #30363d;  /* Lighten tertiary for hover */
-  --bg-rgb: 13, 17, 23;          /* RGB values for bg-primary (for rgba usage) */
-  --bg-viewer: #050505;          /* Near-black for document viewer */
+  /* Color Palette - Warm Light Theme (Editorial Design v2.1)
+     Inspired by archival/manuscript aesthetic with warm tones */
 
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
+  /* Backgrounds - Warm cream/beige tones */
+  --bg-primary: #faf8f5;          /* Warm off-white */
+  --bg-secondary: #ffffff;         /* Pure white for panels */
+  --bg-tertiary: #f5f2ed;          /* Warm light gray */
+  --bg-tertiary-hover: #ebe7e0;
+  --bg-rgb: 250, 248, 245;
+  --bg-viewer: #f0ebe3;            /* Warm paper-like background for viewer */
 
-  --accent-primary: #58a6ff;
-  --accent-rgb: 88, 166, 255;  /* RGB values for accent-primary (for rgba usage) */
-  --accent-secondary: #1f6feb; /* Darker blue for interactions */
+  /* Text - Warm browns instead of cold blacks */
+  --text-primary: #3d3229;         /* Dark warm brown */
+  --text-secondary: #8a7e72;       /* Medium warm gray-brown */
 
-  /* Status Colors - Muted Palette (v2.1)
-     Rationale: Muted colors signal status without alarming */
-  --confident: #2d8659;
-  --confident-rgb: 45, 134, 89;
-  --uncertain: #b8860b;
-  --uncertain-rgb: 184, 134, 11;
-  --problematic: #a84432;
-  --problematic-rgb: 168, 68, 50;
+  /* Brand - Logo colors (identity, distinct from functional colors) */
+  --brand-gold: #b89850;           /* Logo gold - warm ochre */
+  --brand-gold-rgb: 184, 152, 80;
+  --brand-brown: #3d3229;          /* Logo brown - matches text-primary */
+
+  /* Accent - Warm blue (slightly desaturated, for interactive elements) */
+  --accent-primary: #4a7c9b;       /* Muted steel blue */
+  --accent-rgb: 74, 124, 155;
+  --accent-secondary: #3a6a87;
+
+  /* Region colors - Warmer sienna/brown for default boxes */
+  --region-stroke: #8b7355;        /* Warm sienna brown */
+  --region-stroke-hover: #6d5a45;  /* Darker sienna */
+  --region-fill-hover: rgba(139, 115, 85, 0.1);
+
+  /* Status Colors - Muted, archival palette */
+  --confident: #5a8a5a;            /* Muted forest green */
+  --confident-rgb: 90, 138, 90;
+  --uncertain: #c4973a;            /* Warm amber/gold */
+  --uncertain-rgb: 196, 151, 58;
+  --problematic: #b85c4a;          /* Muted terracotta red */
+  --problematic-rgb: 184, 92, 74;
 
   /* Legacy aliases for compatibility */
   --success: var(--confident);
-  --success-rgb: 45, 134, 89;
+  --success-rgb: 90, 138, 90;
   --warning: var(--uncertain);
-  --warning-rgb: 184, 134, 11;
+  --warning-rgb: 196, 151, 58;
   --error: var(--problematic);
-  --error-rgb: 168, 68, 50;
-  --selection: #ffc107;
+  --error-rgb: 184, 92, 74;
+  --selection: #e8c547;            /* Golden yellow for selection */
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
@@ -60,16 +74,52 @@
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-medium: 300ms ease;
-  
+
   /* Layers / Z-Index */
   --z-overlay: 100;
   --z-modal: 200;
   --z-tooltip: 250;
   --z-toast: 300;
 
-  /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.03);
-  --border-muted: rgba(255, 255, 255, 0.05);
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-emphasis: rgba(255, 255, 255, 0.1);
+  /* Borders - Warm, subtle */
+  --border-subtle: rgba(61, 50, 41, 0.04);
+  --border-muted: rgba(61, 50, 41, 0.08);
+  --border-default: rgba(61, 50, 41, 0.12);
+  --border-emphasis: rgba(61, 50, 41, 0.2);
+
+  /* Surface overlays (for hover, backgrounds) */
+  --surface-hover: rgba(61, 50, 41, 0.03);
+  --surface-active: rgba(61, 50, 41, 0.06);
+  --surface-selected: rgba(61, 50, 41, 0.09);
+
+  /* Accent overlays */
+  --accent-hover: rgba(74, 124, 155, 0.08);
+  --accent-active: rgba(74, 124, 155, 0.12);
+  --accent-muted: rgba(74, 124, 155, 0.04);
+
+  /* Brand overlays */
+  --brand-bg: rgba(184, 152, 80, 0.08);
+  --brand-border: rgba(184, 152, 80, 0.25);
+  --brand-glow: 0 0 12px rgba(184, 152, 80, 0.2);
+
+  /* Status overlays */
+  --confident-bg: rgba(90, 138, 90, 0.1);
+  --confident-border: rgba(90, 138, 90, 0.3);
+  --confident-glow: 0 0 8px rgba(90, 138, 90, 0.15);
+  --uncertain-bg: rgba(196, 151, 58, 0.1);
+  --uncertain-border: rgba(196, 151, 58, 0.3);
+  --uncertain-glow: 0 0 8px rgba(196, 151, 58, 0.15);
+  --problematic-bg: rgba(184, 92, 74, 0.1);
+  --problematic-border: rgba(184, 92, 74, 0.3);
+  --problematic-glow: 0 0 8px rgba(184, 92, 74, 0.15);
+
+  /* Shadows - Very soft, warm */
+  --shadow-sm: 0 1px 3px rgba(61, 50, 41, 0.06);
+  --shadow-md: 0 4px 12px rgba(61, 50, 41, 0.08);
+  --shadow-lg: 0 8px 24px rgba(61, 50, 41, 0.1);
+  --shadow-xl: 0 16px 48px rgba(61, 50, 41, 0.12);
+
+  /* Glass effect - Warm tint */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(61, 50, 41, 0.08);
 }

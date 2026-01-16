@@ -35,6 +35,9 @@ export function initViewer() {
     // React to document load
     appState.addEventListener('documentLoaded', (e) => {
         showDocument(e.detail.filename);
+        // Re-render regions (will be empty after setDocument clears them)
+        const currentState = appState.getState();
+        renderRegions(currentState.regions);
     });
 
     // React to state changes
@@ -56,6 +59,18 @@ export function initViewer() {
     // Render initial regions
     const state = appState.getState();
     renderRegions(state.regions);
+
+    // Listen for regions changes (e.g., from PAGE-XML import)
+    appState.addEventListener('regionsChanged', () => {
+        const currentState = appState.getState();
+        renderRegions(currentState.regions);
+    });
+
+    // Also re-render regions when transcription completes (regions may come from segments)
+    appState.addEventListener('transcriptionComplete', () => {
+        const currentState = appState.getState();
+        renderRegions(currentState.regions);
+    });
 
     // Zoom Controls - use appState.zoom getter for current value
     document.getElementById('zoomIn')?.addEventListener('click', () => {

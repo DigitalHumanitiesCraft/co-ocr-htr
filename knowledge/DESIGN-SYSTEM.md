@@ -45,37 +45,52 @@ The aesthetic combines scholarly rigor with modern tool design:
 
 ## 2. Color System
 
-### Dark Theme (Default)
+### Warm Light Theme (Editorial Design)
 
-Optimized for long work sessions and document focus. The dark background makes document images "pop."
+Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds evoke historical paper while remaining easy on the eyes for extended work sessions.
 
-| Token | Value | RGB | Usage |
-|-------|-------|-----|-------|
-| `--bg-primary` | `#0d1117` | 13, 17, 23 | Page background |
-| `--bg-secondary` | `#161b22` | 22, 27, 34 | Panel backgrounds |
-| `--bg-tertiary` | `#21262d` | 33, 38, 45 | Hover states, inputs |
-| `--bg-viewer` | `#050505` | 5, 5, 5 | Document viewer (near-black) |
-| `--text-primary` | `#e6edf3` | 230, 237, 243 | Body text |
-| `--text-secondary` | `#8b949e` | 139, 148, 158 | Labels, hints |
-| `--text-muted` | `#6e7681` | 110, 118, 129 | Line numbers, timestamps |
-
-### Accent Colors
+#### Background Colors
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--accent-primary` | `#58a6ff` | Primary actions, links, active states |
-| `--accent-secondary` | `#1f6feb` | Hover on primary actions |
-| `--selection` | `#ffc107` | Selected region highlight (warm amber) |
+| `--bg-primary` | `#faf8f5` | Page background (warm off-white) |
+| `--bg-secondary` | `#ffffff` | Panel backgrounds (pure white) |
+| `--bg-tertiary` | `#f5f2ed` | Hover states, inputs |
+| `--bg-viewer` | `#f0ebe3` | Document viewer (warm paper-like) |
 
-### Status Colors (Muted Palette)
+#### Text Colors
 
-**Rationale:** Muted colors signal status without alarming. Saturated colors are reserved for critical errors only.
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--text-primary` | `#3d3229` | Body text (dark warm brown) |
+| `--text-secondary` | `#8a7e72` | Labels, hints (medium gray-brown) |
 
-| Token | Value | Category | Usage |
-|-------|-------|----------|-------|
-| `--confident` | `#2d8659` | Certain | Validation passed, high confidence |
-| `--uncertain` | `#b8860b` | Review needed | Expert should check |
-| `--problematic` | `#a84432` | Likely error | Requires correction |
+#### Brand Colors (Logo/Identity)
+
+| Token | Value | Function |
+|-------|-------|----------|
+| `--brand-gold` | `#b89850` | Logo gold - warm ochre, identity |
+| `--brand-brown` | `#3d3229` | Logo brown - matches text-primary |
+
+**Usage:** Brand colors are for identity elements (logo, about section) and should NOT be used for functional UI states.
+
+#### Accent Colors (Interactive)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--accent-primary` | `#4a7c9b` | Primary actions, links, active states (muted steel blue) |
+| `--accent-secondary` | `#3a6a87` | Hover on primary actions |
+| `--selection` | `#e8c547` | Selected region highlight (golden yellow) |
+
+#### Status Colors (Confidence Feedback)
+
+**Rationale:** Muted, archival palette signals status without alarming. Each color has a distinct semantic meaning.
+
+| Token | Value | Meaning | Usage |
+|-------|-------|---------|-------|
+| `--confident` | `#5a8a5a` | Certain | Validation passed, high confidence (muted forest green) |
+| `--uncertain` | `#c4973a` | Review needed | Expert should check (warm amber) |
+| `--problematic` | `#b85c4a` | Likely error | Requires correction (muted terracotta) |
 
 **Legacy aliases (for compatibility):**
 ```css
@@ -84,14 +99,31 @@ Optimized for long work sessions and document focus. The dark background makes d
 --error: var(--problematic);
 ```
 
+#### Region Colors (Bounding Boxes)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--region-stroke` | `#8b7355` | Default region outline (warm sienna) |
+| `--region-stroke-hover` | `#6d5a45` | Hover state (darker sienna) |
+
+### Color Function Matrix
+
+| Category | Purpose | Example Colors |
+|----------|---------|----------------|
+| **Brand** | Identity, logo | Gold, Brown |
+| **Accent** | Interactive elements | Steel Blue |
+| **Status** | Confidence feedback | Green, Amber, Terracotta |
+| **Neutral** | Backgrounds, text | Cream, White, Brown |
+| **Region** | Document annotations | Sienna |
+
 ### Borders
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--border-subtle` | `rgba(255,255,255,0.03)` | Subtle dividers |
-| `--border-muted` | `rgba(255,255,255,0.05)` | Panel sections |
-| `--border-default` | `rgba(255,255,255,0.08)` | Panel borders |
-| `--border-emphasis` | `rgba(255,255,255,0.10)` | Active elements |
+| `--border-subtle` | `rgba(61, 50, 41, 0.04)` | Subtle dividers |
+| `--border-muted` | `rgba(61, 50, 41, 0.08)` | Panel sections |
+| `--border-default` | `rgba(61, 50, 41, 0.12)` | Panel borders |
+| `--border-emphasis` | `rgba(61, 50, 41, 0.2)` | Active elements |
 
 ---
 

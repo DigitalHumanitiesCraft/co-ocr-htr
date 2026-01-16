@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(tree:*)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(ls:*)",
+      "Bash(npx serve:*)",
+      "Bash(timeout:*)",
+      "Bash(git push:*)",
+      "Bash(grep:*)"
     ]
   }
 }

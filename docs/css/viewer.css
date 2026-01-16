@@ -1,0 +1,256 @@
+/**
+ * viewer.css - Document Viewer Styles
+ * coOCR/HTR Design System v2.1
+ */
+
+/* ==========================================================================
+   IMAGE CONTAINER
+   ========================================================================== */
+
+.image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-viewer);
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.image-container:active {
+  cursor: grabbing;
+}
+
+/* Image Wrapper (positions SVG overlay) */
+#imageWrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+#docImage {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  transition: transform 0.1s ease-out;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   REGIONS OVERLAY (SVG)
+   ========================================================================== */
+
+#regionsOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.region-box {
+  fill: transparent;
+  stroke: var(--region-stroke);
+  stroke-width: 1.5px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.region-box:hover {
+  fill: var(--region-fill-hover);
+  stroke: var(--region-stroke-hover);
+  stroke-width: 2px;
+  opacity: 1;
+}
+
+.region-box.selected {
+  stroke: var(--selection);
+  stroke-width: 2px;
+  fill: rgba(255, 193, 7, 0.1);
+  opacity: 1;
+}
+
+/* Confidence-based region colors */
+.region-box.confident {
+  stroke: var(--confident);
+}
+
+.region-box.confident:hover,
+.region-box.confident.selected {
+  fill: var(--confident-bg);
+}
+
+.region-box.uncertain {
+  stroke: var(--uncertain);
+}
+
+.region-box.uncertain:hover,
+.region-box.uncertain.selected {
+  fill: var(--uncertain-bg);
+}
+
+.region-box.problematic {
+  stroke: var(--problematic);
+}
+
+.region-box.problematic:hover,
+.region-box.problematic.selected {
+  fill: var(--problematic-bg);
+}
+
+/* ==========================================================================
+   VIEWER TOOLBAR
+   ========================================================================== */
+
+.viewer-toolbar {
+  position: absolute;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-default);
+  padding: var(--space-2);
+  border-radius: var(--space-6);
+  display: flex;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+}
+
+.viewer-toolbar .icon-btn {
+  color: var(--text-primary);
+  background: transparent;
+  border-radius: var(--radius-sm);
+}
+
+.viewer-toolbar .icon-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--accent-primary);
+}
+
+.viewer-toolbar .icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Zoom Label */
+#zoomLabel {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Toolbar Divider */
+.viewer-toolbar .divider-vertical {
+  margin: 0 var(--space-1);
+}
+
+/* ==========================================================================
+   VIEWER EMPTY STATE
+   ========================================================================== */
+
+.viewer-empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-6);
+  background: var(--bg-primary);
+}
+
+.viewer-empty-state.hidden {
+  display: none;
+}
+
+.viewer-empty-state .empty-state-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.viewer-empty-state .empty-state-title {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.viewer-empty-state .empty-state-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  max-width: 280px;
+  margin-bottom: var(--space-4);
+}
+
+.viewer-empty-state .empty-state-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ==========================================================================
+   PAGE NAVIGATION (Future: Multi-page support)
+   ========================================================================== */
+
+.page-navigation {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.page-navigation .page-info {
+  min-width: 60px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   LOADING STATE
+   ========================================================================== */
+
+.viewer-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--bg-rgb), 0.9);
+  z-index: 20;
+}
+
+.viewer-loading .spinner {
+  width: 32px;
+  height: 32px;
+  margin-bottom: var(--space-3);
+}
+
+.viewer-loading-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}

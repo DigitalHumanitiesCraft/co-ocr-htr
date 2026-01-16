@@ -1,0 +1,298 @@
+/**
+ * validation.css - Validation Panel Styles
+ * coOCR/HTR Design System v2.1
+ */
+
+/* ==========================================================================
+   VALIDATION SECTIONS
+   ========================================================================== */
+
+.validation-section {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.validation-section:last-child {
+  border-bottom: none;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+  font-weight: 600;
+}
+
+.section-title svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ==========================================================================
+   VALIDATION CARDS
+   ========================================================================== */
+
+.validation-card {
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  transition: all var(--transition-fast);
+}
+
+.validation-card:last-child {
+  margin-bottom: 0;
+}
+
+.validation-card:hover {
+  background: var(--surface-active);
+}
+
+.validation-card[data-line] {
+  cursor: pointer;
+}
+
+.validation-card[data-line]:hover {
+  border-color: var(--accent-primary);
+}
+
+/* Card with status border */
+.validation-card.confident {
+  border-left: 3px solid var(--confident);
+}
+
+.validation-card.uncertain {
+  border-left: 3px solid var(--uncertain);
+}
+
+.validation-card.problematic {
+  border-left: 3px solid var(--problematic);
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.card-title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* Card Content */
+.card-lines {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+  margin-left: calc(8px + var(--space-2));
+}
+
+.card-lines a,
+.card-lines .line-ref {
+  color: var(--accent-primary);
+  cursor: pointer;
+}
+
+.card-lines .line-ref:hover {
+  text-decoration: underline;
+}
+
+/* Card Details (Expandable) */
+.card-details {
+  margin-top: var(--space-2);
+  margin-left: calc(8px + var(--space-2));
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  line-height: 1.6;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease, padding 0.2s ease;
+}
+
+.card-details.expanded {
+  max-height: 200px;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  overflow-y: auto;
+}
+
+.details-toggle {
+  color: var(--accent-primary);
+  cursor: pointer;
+  margin-left: calc(8px + var(--space-2));
+  font-size: var(--text-xs);
+  margin-top: var(--space-1);
+  display: inline-block;
+}
+
+.details-toggle:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   VALIDATION EMPTY STATE
+   ========================================================================== */
+
+.validation-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.validation-empty-state.hidden {
+  display: none;
+}
+
+.validation-empty-state .empty-state-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+  opacity: 0.5;
+}
+
+.validation-empty-state h4 {
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.validation-empty-state p {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  max-width: 200px;
+}
+
+/* ==========================================================================
+   VALIDATION LOADING
+   ========================================================================== */
+
+.validation-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  color: var(--text-secondary);
+  gap: var(--space-3);
+}
+
+.validation-loading .spinner {
+  width: 24px;
+  height: 24px;
+}
+
+/* ==========================================================================
+   AI ANALYSIS SECTION
+   ========================================================================== */
+
+.ai-analysis-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.ai-analysis-badge {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  background: var(--surface-active);
+  border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   PERSPECTIVE DROPDOWN
+   ========================================================================== */
+
+.perspective-dropdown {
+  position: relative;
+}
+
+.perspective-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-1);
+  min-width: 200px;
+  z-index: var(--z-overlay);
+  box-shadow: var(--shadow-lg);
+}
+
+.perspective-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.perspective-item:hover {
+  background: var(--surface-hover);
+}
+
+.perspective-item.active {
+  background: var(--accent-hover);
+}
+
+.perspective-item .item-name {
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+.perspective-item .item-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   VALIDATION SUMMARY (Badge counts from Mockup)
+   ========================================================================== */
+
+.validation-summary {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-hover);
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.validation-summary-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+}
+
+.validation-summary-item .count {
+  font-weight: 600;
+}
+
+.validation-summary-item.to-review {
+  color: var(--uncertain);
+}
+
+.validation-summary-item.passed {
+  color: var(--confident);
+}

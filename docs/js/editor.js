@@ -43,6 +43,16 @@ export function initEditor() {
         pushHistory();
     });
 
+    // React to document load (reset editor when new document is loaded)
+    appState.addEventListener('documentLoaded', () => {
+        const state = appState.getState();
+        renderEditor(state.transcription);
+        // Clear history for new document
+        history.stack = [];
+        history.index = -1;
+        updateUndoRedoButtons();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown);
 
