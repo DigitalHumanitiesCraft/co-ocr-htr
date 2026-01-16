@@ -770,9 +770,95 @@ docs/
 
 ### Naechste Schritte
 
-- [ ] Browser-Test der Demo-Funktionalitaet
+- [x] Browser-Test der Demo-Funktionalitaet
 - [ ] GitHub Pages aktivieren
 - [ ] README mit Deploy-Anleitung
+
+---
+
+## 2026-01-16 | Session 6b: Bugfixes und GitHub Pages
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Problemstellung
+
+**Auftrag:** App testen und Bugs beheben, dann auf GitHub Pages deployen.
+
+**Gefundene Bugs:**
+
+| Bug | Ursache | Loesung |
+|-----|---------|---------|
+| `appState.setUI is not a function` | Methode existiert nicht | Ersetzt durch `setLoading()`, `openDialog()`, `closeDialog()` |
+| `validationPanel.init is not a function` | Init-Aufruf fehlte | `validationPanel.init()` in main.js hinzugefuegt |
+| CSS `rgba(var(--bg-rgb))` fehlerhaft | `--bg-rgb` Variable fehlte | RGB-Varianten in variables.css hinzugefuegt |
+| Zoom funktioniert nicht | Stale State-Referenz | `appState.zoom` Getter verwendet |
+| Export Dialog Backdrop fehlt | `.dialog-container` Wrapper fehlte | HTML-Struktur korrigiert |
+
+### Behobene Dateien
+
+| Datei | Aenderung |
+|-------|-----------|
+| `js/components/upload.js` | `setUI` → `setLoading` |
+| `js/components/transcription.js` | `setUI` → `setLoading` |
+| `js/components/dialogs.js` | `setUI` → `openDialog`/`closeDialog` |
+| `js/main.js` | `validationPanel.init()` hinzugefuegt |
+| `css/variables.css` | `--bg-rgb`, `--success-rgb`, `--warning-rgb`, `--error-rgb` |
+| `js/viewer.js` | `state.zoom` → `appState.zoom` |
+| `index.html` | Export Dialog `.dialog-container` Wrapper |
+
+### Test-Ergebnisse
+
+**Lokaler Server:** `npx serve docs -l 3000`
+
+| Feature | Status |
+|---------|--------|
+| Demo-Loader | Funktioniert |
+| Samples Dropdown | Funktioniert |
+| Viewer Empty State | Funktioniert |
+| Validation Panel | Funktioniert |
+| API Configuration Dialog | Funktioniert |
+| Export Dialog | Funktioniert |
+| Zoom Controls | Funktioniert |
+
+### GitHub Deployment
+
+| Aktion | Status |
+|--------|--------|
+| Commits gepusht | Fertig |
+| README aktualisiert | Fertig |
+| Live-Demo URL eingefuegt | Fertig |
+
+**Live-URL:** https://digitalhumanitiecraft.github.io/co-ocr-htr/
+
+### Commits
+
+| Commit | Beschreibung |
+|--------|--------------|
+| `785a38d` | feat: add demo-loader with samples dropdown and viewer empty state |
+| `ba43546` | fix: resolve critical runtime bugs |
+
+### Projektstand
+
+**Alle Meilensteine abgeschlossen:**
+
+| Milestone | Status |
+|-----------|--------|
+| 0: Vorbereitung | Fertig |
+| 1: Core Services | Fertig |
+| 2: Dialoge & Upload | Fertig |
+| 3: LLM-Transkription | Fertig |
+| 4: Validierung | Fertig |
+| 5: Export | Fertig |
+| 6: UX | Fertig |
+| 6.5: Bugfixes & Demo-Loader | Fertig |
+| 7: GitHub Pages Deployment | Fertig |
+
+### Naechste Schritte (Optional)
+
+- [ ] Favicon hinzufuegen
+- [ ] Vitest Unit Tests vervollstaendigen
+- [ ] LLM-Transkription mit echtem API Key testen
+- [ ] Mobile Warnung verbessern
 
 ---
 
