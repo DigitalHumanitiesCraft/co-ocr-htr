@@ -484,9 +484,122 @@ coocr-htr/
 
 ### Naechste Schritte
 
-- [ ] Milestone 2: Dialoge & Upload
-- [ ] Milestone 3: LLM-Transkription
-- [ ] Milestone 4: Validierung
+- [x] Milestone 2: Dialoge & Upload
+- [x] Milestone 3: LLM-Transkription
+- [x] Milestone 4: Validierung
+- [ ] Milestone 5: Export
+- [ ] Milestone 6: UX (Inline-Edit, Undo/Redo)
+- [ ] Milestone 7: Polish & Release
+
+---
+
+## 2026-01-16 | Session 5: Milestone 2-4 Implementierung
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Milestone 2: Input - Dialoge & Upload
+
+**Tasks erledigt:**
+
+| Task | Status | Datei |
+|------|--------|-------|
+| Dialog CSS (Glass Morphism) | Fertig | `css/styles.css` (+480 LOC) |
+| API Key Dialog HTML | Fertig | `index.html` |
+| Export Dialog HTML | Fertig | `index.html` |
+| Dialog Manager JS | Fertig | `js/components/dialogs.js` |
+| Upload Manager (Drag&Drop) | Fertig | `js/components/upload.js` |
+| PAGE-XML Parser | Fertig | `js/services/parsers/page-xml.js` |
+| PAGE-XML Tests | Fertig | `tests/page-xml.test.js` |
+
+**Neue Features:**
+- Native `<dialog>` Element mit Glass Morphism Backdrop
+- Tab-basierte Provider-Konfiguration (5 Provider)
+- Password-Toggle fuer API Keys
+- File Input + Drag & Drop Upload Zone
+- PAGE-XML Import mit Koordinaten-Konvertierung
+- Toast Notification System
+
+### Milestone 3: Transkription - LLM Integration
+
+**Tasks erledigt:**
+
+| Task | Status | Datei |
+|------|--------|-------|
+| Transcribe Button mit Spinner | Fertig | `index.html` |
+| Transcription Manager | Fertig | `js/components/transcription.js` |
+| Image-to-Base64 Konvertierung | Fertig | in transcription.js |
+| Error Handling mit Retry | Fertig | in transcription.js |
+
+**Transkriptions-Flow:**
+```
+Upload → Transcribe Click → Loading State → LLM API Call
+    → Response Parse → State Update → Editor/Viewer Update
+```
+
+### Milestone 4: Validierung (in Arbeit)
+
+**Tasks erledigt:**
+
+| Task | Status | Datei |
+|------|--------|-------|
+| Validation Engine | Fertig | `js/services/validation.js` |
+| Regelbasierte Validierung | Fertig | 8 Regeln definiert |
+| LLM-Judge Integration | Fertig | 4 Perspektiven |
+| Validation Panel UI | Fertig | `js/components/validation.js` |
+| Perspektiven-Dropdown | Fertig | in validation.js |
+
+**Validierungsregeln:**
+1. Datumsformat (DD. Monat)
+2. Waehrung Taler
+3. Waehrung Groschen
+4. Waehrung Gulden/Kreuzer
+5. Unsichere Lesungen [?]
+6. Unleserliche Stellen [illegible]
+7. Spaltenanzahl-Konsistenz
+8. Leere Zellen
+
+**Perspektiven:**
+- Palaeographisch (Buchstabenformen, Ligaturen)
+- Sprachlich (Grammatik, historische Orthographie)
+- Strukturell (Tabellen, Summen, Verweise)
+- Domaenenwissen (Fachtermini, Plausibilitaet)
+
+### Commits
+
+| Commit | Beschreibung |
+|--------|--------------|
+| `8060c3a` | Milestone 2 & 3: Dialoge, Upload, PAGE-XML, Transkription |
+
+### Aktuelle Projektstruktur
+
+```
+docs/
+├── js/
+│   ├── components/
+│   │   ├── dialogs.js       # NEU
+│   │   ├── upload.js        # NEU
+│   │   ├── transcription.js # NEU
+│   │   └── validation.js    # NEU
+│   ├── services/
+│   │   ├── llm.js
+│   │   ├── storage.js
+│   │   ├── validation.js    # NEU
+│   │   └── parsers/
+│   │       └── page-xml.js  # NEU
+│   ├── main.js              # Erweitert
+│   └── state.js             # Erweitert
+├── tests/
+│   ├── llm.test.js
+│   └── page-xml.test.js     # NEU
+└── css/
+    └── styles.css           # Erweitert (+480 LOC)
+```
+
+### Naechste Schritte
+
+- [ ] Milestone 5: Export Service
+- [ ] Milestone 6: Inline-Editing, Undo/Redo
+- [ ] Milestone 7: Polish, GitHub Pages Deployment
 
 ---
 
