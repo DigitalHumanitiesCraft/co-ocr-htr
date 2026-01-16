@@ -5,59 +5,59 @@ tags: [coocr-htr, roadmap, milestones]
 status: complete
 ---
 
-# Implementierungsplan
+# Implementation Plan
 
-Roadmap vom aktuellen Prototyp v2 zur vollstaendigen Anwendung.
+Roadmap from the current Prototype v2 to the complete application.
 
-**Stand:** 2026-01-16
-**Basis:** `docs/` (Modularer Prototyp, GitHub Pages ready)
+**Date:** 2026-01-16
+**Base:** `docs/` (Modular Prototype, GitHub Pages ready)
 
-## Aktueller Status
+## Current Status
 
-### Implementiert (Prototyp v2)
+### Implemented (Prototype v2)
 
-| Komponente | Status | Datei |
-|------------|--------|-------|
-| 3-Spalten-Layout | ✅ Fertig | `index.html` |
-| Design System Tokens | ✅ Fertig | `css/variables.css` |
-| Glass Morphism UI | ✅ Fertig | `css/styles.css` |
-| Zentraler State (EventTarget) | ✅ Fertig | `js/state.js` |
-| Document Viewer + SVG Regions | ✅ Fertig | `js/viewer.js` |
-| Transcription Editor Grid | ✅ Fertig | `js/editor.js` |
-| Validation Panel (statisch) | ✅ Fertig | `index.html` |
-| Dreifach-Synchronisation | ✅ Fertig | `js/*.js` |
-| Zoom Controls | ✅ Fertig | `js/viewer.js` |
-| Mobile Warning | ✅ Fertig | `index.html` |
+| Component | Status | File |
+|-----------|--------|------|
+| 3-Column Layout | ✅ Done | `index.html` |
+| Design System Tokens | ✅ Done | `css/variables.css` |
+| Glass Morphism UI | ✅ Done | `css/styles.css` |
+| Central State (EventTarget) | ✅ Done | `js/state.js` |
+| Document Viewer + SVG Regions | ✅ Done | `js/viewer.js` |
+| Transcription Editor Grid | ✅ Done | `js/editor.js` |
+| Validation Panel (static) | ✅ Done | `index.html` |
+| Triple Synchronization | ✅ Done | `js/*.js` |
+| Zoom Controls | ✅ Done | `js/viewer.js` |
+| Mobile Warning | ✅ Done | `index.html` |
 
-### Noch nicht implementiert
+### Not Yet Implemented
 
-| Feature | Priorität | Komplexität |
-|---------|-----------|-------------|
-| LLM API Integration | Hoch | Mittel |
-| Bild-Upload | Hoch | Niedrig |
-| API Key Dialog | Hoch | Niedrig |
-| Regelbasierte Validierung | Hoch | Mittel |
-| LLM-Judge Validierung | Mittel | Hoch |
-| Export (Markdown/JSON/TSV) | Mittel | Niedrig |
-| LocalStorage Persistenz | Mittel | Niedrig |
-| IndexedDB Dokument-Storage | Niedrig | Mittel |
-| Inline-Editing | Niedrig | Mittel |
-| Undo/Redo | Niedrig | Mittel |
+| Feature | Priority | Complexity |
+|---------|----------|------------|
+| LLM API Integration | High | Medium |
+| Image Upload | High | Low |
+| API Key Dialog | High | Low |
+| Rule-Based Validation | High | Medium |
+| LLM-Judge Validation | Medium | High |
+| Export (Markdown/JSON/TSV) | Medium | Low |
+| LocalStorage Persistence | Medium | Low |
+| IndexedDB Document Storage | Low | Medium |
+| Inline Editing | Low | Medium |
+| Undo/Redo | Low | Medium |
 
 ---
 
-## Phase 1: Core Services (Empfohlen als nächstes)
+## Phase 1: Core Services (Recommended as Next Step)
 
-**Ziel:** Grundlegende Services für LLM-Kommunikation und Persistenz.
+**Goal:** Basic services for LLM communication and persistence.
 
-### 1.1 LLM Service erstellen
+### 1.1 Create LLM Service
 
 ```
 js/services/llm.js
 ```
 
 ```javascript
-// Struktur
+// Structure
 class LLMService {
   constructor() {
     this.providers = {
@@ -70,27 +70,27 @@ class LLMService {
   }
 
   async transcribe(imageBase64, options) {
-    // → Provider-spezifischer API-Call
-    // → Prompt aus METHODOLOGY
-    // → Response parsen zu Segment[]
+    // → Provider-specific API call
+    // → Prompt from METHODOLOGY
+    // → Parse response to Segment[]
   }
 
   async validate(text, perspective) {
-    // → Perspektiven-Prompt aus VALIDATION
-    // → Kategorielle Konfidenz zurückgeben
+    // → Perspective prompt from VALIDATION
+    // → Return categorical confidence
   }
 }
 ```
 
 **Tasks:**
-- [ ] LLMService Klasse erstellen
-- [ ] Gemini Provider implementieren
-- [ ] OpenAI Provider implementieren
-- [ ] Anthropic Provider implementieren
-- [ ] Ollama Provider implementieren
-- [ ] Unified Error Handling
+- [ ] Create LLMService class
+- [ ] Implement Gemini provider
+- [ ] Implement OpenAI provider
+- [ ] Implement Anthropic provider
+- [ ] Implement Ollama provider
+- [ ] Unified error handling
 
-### 1.2 Storage Service erstellen
+### 1.2 Create Storage Service
 
 ```
 js/services/storage.js
@@ -104,7 +104,7 @@ class StorageService {
   saveApiKey(provider, key) {}
   loadApiKey(provider) {}
 
-  // IndexedDB (später)
+  // IndexedDB (later)
   async saveDocument(doc) {}
   async loadDocument(id) {}
   async listDocuments() {}
@@ -112,15 +112,15 @@ class StorageService {
 ```
 
 **Tasks:**
-- [ ] LocalStorage Wrapper für Settings
-- [ ] API Key Obfuskation (Base64)
-- [ ] Auto-Save für aktuelle Session
+- [ ] LocalStorage wrapper for settings
+- [ ] API key obfuscation (Base64)
+- [ ] Auto-save for current session
 
 ---
 
-## Phase 2: Dialoge & Upload
+## Phase 2: Dialogs & Upload
 
-**Ziel:** Benutzer können Bilder hochladen und API Keys konfigurieren.
+**Goal:** Users can upload images and configure API keys.
 
 ### 2.1 API Key Dialog
 
@@ -131,21 +131,21 @@ class StorageService {
   <label>Gemini API Key
     <input type="password" id="geminiKey">
   </label>
-  <!-- weitere Provider -->
+  <!-- other providers -->
   <button>Save</button>
 </dialog>
 ```
 
 **Tasks:**
-- [ ] Dialog HTML erstellen
-- [ ] Dialog CSS (Modal-Style)
-- [ ] JS: Öffnen/Schließen
-- [ ] JS: Keys speichern/laden
+- [ ] Create dialog HTML
+- [ ] Dialog CSS (modal style)
+- [ ] JS: Open/Close
+- [ ] JS: Save/Load keys
 
-### 2.2 Bild-Upload
+### 2.2 Image Upload
 
 ```javascript
-// In state.js erweitern
+// Extend in state.js
 setDocument(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -158,48 +158,48 @@ setDocument(file) {
 ```
 
 **Tasks:**
-- [ ] File Input im Upload-Button
-- [ ] Drag & Drop Support
-- [ ] Preview im Document Viewer
-- [ ] Validierung (Dateityp, Größe)
+- [ ] File input in upload button
+- [ ] Drag & drop support
+- [ ] Preview in Document Viewer
+- [ ] Validation (file type, size)
 
 ---
 
-## Phase 3: LLM Transkription
+## Phase 3: LLM Transcription
 
-**Ziel:** Hochgeladene Bilder können durch LLM transkribiert werden.
+**Goal:** Uploaded images can be transcribed via LLM.
 
-### 3.1 Transkriptions-Flow
+### 3.1 Transcription Flow
 
 ```
 Upload → LLMService.transcribe() → Parser → State.setTranscription() → Editor Update
 ```
 
 **Tasks:**
-- [ ] "Transcribe" Button hinzufügen
-- [ ] Loading State im UI
-- [ ] Response zu Segment[] parsen
-- [ ] Bounding Boxes aus LLM-Response extrahieren (wenn verfügbar)
-- [ ] Fallback: Generische Zeilen-Regionen
+- [ ] Add "Transcribe" button
+- [ ] Loading state in UI
+- [ ] Parse response to Segment[]
+- [ ] Extract bounding boxes from LLM response (if available)
+- [ ] Fallback: Generic line regions
 
 ### 3.2 Prompt Engineering
 
-Transkriptions-Prompt aus [METHODOLOGY](METHODOLOGY.md):
+Transcription prompt from [METHODOLOGY](METHODOLOGY.md):
 
 ```
-Du bist ein Experte für historische Handschriften des 19. Jahrhunderts...
-- Tabellarische Struktur erkennen
-- Datumsformate: DD. Monat
-- Währungen: Taler, Groschen
-- Unsichere Lesungen: [?]
-- Unleserlich: [illegible]
+You are an expert in historical handwriting from the 19th century...
+- Recognize tabular structure
+- Date formats: DD. Month
+- Currencies: Taler, Groschen
+- Uncertain readings: [?]
+- Illegible: [illegible]
 ```
 
 ---
 
-## Phase 4: Regelbasierte Validierung
+## Phase 4: Rule-Based Validation
 
-**Ziel:** Deterministische Prüfungen automatisch ausführen.
+**Goal:** Automatically execute deterministic checks.
 
 ### 4.1 Validation Engine
 
@@ -213,19 +213,19 @@ const RULES = [
     id: 'date_format',
     regex: /\d{1,2}\.\s?(Januar|Februar|...|Dezember)/gi,
     type: 'success',
-    message: 'Datumsformat korrekt'
+    message: 'Date format correct'
   },
   {
     id: 'currency',
     regex: /\d+\s?(Taler|Groschen|Gulden)/gi,
     type: 'success',
-    message: 'Währung erkannt'
+    message: 'Currency recognized'
   },
   {
     id: 'uncertain_marker',
     regex: /\[\?\]/g,
     type: 'warning',
-    message: 'Unsichere Lesung markiert'
+    message: 'Uncertain reading marked'
   },
   // ...
 ];
@@ -240,121 +240,121 @@ function validate(text) {
 ```
 
 **Tasks:**
-- [ ] Validation Rules definieren
-- [ ] Validation Engine implementieren
-- [ ] Validation Panel dynamisch rendern
-- [ ] Zeilennummern zu Regeln verknüpfen
+- [ ] Define validation rules
+- [ ] Implement validation engine
+- [ ] Dynamically render validation panel
+- [ ] Link line numbers to rules
 
 ---
 
-## Phase 5: LLM-Judge Validierung
+## Phase 5: LLM-Judge Validation
 
-**Ziel:** KI-gestützte Validierung aus verschiedenen Perspektiven.
+**Goal:** AI-assisted validation from different perspectives.
 
-### 5.1 Perspektiven-System
+### 5.1 Perspective System
 
-Aus [VALIDATION](VALIDATION.md):
+From [VALIDATION](VALIDATION.md):
 
-| Perspektive | Prompt-Fokus |
+| Perspective | Prompt Focus |
 |-------------|--------------|
-| Paläographisch | Buchstabenformen, Ligaturen |
-| Sprachlich | Grammatik, historische Orthographie |
-| Strukturell | Tabellen, Summen, Verweise |
-| Domänenwissen | Fachtermini, Plausibilität |
+| Paleographic | Letter forms, ligatures |
+| Linguistic | Grammar, historical orthography |
+| Structural | Tables, sums, references |
+| Domain Knowledge | Technical terms, plausibility |
 
 **Tasks:**
-- [ ] Perspektiven-Dropdown im Status Bar aktivieren
-- [ ] LLMService.validate() mit Perspektiven-Prompts
-- [ ] AI Assistant Sektion dynamisch rendern
-- [ ] Kategorielle Konfidenz anzeigen
+- [ ] Activate perspective dropdown in status bar
+- [ ] LLMService.validate() with perspective prompts
+- [ ] Dynamically render AI Assistant section
+- [ ] Display categorical confidence
 
 ---
 
-## Phase 6: Export & Persistenz
+## Phase 6: Export & Persistence
 
-**Ziel:** Arbeit speichern und exportieren.
+**Goal:** Save and export work.
 
-### 6.1 Export Formate
+### 6.1 Export Formats
 
 ```
 js/services/export.js
 ```
 
-| Format | Funktion |
+| Format | Function |
 |--------|----------|
-| JSON | Vollständiges Transcription-Objekt |
-| Markdown | Tabelle mit Validierungshinweisen |
-| TSV | Nur Daten (Tab-separiert) |
+| JSON | Complete Transcription object |
+| Markdown | Table with validation notes |
+| TSV | Data only (tab-separated) |
 
 **Tasks:**
-- [ ] Export-Dialog
-- [ ] JSON Export
-- [ ] Markdown Export
-- [ ] TSV Export
-- [ ] Download-Trigger
+- [ ] Export dialog
+- [ ] JSON export
+- [ ] Markdown export
+- [ ] TSV export
+- [ ] Download trigger
 
-### 6.2 Session-Persistenz
+### 6.2 Session Persistence
 
 **Tasks:**
-- [ ] Auto-Save alle 30s
-- [ ] Session-Recovery beim Laden
-- [ ] "Letzte Sitzung fortsetzen" Dialog
+- [ ] Auto-save every 30s
+- [ ] Session recovery on load
+- [ ] "Resume last session" dialog
 
 ---
 
 ## Phase 7: Polish & UX
 
-**Ziel:** Feinschliff für produktionsreife Anwendung.
+**Goal:** Fine-tuning for production-ready application.
 
-### 7.1 Inline-Editing
+### 7.1 Inline Editing
 
 **Tasks:**
-- [ ] Doppelklick auf Zelle → Edit Mode
-- [ ] Enter → Speichern
-- [ ] Escape → Abbrechen
-- [ ] Tab → Nächste Zelle
+- [ ] Double-click on cell → Edit mode
+- [ ] Enter → Save
+- [ ] Escape → Cancel
+- [ ] Tab → Next cell
 
 ### 7.2 Undo/Redo
 
 **Tasks:**
-- [ ] History Stack in State
+- [ ] History stack in state
 - [ ] Ctrl+Z / Ctrl+Shift+Z
-- [ ] Undo/Redo Buttons im Editor-Header
+- [ ] Undo/Redo buttons in editor header
 
 ### 7.3 Keyboard Shortcuts
 
 **Tasks:**
-- [ ] Shortcut-System implementieren
-- [ ] Help-Overlay (?)
-- [ ] Shortcuts aus [DESIGN-SYSTEM](DESIGN-SYSTEM.md)
+- [ ] Implement shortcut system
+- [ ] Help overlay (?)
+- [ ] Shortcuts from [DESIGN-SYSTEM](DESIGN-SYSTEM.md)
 
 ---
 
-## Priorisierte Roadmap
+## Prioritized Roadmap
 
-| Phase | Beschreibung | Abhängigkeiten | Schätzung |
-|-------|--------------|----------------|-----------|
-| **1** | Core Services | - | Basis |
-| **2** | Dialoge & Upload | Phase 1 | Niedrig |
-| **3** | LLM Transkription | Phase 1, 2 | Mittel |
-| **4** | Regelbasierte Validierung | Phase 3 | Niedrig |
-| **5** | LLM-Judge | Phase 3, 4 | Mittel |
-| **6** | Export & Persistenz | Phase 3 | Niedrig |
-| **7** | Polish & UX | Alle | Mittel |
-
----
-
-## Nächster Schritt
-
-**Empfehlung:** Mit Phase 1.1 (LLM Service) beginnen.
-
-1. `js/services/llm.js` erstellen
-2. Gemini Provider implementieren
-3. Test mit Mock-Bild
+| Phase | Description | Dependencies | Estimate |
+|-------|-------------|--------------|----------|
+| **1** | Core Services | - | Base |
+| **2** | Dialogs & Upload | Phase 1 | Low |
+| **3** | LLM Transcription | Phase 1, 2 | Medium |
+| **4** | Rule-Based Validation | Phase 3 | Low |
+| **5** | LLM-Judge | Phase 3, 4 | Medium |
+| **6** | Export & Persistence | Phase 3 | Low |
+| **7** | Polish & UX | All | Medium |
 
 ---
 
-**Verweise:**
-- [ARCHITECTURE](ARCHITECTURE.md) für Systemdesign
-- [VALIDATION](VALIDATION.md) für Validierungsregeln
-- [DATA-SCHEMA](DATA-SCHEMA.md) für Datenstrukturen
+## Next Step
+
+**Recommendation:** Start with Phase 1.1 (LLM Service).
+
+1. Create `js/services/llm.js`
+2. Implement Gemini provider
+3. Test with mock image
+
+---
+
+**References:**
+- [ARCHITECTURE](ARCHITECTURE.md) for system design
+- [VALIDATION](VALIDATION.md) for validation rules
+- [DATA-SCHEMA](DATA-SCHEMA.md) for data structures

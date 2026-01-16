@@ -7,64 +7,64 @@ status: complete
 
 # coOCR/HTR Knowledge Base
 
-Zentraler Wissensordner fuer das coOCR/HTR-Projekt. Jedes Dokument hat einen definierten Scope und verweist auf verwandte Dokumente.
+Central knowledge repository for the coOCR/HTR project. Each document has a defined scope and references related documents.
 
-## Dokumentenstruktur
+## Document Structure
 
 ```
 knowledge/
-├── INDEX.md               ← Navigation (dieses Dokument)
-├── METHODOLOGY.md         ← Wissenschaftliche Grundlagen
-├── DESIGN-SYSTEM.md       ← UI/UX-Spezifikation (inkl. UI-Mockup-Analyse)
-├── ARCHITECTURE.md        ← Technische Architektur (inkl. Event-Flows)
-├── VALIDATION.md          ← Hybride Validierung (inkl. Panel-Struktur)
-├── DATA-SCHEMA.md         ← Datenstrukturen (inkl. Tabellenformat)
-├── IMPLEMENTATION-PLAN.md ← Roadmap zur Vollständigkeit (NEU)
-└── JOURNAL.md             ← Entwicklungslog
+├── INDEX.md               ← Navigation (this document)
+├── METHODOLOGY.md         ← Scientific foundations
+├── DESIGN-SYSTEM.md       ← UI/UX specification (incl. UI mockup analysis)
+├── ARCHITECTURE.md        ← Technical architecture (incl. event flows)
+├── VALIDATION.md          ← Hybrid validation (incl. panel structure)
+├── DATA-SCHEMA.md         ← Data structures (incl. table format)
+├── IMPLEMENTATION-PLAN.md ← Roadmap to completion
+└── JOURNAL.md             ← Development log
 ```
 
-## Dokumentenmatrix
+## Document Matrix
 
-| Dokument | Beantwortet | Zielgruppe | Abhängigkeiten |
-|----------|-------------|------------|----------------|
-| [METHODOLOGY](METHODOLOGY.md) | Warum so? | Alle | - |
-| [DESIGN-SYSTEM](DESIGN-SYSTEM.md) | Wie sieht es aus? | UI/Frontend | METHODOLOGY |
-| [ARCHITECTURE](ARCHITECTURE.md) | Wie ist es gebaut? | Entwicklung | METHODOLOGY |
-| [VALIDATION](VALIDATION.md) | Wie wird geprüft? | Entwicklung | METHODOLOGY, ARCHITECTURE |
-| [DATA-SCHEMA](DATA-SCHEMA.md) | Welche Daten? | Entwicklung | ARCHITECTURE |
-| [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | Was kommt als nächstes? | Entwicklung | ARCHITECTURE |
-| [JOURNAL](JOURNAL.md) | Was wurde gemacht? | Alle | - |
+| Document | Answers | Audience | Dependencies |
+|----------|---------|----------|--------------|
+| [METHODOLOGY](METHODOLOGY.md) | Why this approach? | Everyone | - |
+| [DESIGN-SYSTEM](DESIGN-SYSTEM.md) | How does it look? | UI/Frontend | METHODOLOGY |
+| [ARCHITECTURE](ARCHITECTURE.md) | How is it built? | Development | METHODOLOGY |
+| [VALIDATION](VALIDATION.md) | How is it verified? | Development | METHODOLOGY, ARCHITECTURE |
+| [DATA-SCHEMA](DATA-SCHEMA.md) | What data? | Development | ARCHITECTURE |
+| [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | What comes next? | Development | ARCHITECTURE |
+| [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
 
-## Kernkonzepte (Schnellreferenz)
+## Core Concepts (Quick Reference)
 
-| Konzept | Definition | Dokument |
+| Concept | Definition | Document |
 |---------|------------|----------|
-| Critical Expert in the Loop | Mensch validiert, Maschine unterstützt | METHODOLOGY |
-| Kategorielle Konfidenz | sicher/prüfenswert/problematisch statt 0-100% | METHODOLOGY |
-| Hybride Validierung | Deterministisch + LLM-Judge kombiniert | VALIDATION |
-| Perspektiven | Paläographisch, Sprachlich, Strukturell, Domäne | VALIDATION |
-| Promptotyping | Iterative Entwicklung durch KI-Dialog | METHODOLOGY |
-| Dreifach-Synchronisation | Viewer ↔ Transcription ↔ Validation | ARCHITECTURE |
-| Tabellarische Transkription | Strukturierte Felder statt Freitext | DATA-SCHEMA |
+| Critical Expert in the Loop | Human validates, machine assists | METHODOLOGY |
+| Categorical Confidence | confident/uncertain/problematic instead of 0-100% | METHODOLOGY |
+| Hybrid Validation | Deterministic + LLM-Judge combined | VALIDATION |
+| Perspectives | Paleographic, Linguistic, Structural, Domain | VALIDATION |
+| Promptotyping | Iterative development through AI dialogue | METHODOLOGY |
+| Triple Synchronization | Viewer ↔ Transcription ↔ Validation | ARCHITECTURE |
+| Tabular Transcription | Structured fields instead of free text | DATA-SCHEMA |
 
-## UI-Komponenten (Schnellreferenz)
+## UI Components (Quick Reference)
 
-| Komponente | Beschreibung | Dokument |
-|------------|--------------|----------|
-| Document Viewer | Bild + Bounding Boxes + Zoom | DESIGN-SYSTEM |
-| Transcription Table | Spalten: #, DATUM, NAME, BESCHREIBUNG, BETRAG | DESIGN-SYSTEM |
-| Validation Panel | Rule-Based + AI Assistant Sektionen | VALIDATION |
+| Component | Description | Document |
+|-----------|-------------|----------|
+| Document Viewer | Image + Bounding Boxes + Zoom | DESIGN-SYSTEM |
+| Transcription Table | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT | DESIGN-SYSTEM |
+| Validation Panel | Rule-Based + AI Assistant sections | VALIDATION |
 | Status Bar | Model, Perspective, Status, Timestamp | DESIGN-SYSTEM |
-| Inline-Marker | [?], [illegible], ... | DESIGN-SYSTEM |
+| Inline Markers | [?], [illegible], ... | DESIGN-SYSTEM |
 
-## Beziehungen
+## Relationships
 
 ```
 METHODOLOGY ──────────────────────────────────────┐
     │                                             │
     ├──→ DESIGN-SYSTEM                            │
     │        │                                    │
-    │        └──→ Farbcodierung für Konfidenz     │
+    │        └──→ Color coding for confidence     │
     │                                             │
     ├──→ ARCHITECTURE                             │
     │        │                                    │
@@ -72,13 +72,14 @@ METHODOLOGY ──────────────────────�
     │        │                                    │
     │        └──→ DATA-SCHEMA (Transcription)     │
     │                                             │
-    └──→ Alle Designentscheidungen begründet ←────┘
+    └──→ All design decisions justified ←─────────┘
 ```
 
-## Versionierung
+## Version History
 
-| Version | Datum | Änderung |
-|---------|-------|----------|
-| 1.0 | 2026-01-16 | Initiale Konsolidierung aus docs/ und new_knowledge/ |
-| 1.1 | 2026-01-16 | UI-Mockup-Analyse integriert: Dreifach-Synchronisation, Tabellenstruktur, Panel-Layout |
-| 1.2 | 2026-01-16 | Prototyp v2 Analyse: AppState mit EventTarget, modulare JS-Architektur, IMPLEMENTATION-PLAN.md |
+| Version | Date | Change |
+|---------|------|--------|
+| 1.0 | 2026-01-16 | Initial consolidation from docs/ and new_knowledge/ |
+| 1.1 | 2026-01-16 | UI mockup analysis integrated: triple sync, table structure, panel layout |
+| 1.2 | 2026-01-16 | Prototype v2 analysis: AppState with EventTarget, modular JS architecture, IMPLEMENTATION-PLAN.md |
+| 1.3 | 2026-01-16 | Translated to English |

@@ -5,65 +5,65 @@ tags: [coocr-htr, journal, development-log]
 status: complete
 ---
 
-# Entwicklungsjournal
+# Development Journal
 
-Chronologische Dokumentation der Projektentwicklung.
+Chronological documentation of project development.
 
 ---
 
-## 2026-01-16 | Session 1: Initialisierung und Wissenskonsolidierung
+## 2026-01-16 | Session 1: Initialization and Knowledge Consolidation
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Phase 1: Projektinitialisierung
+### Phase 1: Project Initialization
 
-**Auftrag:** Promptotyping-Projekt für coOCR/HTR initialisieren.
+**Task:** Initialize promptotyping project for coOCR/HTR.
 
-**Ergebnis:** Erste Struktur erstellt:
-- `README.md` (englisch, kompakt)
-- `CLAUDE.md` (Projektkontext)
-- `docs/` mit REQUIREMENTS, DESIGN, ARCHITECTURE, DATA
-- `src/` (leer)
+**Result:** Initial structure created:
+- `README.md` (English, compact)
+- `CLAUDE.md` (Project context)
+- `docs/` with REQUIREMENTS, DESIGN, ARCHITECTURE, DATA
+- `src/` (empty)
 
-### Phase 2: Knowledge-Analyse
+### Phase 2: Knowledge Analysis
 
-**Auftrag:** `new_knowledge/` Ordner analysieren (Gemini 3 Material).
+**Task:** Analyze `new_knowledge/` folder (Gemini 3 material).
 
-**Befund:** Material aus Gemini-Session war umfangreicher:
+**Finding:** Material from Gemini session was more extensive:
 
-| Quelle | Inhalt | Bewertung |
-|--------|--------|-----------|
-| `knowledge/coOCR-HTR Methodische Grundlagen.md` | Wissenschaftliche Basis (LLM-Bias, Critical Expert) | Hoch relevant |
-| `docs/design-ui.md` | Detailliertes Design-System | Hoch relevant |
-| `docs/architecture.md` | Konkrete Modulstruktur, APIs | Hoch relevant |
-| `docs/implementation-plan.md` | Phasen-Plan für Prototyp | Mittel relevant |
-| `index.html` | Funktionierender Prototyp (1400 LOC) | Hoch relevant |
+| Source | Content | Assessment |
+|--------|---------|------------|
+| `knowledge/coOCR-HTR Methodische Grundlagen.md` | Scientific foundation (LLM Bias, Critical Expert) | Highly relevant |
+| `docs/design-ui.md` | Detailed design system | Highly relevant |
+| `docs/architecture.md` | Concrete module structure, APIs | Highly relevant |
+| `docs/implementation-plan.md` | Phase plan for prototype | Moderately relevant |
+| `index.html` | Working prototype (1400 LOC) | Highly relevant |
 
-**Kernerkenntnisse:**
-1. Kategorielle statt numerische Konfidenz (LLM-Bias-Forschung)
-2. Validierungs-Perspektiven (Paläographisch, Sprachlich, etc.)
-3. Event-basierte Text-Bild-Synchronisation
+**Key Insights:**
+1. Categorical instead of numeric confidence (LLM bias research)
+2. Validation perspectives (Paleographic, Linguistic, etc.)
+3. Event-based text-image synchronization
 
-### Phase 3: Wissenskonsolidierung
+### Phase 3: Knowledge Consolidation
 
-**Auftrag:** Alles in gemeinsamen `knowledge/` Ordner integrieren.
+**Task:** Integrate everything into common `knowledge/` folder.
 
-**Durchgeführte Aktionen:**
+**Actions Performed:**
 
-| Aktion | Ergebnis |
-|--------|----------|
-| `knowledge/INDEX.md` erstellt | Zentrale Navigation, Dokumentenmatrix |
-| `knowledge/METHODOLOGY.md` erstellt | Promptotyping, LLM-Bias, Critical Expert |
-| `knowledge/DESIGN-SYSTEM.md` erstellt | CSS-Variablen, Komponenten, a11y |
-| `knowledge/ARCHITECTURE.md` erstellt | Systemdiagramm, Module, APIs |
-| `knowledge/VALIDATION.md` erstellt | Regeln, Perspektiven, Kategorien |
-| `knowledge/DATA-SCHEMA.md` erstellt | TypeScript-Interfaces, JSON-Beispiele |
-| `new_knowledge/index.html` → `src/index.html` | Prototyp verschoben |
-| `CLAUDE.md` aktualisiert | Verweise auf knowledge/ |
-| `docs/` gelöscht | Redundant |
-| `new_knowledge/` gelöscht | Integriert |
+| Action | Result |
+|--------|--------|
+| `knowledge/INDEX.md` created | Central navigation, document matrix |
+| `knowledge/METHODOLOGY.md` created | Promptotyping, LLM bias, Critical Expert |
+| `knowledge/DESIGN-SYSTEM.md` created | CSS variables, components, a11y |
+| `knowledge/ARCHITECTURE.md` created | System diagram, modules, APIs |
+| `knowledge/VALIDATION.md` created | Rules, perspectives, categories |
+| `knowledge/DATA-SCHEMA.md` created | TypeScript interfaces, JSON examples |
+| `new_knowledge/index.html` → `src/index.html` | Prototype moved |
+| `CLAUDE.md` updated | References to knowledge/ |
+| `docs/` deleted | Redundant |
+| `new_knowledge/` deleted | Integrated |
 
-### Finale Projektstruktur
+### Final Project Structure
 
 ```
 coocr-htr/
@@ -81,56 +81,56 @@ coocr-htr/
     └── index.html
 ```
 
-### Offene Punkte
+### Open Items
 
-- [ ] Prototyp in modulare Struktur aufteilen (js/, css/)
-- [ ] Echte LLM-Integration implementieren
-- [ ] LocalStorage/IndexedDB-Persistenz
-- [ ] Export-Funktionen (Markdown, JSON, TSV)
+- [ ] Split prototype into modular structure (js/, css/)
+- [ ] Implement real LLM integration
+- [ ] LocalStorage/IndexedDB persistence
+- [ ] Export functions (Markdown, JSON, TSV)
 
 ---
 
-## Dokumentenbeziehungen
+## Document Relationships
 
 ```
-METHODOLOGY ─────┬──→ DESIGN-SYSTEM (Farbcodierung)
-                 ├──→ ARCHITECTURE (Technologieentscheidungen)
-                 └──→ VALIDATION (Kategorien, Perspektiven)
+METHODOLOGY ─────┬──→ DESIGN-SYSTEM (Color coding)
+                 ├──→ ARCHITECTURE (Technology decisions)
+                 └──→ VALIDATION (Categories, perspectives)
 
-ARCHITECTURE ────┬──→ VALIDATION (Engine-Integration)
-                 └──→ DATA-SCHEMA (Storage-Formate)
+ARCHITECTURE ────┬──→ VALIDATION (Engine integration)
+                 └──→ DATA-SCHEMA (Storage formats)
 
 VALIDATION ──────┬──→ DATA-SCHEMA (ValidationResult)
-                 └──→ DESIGN-SYSTEM (UI-Darstellung)
+                 └──→ DESIGN-SYSTEM (UI representation)
 ```
 
 ---
 
-## 2026-01-16 | Session 2: UI-Mockup-Analyse und Integration
+## 2026-01-16 | Session 2: UI Mockup Analysis and Integration
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Phase 1: Promptotyping-Prototyp-Analyse
+### Phase 1: Promptotyping Prototype Analysis
 
-**Auftrag:** `Promptotyping/prototype/` Ordner analysieren für übertragbare Patterns.
+**Task:** Analyze `Promptotyping/prototype/` folder for transferable patterns.
 
-**Befund:** Anderes Projekt (Living Paper), aber nützliche Muster:
+**Finding:** Different project (Living Paper), but useful patterns:
 
-| Pattern | Beschreibung | Übertragbar? |
-|---------|--------------|--------------|
-| Intersection Observer | Scroll-basierte Navigation | Ja |
-| Slide-Panel | Seitliches Panel mit Overlay | Ja |
-| CSS Variables | Strukturierte Farbpalette | Ja |
-| Terminal-UI | Monospace-Ästhetik | Teilweise |
-| TESTING.md | Manuelle Test-Checkliste | Ja |
+| Pattern | Description | Transferable? |
+|---------|-------------|---------------|
+| Intersection Observer | Scroll-based navigation | Yes |
+| Slide Panel | Side panel with overlay | Yes |
+| CSS Variables | Structured color palette | Yes |
+| Terminal UI | Monospace aesthetic | Partially |
+| TESTING.md | Manual test checklist | Yes |
 
-### Phase 2: UI-Mockup-Detailanalyse
+### Phase 2: UI Mockup Detail Analysis
 
-**Auftrag:** Screenshot des coOCR/HTR UI-Mockups analysieren.
+**Task:** Analyze screenshot of coOCR/HTR UI mockup.
 
-**Extrahierte Informationen:**
+**Extracted Information:**
 
-#### Layout-Struktur
+#### Layout Structure
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │ HEADER: Logo | Filename | Pagination | Upload | Settings | User    │
@@ -145,16 +145,16 @@ VALIDATION ──────┬──→ DATA-SCHEMA (ValidationResult)
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Erkannte Komponenten
+#### Recognized Components
 
-| Komponente | Details |
-|------------|---------|
-| **Document Viewer** | Bild mit farbigen Bounding Boxes, Zoom-Controls (+/-/Reset) |
-| **Transcription Table** | Spalten: #, DATUM, NAME, BESCHREIBUNG, BETRAG |
-| **Validation Panel** | Zwei Sektionen: ⚙️ RULE-BASED, ✨ AI ASSISTANT |
-| **Status Bar** | Model-Dropdown, Perspective-Dropdown, Status-Badge, Timestamp |
+| Component | Details |
+|-----------|---------|
+| **Document Viewer** | Image with colored bounding boxes, zoom controls (+/-/Reset) |
+| **Transcription Table** | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT |
+| **Validation Panel** | Two sections: ⚙️ RULE-BASED, ✨ AI ASSISTANT |
+| **Status Bar** | Model dropdown, Perspective dropdown, Status badge, Timestamp |
 
-#### Farbpalette (aus Mockup extrahiert)
+#### Color Palette (extracted from mockup)
 - Background: `#0d1117` (GitHub Dark)
 - Surface: `#161b22`
 - Border: `#30363d`
@@ -162,68 +162,68 @@ VALIDATION ──────┬──→ DATA-SCHEMA (ValidationResult)
 - Warning: `#d29922`
 - Error: `#f85149`
 
-### Phase 3: Knowledge-Base-Integration
+### Phase 3: Knowledge Base Integration
 
-**Auftrag:** UI-Mockup-Erkenntnisse in Knowledge Base einarbeiten.
+**Task:** Incorporate UI mockup insights into knowledge base.
 
-**Aktualisierte Dokumente:**
+**Updated Documents:**
 
-| Dokument | Änderungen |
-|----------|------------|
-| **DESIGN-SYSTEM.md** | Layout-Diagramm, Header-Elemente, Status Bar, Document Viewer CSS, Transcription Table CSS, Validation Panel, Card-Anatomie, Interaktions-Patterns |
-| **ARCHITECTURE.md** | Erweiterte EventBus-Events, Drei Synchronisations-Flows (Transcription→All, Viewer→All, Validation→All) |
-| **VALIDATION.md** | Panel-Struktur ASCII-Diagramm, Card-Anatomie, Card-Interaktion, Expandierter Zustand |
-| **DATA-SCHEMA.md** | `lineNumber` und `fields` zu Segment hinzugefügt, `ColumnDefinition` Interface, Beispiel mit strukturierten Feldern |
-| **INDEX.md** | UI-Komponenten Schnellreferenz, Version 1.1 Eintrag |
+| Document | Changes |
+|----------|---------|
+| **DESIGN-SYSTEM.md** | Layout diagram, header elements, status bar, Document Viewer CSS, Transcription Table CSS, Validation Panel, card anatomy, interaction patterns |
+| **ARCHITECTURE.md** | Extended EventBus events, three synchronization flows (Transcription→All, Viewer→All, Validation→All) |
+| **VALIDATION.md** | Panel structure ASCII diagram, card anatomy, card interaction, expanded state |
+| **DATA-SCHEMA.md** | Added `lineNumber` and `fields` to Segment, `ColumnDefinition` interface, example with structured fields |
+| **INDEX.md** | UI components quick reference, Version 1.1 entry |
 
-### Kernerkenntnisse
+### Key Insights
 
-1. **Dreifach-Synchronisation:** Document Viewer ↔ Transcription ↔ Validation müssen bidirektional synchron bleiben
-2. **Tabellarische Transkription:** Strukturierte Spalten statt Freitext für Rechnungsbücher
-3. **Validation-Trennung:** RULE-BASED (deterministisch) vs. AI ASSISTANT (probabilistisch)
-4. **Card-Pattern:** Expandierbare Karten mit Status-Indikator (Border-Left)
+1. **Triple Synchronization:** Document Viewer ↔ Transcription ↔ Validation must stay bidirectionally synchronized
+2. **Tabular Transcription:** Structured columns instead of free text for account books
+3. **Validation Separation:** RULE-BASED (deterministic) vs. AI ASSISTANT (probabilistic)
+4. **Card Pattern:** Expandable cards with status indicator (border-left)
 
-### Offene Punkte
+### Open Items
 
-- [x] Git Commit für Knowledge-Base-Updates
-- [x] Prototyp an neue Erkenntnisse anpassen → Erledigt durch neuen modularen Prototyp v2
-- [x] EventBus-Implementation für Synchronisation → AppState mit EventTarget
-- [x] Transcription Table Komponente implementieren → editor.js mit CSS Grid
+- [x] Git commit for knowledge base updates
+- [x] Adapt prototype to new insights → Completed with new modular Prototype v2
+- [x] EventBus implementation for synchronization → AppState with EventTarget
+- [x] Implement Transcription Table component → editor.js with CSS Grid
 
 ---
 
-## 2026-01-16 | Session 3: Prototyp v2 Analyse und Implementierungsplan
+## 2026-01-16 | Session 3: Prototype v2 Analysis and Implementation Plan
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Phase 1: Neuer Prototyp Analyse
+### Phase 1: New Prototype Analysis
 
-**Auftrag:** `newer prototpye/` Ordner analysieren und mit Knowledge Base abgleichen.
+**Task:** Analyze `newer prototpye/` folder and compare with knowledge base.
 
-**Befund:** Signifikante Verbesserungen gegenüber Prototyp v1:
+**Finding:** Significant improvements over Prototype v1:
 
-| Aspekt | Prototyp v1 | Prototyp v2 |
-|--------|-------------|-------------|
-| Architektur | Monolithisch (1413 LOC) | Modular (322 HTML + 260 JS) |
-| State | DOM-basiert | AppState mit EventTarget |
-| CSS | Inline `<style>` | Externe Dateien mit Tokens |
-| JS | Inline `<script>` | ES6 Module |
-| Bounding Boxes | CSS-basiert | SVG-Overlay |
+| Aspect | Prototype v1 | Prototype v2 |
+|--------|--------------|--------------|
+| Architecture | Monolithic (1413 LOC) | Modular (322 HTML + 260 JS) |
+| State | DOM-based | AppState with EventTarget |
+| CSS | Inline `<style>` | External files with tokens |
+| JS | Inline `<script>` | ES6 Modules |
+| Bounding Boxes | CSS-based | SVG Overlay |
 
-### Phase 2: Modulstruktur dokumentiert
+### Phase 2: Module Structure Documented
 
-**Analysierte Dateien:**
+**Analyzed Files:**
 
-| Datei | LOC | Funktion |
-|-------|-----|----------|
-| `js/main.js` | 15 | Entry Point, Module laden |
-| `js/state.js` | 61 | Zentraler State mit EventTarget |
-| `js/viewer.js` | 67 | Document Viewer, SVG Regions, Zoom |
-| `js/editor.js` | 77 | Grid-basierter Editor, Marker-Rendering |
-| `js/ui.js` | 40 | Validation-Interaktionen, Flash-Effekte |
-| `css/variables.css` | 52 | Design System Tokens |
+| File | LOC | Function |
+|------|-----|----------|
+| `js/main.js` | 15 | Entry point, load modules |
+| `js/state.js` | 61 | Central state with EventTarget |
+| `js/viewer.js` | 67 | Document Viewer, SVG regions, zoom |
+| `js/editor.js` | 77 | Grid-based editor, marker rendering |
+| `js/ui.js` | 40 | Validation interactions, flash effects |
+| `css/variables.css` | 52 | Design system tokens |
 
-**Kernimplementierung - AppState:**
+**Core Implementation - AppState:**
 
 ```javascript
 class AppState extends EventTarget {
@@ -234,35 +234,35 @@ class AppState extends EventTarget {
 }
 ```
 
-→ Ersetzt den geplanten EventBus durch native Browser-API.
+→ Replaces planned EventBus with native browser API.
 
 ### Phase 3: Knowledge Base Update
 
-**Aktualisierte Dokumente:**
+**Updated Documents:**
 
-| Dokument | Änderungen |
-|----------|------------|
-| **ARCHITECTURE.md** | Aktuelle vs. Zielstruktur, AppState-Implementierung, Event-Listener-Code |
-| **DESIGN-SYSTEM.md** | Z-Index Layers, erweiterte Spacing/Transitions, Glass Morphism, Mobile Warning, Editor Grid, SVG Regions |
-| **INDEX.md** | IMPLEMENTATION-PLAN.md hinzugefügt, Version 1.2 |
+| Document | Changes |
+|----------|---------|
+| **ARCHITECTURE.md** | Current vs. target structure, AppState implementation, event listener code |
+| **DESIGN-SYSTEM.md** | Z-Index layers, extended spacing/transitions, glass morphism, mobile warning, editor grid, SVG regions |
+| **INDEX.md** | Added IMPLEMENTATION-PLAN.md, Version 1.2 |
 
-### Phase 4: Implementierungsplan erstellt
+### Phase 4: Implementation Plan Created
 
-**Neues Dokument:** `IMPLEMENTATION-PLAN.md`
+**New Document:** `IMPLEMENTATION-PLAN.md`
 
-**7 Phasen definiert:**
+**7 Phases Defined:**
 
 1. **Core Services** - LLM Service, Storage Service
-2. **Dialoge & Upload** - API Key Dialog, Bild-Upload
-3. **LLM Transkription** - Flow: Upload → LLM → Parser → State
-4. **Regelbasierte Validierung** - Deterministische Prüfungen
-5. **LLM-Judge Validierung** - Perspektiven-System
-6. **Export & Persistenz** - JSON/Markdown/TSV, Auto-Save
-7. **Polish & UX** - Inline-Editing, Undo/Redo, Shortcuts
+2. **Dialogs & Upload** - API Key Dialog, Image Upload
+3. **LLM Transcription** - Flow: Upload → LLM → Parser → State
+4. **Rule-Based Validation** - Deterministic checks
+5. **LLM-Judge Validation** - Perspective system
+6. **Export & Persistence** - JSON/Markdown/TSV, Auto-Save
+7. **Polish & UX** - Inline editing, Undo/Redo, Shortcuts
 
-**Empfohlener nächster Schritt:** Phase 1.1 - LLM Service erstellen
+**Recommended Next Step:** Phase 1.1 - Create LLM Service
 
-### Aktuelle Projektstruktur
+### Current Project Structure
 
 ```
 coocr-htr/
@@ -275,11 +275,11 @@ coocr-htr/
 │   ├── ARCHITECTURE.md
 │   ├── VALIDATION.md
 │   ├── DATA-SCHEMA.md
-│   ├── IMPLEMENTATION-PLAN.md  ← NEU
+│   ├── IMPLEMENTATION-PLAN.md  ← NEW
 │   └── JOURNAL.md
 ├── src/
-│   └── index.html              # Prototyp v1 (monolithisch)
-├── newer prototpye/            # Prototyp v2 (modular)
+│   └── index.html              # Prototype v1 (monolithic)
+├── newer prototpye/            # Prototype v2 (modular)
 │   ├── index.html
 │   ├── css/
 │   │   ├── variables.css
@@ -292,156 +292,156 @@ coocr-htr/
 │   │   └── ui.js
 │   └── assets/
 │       └── mock-document.jpg
-└── data/                       # Beispieldaten (User erstellt)
+└── data/                       # Example data (user created)
 ```
 
-### Offene Punkte
+### Open Items
 
-- [x] Git Commit für Session 3 Updates → Commit `3e7f219`
-- [x] Data-Ordner mit Beispieldaten befüllen → Raitbuch 2 mit 340 Dateien
-- [ ] Phase 1: LLM Service implementieren
-- [ ] Prototyp v2 nach `src/` migrieren
+- [x] Git commit for Session 3 updates → Commit `3e7f219`
+- [x] Populate data folder with example data → Raitbuch 2 with 340 files
+- [ ] Phase 1: Implement LLM Service
+- [ ] Migrate Prototype v2 to `src/`
 
 ---
 
-## 2026-01-16 | Session 3b: Data-Ordner Analyse und Dokumentation
+## 2026-01-16 | Session 3b: Data Folder Analysis and Documentation
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Analyse der Beispieldaten
+### Example Data Analysis
 
-**Auftrag:** Data-Ordner im Detail analysieren und dokumentieren.
+**Task:** Analyze data folder in detail and document.
 
-**Befund:** Drei Hauptdatensätze mit PAGE-XML Standard:
+**Finding:** Three main datasets with PAGE-XML standard:
 
-| Datensatz | Typ | Seiten | Format | Status |
-|-----------|-----|--------|--------|--------|
-| **Raitbuch 2** | Rechnungsbuch (16./17. Jh.) | 123 | PAGE-XML + doc.xml | FINAL |
-| **1617-wecker** | Medizinbuch (Latein) | 83 | PAGE-XML | Teilweise |
-| **o_szd** | Stefan Zweig Briefe | 12 | METS-XML + JSON | Metadaten |
-| **Schliemann** | Archivbilder | 21 | Nur JPG | - |
+| Dataset | Type | Pages | Format | Status |
+|---------|------|-------|--------|--------|
+| **Raitbuch 2** | Account book (16th/17th c.) | 123 | PAGE-XML + doc.xml | FINAL |
+| **1617-wecker** | Medical book (Latin) | 83 | PAGE-XML | Partial |
+| **o_szd** | Stefan Zweig letters | 12 | METS-XML + JSON | Metadata |
+| **Schliemann** | Archive images | 21 | JPG only | - |
 
-### PAGE-XML Format dokumentiert
+### PAGE-XML Format Documented
 
-**Erkenntnisse:**
-- Standardformat von Transkribus/PyLaia
-- Polygon-basierte Koordinaten (nicht rechteckig)
-- Hierarchie: Page → TextRegion → TextLine → Word
-- Transkriptionsstatus: NEW, IN_PROGRESS, FINAL
+**Insights:**
+- Standard format from Transkribus/PyLaia
+- Polygon-based coordinates (not rectangular)
+- Hierarchy: Page → TextRegion → TextLine → Word
+- Transcription status: NEW, IN_PROGRESS, FINAL
 
-**Mapping zu coOCR/HTR:**
+**Mapping to coOCR/HTR:**
 ```
 TextLine/Coords@points → bounds (Polygon→BoundingBox)
 TextLine/TextEquiv/Unicode → text
 TranskribusMetadata@status → confidence
 ```
 
-### Dokumentation erstellt
+### Documentation Created
 
-| Aktion | Ergebnis |
-|--------|----------|
-| `data/README.md` erstellt | Datenformate, Struktur, Verwendung |
-| `DATA-SCHEMA.md` erweitert | PAGE-XML Import-Schema, Konvertierung |
+| Action | Result |
+|--------|--------|
+| `data/README.md` created | Data formats, structure, usage |
+| `DATA-SCHEMA.md` extended | PAGE-XML import schema, conversion |
 
 ### Commit
 
-Commit `40a6d9c` - Data-Dokumentation hinzugefügt
+Commit `40a6d9c` - Data documentation added
 
-### Offene Punkte
+### Open Items
 
-- [ ] PAGE-XML Import-Service implementieren
-- [ ] Koordinaten-Konvertierung testen
-- [ ] Beispiel-Import mit Raitbuch 2
-
----
+- [ ] Implement PAGE-XML import service
+- [ ] Test coordinate conversion
+- [ ] Example import with Raitbuch 2
 
 ---
 
-## 2026-01-16 | Session 4: Vollständige Implementierung gestartet
+---
 
-**Teilnehmer:** User, Claude Opus 4.5
+## 2026-01-16 | Session 4: Full Implementation Started
 
-### Phase 1: Anforderungsklärung
+**Participants:** User, Claude Opus 4.5
 
-**Auftrag:** Vollständigen Implementierungsplan erstellen mit Milestones.
+### Phase 1: Requirements Clarification
 
-**Benutzerentscheidungen:**
+**Task:** Create complete implementation plan with milestones.
 
-| Frage | Antwort |
-|-------|---------|
-| LLM-Provider | Gemini 2.5 Flash, GPT-4.5 Mini, Haiku 4.5, DeepSeek (lokal+API) |
-| API-Key Speicherung | LocalStorage (einfach) |
-| Datenformate | Bilder + PAGE-XML |
-| Export-Formate | .txt, .json, .md (PAGE-XML als Ausbaustufe) |
-| Validierung | Regelbasiert + LLM-Judge parallel |
-| Tests | Vitest für kritische Services |
-| Ordner-Umbenennung | `newer prototpye` → `prototype` |
-| Test-Framework | Vitest (Entscheidung Claude) |
-| DeepSeek | Beide Optionen (API + Ollama lokal) |
-| Deployment | GitHub Pages + lokale file:// Nutzung |
+**User Decisions:**
 
-### Phase 2: Milestone 0 - Vorbereitung
+| Question | Answer |
+|----------|--------|
+| LLM Providers | Gemini 2.5 Flash, GPT-4.5 Mini, Haiku 4.5, DeepSeek (local+API) |
+| API Key Storage | LocalStorage (simple) |
+| Data Formats | Images + PAGE-XML |
+| Export Formats | .txt, .json, .md (PAGE-XML as expansion stage) |
+| Validation | Rule-based + LLM-Judge parallel |
+| Tests | Vitest for critical services |
+| Folder Rename | `newer prototpye` → `prototype` |
+| Test Framework | Vitest (Claude's decision) |
+| DeepSeek | Both options (API + Ollama local) |
+| Deployment | GitHub Pages + local file:// usage |
 
-**Tasks erledigt:**
+### Phase 2: Milestone 0 - Preparation
+
+**Tasks Completed:**
 
 | Task | Status |
 |------|--------|
-| Ordner `newer prototpye` → `prototype` umbenennen | ✅ |
-| Projektstruktur erstellen (`js/services/`, `js/components/`, `tests/`) | ✅ |
-| `package.json` mit Vitest erstellen | ✅ |
-| `vitest.config.js` erstellen | ✅ |
-| IMPLEMENTATION-PLAN.md Pfade aktualisieren | ✅ |
-| ARCHITECTURE.md Pfade aktualisieren | ✅ |
+| Rename folder `newer prototpye` → `prototype` | ✅ |
+| Create project structure (`js/services/`, `js/components/`, `tests/`) | ✅ |
+| Create `package.json` with Vitest | ✅ |
+| Create `vitest.config.js` | ✅ |
+| Update IMPLEMENTATION-PLAN.md paths | ✅ |
+| Update ARCHITECTURE.md paths | ✅ |
 
 ### Phase 3: Milestone 1 - Core Services
 
-**Tasks erledigt:**
+**Tasks Completed:**
 
-| Task | Status | Datei |
-|------|--------|-------|
-| Storage Service | Fertig | `js/services/storage.js` |
-| State.js erweitert | Fertig | `js/state.js` |
-| LLM Service Basis | Fertig | `js/services/llm.js` |
-| Gemini Provider | Fertig | in llm.js |
-| OpenAI Provider | Fertig | in llm.js |
-| Anthropic Provider | Fertig | in llm.js |
-| DeepSeek Provider (API + Ollama) | Fertig | in llm.js |
-| LLM Service Tests | Fertig | `tests/llm.test.js` |
+| Task | Status | File |
+|------|--------|------|
+| Storage Service | Done | `js/services/storage.js` |
+| State.js extended | Done | `js/state.js` |
+| LLM Service Base | Done | `js/services/llm.js` |
+| Gemini Provider | Done | in llm.js |
+| OpenAI Provider | Done | in llm.js |
+| Anthropic Provider | Done | in llm.js |
+| DeepSeek Provider (API + Ollama) | Done | in llm.js |
+| LLM Service Tests | Done | `tests/llm.test.js` |
 
-**Implementierte Features:**
+**Implemented Features:**
 
 1. **Storage Service** (~230 LOC)
-   - Settings CRUD mit Defaults
-   - API Key Speicherung (Base64-obfuskiert)
-   - Session Auto-Save/Restore
-   - Storage-Info Utility
+   - Settings CRUD with defaults
+   - API key storage (Base64-obfuscated)
+   - Session auto-save/restore
+   - Storage info utility
 
-2. **State.js erweitert** (~440 LOC)
-   - Document Management (Upload, Dimensions)
-   - Transcription State (Provider, Segments, Lines)
-   - Validation State (Rules, LLM-Judge, Perspective)
-   - UI State (Loading, Dialogs, Errors)
-   - Session Auto-Save mit Storage Service
-   - Backward-Compatibility mit altem API
+2. **State.js Extended** (~440 LOC)
+   - Document management (upload, dimensions)
+   - Transcription state (provider, segments, lines)
+   - Validation state (rules, LLM-Judge, perspective)
+   - UI state (loading, dialogs, errors)
+   - Session auto-save with storage service
+   - Backward compatibility with old API
 
 3. **LLM Service** (~500 LOC)
-   - 5 Provider: Gemini, OpenAI, Anthropic, DeepSeek, Ollama
-   - Transkriptions-Prompt (historische Handschriften)
-   - Validierungs-Prompts (4 Perspektiven)
-   - Response-Parsing (Markdown-Tabellen, JSON)
-   - Error Handling mit Kategorisierung
+   - 5 providers: Gemini, OpenAI, Anthropic, DeepSeek, Ollama
+   - Transcription prompt (historical handwriting)
+   - Validation prompts (4 perspectives)
+   - Response parsing (Markdown tables, JSON)
+   - Error handling with categorization
 
-### Phase 4: Umbenennung zu docs/
+### Phase 4: Rename to docs/
 
-**Auftrag:** Ordner umbenennen für GitHub Pages Kompatibilität.
+**Task:** Rename folder for GitHub Pages compatibility.
 
-| Aktion | Status |
+| Action | Status |
 |--------|--------|
-| `src/index.html` geloescht | Fertig |
-| `prototype/` -> `docs/` | Fertig |
-| Dokumentation aktualisiert | Fertig |
+| Deleted `src/index.html` | Done |
+| `prototype/` -> `docs/` | Done |
+| Updated documentation | Done |
 
-### Aktuelle Projektstruktur
+### Current Project Structure
 
 ```
 coocr-htr/
@@ -463,18 +463,18 @@ coocr-htr/
 │   │   └── styles.css
 │   ├── js/
 │   │   ├── main.js
-│   │   ├── state.js            # Erweitert
+│   │   ├── state.js            # Extended
 │   │   ├── viewer.js
 │   │   ├── editor.js
 │   │   ├── ui.js
 │   │   ├── components/
 │   │   ├── services/
-│   │   │   ├── llm.js          # NEU
-│   │   │   ├── storage.js      # NEU
+│   │   │   ├── llm.js          # NEW
+│   │   │   ├── storage.js      # NEW
 │   │   │   └── parsers/
 │   │   └── utils/
 │   ├── tests/
-│   │   └── llm.test.js         # NEU
+│   │   └── llm.test.js         # NEW
 │   ├── assets/
 │   │   └── mock-document.jpg
 │   ├── package.json
@@ -484,224 +484,224 @@ coocr-htr/
 
 ### Commits
 
-| Commit | Beschreibung |
-|--------|--------------|
-| `3cfb93c` | Milestone 0: Vorbereitung |
+| Commit | Description |
+|--------|-------------|
+| `3cfb93c` | Milestone 0: Preparation |
 | `0c4ae1c` | Milestone 1: Core Services |
 
-### Naechste Schritte
+### Next Steps
 
-- [x] Milestone 2: Dialoge & Upload
-- [x] Milestone 3: LLM-Transkription
-- [x] Milestone 4: Validierung
+- [x] Milestone 2: Dialogs & Upload
+- [x] Milestone 3: LLM Transcription
+- [x] Milestone 4: Validation
 - [ ] Milestone 5: Export
 - [ ] Milestone 6: UX (Inline-Edit, Undo/Redo)
 - [ ] Milestone 7: Polish & Release
 
 ---
 
-## 2026-01-16 | Session 5: Milestone 2-4 Implementierung
+## 2026-01-16 | Session 5: Milestone 2-4 Implementation
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Milestone 2: Input - Dialoge & Upload
+### Milestone 2: Input - Dialogs & Upload
 
-**Tasks erledigt:**
+**Tasks Completed:**
 
-| Task | Status | Datei |
-|------|--------|-------|
-| Dialog CSS (Glass Morphism) | Fertig | `css/styles.css` (+480 LOC) |
-| API Key Dialog HTML | Fertig | `index.html` |
-| Export Dialog HTML | Fertig | `index.html` |
-| Dialog Manager JS | Fertig | `js/components/dialogs.js` |
-| Upload Manager (Drag&Drop) | Fertig | `js/components/upload.js` |
-| PAGE-XML Parser | Fertig | `js/services/parsers/page-xml.js` |
-| PAGE-XML Tests | Fertig | `tests/page-xml.test.js` |
+| Task | Status | File |
+|------|--------|------|
+| Dialog CSS (Glass Morphism) | Done | `css/styles.css` (+480 LOC) |
+| API Key Dialog HTML | Done | `index.html` |
+| Export Dialog HTML | Done | `index.html` |
+| Dialog Manager JS | Done | `js/components/dialogs.js` |
+| Upload Manager (Drag&Drop) | Done | `js/components/upload.js` |
+| PAGE-XML Parser | Done | `js/services/parsers/page-xml.js` |
+| PAGE-XML Tests | Done | `tests/page-xml.test.js` |
 
-**Neue Features:**
-- Native `<dialog>` Element mit Glass Morphism Backdrop
-- Tab-basierte Provider-Konfiguration (5 Provider)
-- Password-Toggle fuer API Keys
-- File Input + Drag & Drop Upload Zone
-- PAGE-XML Import mit Koordinaten-Konvertierung
-- Toast Notification System
+**New Features:**
+- Native `<dialog>` element with glass morphism backdrop
+- Tab-based provider configuration (5 providers)
+- Password toggle for API keys
+- File input + drag & drop upload zone
+- PAGE-XML import with coordinate conversion
+- Toast notification system
 
-### Milestone 3: Transkription - LLM Integration
+### Milestone 3: Transcription - LLM Integration
 
-**Tasks erledigt:**
+**Tasks Completed:**
 
-| Task | Status | Datei |
-|------|--------|-------|
-| Transcribe Button mit Spinner | Fertig | `index.html` |
-| Transcription Manager | Fertig | `js/components/transcription.js` |
-| Image-to-Base64 Konvertierung | Fertig | in transcription.js |
-| Error Handling mit Retry | Fertig | in transcription.js |
+| Task | Status | File |
+|------|--------|------|
+| Transcribe Button with Spinner | Done | `index.html` |
+| Transcription Manager | Done | `js/components/transcription.js` |
+| Image-to-Base64 Conversion | Done | in transcription.js |
+| Error Handling with Retry | Done | in transcription.js |
 
-**Transkriptions-Flow:**
+**Transcription Flow:**
 ```
 Upload → Transcribe Click → Loading State → LLM API Call
     → Response Parse → State Update → Editor/Viewer Update
 ```
 
-### Milestone 4: Validierung (in Arbeit)
+### Milestone 4: Validation (in progress)
 
-**Tasks erledigt:**
+**Tasks Completed:**
 
-| Task | Status | Datei |
-|------|--------|-------|
-| Validation Engine | Fertig | `js/services/validation.js` |
-| Regelbasierte Validierung | Fertig | 8 Regeln definiert |
-| LLM-Judge Integration | Fertig | 4 Perspektiven |
-| Validation Panel UI | Fertig | `js/components/validation.js` |
-| Perspektiven-Dropdown | Fertig | in validation.js |
+| Task | Status | File |
+|------|--------|------|
+| Validation Engine | Done | `js/services/validation.js` |
+| Rule-Based Validation | Done | 8 rules defined |
+| LLM-Judge Integration | Done | 4 perspectives |
+| Validation Panel UI | Done | `js/components/validation.js` |
+| Perspective Dropdown | Done | in validation.js |
 
-**Validierungsregeln:**
-1. Datumsformat (DD. Monat)
-2. Waehrung Taler
-3. Waehrung Groschen
-4. Waehrung Gulden/Kreuzer
-5. Unsichere Lesungen [?]
-6. Unleserliche Stellen [illegible]
-7. Spaltenanzahl-Konsistenz
-8. Leere Zellen
+**Validation Rules:**
+1. Date format (DD. Month)
+2. Currency Taler
+3. Currency Groschen
+4. Currency Gulden/Kreuzer
+5. Uncertain readings [?]
+6. Illegible passages [illegible]
+7. Column count consistency
+8. Empty cells
 
-**Perspektiven:**
-- Palaeographisch (Buchstabenformen, Ligaturen)
-- Sprachlich (Grammatik, historische Orthographie)
-- Strukturell (Tabellen, Summen, Verweise)
-- Domaenenwissen (Fachtermini, Plausibilitaet)
+**Perspectives:**
+- Paleographic (letter forms, ligatures)
+- Linguistic (grammar, historical orthography)
+- Structural (tables, sums, references)
+- Domain knowledge (technical terms, plausibility)
 
 ### Commits
 
-| Commit | Beschreibung |
-|--------|--------------|
-| `8060c3a` | Milestone 2 & 3: Dialoge, Upload, PAGE-XML, Transkription |
+| Commit | Description |
+|--------|-------------|
+| `8060c3a` | Milestone 2 & 3: Dialogs, Upload, PAGE-XML, Transcription |
 
-### Aktuelle Projektstruktur
+### Current Project Structure
 
 ```
 docs/
 ├── js/
 │   ├── components/
-│   │   ├── dialogs.js       # NEU
-│   │   ├── upload.js        # NEU
-│   │   ├── transcription.js # NEU
-│   │   └── validation.js    # NEU
+│   │   ├── dialogs.js       # NEW
+│   │   ├── upload.js        # NEW
+│   │   ├── transcription.js # NEW
+│   │   └── validation.js    # NEW
 │   ├── services/
 │   │   ├── llm.js
 │   │   ├── storage.js
-│   │   ├── validation.js    # NEU
+│   │   ├── validation.js    # NEW
 │   │   └── parsers/
-│   │       └── page-xml.js  # NEU
-│   ├── main.js              # Erweitert
-│   └── state.js             # Erweitert
+│   │       └── page-xml.js  # NEW
+│   ├── main.js              # Extended
+│   └── state.js             # Extended
 ├── tests/
 │   ├── llm.test.js
-│   └── page-xml.test.js     # NEU
+│   └── page-xml.test.js     # NEW
 └── css/
-    └── styles.css           # Erweitert (+480 LOC)
+    └── styles.css           # Extended (+480 LOC)
 ```
 
-### Naechste Schritte
+### Next Steps
 
 - [x] Milestone 5: Export Service
-- [x] Milestone 6: Inline-Editing, Undo/Redo
+- [x] Milestone 6: Inline Editing, Undo/Redo
 - [ ] Milestone 7: Polish, GitHub Pages Deployment
 
 ---
 
-## 2026-01-16 | Session 5b: Milestone 5-6 Abschluss
+## 2026-01-16 | Session 5b: Milestone 5-6 Completion
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
 ### Milestone 5: Export Service
 
-**Tasks erledigt:**
+**Tasks Completed:**
 
-| Task | Status | Datei |
-|------|--------|-------|
-| Export Service | Fertig | `js/services/export.js` |
-| Plain Text Export | Fertig | Tab-separiert |
-| JSON Export | Fertig | Mit Metadata-Option |
-| Markdown Export | Fertig | Mit Validierungsnotizen |
-| Download Trigger | Fertig | Blob + createObjectURL |
+| Task | Status | File |
+|------|--------|------|
+| Export Service | Done | `js/services/export.js` |
+| Plain Text Export | Done | Tab-separated |
+| JSON Export | Done | With metadata option |
+| Markdown Export | Done | With validation notes |
+| Download Trigger | Done | Blob + createObjectURL |
 
 ### Milestone 6: UX Features
 
-**Tasks erledigt:**
+**Tasks Completed:**
 
-| Task | Status | Datei |
-|------|--------|-------|
-| Inline Editing | Fertig | `js/editor.js` |
-| Undo/Redo Stack | Fertig | `js/editor.js` |
-| Keyboard Shortcuts | Fertig | `js/editor.js` |
-| Cell CSS | Fertig | `css/styles.css` |
+| Task | Status | File |
+|------|--------|------|
+| Inline Editing | Done | `js/editor.js` |
+| Undo/Redo Stack | Done | `js/editor.js` |
+| Keyboard Shortcuts | Done | `js/editor.js` |
+| Cell CSS | Done | `css/styles.css` |
 
 **Inline Editing Features:**
-- Doppelklick auf Zelle startet Editing
-- Enter beendet und speichert
-- Escape bricht ab
-- Tab navigiert zur naechsten Zelle
+- Double-click on cell starts editing
+- Enter finishes and saves
+- Escape cancels
+- Tab navigates to next cell
 
 **Keyboard Shortcuts:**
 - Ctrl+Z / Cmd+Z: Undo
 - Ctrl+Shift+Z / Ctrl+Y: Redo
-- Pfeiltasten: Zeilen-Navigation
-- Enter: Editing starten
+- Arrow keys: Line navigation
+- Enter: Start editing
 
 ### Commits
 
-| Commit | Beschreibung |
-|--------|--------------|
+| Commit | Description |
+|--------|-------------|
 | `4e78d0f` | Milestone 5: Export Service |
 | `5bd62bc` | Milestone 6: Inline Editing, Undo/Redo, Shortcuts |
 
-### Projektstand
+### Project Status
 
-**Alle Kernfunktionen implementiert:**
+**All Core Features Implemented:**
 
 | Feature | Status |
 |---------|--------|
-| LLM-Provider (5) | Fertig |
-| Dialoge & Upload | Fertig |
-| PAGE-XML Import | Fertig |
-| LLM-Transkription | Fertig |
-| Regelbasierte Validierung | Fertig |
-| LLM-Judge Validierung | Fertig |
-| Export (txt, json, md) | Fertig |
-| Inline-Editing | Fertig |
-| Undo/Redo | Fertig |
-| Keyboard Shortcuts | Fertig |
+| LLM Providers (5) | Done |
+| Dialogs & Upload | Done |
+| PAGE-XML Import | Done |
+| LLM Transcription | Done |
+| Rule-Based Validation | Done |
+| LLM-Judge Validation | Done |
+| Export (txt, json, md) | Done |
+| Inline Editing | Done |
+| Undo/Redo | Done |
+| Keyboard Shortcuts | Done |
 
-**Noch offen:**
-- [ ] Tests fuer alle neuen Services
-- [ ] End-to-End Test
-- [ ] GitHub Pages Aktivierung
+**Still Open:**
+- [ ] Tests for all new services
+- [ ] End-to-end test
+- [ ] GitHub Pages activation
 
 ---
 
-## 2026-01-16 | Session 6: Milestone 7 - Demo-Loader und Polish
+## 2026-01-16 | Session 6: Milestone 7 - Demo Loader and Polish
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Problemstellung
+### Problem Statement
 
-**Auftrag:** Placeholder-Bild durch echte Demo-Funktionalitaet ersetzen. Daten aus `data/` Ordner sollen ladbar sein.
+**Task:** Replace placeholder image with real demo functionality. Data from `data/` folder should be loadable.
 
-**Herausforderung:**
-- `data/` liegt ausserhalb `docs/` und ist daher nicht per Browser erreichbar
-- GitHub Pages serviert nur aus `docs/`
+**Challenge:**
+- `data/` is outside `docs/` and therefore not accessible via browser
+- GitHub Pages only serves from `docs/`
 
-### Loesung: Demo-Loader System
+### Solution: Demo Loader System
 
-**Architekturentscheidung:** Ausgewaehlte Beispieldaten nach `docs/samples/` kopieren.
+**Architecture Decision:** Copy selected example data to `docs/samples/`.
 
-| Aktion | Ergebnis |
-|--------|----------|
-| `docs/samples/` erstellt | Ordnerstruktur fuer Demos |
-| `docs/samples/index.json` | Manifest mit Metadaten |
-| `docs/js/services/samples.js` | Sample-Loader Service |
-| Beispieldaten kopiert | raitbuch, letter, karteikarte |
+| Action | Result |
+|--------|--------|
+| `docs/samples/` created | Folder structure for demos |
+| `docs/samples/index.json` | Manifest with metadata |
+| `docs/js/services/samples.js` | Sample loader service |
+| Example data copied | raitbuch, letter, karteikarte |
 
 ### Samples Manifest
 
@@ -711,7 +711,7 @@ docs/
     {
       "id": "raitbuch-0v1r",
       "name": "Raitbuch 2, fol. 0v-1r",
-      "description": "Oberoesterreichisches Kirchenamt-Rechnungsbuch",
+      "description": "Upper Austrian church office account book",
       "image": "raitbuch/fol-0v-1r.jpg",
       "pageXml": "raitbuch/fol-0v-1r.xml"
     },
@@ -720,43 +720,43 @@ docs/
 }
 ```
 
-### UI-Erweiterungen
+### UI Extensions
 
-**Tasks erledigt:**
+**Tasks Completed:**
 
-| Task | Status | Datei |
-|------|--------|-------|
-| Samples Dropdown im Header | Fertig | `index.html` |
-| Viewer Empty State | Fertig | `index.html` |
-| Empty State Buttons | Fertig | `main.js` |
-| Samples Menu CSS | Fertig | `styles.css` |
-| Empty State CSS | Fertig | `styles.css` |
-| viewer.js documentLoaded Handler | Fertig | `viewer.js` |
+| Task | Status | File |
+|------|--------|------|
+| Samples Dropdown in Header | Done | `index.html` |
+| Viewer Empty State | Done | `index.html` |
+| Empty State Buttons | Done | `main.js` |
+| Samples Menu CSS | Done | `styles.css` |
+| Empty State CSS | Done | `styles.css` |
+| viewer.js documentLoaded Handler | Done | `viewer.js` |
 
-**CSS-Refactoring:**
+**CSS Refactoring:**
 
-| Problem | Loesung |
-|---------|---------|
-| Fehlende `--accent-rgb` Variable | Hinzugefuegt in `variables.css` |
-| Alte onclick-Handler | Entfernt, IDs hinzugefuegt |
+| Problem | Solution |
+|---------|----------|
+| Missing `--accent-rgb` variable | Added in `variables.css` |
+| Old onclick handlers | Removed, added IDs |
 
-### Neue UI-Elemente
+### New UI Elements
 
 **Empty State (Viewer):**
-- Icon, Titel, Beschreibung
-- "Load Demo" Button (oeffnet Samples Menu)
-- "Upload Image" Button (triggert Upload)
+- Icon, title, description
+- "Load Demo" button (opens Samples Menu)
+- "Upload Image" button (triggers upload)
 
 **Samples Dropdown:**
-- Button im Header "Demo"
-- Dropdown mit allen verfuegbaren Samples
-- Click laedt Sample via samplesService
+- Button in header "Demo"
+- Dropdown with all available samples
+- Click loads sample via samplesService
 
-### Projektstruktur Update
+### Project Structure Update
 
 ```
 docs/
-├── samples/                    # NEU
+├── samples/                    # NEW
 │   ├── index.json
 │   ├── raitbuch/
 │   │   ├── fol-0v-1r.jpg
@@ -767,208 +767,208 @@ docs/
 │       └── image.jpg
 ├── js/
 │   ├── services/
-│   │   └── samples.js          # NEU
-│   ├── viewer.js               # Erweitert
-│   └── main.js                 # Erweitert
+│   │   └── samples.js          # NEW
+│   ├── viewer.js               # Extended
+│   └── main.js                 # Extended
 └── css/
-    ├── variables.css           # --accent-rgb hinzugefuegt
+    ├── variables.css           # --accent-rgb added
     └── styles.css              # Samples Menu + Empty State CSS
 ```
 
-### Naechste Schritte
+### Next Steps
 
-- [x] Browser-Test der Demo-Funktionalitaet
-- [ ] GitHub Pages aktivieren
-- [ ] README mit Deploy-Anleitung
+- [x] Browser test of demo functionality
+- [ ] Activate GitHub Pages
+- [ ] README with deploy instructions
 
 ---
 
-## 2026-01-16 | Session 6b: Bugfixes und GitHub Pages
+## 2026-01-16 | Session 6b: Bugfixes and GitHub Pages
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Problemstellung
+### Problem Statement
 
-**Auftrag:** App testen und Bugs beheben, dann auf GitHub Pages deployen.
+**Task:** Test app and fix bugs, then deploy to GitHub Pages.
 
-**Gefundene Bugs:**
+**Bugs Found:**
 
-| Bug | Ursache | Loesung |
-|-----|---------|---------|
-| `appState.setUI is not a function` | Methode existiert nicht | Ersetzt durch `setLoading()`, `openDialog()`, `closeDialog()` |
-| `validationPanel.init is not a function` | Init-Aufruf fehlte | `validationPanel.init()` in main.js hinzugefuegt |
-| CSS `rgba(var(--bg-rgb))` fehlerhaft | `--bg-rgb` Variable fehlte | RGB-Varianten in variables.css hinzugefuegt |
-| Zoom funktioniert nicht | Stale State-Referenz | `appState.zoom` Getter verwendet |
-| Export Dialog Backdrop fehlt | `.dialog-container` Wrapper fehlte | HTML-Struktur korrigiert |
+| Bug | Cause | Solution |
+|-----|-------|----------|
+| `appState.setUI is not a function` | Method doesn't exist | Replaced with `setLoading()`, `openDialog()`, `closeDialog()` |
+| `validationPanel.init is not a function` | Init call missing | Added `validationPanel.init()` in main.js |
+| CSS `rgba(var(--bg-rgb))` faulty | `--bg-rgb` variable missing | Added RGB variants in variables.css |
+| Zoom doesn't work | Stale state reference | Used `appState.zoom` getter |
+| Export Dialog backdrop missing | `.dialog-container` wrapper missing | Corrected HTML structure |
 
-### Behobene Dateien
+### Fixed Files
 
-| Datei | Aenderung |
-|-------|-----------|
+| File | Change |
+|------|--------|
 | `js/components/upload.js` | `setUI` → `setLoading` |
 | `js/components/transcription.js` | `setUI` → `setLoading` |
 | `js/components/dialogs.js` | `setUI` → `openDialog`/`closeDialog` |
-| `js/main.js` | `validationPanel.init()` hinzugefuegt |
+| `js/main.js` | Added `validationPanel.init()` |
 | `css/variables.css` | `--bg-rgb`, `--success-rgb`, `--warning-rgb`, `--error-rgb` |
 | `js/viewer.js` | `state.zoom` → `appState.zoom` |
-| `index.html` | Export Dialog `.dialog-container` Wrapper |
+| `index.html` | Export Dialog `.dialog-container` wrapper |
 
-### Test-Ergebnisse
+### Test Results
 
-**Lokaler Server:** `npx serve docs -l 3000`
+**Local Server:** `npx serve docs -l 3000`
 
 | Feature | Status |
 |---------|--------|
-| Demo-Loader | Funktioniert |
-| Samples Dropdown | Funktioniert |
-| Viewer Empty State | Funktioniert |
-| Validation Panel | Funktioniert |
-| API Configuration Dialog | Funktioniert |
-| Export Dialog | Funktioniert |
-| Zoom Controls | Funktioniert |
+| Demo Loader | Works |
+| Samples Dropdown | Works |
+| Viewer Empty State | Works |
+| Validation Panel | Works |
+| API Configuration Dialog | Works |
+| Export Dialog | Works |
+| Zoom Controls | Works |
 
 ### GitHub Deployment
 
-| Aktion | Status |
+| Action | Status |
 |--------|--------|
-| Commits gepusht | Fertig |
-| README aktualisiert | Fertig |
-| Live-Demo URL eingefuegt | Fertig |
+| Commits pushed | Done |
+| README updated | Done |
+| Live demo URL added | Done |
 
-**Live-URL:** http://dhcraft.org/co-ocr-htr
+**Live URL:** http://dhcraft.org/co-ocr-htr
 
 ### Commits
 
-| Commit | Beschreibung |
-|--------|--------------|
+| Commit | Description |
+|--------|-------------|
 | `785a38d` | feat: add demo-loader with samples dropdown and viewer empty state |
 | `ba43546` | fix: resolve critical runtime bugs |
 
-### Projektstand
+### Project Status
 
-**Alle Meilensteine abgeschlossen:**
+**All Milestones Completed:**
 
 | Milestone | Status |
 |-----------|--------|
-| 0: Vorbereitung | Fertig |
-| 1: Core Services | Fertig |
-| 2: Dialoge & Upload | Fertig |
-| 3: LLM-Transkription | Fertig |
-| 4: Validierung | Fertig |
-| 5: Export | Fertig |
-| 6: UX | Fertig |
-| 6.5: Bugfixes & Demo-Loader | Fertig |
-| 7: GitHub Pages Deployment | Fertig |
+| 0: Preparation | Done |
+| 1: Core Services | Done |
+| 2: Dialogs & Upload | Done |
+| 3: LLM Transcription | Done |
+| 4: Validation | Done |
+| 5: Export | Done |
+| 6: UX | Done |
+| 6.5: Bugfixes & Demo Loader | Done |
+| 7: GitHub Pages Deployment | Done |
 
-### Naechste Schritte (Optional)
+### Next Steps (Optional)
 
-- [x] Favicon hinzugefuegt (bereits vorhanden)
-- [ ] Vitest Unit Tests vervollstaendigen
-- [ ] LLM-Transkription mit echtem API Key testen
-- [ ] Mobile Warnung verbessern
+- [x] Favicon added (already present)
+- [ ] Complete Vitest unit tests
+- [ ] Test LLM transcription with real API key
+- [ ] Improve mobile warning
 
 ---
 
 ## 2026-01-16 | Session 7: Flexible Editor & Guided Workflow
 
-**Teilnehmer:** User, Claude Opus 4.5
+**Participants:** User, Claude Opus 4.5
 
-### Problemstellung
+### Problem Statement
 
-**Auftrag:** Editor war hardcoded fuer Rechnungsbuch-Struktur (4 Spalten: Datum/Name/Beschreibung/Betrag). Soll flexible Quellentypen unterstuetzen.
+**Task:** Editor was hardcoded for account book structure (4 columns: Date/Name/Description/Amount). Should support flexible source types.
 
-**Analyse der Knowledge-Dokumente:**
-- DATA-SCHEMA.md unterstuetzte bereits flexible Struktur
-- Editor-Code war nicht flexibel implementiert
+**Analysis of Knowledge Documents:**
+- DATA-SCHEMA.md already supported flexible structure
+- Editor code was not flexibly implemented
 
-### Loesung: Flexible Editor-Modi
+### Solution: Flexible Editor Modes
 
-**Automatische Modus-Erkennung:**
+**Automatic Mode Detection:**
 
-| Bedingung | Modus |
-|-----------|-------|
-| `columns[]` definiert | grid |
-| Segmente mit `fields` | grid |
-| Text enthaelt `\|` | grid |
+| Condition | Mode |
+|-----------|------|
+| `columns[]` defined | grid |
+| Segments with `fields` | grid |
+| Text contains `\|` | grid |
 | Standard/Fallback | lines |
 
-**Neue Editor-Modi:**
+**New Editor Modes:**
 
-| Modus | Verwendung | Beispiel |
-|-------|------------|----------|
-| `lines` | Fliesstext | Briefe, Tagebuecher, Manuskripte |
-| `grid` | Tabellen | Rechnungsbuecher, Inventare, Register |
+| Mode | Usage | Example |
+|------|-------|---------|
+| `lines` | Prose text | Letters, diaries, manuscripts |
+| `grid` | Tables | Account books, inventories, registers |
 
 ### Guided Workflow Features
 
-**Implementiert:**
+**Implemented:**
 
-| Feature | Beschreibung |
-|---------|--------------|
-| Workflow Stepper | 6 Schritte in Status Bar (Laden → Exportieren) |
-| Panel Hints | Kontextuelle Hinweise pro Panel |
-| Info Tooltips | Methodologie-Erklaerungen in Panel-Headern |
-| Onboarding Toast | Willkommensnachricht fuer Erstbesucher |
-| Hint Dismissal | Hinweise koennen geschlossen werden (persistent) |
+| Feature | Description |
+|---------|-------------|
+| Workflow Stepper | 6 steps in status bar (Load → Export) |
+| Panel Hints | Contextual hints per panel |
+| Info Tooltips | Methodology explanations in panel headers |
+| Onboarding Toast | Welcome message for first-time visitors |
+| Hint Dismissal | Hints can be dismissed (persistent) |
 
-### Implementierte Dateien
+### Implemented Files
 
-| Datei | Aenderungen |
-|-------|-------------|
-| `js/editor.js` | Komplett refactored fuer flexible Modi |
+| File | Changes |
+|------|---------|
+| `js/editor.js` | Completely refactored for flexible modes |
 | `js/main.js` | `initGuidedWorkflow()`, `showOnboardingToast()` |
-| `index.html` | Panel Hints, Workflow Stepper, Info Tooltips |
-| `css/styles.css` | Lines Editor CSS, Workflow Stepper CSS |
-| `knowledge/DATA-SCHEMA.md` | Quellentypen-Dokumentation |
+| `index.html` | Panel hints, workflow stepper, info tooltips |
+| `css/styles.css` | Lines editor CSS, workflow stepper CSS |
+| `knowledge/DATA-SCHEMA.md` | Source types documentation |
 
 ### CSS/HTML Refactoring
 
-**CSS Verbesserungen:**
+**CSS Improvements:**
 
-| Problem | Loesung |
-|---------|---------|
-| Duplizierte `.editor-grid-row` | Zusammengefuehrt |
-| Hardcoded Farben (`#30363d`) | CSS-Variablen (`--bg-tertiary-hover`) |
-| Fehlende Border-Variablen | `--border-subtle`, `--border-muted` hinzugefuegt |
-| Verwaiste Modal-Styles | Entfernt (nutzen jetzt `<dialog>`) |
+| Problem | Solution |
+|---------|----------|
+| Duplicate `.editor-grid-row` | Merged |
+| Hardcoded colors (`#30363d`) | CSS variables (`--bg-tertiary-hover`) |
+| Missing border variables | Added `--border-subtle`, `--border-muted` |
+| Orphaned modal styles | Removed (now use `<dialog>`) |
 
-**HTML Verbesserungen:**
+**HTML Improvements:**
 
-| Problem | Loesung |
-|---------|---------|
-| Leeres `<style>` Tag | Entfernt |
-| Inline Styles | Utility-Klassen erstellt |
+| Problem | Solution |
+|---------|----------|
+| Empty `<style>` tag | Removed |
+| Inline styles | Created utility classes |
 
 ### Commits
 
-| Commit | Beschreibung |
-|--------|--------------|
+| Commit | Description |
+|--------|-------------|
 | `1823692` | feat: add flexible editor modes and guided workflow UX |
 
-### Projektstand
+### Project Status
 
-**Milestone 8 abgeschlossen:**
+**Milestone 8 Completed:**
 
 | Feature | Status |
 |---------|--------|
-| Flexible Editor (lines/grid) | Fertig |
-| Automatische Modus-Erkennung | Fertig |
-| Workflow Stepper | Fertig |
-| Panel Hints | Fertig |
-| Info Tooltips | Fertig |
-| Onboarding Toast | Fertig |
-| CSS Refactoring | Fertig |
+| Flexible Editor (lines/grid) | Done |
+| Automatic Mode Detection | Done |
+| Workflow Stepper | Done |
+| Panel Hints | Done |
+| Info Tooltips | Done |
+| Onboarding Toast | Done |
+| CSS Refactoring | Done |
 
-### Knowledge-Dokumente Status
+### Knowledge Documents Status
 
-| Dokument | Status |
+| Document | Status |
 |----------|--------|
-| DATA-SCHEMA.md | Aktualisiert mit Quellentypen |
-| JOURNAL.md | Aktualisiert (diese Session) |
-| README.md | Aktualisiert mit Milestone 8 |
-| ARCHITECTURE.md | Aktuell |
-| METHODOLOGY.md | Aktuell |
+| DATA-SCHEMA.md | Updated with source types |
+| JOURNAL.md | Updated (this session) |
+| README.md | Updated with Milestone 8 |
+| ARCHITECTURE.md | Current |
+| METHODOLOGY.md | Current |
 
 ---
 
-*Format: YYYY-MM-DD | Session N: Titel*
+*Format: YYYY-MM-DD | Session N: Title*

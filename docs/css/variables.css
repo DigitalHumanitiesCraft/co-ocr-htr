@@ -14,12 +14,22 @@
   --accent-rgb: 88, 166, 255;  /* RGB values for accent-primary (for rgba usage) */
   --accent-secondary: #1f6feb; /* Darker blue for interactions */
 
-  --success: #3fb950;
-  --success-rgb: 63, 185, 80;  /* RGB values for success */
-  --warning: #d29922;
-  --warning-rgb: 210, 153, 34; /* RGB values for warning */
-  --error: #f85149;
-  --error-rgb: 248, 81, 73;    /* RGB values for error */
+  /* Status Colors - Muted Palette (v2.1)
+     Rationale: Muted colors signal status without alarming */
+  --confident: #2d8659;
+  --confident-rgb: 45, 134, 89;
+  --uncertain: #b8860b;
+  --uncertain-rgb: 184, 134, 11;
+  --problematic: #a84432;
+  --problematic-rgb: 168, 68, 50;
+
+  /* Legacy aliases for compatibility */
+  --success: var(--confident);
+  --success-rgb: 45, 134, 89;
+  --warning: var(--uncertain);
+  --warning-rgb: 184, 134, 11;
+  --error: var(--problematic);
+  --error-rgb: 168, 68, 50;
   --selection: #ffc107;
 
   /* Typography */

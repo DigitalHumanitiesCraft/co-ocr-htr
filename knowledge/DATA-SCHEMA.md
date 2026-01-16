@@ -5,47 +5,47 @@ tags: [coocr-htr, data-schema, page-xml]
 status: complete
 ---
 
-# Datenstrukturen
+# Data Structures
 
-JSON-Schemas und Beispieldaten fuer coOCR/HTR.
+JSON schemas and example data for coOCR/HTR.
 
-**Abhängigkeit:** [ARCHITECTURE](ARCHITECTURE.md) (Storage-Integration)
+**Dependency:** [ARCHITECTURE](ARCHITECTURE.md) (Storage Integration)
 
-## Quellentypen
+## Source Types
 
-coOCR/HTR unterstützt verschiedene historische Dokumenttypen mit flexibler Editor-Darstellung.
+coOCR/HTR supports various historical document types with flexible editor rendering.
 
-### Unterstützte Quellentypen
+### Supported Source Types
 
-| Typ | Struktur | Editor-Modus | Beispiel |
-|-----|----------|--------------|----------|
-| **Fließtext** | Zeilen ohne Spalten | `lines` | Briefe, Tagebücher, Manuskripte |
-| **Tabelle** | Zeilen mit Spalten | `grid` | Rechnungsbücher, Inventare, Register |
-| **Strukturiert** | Key-Value-Paare | `structured` | Karteikarten, Formulare |
-| **Gemischt** | Wechselnd | `auto` | Bücher mit Tabellen und Text |
+| Type | Structure | Editor Mode | Example |
+|------|-----------|-------------|---------|
+| **Prose** | Lines without columns | `lines` | Letters, diaries, manuscripts |
+| **Tabular** | Lines with columns | `grid` | Account books, inventories, registers |
+| **Structured** | Key-value pairs | `structured` | Index cards, forms |
+| **Mixed** | Varying | `auto` | Books with tables and text |
 
-### Editor-Modi
+### Editor Modes
 
 ```typescript
 type EditorMode = 'lines' | 'grid' | 'structured' | 'auto';
 
 interface EditorConfig {
   mode: EditorMode;
-  columns?: ColumnDefinition[];  // Nur für 'grid'
-  fields?: FieldDefinition[];    // Nur für 'structured'
+  columns?: ColumnDefinition[];  // Only for 'grid'
+  fields?: FieldDefinition[];    // Only for 'structured'
 }
 ```
 
-### Automatische Modus-Erkennung
+### Automatic Mode Detection
 
-Der Editor wählt automatisch den Modus basierend auf:
+The editor automatically selects the mode based on:
 
-1. **PAGE-XML Struktur:** Wenn `TextRegion` mehrere `TextLine` ohne explizite Spalten enthält → `lines`
-2. **Pipe-Separator:** Wenn Text `|` enthält → `grid` mit automatischer Spaltenanzahl
-3. **Explizite Konfiguration:** `columns[]` im Schema → `grid`
-4. **Fallback:** `lines` (einfachster Modus)
+1. **PAGE-XML Structure:** If `TextRegion` contains multiple `TextLine` without explicit columns → `lines`
+2. **Pipe Separator:** If text contains `|` → `grid` with automatic column count
+3. **Explicit Configuration:** `columns[]` in schema → `grid`
+4. **Fallback:** `lines` (simplest mode)
 
-## Hauptschema: Transcription
+## Main Schema: Transcription
 
 ```typescript
 interface Transcription {
@@ -68,22 +68,22 @@ interface Document {
 interface TranscriptionData {
   provider: 'gemini' | 'claude' | 'openai' | 'ollama';
   model: string;
-  raw: string;                   // Rohtext
+  raw: string;                   // Raw text
   segments: Segment[];
-  columns?: ColumnDefinition[];  // Für strukturierte Dokumente
+  columns?: ColumnDefinition[];  // For structured documents
 }
 
 interface Segment {
-  lineNumber: number;            // Zeilennummer (für Synchronisation)
+  lineNumber: number;            // Line number (for synchronization)
   text: string;
   confidence: 'certain' | 'likely' | 'uncertain';
   bounds?: BoundingBox;
-  fields?: Record<string, string>;  // Strukturierte Felder (DATUM, NAME, etc.)
+  fields?: Record<string, string>;  // Structured fields (DATE, NAME, etc.)
 }
 
 interface ColumnDefinition {
-  id: string;                    // z.B. 'datum', 'name', 'beschreibung', 'betrag'
-  label: string;                 // z.B. 'DATUM', 'NAME', etc.
+  id: string;                    // e.g., 'date', 'name', 'description', 'amount'
+  label: string;                 // e.g., 'DATE', 'NAME', etc.
   width: 'auto' | 'flex' | number;
 }
 
@@ -123,7 +123,7 @@ interface Correction {
 }
 ```
 
-## Beispiel: Rechnungsbuch-Eintrag (aus UI-Mockup)
+## Example: Account Book Entry (from UI Mockup)
 
 ```json
 {
@@ -140,10 +140,10 @@ interface Correction {
     "model": "gemini-2.0-flash",
     "raw": "...",
     "columns": [
-      { "id": "datum", "label": "DATUM", "width": "auto" },
+      { "id": "date", "label": "DATE", "width": "auto" },
       { "id": "name", "label": "NAME", "width": "auto" },
-      { "id": "beschreibung", "label": "BESCHREIBUNG", "width": "flex" },
-      { "id": "betrag", "label": "BETRAG", "width": "auto" }
+      { "id": "description", "label": "DESCRIPTION", "width": "flex" },
+      { "id": "amount", "label": "AMOUNT", "width": "auto" }
     ],
     "segments": [
       {
@@ -152,10 +152,10 @@ interface Correction {
         "confidence": "certain",
         "bounds": { "x": 28, "y": 255, "width": 482, "height": 35 },
         "fields": {
-          "datum": "28. Mai",
+          "date": "28. Mai",
           "name": "K. Schmidt",
-          "beschreibung": "Eisenwaren",
-          "betrag": "23 Taler"
+          "description": "Eisenwaren",
+          "amount": "23 Taler"
         }
       },
       {
@@ -164,10 +164,10 @@ interface Correction {
         "confidence": "likely",
         "bounds": { "x": 28, "y": 290, "width": 482, "height": 35 },
         "fields": {
-          "datum": "28. Mai",
+          "date": "28. Mai",
           "name": "[?] Schmidt",
-          "beschreibung": "Pinsel...",
-          "betrag": "10 Taler 4 Gr"
+          "description": "Pinsel...",
+          "amount": "10 Taler 4 Gr"
         }
       },
       {
@@ -176,10 +176,10 @@ interface Correction {
         "confidence": "certain",
         "bounds": { "x": 28, "y": 325, "width": 482, "height": 35 },
         "fields": {
-          "datum": "3. Juni",
+          "date": "3. Juni",
           "name": "H. Müller",
-          "beschreibung": "Tuchstoff",
-          "betrag": "15 Taler 4 Gr"
+          "description": "Tuchstoff",
+          "amount": "15 Taler 4 Gr"
         }
       },
       {
@@ -188,10 +188,10 @@ interface Correction {
         "confidence": "certain",
         "bounds": { "x": 28, "y": 360, "width": 482, "height": 35 },
         "fields": {
-          "datum": "3. Juni",
+          "date": "3. Juni",
           "name": "H. Müller",
-          "beschreibung": "Tuchstoff",
-          "betrag": "15 Taler 4 Gr"
+          "description": "Tuchstoff",
+          "amount": "15 Taler 4 Gr"
         }
       },
       {
@@ -200,10 +200,10 @@ interface Correction {
         "confidence": "likely",
         "bounds": { "x": 28, "y": 395, "width": 482, "height": 35 },
         "fields": {
-          "datum": "4. Juni",
+          "date": "4. Juni",
           "name": "Stadtkasse",
-          "beschreibung": "...",
-          "betrag": "40 Taler"
+          "description": "...",
+          "amount": "40 Taler"
         }
       },
       {
@@ -212,10 +212,10 @@ interface Correction {
         "confidence": "uncertain",
         "bounds": { "x": 28, "y": 430, "width": 482, "height": 35 },
         "fields": {
-          "datum": "5. Juni",
-          "name": "Unbekannt",
-          "beschreibung": "Lieferung",
-          "betrag": "[?] Taler"
+          "date": "5. Juni",
+          "name": "Unknown",
+          "description": "Delivery",
+          "amount": "[?] Taler"
         }
       },
       {
@@ -224,10 +224,10 @@ interface Correction {
         "confidence": "likely",
         "bounds": { "x": 28, "y": 500, "width": 482, "height": 35 },
         "fields": {
-          "datum": "Total",
+          "date": "Total",
           "name": "",
-          "beschreibung": "",
-          "betrag": "103 Taler 1..."
+          "description": "",
+          "amount": "103 Taler 1..."
         }
       }
     ]
@@ -237,30 +237,30 @@ interface Correction {
     "rules": [
       {
         "id": "date_format",
-        "name": "Datumsformat",
+        "name": "Date Format",
         "passed": true,
-        "message": "Datumsformat korrekt (DD. Monat)",
+        "message": "Date format correct (DD. Month)",
         "lines": [3, 4]
       },
       {
         "id": "currency",
-        "name": "Währungsformat",
+        "name": "Currency Format",
         "passed": true,
-        "message": "Währung erkannt (Taler)",
+        "message": "Currency recognized (Taler)",
         "lines": [3, 4]
       },
       {
         "id": "uncertain_marker",
-        "name": "Unsichere Lesung",
+        "name": "Uncertain Reading",
         "passed": false,
-        "message": "Unsichere Lesung [?] vorhanden",
+        "message": "Uncertain reading [?] present",
         "lines": [4]
       }
     ],
     "llmJudge": {
       "perspective": "paleographic",
       "confidence": "likely",
-      "reasoning": "Der Name könnte 'Müller' oder 'Möller' sein. Die Handschrift zeigt eine Ligatur, die beide Lesarten zulässt."
+      "reasoning": "The name could be 'Müller' or 'Möller'. The handwriting shows a ligature that allows both readings."
     }
   },
   "corrections": [
@@ -268,14 +268,14 @@ interface Correction {
       "segmentIndex": 2,
       "original": "L. [?] Müller",
       "corrected": "L. [?] Müller",
-      "reason": "Name bleibt unsicher, Marker beibehalten",
+      "reason": "Name remains uncertain, marker retained",
       "timestamp": "2026-01-16T17:15:00Z"
     }
   ]
 }
 ```
 
-## Storage-Schemas
+## Storage Schemas
 
 ### LocalStorage
 
@@ -321,57 +321,57 @@ const DB_SCHEMA = {
 };
 ```
 
-## Export-Formate
+## Export Formats
 
 ### Markdown
 
 ```markdown
 # Rechnungsbuch_1842_S15
 
-| Datum | Beschreibung | Betrag |
-|-------|--------------|--------|
+| Date | Description | Amount |
+|------|-------------|--------|
 | 28. Mai | K. Schmidt, Eisenwaren | 23 Taler |
 | 28. Mai | L. [?] Müller, Kornkauf | 12 Taler |
 
-## Validierungshinweise
+## Validation Notes
 
-- ⚠️ Zeile 4: Unsichere Lesung [?] – Name könnte "Möller" sein
+- ⚠️ Line 4: Uncertain reading [?] – Name could be "Möller"
 ```
 
-### JSON (vollständig)
+### JSON (complete)
 
-Komplettes Transcription-Objekt (siehe oben).
+Complete Transcription object (see above).
 
-### TSV (Tabellendaten)
+### TSV (Tabular Data)
 
 ```
-Datum	Beschreibung	Betrag
+Date	Description	Amount
 28. Mai	K. Schmidt, Eisenwaren	23 Taler
 28. Mai	L. [?] Müller, Kornkauf	12 Taler
 ```
 
-## Validierungsregeln-Referenz
+## Validation Rules Reference
 
-| Regel-ID | Regex/Logik | Typ |
-|----------|-------------|-----|
+| Rule ID | Regex/Logic | Type |
+|---------|-------------|------|
 | `date_format` | `/\d{1,2}\.\s?(Januar\|...\|Dezember)/gi` | success |
 | `currency` | `/\d+\s?(Taler\|Groschen\|...)/gi` | success |
 | `uncertain_marker` | `/\[\?\]/g` | warning |
 | `illegible_marker` | `/\[illegible\]/gi` | error |
-| `table_consistency` | Pipe-Count pro Zeile gleich | warning |
+| `table_consistency` | Pipe count per line equal | warning |
 
 ---
 
-## Import-Formate
+## Import Formats
 
 ### PAGE-XML (Transkribus/PyLaia)
 
-Externes Format für den Import bestehender Transkriptionen. Siehe [data/README.md](../data/README.md).
+External format for importing existing transcriptions. See [data/README.md](../data/README.md).
 
 **Namespace:** `http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15`
 
 ```typescript
-// PAGE-XML Struktur (vereinfacht)
+// PAGE-XML Structure (simplified)
 interface PageXML {
   PcGts: {
     Metadata: {
@@ -415,18 +415,18 @@ interface Word {
 
 ### Mapping PAGE-XML → coOCR/HTR
 
-| PAGE-XML | coOCR/HTR Segment | Konvertierung |
-|----------|-------------------|---------------|
+| PAGE-XML | coOCR/HTR Segment | Conversion |
+|----------|-------------------|------------|
 | `TextLine/Coords@points` | `bounds` | Polygon → BoundingBox |
-| `TextLine/TextEquiv/Unicode` | `text` | Direkt |
+| `TextLine/TextEquiv/Unicode` | `text` | Direct |
 | `TranskribusMetadata@status` | `confidence` | FINAL→certain, IN_PROGRESS→likely, NEW→uncertain |
-| `ReadingOrder/index` | `lineNumber` | Sequenznummer |
+| `ReadingOrder/index` | `lineNumber` | Sequence number |
 
-### Koordinaten-Konvertierung
+### Coordinate Conversion
 
 ```javascript
 /**
- * Konvertiert PAGE-XML Polygon zu coOCR/HTR BoundingBox
+ * Converts PAGE-XML Polygon to coOCR/HTR BoundingBox
  * @param points "x1,y1 x2,y2 x3,y3 x4,y4"
  * @returns BoundingBox
  */
@@ -446,9 +446,9 @@ function polygonToBounds(points) {
 }
 ```
 
-### Beispiel: PAGE-XML Import
+### Example: PAGE-XML Import
 
-**Eingabe (PAGE-XML):**
+**Input (PAGE-XML):**
 ```xml
 <TextLine id="line_1">
   <Coords points="100,200 500,200 500,240 100,240"/>
@@ -458,7 +458,7 @@ function polygonToBounds(points) {
 </TextLine>
 ```
 
-**Ausgabe (coOCR/HTR Segment):**
+**Output (coOCR/HTR Segment):**
 ```json
 {
   "lineNumber": 1,
@@ -466,32 +466,32 @@ function polygonToBounds(points) {
   "confidence": "certain",
   "bounds": { "x": 100, "y": 200, "width": 400, "height": 40 },
   "fields": {
-    "datum": "28. Mai",
+    "date": "28. Mai",
     "name": "K. Schmidt",
-    "beschreibung": "Eisenwaren",
-    "betrag": "23 Taler"
+    "description": "Eisenwaren",
+    "amount": "23 Taler"
   }
 }
 ```
 
 ---
 
-## Beispieldaten
+## Example Data
 
-Verfügbar in `data/`:
+Available in `data/`:
 
-| Datensatz | Seiten | Status | Format |
-|-----------|--------|--------|--------|
+| Dataset | Pages | Status | Format |
+|---------|-------|--------|--------|
 | Raitbuch 2 | 123 | FINAL | PAGE-XML |
-| 1617-wecker | 83 | Teilweise | PAGE-XML |
-| o_szd.* | 12 | Metadaten | METS-XML |
-| Schliemann | 21 | Nur Bilder | JPG |
+| 1617-wecker | 83 | Partial | PAGE-XML |
+| o_szd.* | 12 | Metadata | METS-XML |
+| Schliemann | 21 | Images only | JPG |
 
-Siehe [data/README.md](../data/README.md) für Details.
+See [data/README.md](../data/README.md) for details.
 
 ---
 
-**Verweise:**
-- [VALIDATION](VALIDATION.md) für Regel-Implementierung
-- [ARCHITECTURE](ARCHITECTURE.md) für Storage-Integration
-- [data/README.md](../data/README.md) für Beispieldaten
+**References:**
+- [VALIDATION](VALIDATION.md) for rule implementation
+- [ARCHITECTURE](ARCHITECTURE.md) for storage integration
+- [data/README.md](../data/README.md) for example data

@@ -5,15 +5,15 @@ tags: [coocr-htr, validation, llm-judge]
 status: complete
 ---
 
-# Hybride Validierung
+# Hybrid Validation
 
-Kombination aus deterministischen Regeln und LLM-Einschaetzungen.
+Combination of deterministic rules and LLM assessments.
 
-**Abhängigkeiten:**
-- [METHODOLOGY](METHODOLOGY.md) (Begründung: LLM-Bias, Expert-in-the-Loop)
-- [ARCHITECTURE](ARCHITECTURE.md) (ValidationEngine-Integration)
+**Dependencies:**
+- [METHODOLOGY](METHODOLOGY.md) (Rationale: LLM Bias, Expert-in-the-Loop)
+- [ARCHITECTURE](ARCHITECTURE.md) (ValidationEngine Integration)
 
-## Architektur
+## Architecture
 
 ```
               ┌─────────────────┐
@@ -33,129 +33,129 @@ Kombination aus deterministischen Regeln und LLM-Einschaetzungen.
               └─────────────────┘
 ```
 
-## Regelbasierte Validierung
+## Rule-Based Validation
 
-Deterministische Prüfungen mit Regex und Logik.
+Deterministic checks using regex and logic.
 
-### Implementierte Regeln
+### Implemented Rules
 
 ```javascript
 const VALIDATION_RULES = [
   {
     id: 'date_format',
-    name: 'Datumsformat',
+    name: 'Date Format',
     regex: /\d{1,2}\.\s?(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)/gi,
     type: 'success',
-    message: 'Datumsformat korrekt erkannt'
+    message: 'Date format correctly recognized'
   },
   {
     id: 'currency',
-    name: 'Währungsformat',
+    name: 'Currency Format',
     regex: /\d+\s?(Taler|Groschen|Pfennig|Gulden|Kreuzer|fl\.?|kr\.?)/gi,
     type: 'success',
-    message: 'Währungsangabe erkannt'
+    message: 'Currency notation recognized'
   },
   {
     id: 'uncertain_marker',
-    name: 'Unsichere Lesung',
+    name: 'Uncertain Reading',
     regex: /\[\?\]/g,
     type: 'warning',
-    message: 'Unsichere Lesung markiert'
+    message: 'Uncertain reading marked'
   },
   {
     id: 'illegible_marker',
-    name: 'Unleserliche Stelle',
+    name: 'Illegible Passage',
     regex: /\[illegible\]/gi,
     type: 'error',
-    message: 'Unleserliche Stelle'
+    message: 'Illegible passage'
   },
   {
     id: 'table_consistency',
-    name: 'Tabellenstruktur',
+    name: 'Table Structure',
     validate: (text) => {
       const lines = text.split('\n').filter(l => l.includes('|'));
       const pipeCounts = lines.map(l => (l.match(/\|/g) || []).length);
       return pipeCounts.every(c => c === pipeCounts[0]);
     },
     type: 'warning',
-    message: 'Inkonsistente Spaltenanzahl'
+    message: 'Inconsistent column count'
   }
 ];
 ```
 
-### Regel-Kategorien
+### Rule Categories
 
-| Kategorie | Beispiele | Typ |
-|-----------|-----------|-----|
-| Format | Datum, Währung, Zahlen | Regex |
-| Struktur | Tabellenlogik, Spaltenanzahl | Logik |
-| Marker | [?], [illegible], [gap] | Regex |
-| Summen | Additionsprüfung | Logik |
+| Category | Examples | Type |
+|----------|----------|------|
+| Format | Date, Currency, Numbers | Regex |
+| Structure | Table logic, Column count | Logic |
+| Markers | [?], [illegible], [gap] | Regex |
+| Sums | Addition verification | Logic |
 
-## LLM-Perspektiven
+## LLM Perspectives
 
-Konfigurierbare Prüfwinkel für Expert-in-the-Loop.
+Configurable validation angles for Expert-in-the-Loop.
 
-### Perspektiven-Definition
+### Perspective Definitions
 
 ```javascript
 const PERSPECTIVES = {
   paleographic: {
     id: 'paleographic',
-    name: 'Paläographisch',
-    prompt: `Analysiere den Text aus paläographischer Sicht:
-      - Buchstabenformen: Konsistent mit Epoche?
-      - Ligaturen: Korrekt aufgelöst?
-      - Abkürzungen: Korrekt expandiert?
-      - Fehlertypen: Verwechslung ähnlicher Buchstaben (n/u, c/e)?`
+    name: 'Paleographic',
+    prompt: `Analyze the text from a paleographic perspective:
+      - Letter forms: Consistent with the period?
+      - Ligatures: Correctly resolved?
+      - Abbreviations: Correctly expanded?
+      - Error types: Confusion of similar letters (n/u, c/e)?`
   },
   linguistic: {
     id: 'linguistic',
-    name: 'Sprachlich',
-    prompt: `Analysiere den Text sprachlich:
-      - Grammatik: Plausible Sätze?
-      - Orthographie: Historische Schreibweise?
-      - Lexik: Epochentypische Wörter?`
+    name: 'Linguistic',
+    prompt: `Analyze the text linguistically:
+      - Grammar: Plausible sentences?
+      - Orthography: Historical spelling?
+      - Lexicon: Period-typical words?`
   },
   structural: {
     id: 'structural',
-    name: 'Strukturell',
-    prompt: `Analysiere die Textstruktur:
-      - Tabellenlogik: Stimmen Summen?
-      - Verweise: Konsistente Referenzen?
-      - Nummerierung: Logische Reihenfolge?`
+    name: 'Structural',
+    prompt: `Analyze the text structure:
+      - Table logic: Do sums match?
+      - References: Consistent cross-references?
+      - Numbering: Logical sequence?`
   },
   domain: {
     id: 'domain',
-    name: 'Domänenwissen',
-    prompt: `Analysiere mit Domänenwissen:
-      - Fachtermini: Korrekt verwendet?
-      - Plausibilität: Realistische Mengen/Preise/Daten?
-      - Kontext: Passt zum Dokumenttyp?`
+    name: 'Domain Knowledge',
+    prompt: `Analyze with domain knowledge:
+      - Technical terms: Correctly used?
+      - Plausibility: Realistic quantities/prices/data?
+      - Context: Fits the document type?`
   }
 };
 ```
 
-### Perspektiven-Matrix
+### Perspective Matrix
 
-| Perspektive | Prüft | Typische Fehler |
-|-------------|-------|-----------------|
-| Paläographisch | Buchstabenformen | n↔u, c↔e, Ligaturen |
-| Sprachlich | Grammatik, Lexik | Anachronismen, Syntax |
-| Strukturell | Tabellen, Summen | Rechenfehler, Brüche |
-| Domänenwissen | Fachtermini, Plausibilität | Unrealistische Preise |
+| Perspective | Checks | Typical Errors |
+|-------------|--------|----------------|
+| Paleographic | Letter forms | n↔u, c↔e, Ligatures |
+| Linguistic | Grammar, Lexicon | Anachronisms, Syntax |
+| Structural | Tables, Sums | Calculation errors, Breaks |
+| Domain Knowledge | Technical terms, Plausibility | Unrealistic prices |
 
-## Konfidenz-Kategorien
+## Confidence Categories
 
-Keine numerischen Werte (→ [METHODOLOGY](METHODOLOGY.md): LLM-Bias).
+No numeric values (→ [METHODOLOGY](METHODOLOGY.md): LLM Bias).
 
-| Kategorie | Intern | UI | Bedeutung |
-|-----------|--------|-----|-----------|
-| `certain` | `success` | ✅ Grün | Hohe Übereinstimmung |
-| `likely` | `warning` | ⚠️ Orange | Experte sollte prüfen |
-| `uncertain` | `error` | ❌ Rot | Wahrscheinlich fehlerhaft |
+| Category | Internal | UI | Meaning |
+|----------|----------|-----|---------|
+| `certain` | `success` | ✅ Green | High agreement |
+| `likely` | `warning` | ⚠️ Orange | Expert should review |
+| `uncertain` | `error` | ❌ Red | Likely incorrect |
 
-## ValidationResult-Format
+## ValidationResult Format
 
 ```typescript
 interface ValidationResult {
@@ -164,16 +164,16 @@ interface ValidationResult {
   type: 'success' | 'warning' | 'error';
   category: string;           // date_format, paleographic, ...
   message: string;
-  lines: number[];            // Betroffene Zeilen
-  details?: string;           // Erweiterte Erklärung
-  suggestions?: string[];     // Alternative Lesungen
+  lines: number[];            // Affected lines
+  details?: string;           // Extended explanation
+  suggestions?: string[];     // Alternative readings
   confidence?: 'certain' | 'likely' | 'uncertain';
 }
 ```
 
-## UI-Darstellung
+## UI Representation
 
-### Panel-Struktur (aus UI-Mockup)
+### Panel Structure (from UI Mockup)
 
 ```
 ┌─────────────────────────────────────────┐
@@ -210,42 +210,42 @@ interface ValidationResult {
 └─────────────────────────────────────────┘
 ```
 
-### Panel-Header
+### Panel Header
 
-| Element | Position | Beschreibung |
-|---------|----------|--------------|
-| Titel | Links | "Validation" |
-| Badge | Rechts | "5 Issues" (Anzahl aller Warnings + Errors) |
+| Element | Position | Description |
+|---------|----------|-------------|
+| Title | Left | "Validation" |
+| Badge | Right | "5 Issues" (count of all Warnings + Errors) |
 
-### Sektion-Header
+### Section Headers
 
-| Sektion | Icon | Farbe |
+| Section | Icon | Color |
 |---------|------|-------|
 | RULE-BASED | ⚙️ | `--text-secondary` |
 | AI ASSISTANT | ✨ | `--text-secondary` |
 
-### Card-Anatomie
+### Card Anatomy
 
 ```
-┌─ Border-Left (3px, Statusfarbe) ─────────────────────┐
+┌─ Border-Left (3px, Status color) ────────────────────┐
 │                                                      │
 │  🟢 Title                                            │
 │     Meta-Info (Line X • Additional Info)             │
-│     ▸ Show Details (klickbar, blau)                  │
+│     ▸ Show Details (clickable, blue)                 │
 │                                                      │
 └──────────────────────────────────────────────────────┘
 ```
 
-### Card-Interaktion
+### Card Interaction
 
-| Aktion | Reaktion |
+| Action | Reaction |
 |--------|----------|
-| Hover auf Card | Background wird `--bg-hover` |
-| Klick auf Card | Card expandiert mit Details |
-| Klick auf "Show Details" | Details-Bereich erscheint |
-| Klick auf Zeilenreferenz | Sprung zu Zeile in allen Panels |
+| Hover on Card | Background becomes `--bg-hover` |
+| Click on Card | Card expands with details |
+| Click on "Show Details" | Details section appears |
+| Click on Line Reference | Jump to line in all panels |
 
-### Expandierter Zustand
+### Expanded State
 
 ```
 ┌─────────────────────────────────────┐
@@ -253,40 +253,40 @@ interface ValidationResult {
 │    Line 12 • Diff: 3 Taler          │
 │    ▾ Hide Details                   │
 │ ┌─────────────────────────────────┐ │
-│ │ Erwartete Summe: 106 Taler      │ │
-│ │ Gefundene Summe: 103 Taler      │ │
-│ │ Differenz: 3 Taler              │ │
+│ │ Expected sum: 106 Taler         │ │
+│ │ Found sum: 103 Taler            │ │
+│ │ Difference: 3 Taler             │ │
 │ │                                 │ │
-│ │ Betroffene Zeilen: 3, 4, 5, 12  │ │
+│ │ Affected lines: 3, 4, 5, 12     │ │
 │ └─────────────────────────────────┘ │
 └─────────────────────────────────────┘
 ```
 
-### Visuelle Unterscheidung
+### Visual Distinction
 
-| Sektion | Charakteristik | Beschreibung |
-|---------|----------------|--------------|
-| ⚙️ RULE-BASED | Deterministisch | Immer gleiches Ergebnis, Regex/Logik |
-| ✨ AI ASSISTANT | Probabilistisch | Kann variieren, kontextabhängig |
+| Section | Characteristic | Description |
+|---------|----------------|-------------|
+| ⚙️ RULE-BASED | Deterministic | Always same result, Regex/Logic |
+| ✨ AI ASSISTANT | Probabilistic | May vary, context-dependent |
 
-### Status-Indikatoren
+### Status Indicators
 
-| Status | Farbe | Dot | Beschreibung |
-|--------|-------|-----|--------------|
-| Success | `--success` (#3fb950) | 🟢 | Prüfung bestanden |
-| Warning | `--warning` (#d29922) | 🟡 | Experte sollte prüfen |
-| Error | `--error` (#f85149) | 🔴 | Fehler erkannt |
+| Status | Color | Dot | Description |
+|--------|-------|-----|-------------|
+| Success | `--success` (#3fb950) | 🟢 | Check passed |
+| Warning | `--warning` (#d29922) | 🟡 | Expert should review |
+| Error | `--error` (#f85149) | 🔴 | Error detected |
 
-**Hinweis:** Im UI werden ausgefüllte Kreise (●) statt Emojis verwendet.
+**Note:** In the UI, filled circles (●) are used instead of emojis.
 
-## Validierungs-Flow
+## Validation Flow
 
 ```
-Transkription geladen
+Transcription loaded
        │
        ▼
 ┌──────────────┐
-│ RuleValidator│ (sofort, synchron)
+│ RuleValidator│ (immediate, synchronous)
 └──────┬───────┘
        │
        ▼
@@ -303,32 +303,32 @@ Transkription geladen
   UI-Update via EventBus
 ```
 
-## Erweiterbarkeit
+## Extensibility
 
-### Neue Regel hinzufügen
+### Adding a New Rule
 
 ```javascript
 VALIDATION_RULES.push({
   id: 'custom_rule',
-  name: 'Meine Regel',
-  regex: /muster/gi,
+  name: 'My Rule',
+  regex: /pattern/gi,
   type: 'warning',
-  message: 'Beschreibung'
+  message: 'Description'
 });
 ```
 
-### Neue Perspektive hinzufügen
+### Adding a New Perspective
 
 ```javascript
 PERSPECTIVES.custom = {
   id: 'custom',
-  name: 'Meine Perspektive',
-  prompt: 'Analysiere...'
+  name: 'My Perspective',
+  prompt: 'Analyze...'
 };
 ```
 
 ---
 
-**Verweise:**
-- [DATA-SCHEMA](DATA-SCHEMA.md) für ValidationResult-Integration
-- [DESIGN-SYSTEM](DESIGN-SYSTEM.md) für UI-Darstellung
+**References:**
+- [DATA-SCHEMA](DATA-SCHEMA.md) for ValidationResult integration
+- [DESIGN-SYSTEM](DESIGN-SYSTEM.md) for UI representation

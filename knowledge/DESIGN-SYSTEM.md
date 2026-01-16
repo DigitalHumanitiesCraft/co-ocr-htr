@@ -1,621 +1,589 @@
 ---
 type: knowledge
 created: 2026-01-16
-tags: [coocr-htr, design-system, css]
+updated: 2026-01-16
+tags: [coocr-htr, design-system, ui-ux]
 status: complete
+version: 2.1
 ---
 
-# Design System
+# coOCR/HTR Design System
 
-UI/UX-Spezifikation fuer coOCR/HTR. Alle Werte sind verbindlich.
+Version 2.1 — Consolidated and Optimized
 
-**Abhängigkeit:** [METHODOLOGY](METHODOLOGY.md) (Begründung für Farbcodierung, Kategorien)
+---
 
-**Referenz:**
-- UI-Mockup analysiert am 2026-01-16
-- Prototyp v2 implementiert in `newer prototpye/`
+## 1. Design Philosophy
 
-## Farbpalette
+### Who Uses This Tool
 
-### Hintergründe
+Researchers in Digital Humanities who transcribe and validate historical documents. They work with handwritten sources from the 16th–20th century: letters, account books, diaries, registers. They are experts in their domain but not necessarily in technology.
 
-| Variable | Hex | Verwendung |
-|----------|-----|------------|
-| `--bg-primary` | `#0d1117` | Haupthintergrund (Body) |
-| `--bg-secondary` | `#161b22` | Panels, Sidebar |
-| `--bg-tertiary` | `#21262d` | Cards, Inputs, Table Rows |
-| `--bg-hover` | `#30363d` | Hover-States |
+### Core Principle
 
-### Text
+> **The AI assists; the human decides.**
 
-| Variable | Hex | Verwendung |
-|----------|-----|------------|
-| `--text-primary` | `#e6edf3` | Haupttext, Tabellendaten |
-| `--text-secondary` | `#8b949e` | Labels, Panel-Titel, Hints |
-| `--text-muted` | `#6e7681` | Deaktiviert, Zeilennummern, Timestamps |
+The interface positions the user as the expert operating a precision instrument. Every design element serves this relationship.
 
-### Status (→ kategorielle Konfidenz)
+### Design Goals
 
-| Variable | Hex | Kategorie | Icon | Verwendung |
-|----------|-----|-----------|------|------------|
-| `--success` | `#3fb950` | sicher | 🟢 | Validation passed |
-| `--warning` | `#d29922` | prüfenswert | 🟡 | Needs review |
-| `--error` | `#f85149` | problematisch | 🔴 | Failed/Missing |
-| `--selection` | `#ffc107` | ausgewählt | - | Aktive Bounding Box |
+| Goal | Implementation |
+|------|----------------|
+| **Clarity** | Clean hierarchy, consistent spacing, readable typography |
+| **Efficiency** | Triple-panel synchronization, keyboard shortcuts, batch processing |
+| **Trust** | Triple-coded status (color + icon + position), no false certainty |
+| **Focus** | Dark theme reduces distractions, highlights document content |
 
-**Hinweis:** Im UI werden ausgefüllte Kreise (●) statt Emojis verwendet.
+### Visual Identity
 
-### Akzent
+The aesthetic combines scholarly rigor with modern tool design:
+- **Primary influence:** Academic publishing, archival interfaces
+- **Secondary influence:** Developer tools (information density, keyboard-first)
+- **Avoids:** Sterile tech minimalism, decorative historicism
 
-| Variable | Hex | Verwendung |
-|----------|-----|------------|
-| `--accent-primary` | `#58a6ff` | Links, Fokus, Bounding Boxes |
-| `--accent-secondary` | `#1f6feb` | Dunkleres Blau für Interaktionen |
-| `--accent-hover` | `#79b8ff` | Hover auf Links |
-| `--accent-action` | `#f97316` | Upload-Button, primäre CTAs |
+---
 
-### Z-Index Layers (Neu in v2)
+## 2. Color System
 
-| Variable | Wert | Verwendung |
-|----------|------|------------|
-| `--z-overlay` | `100` | Overlays, Dropdowns |
-| `--z-modal` | `200` | Modal-Dialoge |
-| `--z-toast` | `300` | Benachrichtigungen |
+### Dark Theme (Default)
 
-## Typografie
+Optimized for long work sessions and document focus. The dark background makes document images "pop."
+
+| Token | Value | RGB | Usage |
+|-------|-------|-----|-------|
+| `--bg-primary` | `#0d1117` | 13, 17, 23 | Page background |
+| `--bg-secondary` | `#161b22` | 22, 27, 34 | Panel backgrounds |
+| `--bg-tertiary` | `#21262d` | 33, 38, 45 | Hover states, inputs |
+| `--bg-viewer` | `#050505` | 5, 5, 5 | Document viewer (near-black) |
+| `--text-primary` | `#e6edf3` | 230, 237, 243 | Body text |
+| `--text-secondary` | `#8b949e` | 139, 148, 158 | Labels, hints |
+| `--text-muted` | `#6e7681` | 110, 118, 129 | Line numbers, timestamps |
+
+### Accent Colors
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--accent-primary` | `#58a6ff` | Primary actions, links, active states |
+| `--accent-secondary` | `#1f6feb` | Hover on primary actions |
+| `--selection` | `#ffc107` | Selected region highlight (warm amber) |
+
+### Status Colors (Muted Palette)
+
+**Rationale:** Muted colors signal status without alarming. Saturated colors are reserved for critical errors only.
+
+| Token | Value | Category | Usage |
+|-------|-------|----------|-------|
+| `--confident` | `#2d8659` | Certain | Validation passed, high confidence |
+| `--uncertain` | `#b8860b` | Review needed | Expert should check |
+| `--problematic` | `#a84432` | Likely error | Requires correction |
+
+**Legacy aliases (for compatibility):**
+```css
+--success: var(--confident);
+--warning: var(--uncertain);
+--error: var(--problematic);
+```
+
+### Borders
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--border-subtle` | `rgba(255,255,255,0.03)` | Subtle dividers |
+| `--border-muted` | `rgba(255,255,255,0.05)` | Panel sections |
+| `--border-default` | `rgba(255,255,255,0.08)` | Panel borders |
+| `--border-emphasis` | `rgba(255,255,255,0.10)` | Active elements |
+
+---
+
+## 3. Typography
+
+### Font Stack
 
 ```css
---font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
---font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-
---text-xs: 0.75rem;   /* 12px - Labels */
---text-sm: 0.875rem;  /* 14px - Sekundär */
---text-base: 1rem;    /* 16px - Body */
---text-lg: 1.125rem;  /* 18px - Überschriften */
---text-xl: 1.25rem;   /* 20px - Panel-Titel */
+--font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+--font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 ```
 
-**Regel:** Transkriptionstext immer in `--font-mono`.
+**Rationale:** Monospace for transcription enables precise character comparison. Sans-serif for interface ensures readability at small sizes.
 
-## Spacing & Radii
+### Type Scale
+
+| Token | Size | Usage |
+|-------|------|-------|
+| `--text-xs` | 11px | Panel headers (uppercase), hints |
+| `--text-sm` | 13px | Body text, buttons, cards |
+| `--text-base` | 14px | Transcription text |
+| `--text-lg` | 16px | Dialog titles |
+| `--text-xl` | 18px | Section headers |
+
+### Type Styles
+
+| Element | Font | Size | Weight | Additional |
+|---------|------|------|--------|------------|
+| Panel headers | Inter | 11px | 500 | Uppercase, +0.5px tracking |
+| Body text | Inter | 13px | 400 | — |
+| Transcription | JetBrains Mono | 14px | 400 | Line-height 1.6 |
+| Button labels | Inter | 13px | 500 | — |
+| Line numbers | JetBrains Mono | 11px | 400 | 50% opacity |
+
+---
+
+## 4. Spacing
+
+8-point grid system. All spacing values are multiples of 4px.
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--space-1` | 4px | Tight spacing, icon gaps |
+| `--space-2` | 8px | Default padding, gaps |
+| `--space-3` | 12px | Panel padding |
+| `--space-4` | 16px | Section spacing |
+| `--space-6` | 24px | Large gaps |
+| `--space-8` | 32px | Panel margins |
+
+---
+
+## 5. Layout
+
+### Three-Panel Structure
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HEADER (56px)                                                   │
+│ Logo                                     Demo │ Upload │ Config │
+├───────────────────┬───────────────────┬─────────────────────────┤
+│ DOCUMENT VIEWER   │ TRANSCRIPTION     │ VALIDATION              │
+│ 40%               │ 35%               │ 25%                     │
+│                   │                   │                         │
+│ [Document image   │ [Transcribed text │ [Validation results     │
+│  with bounding    │  with line        │  grouped by source:     │
+│  boxes]           │  numbers]         │  Rules / AI]            │
+│                   │                   │                         │
+│ ─ 100% +          │                   │                         │
+├───────────────────┴───────────────────┴─────────────────────────┤
+│ WORKFLOW BAR (32px)                                             │
+│ I. Load ─── II. Transcribe ─── III. Validate ─── IV. Export     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Panel Proportions
+
+| Viewport | Viewer | Transcription | Validation |
+|----------|--------|---------------|------------|
+| ≥1400px | 40% | 35% | 25% |
+| 1200–1399px | 35% | 35% | 30% |
+| 900–1199px | Tabs (one panel visible) |
+| <900px | Mobile warning |
+
+### Grid Configuration
 
 ```css
-/* Spacing - 8er-System */
---space-1: 0.25rem;  /* 4px */
---space-2: 0.5rem;   /* 8px */
---space-3: 0.75rem;  /* 12px */
---space-4: 1rem;     /* 16px */
---space-5: 1.25rem;  /* 20px */
---space-6: 1.5rem;   /* 24px */
---space-8: 2rem;     /* 32px */
-
-/* Border Radii */
---radius-sm: 4px;
---radius-md: 8px;
---radius-lg: 12px;
-
-/* Transitions */
---transition-fast: 150ms ease;
---transition-medium: 300ms ease;
-```
-
-## Layout
-
-### Hauptstruktur
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ HEADER (56px)                                                           │
-│ Logo │ 🟢 Filename │ ◄ 15/47 ► │                    [Upload] │ Icons   │
-├─────────────────────┬─────────────────────┬─────────────────────────────┤
-│ DOCUMENT VIEWER     │ TRANSCRIPTION       │ VALIDATION                  │
-│ (~40%)              │ (~35%)              │ (~25%)                      │
-│                     │                     │ ┌─────────────────────────┐ │
-│ ┌─────────────────┐ │ # │DATUM│NAME│...│  │ │ ⚙️ RULE-BASED          │ │
-│ │                 │ │ 3 │28.Mai│K.Schmidt│ │ │ 🟢 Date Format Correct │ │
-│ │  [Bounding      │ │ 4 │28.Mai│[?]Smith │ │ │ 🟡 Sum Check Mismatch  │ │
-│ │   Boxes]        │ │ 5 │3.Juni│H.Müller │ │ ├─────────────────────────┤ │
-│ │                 │ │ ...                 │ │ │ ✨ AI ASSISTANT        │ │
-│ └─────────────────┘ │                     │ │ 🟢 High Confidence      │ │
-│     [100%] [+][-]   │                     │ │ 🟡 Ambiguous Reading    │ │
-│                     │                     │ │ 🔴 Missing Column       │ │
-│                     │                     │ └─────────────────────────┘ │
-├─────────────────────┴─────────────────────┴─────────────────────────────┤
-│ STATUS BAR (36px)                                                       │
-│ Model: Gemini 2.0 Flash ▾ │ Perspective: Paleographic ▾ │ Ready │17:28 │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Header-Elemente
-
-| Position | Element | Beschreibung |
-|----------|---------|--------------|
-| Links | Logo + "coOCR/HTR" | Branding, 16px semibold |
-| Mitte-Links | 🟢 + Filename | Dokumentstatus + Name |
-| Mitte | ◄ 15/47 ► | Seitennavigation |
-| Rechts | [Upload] | Primärer CTA, `--accent-action` |
-| Ganz rechts | Icons (4x) | Export, Settings, Help, Profile |
-
-### Status Bar Elemente
-
-| Element | Typ | Beschreibung |
-|---------|-----|--------------|
-| Model | Dropdown | "Gemini 2.0 Flash", "Claude 3.5", "GPT-4o" |
-| Perspective | Dropdown | "Paleographic", "Linguistic", "Structural", "Domain" |
-| Status | Text | "Ready", "Processing...", "Error" |
-| Last Change | Timestamp | "17:28" |
-
-### CSS Grid
-
-```css
-.app {
+.app-container {
   display: grid;
-  grid-template-rows: 56px 1fr 36px;
-  height: 100vh;
-}
-
-.main-content {
-  display: grid;
+  grid-template-rows: 56px 1fr 32px;
   grid-template-columns: 40fr 35fr 25fr;
-  gap: var(--space-2);
-  padding: var(--space-2);
+  gap: 8px;
+  padding: 8px;
 }
 ```
 
-### Responsive Breakpoints
+### Z-Index Layers
 
-| Breakpoint | Layout |
-|------------|--------|
-| ≥1400px | Drei Spalten (40/35/25) |
-| 1024–1399px | Zwei Spalten, Validation als Tab |
-| 768–1023px | Tabs: Viewer / Editor / Validation |
-| <768px | Mobile-Warnung mit Desktop-Empfehlung |
+| Layer | Value | Content |
+|-------|-------|---------|
+| Base | 0 | Panels, content |
+| Toolbar | 10 | Zoom controls |
+| Overlay | 100 | Dropdowns, menus |
+| Modal | 200 | Dialogs |
+| Tooltip | 250 | Info tooltips |
+| Toast | 300 | Notifications |
 
-### Mobile Warning (Implementiert in v2)
+---
 
-```html
-<div class="mobile-warning">
-  <svg><!-- Monitor Icon --></svg>
-  <h2>Desktop Recommended</h2>
-  <p>coOCR/HTR is optimized for large screens...</p>
-</div>
+## 6. Components
+
+### 6.1 Document Viewer
+
+**Purpose:** Display document image with interactive bounding boxes.
+
+**Empty State:**
+- Light gray background
+- Upload icon (line drawing)
+- Text: "Drop image here or click Upload"
+- Two buttons: "Load Demo" / "Upload Image"
+
+**Loaded State:**
+- Document image centered with shadow
+- SVG overlay for bounding boxes
+- Zoom toolbar at bottom center
+
+**Zoom Controls:**
+```
+┌─────────────────────┐
+│  −   100%   +       │  (pill-shaped, semi-transparent)
+└─────────────────────┘
 ```
 
-### Glass Morphism (Neu in v2)
+**Bounding Boxes:**
 
-```css
-.glass {
-  background: rgba(22, 27, 34, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+| State | Stroke | Fill | Opacity |
+|-------|--------|------|---------|
+| Default | `--accent-primary` 1px | transparent | 60% |
+| Hover | `--accent-primary` 2px | 10% accent | 100% |
+| Selected | `--selection` 2px | 10% selection | 100% |
 
-.glass-panel {
-  background: rgba(22, 27, 34, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
+### 6.2 Transcription Editor
+
+**Two Modes:**
+
+| Mode | Use Case | Layout |
+|------|----------|--------|
+| `lines` | Prose text (letters, diaries) | Line numbers + full-width text |
+| `grid` | Tabular data (account books) | Columns detected from PAGE-XML or pipes |
+
+**Lines Mode:**
+```
+┌──────────────────────────────────────────┐
+│  1   First line of transcribed text...   │
+│  2   Second line continues here...       │
+│  3   [?] Uncertain reading marked        │
+│  4   More text follows...                │
+└──────────────────────────────────────────┘
 ```
 
-**Verwendung:** Header, Status Bar, Floating Toolbar
-
-## Komponenten
-
-### Panel
-
-```css
-.panel {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-}
-
-.panel-header {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--bg-tertiary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.panel-title {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.panel-badge {
-  font-size: 12px;
-  color: var(--text-muted);
-}
+**Grid Mode:**
+```
+┌──────┬────────────┬────────────────┬──────────┐
+│  #   │ DATE       │ DESCRIPTION    │ AMOUNT   │
+├──────┼────────────┼────────────────┼──────────┤
+│  3   │ 28. Mai    │ K. Schmidt     │ 23 Taler │
+│  4   │ 28. Mai    │ [?] Müller     │ 12 Taler │
+└──────┴────────────┴────────────────┴──────────┘
 ```
 
-### Document Viewer
+**Row States:**
 
-```css
-.document-viewer {
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-tertiary);
-}
+| State | Background | Border | Additional |
+|-------|------------|--------|------------|
+| Default | transparent | — | — |
+| Hover | `rgba(255,255,255,0.02)` | — | — |
+| Selected | `rgba(255,193,7,0.1)` | 2px left `--selection` | — |
+| Editing | `rgba(88,166,255,0.1)` | 1px outline `--accent` | Cursor: text |
 
-.document-image {
-  max-width: 100%;
-  height: auto;
-}
+**Inline Markers:**
 
-.zoom-controls {
-  position: absolute;
-  bottom: var(--space-4);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: var(--space-2);
-  background: var(--bg-secondary);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-}
+| Marker | Style | Meaning |
+|--------|-------|---------|
+| `[?]` | Amber background (30% opacity), rounded | Uncertain reading |
+| `[illegible]` | Red background (30% opacity), italic | Cannot be read |
+| `...` | Gray, ellipsis character | Truncated/continues |
 
-.zoom-level {
-  font-size: 14px;
-  color: var(--text-primary);
-  min-width: 48px;
-  text-align: center;
-}
+### 6.3 Validation Panel
+
+**Two Sections:**
+
+| Section | Icon | Source | Characteristic |
+|---------|------|--------|----------------|
+| Rule-Based | ⚙ | Deterministic rules | Always same result |
+| AI Analysis | ◇ | LLM perspectives | May vary, context-dependent |
+
+**Section Header:**
+```
+⚙ RULE-BASED                    (11px, uppercase, tracking)
 ```
 
-### Transcription Table
+### 6.4 Validation Card
 
-```css
-.transcription-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-mono);
-  font-size: 14px;
-}
-
-.transcription-table th {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  text-align: left;
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--bg-hover);
-}
-
-.transcription-table td {
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.transcription-table tr:hover {
-  background: var(--bg-hover);
-}
-
-.transcription-table .row-number {
-  color: var(--text-muted);
-  font-size: 12px;
-  width: 32px;
-}
+**Anatomy:**
+```
+┌─ 3px left border (status color) ──────────────────┐
+│                                                   │
+│  ● Title of validation result                     │
+│    Description text explaining the finding        │
+│    Lines 3-7 · paleographic                       │
+│    ▸ Show Details                                 │
+│                                                   │
+└───────────────────────────────────────────────────┘
 ```
 
-**Spalten für strukturierte Dokumente:**
+**Card States:**
 
-| Spalte | Breite | Beschreibung |
-|--------|--------|--------------|
-| # | 32px | Zeilennummer |
-| DATUM | auto | Datumsfeld |
-| NAME | auto | Personenname |
-| BESCHREIBUNG | flex | Hauptinhalt |
-| BETRAG | auto | Währung/Wert |
+| State | Background | Interaction |
+|-------|------------|-------------|
+| Default | transparent | — |
+| Hover | `rgba(255,255,255,0.02)` | Cursor: pointer |
+| Expanded | Same | Shows details section |
 
-### Validation Panel
+**Status Indicators (Triple-Coded):**
 
-Zwei Sektionen mit visueller Trennung:
+Every validation result uses THREE redundant signals:
 
-```css
-.validation-section {
-  margin-bottom: var(--space-4);
-}
+| Signal | Confident | Uncertain | Problematic |
+|--------|-----------|-----------|-------------|
+| **1. Color** | `--confident` | `--uncertain` | `--problematic` |
+| **2. Icon** | ✓ Checkmark | ? Question | ! Exclamation |
+| **3. Position** | Success section | Warning section | Error section |
 
-.validation-section-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  margin-bottom: var(--space-3);
-}
+**Perspective Icons:**
 
-.validation-section-icon {
-  font-size: 14px;
-}
+| Perspective | Icon | Description |
+|-------------|------|-------------|
+| Paleographic | Feather | Letter forms, ligatures, abbreviations |
+| Linguistic | Speech bubble | Grammar, historical spelling |
+| Structural | Grid | Table logic, sums, cross-references |
+| Domain | Book | Period-appropriate terms, plausible values |
+
+### 6.5 Workflow Stepper
+
+**Visual Style:** Roman numerals connected by thin line. Scholarly aesthetic.
+
+```
+I. Load ─── II. Transcribe ─── III. Validate ─── IV. Export
+   ●             ○                  ○               ○
 ```
 
-| Sektion | Icon | Inhalt |
-|---------|------|--------|
-| RULE-BASED | ⚙️ | Deterministische Prüfungen |
-| AI ASSISTANT | ✨ | LLM-Einschätzungen |
+**Step States:**
 
-### Validation Card
+| State | Number Style | Label Style |
+|-------|--------------|-------------|
+| Inactive | Circle outline, muted | Muted text |
+| Active | Filled circle, accent | Accent text, underline |
+| Complete | Checkmark, success | Success text |
 
-```css
-.validation-card {
-  padding: var(--space-3);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  border-left: 3px solid transparent;
-  cursor: pointer;
-  margin-bottom: var(--space-2);
-}
+### 6.6 Dialogs
 
-.validation-card:hover {
-  background: var(--bg-hover);
-}
-
-.validation-card.success { border-left-color: var(--success); }
-.validation-card.warning { border-left-color: var(--warning); }
-.validation-card.error   { border-left-color: var(--error); }
-
-.validation-card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.validation-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.validation-card-title {
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--text-primary);
-}
-
-.validation-card-meta {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: var(--space-1);
-}
-
-.validation-card-link {
-  font-size: 12px;
-  color: var(--accent-primary);
-  cursor: pointer;
-  margin-top: var(--space-2);
-}
-
-.validation-card-link:hover {
-  text-decoration: underline;
-}
+**Structure:**
+```
+┌─────────────────────────────────────────┐
+│ HEADER                            ✕     │
+├─────────────────────────────────────────┤
+│ [Tab 1] [Tab 2] [Tab 3]                 │  (optional)
+├─────────────────────────────────────────┤
+│                                         │
+│ BODY                                    │
+│                                         │
+├─────────────────────────────────────────┤
+│                      [Cancel] [Primary] │
+└─────────────────────────────────────────┘
 ```
 
-### Bounding Box / SVG Regions (Implementiert in v2)
+**Backdrop:** `rgba(13,17,23,0.9)` with 8px blur.
 
-```css
-/* SVG-basierte Regionen im Document Viewer */
-.region-box {
-  fill: rgba(88, 166, 255, 0.1);
-  stroke: var(--accent-primary);
-  stroke-width: 2;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
+**Container:**
+- Width: 520px (max 90vw)
+- Background: `--bg-secondary`
+- Border: 1px `--bg-tertiary`
+- Border-radius: 12px
+- Shadow: `0 16px 48px rgba(0,0,0,0.5)`
 
-.region-box:hover {
-  fill: rgba(88, 166, 255, 0.25);
-}
+### 6.7 Toast Notifications
 
-.region-box.selected {
-  stroke: var(--selection);
-  fill: rgba(255, 193, 7, 0.2);
-  stroke-width: 3;
-}
+**Position:** Bottom-right, 16px from edges.
+
+**Structure:**
+```
+┌─ 3px left border (status color) ──────────────────┐
+│  [Icon]  Message text here                    ✕   │
+└───────────────────────────────────────────────────┘
 ```
 
-**Implementierung:** SVG-Overlay über dem Dokument-Bild mit prozentbasierten Koordinaten.
+**Animation:** Slide in from right, 300ms ease-out.
 
-```html
-<svg id="regionsOverlay" viewBox="0 0 1024 1024">
-  <rect class="region-box" data-line="3" x="10%" y="22%" width="80%" height="5%"/>
-</svg>
+**Duration:** 4s default, 8s for important messages.
+
+---
+
+## 7. States
+
+### Loading States
+
+**During LLM transcription:**
+- Transcription panel: Circular spinner (48px), status text below
+- Other panels: 70% opacity dimming
+- Status text phases: "Analyzing image..." → "Recognizing text..." → "Structuring content..."
+
+### Error States
+
+Errors appear inline within the affected panel, not as modal dialogs.
+
+| Error | Display | Action |
+|-------|---------|--------|
+| API unreachable | Red left border, message | "Retry" button |
+| Invalid API key | Lock icon, message | "Open Settings" link |
+| Image too large | Warning icon, message | "Compress" button |
+| Timeout | Clock icon, message | "Retry" button |
+
+### Empty States
+
+| Panel | Message | Visual |
+|-------|---------|--------|
+| Document Viewer | "Drop image here or click Upload" | Upload icon |
+| Transcription | "Transcription appears after analysis" | None |
+| Validation | "Validation results appear after transcription" | Checkmark outline |
+
+---
+
+## 8. Interaction
+
+### Synchronization
+
+The three panels are bidirectionally linked. Selection in any panel updates the other two.
+
 ```
-
-### Inline-Marker (Transcription)
-
-| Marker | CSS | Bedeutung | Klickbar |
-|--------|-----|-----------|----------|
-| `[?]` | `background: rgba(255, 193, 7, 0.3); padding: 2px 4px; border-radius: 2px;` | Unsichere Lesung | Ja |
-| `[illegible]` | `background: rgba(248, 81, 73, 0.3); font-style: italic;` | Unleserlich | Ja |
-| `[gap]` | `background: var(--bg-hover);` | Fehlende Stelle | Nein |
-| `...` | `color: var(--error);` | Truncated/Abgeschnitten | Ja |
-
-```css
-.marker-uncertain {
-  background: rgba(255, 193, 7, 0.3);
-  padding: 2px 4px;
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.marker-uncertain:hover {
-  background: rgba(255, 193, 7, 0.5);
-}
+User clicks line 7 in Transcription
+         │
+         ▼
+    State updates: selectedLine = 7
+         │
+         ├─────────────────┬─────────────────┐
+         ▼                 ▼                 ▼
+   Document Viewer    Transcription     Validation
+   - Region 7 gets    - Row 7 gets      - Related card
+     selection border   selected bg       scrolls into view
+   - Scrolls to       - 2px left        - Brief pulse
+     show region        border            animation
 ```
-
-## Barrierefreiheit
-
-### Kontrastverhältnisse (WCAG)
-
-| Element | Vordergrund | Hintergrund | Ratio | Level |
-|---------|-------------|-------------|-------|-------|
-| Body Text | #e6edf3 | #0d1117 | 13.7:1 | AAA |
-| Secondary | #8b949e | #0d1117 | 6.2:1 | AA |
-| Success | #3fb950 | #161b22 | 5.8:1 | AA |
-| Warning | #d29922 | #161b22 | 5.1:1 | AA |
-| Error | #f85149 | #161b22 | 5.4:1 | AA |
-
-### Triple-Coding für Status
-
-Jeder Validierungsstatus verwendet drei redundante Signale:
-
-1. **Farbe** (Grün/Orange/Rot)
-2. **Icon** (✅/⚠️/❌)
-3. **Position** (Gruppiert in Sektionen)
-
-### Focus States
-
-```css
-:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-```
-
-## Interaktionen
-
-### Text-Bild-Synchronisation
-
-Dreifache Verknüpfung zwischen allen drei Panels:
-
-| Trigger | Aktion | Reaktion |
-|---------|--------|----------|
-| Click | Transcription-Zeile | Bounding Box wird gelb, Bild scrollt/zoomt |
-| Click | Bounding Box im Bild | Transcription scrollt zur Zeile, Highlight |
-| Click | Validation Card | Bild + Transcription springen zur Zeile |
-| Hover | Transcription-Zeile | Sanftes Highlight im Bild (20% opacity) |
-| Hover | Bounding Box | Transcription-Zeile leicht hervorgehoben |
-
-### Validation-Interaktionen
-
-| Aktion | Element | Reaktion |
-|--------|---------|----------|
-| Click | Validation Card | Expandiert mit Details |
-| Click | "Show Details" Link | Zeigt erweiterte Informationen |
-| Click | Zeilenreferenz (z.B. "Line 4") | Springt zu Zeile in allen Panels |
-
-### Marker-Interaktionen
-
-| Aktion | Element | Reaktion |
-|--------|---------|----------|
-| Click | `[?]` Marker | Öffnet Korrektur-Popover |
-| Click | `...` Truncation | Zeigt vollständigen Text |
-| Hover | Jeder Marker | Tooltip mit Erklärung |
 
 ### Keyboard Shortcuts
 
-| Shortcut | Aktion | Kontext |
-|----------|--------|---------|
-| `Ctrl+S` | Speichern | Global |
-| `Ctrl+Z` | Undo | Transcription |
-| `Ctrl+Shift+Z` | Redo | Transcription |
-| `+` / `-` | Zoom In/Out | Document Viewer |
-| `W` | Fit Width | Document Viewer |
-| `F` | Fit Page | Document Viewer |
-| `Esc` | Dialog schließen / Deselect | Global |
-| `↑` / `↓` | Zeile wechseln | Transcription |
-| `Enter` | Zeile bearbeiten | Transcription |
+| Key | Action | Context |
+|-----|--------|---------|
+| Tab | Move between panels | Global |
+| ↑/↓ | Navigate lines | Editor focused |
+| Enter | Start editing / Confirm | Editor |
+| Escape | Cancel edit / Close dialog | Editor / Dialog |
+| Ctrl+Z | Undo | Editor |
+| Ctrl+Shift+Z | Redo | Editor |
+| N | Next uncertain item | Global |
+| P | Previous uncertain item | Global |
 
-### Transitions
+### Focus States
 
-```css
-/* Standard */
-transition: all 0.15s ease;
+All interactive elements show visible focus: 2px outline in `--accent-primary`, 2px offset.
 
-/* Bounding Box Highlight */
-transition: background 0.1s ease, border-color 0.1s ease;
+---
 
-/* Panel Scroll */
-scroll-behavior: smooth;
+## 9. Animation
+
+### Timing
+
+| Type | Duration | Easing |
+|------|----------|--------|
+| Micro-interactions | 150ms | ease-out |
+| Panel transitions | 150ms | ease-out |
+| Dialog open/close | 200ms | ease-out |
+| Toast slide | 300ms | ease-out |
+
+**Rule:** No animation exceeds 300ms.
+
+### What Animates
+
+- Hover states (background, border)
+- Selection highlighting
+- Card expansion/collapse
+- Loading spinner rotation
+- Toast entrance/exit
+
+### What Does Not Animate
+
+- Text editing
+- Validation results appearing (instant)
+- Error messages (instant)
+
+---
+
+## 10. Accessibility
+
+### Contrast Ratios
+
+All text meets WCAG AA (4.5:1 minimum).
+
+| Element | Foreground | Background | Ratio |
+|---------|------------|------------|-------|
+| Body text | #e6edf3 | #0d1117 | 14.2:1 |
+| Secondary text | #8b949e | #0d1117 | 6.4:1 |
+| Confident status | #2d8659 | #161b22 | 4.8:1 |
+| Uncertain status | #b8860b | #161b22 | 4.6:1 |
+| Problematic status | #a84432 | #161b22 | 5.1:1 |
+
+### Triple Coding
+
+Every validation status uses three redundant signals:
+1. **Color** (green/amber/red spectrum)
+2. **Icon** (checkmark/question/exclamation)
+3. **Position** (grouped in sections)
+
+This ensures accessibility for color-blind users.
+
+### Screen Reader Support
+
+- All images have alt text
+- Interactive elements have ARIA labels
+- Focus order follows visual layout
+- Status changes announced via live regions
+
+---
+
+## 11. Implementation Notes
+
+### CSS Custom Properties
+
+All design tokens defined as CSS custom properties in `:root`. This enables:
+- Consistent styling across components
+- Easy theme switching (future feature)
+- Runtime customization
+
+### No Framework Dependency
+
+Design implementable with vanilla CSS. No Tailwind, no component library required.
+
+### Asset Requirements
+
+| Asset | Format | Size |
+|-------|--------|------|
+| Inter font | WOFF2 | ~100KB |
+| JetBrains Mono font | WOFF2 | ~80KB |
+| Icons | Inline SVG | <5KB total |
+
+### File Structure
+
+```
+docs/
+├── css/
+│   ├── variables.css    # All design tokens
+│   └── styles.css       # Component styles
+├── js/
+│   └── ...
+└── index.html
 ```
 
-### Zoom Controls
+---
 
-| Button | Icon | Funktion |
-|--------|------|----------|
-| Zoom Out | `-` | 10% Reduktion |
-| Zoom Level | `100%` | Aktueller Wert (klickbar → Reset) |
-| Zoom In | `+` | 10% Erhöhung |
-| Fit Width | `↔` | Breite anpassen |
-| Fit Page | `⬜` | Ganze Seite sichtbar |
+## Changelog
+
+### v2.1 (2026-01-16)
+- Consolidated best elements from v2.0 editorial design
+- Kept dark theme (better for document focus)
+- Adopted muted status colors (less alarming)
+- Added triple-coding requirement for status
+- Added perspective icons (Feather, Speech, Grid, Book)
+- Changed workflow stepper to Roman numerals
+- Reduced animation durations (max 300ms)
+- Added scholarly design rationale
+
+### v2.0 (2026-01-16)
+- Complete redesign proposal (light theme, warm palette)
+- New editorial/archival visual identity
+- Four validation perspectives with icons
+
+### v1.0 (2026-01-16)
+- Initial design system (GitHub Dark inspired)
+- Three-panel layout
+- Glass morphism effects
 
 ---
 
-## Beispiel-Validierungsmeldungen
-
-### Rule-Based
-
-| Status | Titel | Meta |
-|--------|-------|------|
-| 🟢 | Date Format Correct | Lines 3-7 (DD. Month) |
-| 🟡 | Sum Check Mismatch | Line 12 • Diff: 3 Taler |
-| 🔴 | Missing Required Field | Line 9 • Column: BETRAG |
-
-### AI Assistant
-
-| Status | Titel | Meta |
-|--------|-------|------|
-| 🟢 | High Confidence | Overall Document Match |
-| 🟡 | Ambiguous Reading | Line 4 • Confidence: Low |
-| 🔴 | Missing Column | Line 9 |
-
----
-
-## Editor Grid (Neu in v2)
-
-Grid-basierter Transcription-Editor mit CSS Grid statt HTML-Tabelle.
-
-```css
-.editor-grid-row {
-  display: grid;
-  grid-template-columns: 32px repeat(4, 1fr);
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  cursor: pointer;
-}
-
-.editor-grid-row:hover {
-  background: var(--bg-hover);
-}
-
-.editor-grid-row.active {
-  background: rgba(88, 166, 255, 0.1);
-  border-left: 3px solid var(--accent-primary);
-}
-
-.line-num {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  text-align: right;
-}
-
-.editor-cell {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.editor-cell.header {
-  font-family: var(--font-sans);
-  font-weight: 500;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-}
-```
-
----
-
-**Verweis:** Prototyp-Implementierung in `newer prototpye/`
+**References:**
+- [METHODOLOGY](METHODOLOGY.md) for categorical confidence rationale
+- [ARCHITECTURE](ARCHITECTURE.md) for component implementation
+- [VALIDATION](VALIDATION.md) for validation card details
