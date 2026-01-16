@@ -305,7 +305,7 @@ function showOnboardingToast() {
     // Delay to let app load
     setTimeout(() => {
         dialogManager.showToast(
-            '👋 Willkommen bei coOCR/HTR! Lade ein Demo-Dokument oder uploade ein Bild, um zu beginnen.',
+            'Welcome to coOCR/HTR! Load a demo document or upload an image to get started.',
             'info',
             8000 // Show longer
         );
