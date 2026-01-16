@@ -290,10 +290,61 @@ coocr-htr/
 
 ### Offene Punkte
 
-- [ ] Git Commit für Session 3 Updates
-- [ ] Data-Ordner mit Beispieldaten befüllen
+- [x] Git Commit für Session 3 Updates → Commit `3e7f219`
+- [x] Data-Ordner mit Beispieldaten befüllen → Raitbuch 2 mit 340 Dateien
 - [ ] Phase 1: LLM Service implementieren
 - [ ] Prototyp v2 nach `src/` migrieren
+
+---
+
+## 2026-01-16 | Session 3b: Data-Ordner Analyse und Dokumentation
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Analyse der Beispieldaten
+
+**Auftrag:** Data-Ordner im Detail analysieren und dokumentieren.
+
+**Befund:** Drei Hauptdatensätze mit PAGE-XML Standard:
+
+| Datensatz | Typ | Seiten | Format | Status |
+|-----------|-----|--------|--------|--------|
+| **Raitbuch 2** | Rechnungsbuch (16./17. Jh.) | 123 | PAGE-XML + doc.xml | FINAL |
+| **1617-wecker** | Medizinbuch (Latein) | 83 | PAGE-XML | Teilweise |
+| **o_szd** | Stefan Zweig Briefe | 12 | METS-XML + JSON | Metadaten |
+| **Schliemann** | Archivbilder | 21 | Nur JPG | - |
+
+### PAGE-XML Format dokumentiert
+
+**Erkenntnisse:**
+- Standardformat von Transkribus/PyLaia
+- Polygon-basierte Koordinaten (nicht rechteckig)
+- Hierarchie: Page → TextRegion → TextLine → Word
+- Transkriptionsstatus: NEW, IN_PROGRESS, FINAL
+
+**Mapping zu coOCR/HTR:**
+```
+TextLine/Coords@points → bounds (Polygon→BoundingBox)
+TextLine/TextEquiv/Unicode → text
+TranskribusMetadata@status → confidence
+```
+
+### Dokumentation erstellt
+
+| Aktion | Ergebnis |
+|--------|----------|
+| `data/README.md` erstellt | Datenformate, Struktur, Verwendung |
+| `DATA-SCHEMA.md` erweitert | PAGE-XML Import-Schema, Konvertierung |
+
+### Commit
+
+Commit `???` - Data-Dokumentation hinzugefügt
+
+### Offene Punkte
+
+- [ ] PAGE-XML Import-Service implementieren
+- [ ] Koordinaten-Konvertierung testen
+- [ ] Beispiel-Import mit Raitbuch 2
 
 ---
 

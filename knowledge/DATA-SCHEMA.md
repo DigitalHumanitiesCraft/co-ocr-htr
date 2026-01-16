@@ -321,6 +321,136 @@ Datum	Beschreibung	Betrag
 
 ---
 
+## Import-Formate
+
+### PAGE-XML (Transkribus/PyLaia)
+
+Externes Format für den Import bestehender Transkriptionen. Siehe [data/README.md](../data/README.md).
+
+**Namespace:** `http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15`
+
+```typescript
+// PAGE-XML Struktur (vereinfacht)
+interface PageXML {
+  PcGts: {
+    Metadata: {
+      Creator: string;           // "prov=READ-COOP:name=PyLaia..."
+      Created: string;           // ISO 8601
+      TranskribusMetadata?: {
+        docId: string;
+        pageId: string;
+        status: 'NEW' | 'IN_PROGRESS' | 'FINAL';
+      };
+    };
+    Page: {
+      imageFilename: string;
+      imageWidth: number;
+      imageHeight: number;
+      TextRegion: TextRegion[];
+    };
+  };
+}
+
+interface TextRegion {
+  id: string;
+  Coords: { points: string };    // "x1,y1 x2,y2 x3,y3 x4,y4"
+  TextLine: TextLine[];
+}
+
+interface TextLine {
+  id: string;
+  Coords: { points: string };
+  Baseline?: { points: string };
+  Word?: Word[];
+  TextEquiv: { Unicode: string };
+}
+
+interface Word {
+  id: string;
+  Coords: { points: string };
+  TextEquiv: { Unicode: string };
+}
+```
+
+### Mapping PAGE-XML → coOCR/HTR
+
+| PAGE-XML | coOCR/HTR Segment | Konvertierung |
+|----------|-------------------|---------------|
+| `TextLine/Coords@points` | `bounds` | Polygon → BoundingBox |
+| `TextLine/TextEquiv/Unicode` | `text` | Direkt |
+| `TranskribusMetadata@status` | `confidence` | FINAL→certain, IN_PROGRESS→likely, NEW→uncertain |
+| `ReadingOrder/index` | `lineNumber` | Sequenznummer |
+
+### Koordinaten-Konvertierung
+
+```javascript
+/**
+ * Konvertiert PAGE-XML Polygon zu coOCR/HTR BoundingBox
+ * @param points "x1,y1 x2,y2 x3,y3 x4,y4"
+ * @returns BoundingBox
+ */
+function polygonToBounds(points) {
+  const coords = points.split(' ').map(p => {
+    const [x, y] = p.split(',').map(Number);
+    return { x, y };
+  });
+  const xs = coords.map(c => c.x);
+  const ys = coords.map(c => c.y);
+  return {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys)
+  };
+}
+```
+
+### Beispiel: PAGE-XML Import
+
+**Eingabe (PAGE-XML):**
+```xml
+<TextLine id="line_1">
+  <Coords points="100,200 500,200 500,240 100,240"/>
+  <TextEquiv>
+    <Unicode>28. Mai | K. Schmidt | Eisenwaren | 23 Taler</Unicode>
+  </TextEquiv>
+</TextLine>
+```
+
+**Ausgabe (coOCR/HTR Segment):**
+```json
+{
+  "lineNumber": 1,
+  "text": "28. Mai | K. Schmidt | Eisenwaren | 23 Taler",
+  "confidence": "certain",
+  "bounds": { "x": 100, "y": 200, "width": 400, "height": 40 },
+  "fields": {
+    "datum": "28. Mai",
+    "name": "K. Schmidt",
+    "beschreibung": "Eisenwaren",
+    "betrag": "23 Taler"
+  }
+}
+```
+
+---
+
+## Beispieldaten
+
+Verfügbar in `data/`:
+
+| Datensatz | Seiten | Status | Format |
+|-----------|--------|--------|--------|
+| Raitbuch 2 | 123 | FINAL | PAGE-XML |
+| 1617-wecker | 83 | Teilweise | PAGE-XML |
+| o_szd.* | 12 | Metadaten | METS-XML |
+| Schliemann | 21 | Nur Bilder | JPG |
+
+Siehe [data/README.md](../data/README.md) für Details.
+
+---
+
 **Verweise:**
 - [VALIDATION](VALIDATION.md) für Regel-Implementierung
 - [ARCHITECTURE](ARCHITECTURE.md) für Storage-Integration
+- [data/README.md](../data/README.md) für Beispieldaten
