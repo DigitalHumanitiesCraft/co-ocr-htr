@@ -99,6 +99,12 @@ async function initApp() {
     // Connect empty state buttons
     initEmptyStateButtons();
 
+    // Initialize guided workflow features
+    initGuidedWorkflow();
+
+    // Show onboarding toast for first-time visitors
+    showOnboardingToast();
+
     console.log('coOCR/HTR: Initialized');
 }
 
@@ -193,6 +199,120 @@ async function initSamplesMenu() {
             dialogManager.showToast(`Failed to load sample: ${error.message}`, 'error');
         }
     });
+}
+
+/**
+ * Initialize guided workflow features
+ * - Workflow stepper updates based on app state
+ * - Panel hints can be dismissed
+ */
+function initGuidedWorkflow() {
+    // Panel hint dismissal
+    document.querySelectorAll('[data-dismiss-hint]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const hintId = btn.dataset.dismissHint;
+            const hint = document.getElementById(`${hintId}Hint`);
+            if (hint) {
+                hint.classList.add('hidden');
+                // Remember dismissal
+                storage.saveSetting(`hint_${hintId}_dismissed`, true);
+            }
+        });
+    });
+
+    // Hide already-dismissed hints
+    ['viewer', 'editor', 'validation'].forEach(hintId => {
+        if (storage.loadSettings()?.[`hint_${hintId}_dismissed`]) {
+            const hint = document.getElementById(`${hintId}Hint`);
+            if (hint) hint.classList.add('hidden');
+        }
+    });
+
+    // Workflow stepper state management
+    const stepper = document.getElementById('workflowStepper');
+    if (!stepper) return;
+
+    // Listen to state changes and update stepper
+    appState.addEventListener('imageChanged', () => {
+        updateWorkflowStep(1, 'completed');
+        updateWorkflowStep(2, 'active');
+        // Hide viewer hint when document loaded
+        const viewerHint = document.getElementById('viewerHint');
+        if (viewerHint) viewerHint.classList.add('hidden');
+    });
+
+    appState.addEventListener('transcriptionComplete', () => {
+        updateWorkflowStep(2, 'completed');
+        updateWorkflowStep(3, 'completed');
+        updateWorkflowStep(4, 'active');
+        // Hide editor hint
+        const editorHint = document.getElementById('editorHint');
+        if (editorHint) editorHint.classList.add('hidden');
+    });
+
+    appState.addEventListener('validationComplete', () => {
+        updateWorkflowStep(4, 'completed');
+        updateWorkflowStep(5, 'active');
+        // Hide validation hint
+        const validationHint = document.getElementById('validationHint');
+        if (validationHint) validationHint.classList.add('hidden');
+    });
+
+    // Track edits for step 5
+    appState.addEventListener('segmentUpdated', () => {
+        updateWorkflowStep(5, 'completed');
+        updateWorkflowStep(6, 'active');
+    });
+}
+
+/**
+ * Update workflow step state
+ */
+function updateWorkflowStep(stepNum, state) {
+    const step = document.querySelector(`.workflow-step[data-step="${stepNum}"]`);
+    if (!step) return;
+
+    // Remove all states
+    step.classList.remove('active', 'completed');
+
+    // Add new state
+    if (state === 'active' || state === 'completed') {
+        step.classList.add(state);
+    }
+
+    // Mark all previous steps as completed if this step is active
+    if (state === 'active') {
+        for (let i = 1; i < stepNum; i++) {
+            const prevStep = document.querySelector(`.workflow-step[data-step="${i}"]`);
+            if (prevStep && !prevStep.classList.contains('completed')) {
+                prevStep.classList.remove('active');
+                prevStep.classList.add('completed');
+            }
+        }
+    }
+}
+
+/**
+ * Show onboarding toast for first-time visitors
+ */
+function showOnboardingToast() {
+    const settings = storage.loadSettings() || {};
+
+    // Only show once
+    if (settings.onboardingShown) return;
+
+    // Delay to let app load
+    setTimeout(() => {
+        dialogManager.showToast(
+            '👋 Willkommen bei coOCR/HTR! Lade ein Demo-Dokument oder uploade ein Bild, um zu beginnen.',
+            'info',
+            8000 // Show longer
+        );
+
+        // Mark as shown
+        storage.saveSetting('onboardingShown', true);
+    }, 1500);
 }
 
 // Start application when DOM is ready

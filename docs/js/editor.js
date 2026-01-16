@@ -1,6 +1,11 @@
 /**
  * coOCR/HTR Editor
- * Transcription Editor with Inline Editing and Undo/Redo
+ * Flexible Transcription Editor with support for multiple source types
+ *
+ * Editor Modes:
+ * - 'lines': Simple line-based view (letters, diaries, manuscripts)
+ * - 'grid': Column-based grid view (account books, inventories)
+ * - 'auto': Automatically detect from data structure
  */
 import { appState } from './state.js';
 
@@ -14,14 +19,17 @@ const history = {
 // Currently editing cell
 let editingCell = null;
 
+// Current editor mode
+let editorMode = 'auto';
+
 export function initEditor() {
     const container = document.getElementById('editorContent');
     if (!container) return;
 
     // React to selection
     appState.addEventListener('selectionChanged', (e) => {
-        document.querySelectorAll('.editor-grid-row.active').forEach(el => el.classList.remove('active'));
-        const lineEl = document.querySelector(`.editor-grid-row[data-line="${e.detail.line}"]`);
+        document.querySelectorAll('.editor-grid-row.active, .editor-line.active').forEach(el => el.classList.remove('active'));
+        const lineEl = document.querySelector(`[data-line="${e.detail.line}"]`);
         if (lineEl) {
             lineEl.classList.add('active');
             lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -31,12 +39,7 @@ export function initEditor() {
     // React to transcription updates
     appState.addEventListener('transcriptionComplete', () => {
         const state = appState.getState();
-        if (state.transcription.segments?.length > 0) {
-            renderEditorFromSegments(state.transcription.segments, state.transcription.columns);
-        } else {
-            renderEditor(state.transcription.lines);
-        }
-        // Save initial state to history
+        renderEditor(state.transcription);
         pushHistory();
     });
 
@@ -51,129 +54,244 @@ export function initEditor() {
 
     // Initial render
     const state = appState.getState();
-    if (state.transcription.segments?.length > 0) {
-        renderEditorFromSegments(state.transcription.segments, state.transcription.columns);
-    } else {
-        renderEditor(state.transcription.lines);
-    }
-}
-
-function renderEditor(transcriptionData) {
-    const container = document.getElementById('editorContent');
-    let html = '';
-
-    // Header
-    html += `
-        <div class="editor-grid-row" style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05);">
-            <div class="editor-cell header">#</div>
-            <div class="editor-cell header">Datum</div>
-            <div class="editor-cell header">Name</div>
-            <div class="editor-cell header">Beschreibung</div>
-            <div class="editor-cell header">Betrag</div>
-        </div>
-    `;
-
-    transcriptionData.forEach((text, index) => {
-        if (text.includes('---')) return;
-        if (text.includes('Datum') && index === 0) return;
-
-        const lineNum = index + 1;
-        const content = text.replace(/^\||\|$/g, '').split('|');
-
-        let rowContent = '';
-        if (content.length >= 4) {
-            rowContent = content.slice(0, 4).map(cell => {
-                let cellHtml = cell.trim()
-                    .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
-                    .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
-                return `<div class="editor-cell" title="${cell.trim()}">${cellHtml}</div>`;
-            }).join('');
-        } else {
-            rowContent = `<div class="editor-cell" style="grid-column: 2 / -1; color: var(--text-secondary); opacity: 0.5;">${text}</div>`;
-        }
-
-        html += `
-            <div class="editor-grid-row" data-line="${lineNum}">
-                <div class="line-num">${lineNum}</div>
-                ${rowContent}
-            </div>
-        `;
-    });
-
-    container.innerHTML = html;
-    bindEditorEvents(container);
+    renderEditor(state.transcription);
 }
 
 /**
- * Render editor from structured segments
+ * Main render function - determines mode and renders accordingly
  */
-function renderEditorFromSegments(segments, columns) {
+function renderEditor(transcription) {
     const container = document.getElementById('editorContent');
     if (!container) return;
 
+    // Determine editor mode
+    const mode = detectEditorMode(transcription);
+    editorMode = mode;
+
+    if (mode === 'grid') {
+        renderGridEditor(container, transcription);
+    } else {
+        renderLinesEditor(container, transcription);
+    }
+}
+
+/**
+ * Detect which editor mode to use based on data structure
+ */
+function detectEditorMode(transcription) {
+    // Explicit columns defined → grid
+    if (transcription.columns?.length > 0) {
+        return 'grid';
+    }
+
+    // Check segments for structured fields
+    if (transcription.segments?.length > 0) {
+        const hasFields = transcription.segments.some(s => s.fields && Object.keys(s.fields).length > 1);
+        if (hasFields) return 'grid';
+
+        // Check for pipe separators in text
+        const hasPipes = transcription.segments.some(s => s.text?.includes('|'));
+        if (hasPipes) return 'grid';
+    }
+
+    // Check lines for pipe separators
+    if (transcription.lines?.length > 0) {
+        const hasPipes = transcription.lines.some(line =>
+            typeof line === 'string' && line.includes('|') && line.split('|').length > 2
+        );
+        if (hasPipes) return 'grid';
+    }
+
+    // Default: lines mode for simple text
+    return 'lines';
+}
+
+/**
+ * Render simple line-based editor (for letters, diaries, manuscripts)
+ */
+function renderLinesEditor(container, transcription) {
+    let html = '<div class="editor-lines">';
+
+    // Get data source
+    const lines = transcription.segments?.map(s => ({
+        lineNumber: s.lineNumber,
+        text: s.text,
+        confidence: s.confidence
+    })) || transcription.lines?.map((text, i) => ({
+        lineNumber: i + 1,
+        text: typeof text === 'string' ? text : text.text,
+        confidence: text.confidence || 'certain'
+    })) || [];
+
+    if (lines.length === 0) {
+        html += `
+            <div class="editor-empty-state">
+                <p>Keine Transkription vorhanden.</p>
+                <p class="text-secondary">Lade ein Dokument und starte die Transkription.</p>
+            </div>
+        `;
+    } else {
+        lines.forEach((line) => {
+            const lineNum = line.lineNumber;
+            const text = line.text || '';
+            const confidence = line.confidence || 'certain';
+
+            // Apply markers
+            const displayText = text
+                .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
+                .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
+
+            const confidenceClass = confidence === 'uncertain' ? 'confidence-uncertain' :
+                                    confidence === 'likely' ? 'confidence-likely' : '';
+
+            html += `
+                <div class="editor-line ${confidenceClass}" data-line="${lineNum}">
+                    <span class="line-num">${lineNum}</span>
+                    <span class="line-text" data-line="${lineNum}" title="${text}">${displayText || '&nbsp;'}</span>
+                </div>
+            `;
+        });
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+    bindLinesEditorEvents(container);
+}
+
+/**
+ * Render grid-based editor (for account books, inventories)
+ */
+function renderGridEditor(container, transcription) {
     let html = '';
 
-    // Determine headers
-    const headers = columns?.length > 0
-        ? columns.map(c => c.label || c.id)
-        : ['#', 'Datum', 'Name', 'Beschreibung', 'Betrag'];
+    // Determine columns
+    let columns = transcription.columns || [];
+
+    // Auto-detect columns from first segment or line
+    if (columns.length === 0) {
+        const firstSegment = transcription.segments?.[0];
+        const firstLine = transcription.lines?.[0];
+
+        if (firstSegment?.fields) {
+            columns = Object.keys(firstSegment.fields).map(key => ({
+                id: key,
+                label: key.charAt(0).toUpperCase() + key.slice(1)
+            }));
+        } else if (firstSegment?.text?.includes('|') || (typeof firstLine === 'string' && firstLine.includes('|'))) {
+            const parts = (firstSegment?.text || firstLine).split('|').filter(p => p.trim());
+            columns = parts.map((_, i) => ({
+                id: `col${i}`,
+                label: `Spalte ${i + 1}`
+            }));
+        }
+    }
+
+    // Fallback to default columns
+    if (columns.length === 0) {
+        columns = [
+            { id: 'datum', label: 'Datum' },
+            { id: 'name', label: 'Name' },
+            { id: 'beschreibung', label: 'Beschreibung' },
+            { id: 'betrag', label: 'Betrag' }
+        ];
+    }
+
+    // Set CSS grid template
+    const gridCols = `3rem repeat(${columns.length}, 1fr)`;
 
     // Header row
     html += `
-        <div class="editor-grid-row" style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div class="editor-grid-row editor-header" style="grid-template-columns: ${gridCols};">
             <div class="editor-cell header">#</div>
-            ${headers.slice(0, 4).map(h => `<div class="editor-cell header">${h}</div>`).join('')}
+            ${columns.map(c => `<div class="editor-cell header">${c.label}</div>`).join('')}
         </div>
     `;
 
     // Data rows
-    segments.forEach((seg, index) => {
-        const lineNum = seg.lineNumber || (index + 1);
-        let cells;
+    const segments = transcription.segments || [];
+    const lines = transcription.lines || [];
 
-        if (seg.fields && Object.keys(seg.fields).length > 0) {
-            cells = Object.values(seg.fields).slice(0, 4);
-        } else if (seg.text) {
-            // Parse text as pipe-separated
-            const parts = seg.text.replace(/^\||\|$/g, '').split('|').map(s => s.trim());
-            cells = parts.slice(0, 4);
-        } else {
-            cells = ['', '', '', ''];
-        }
+    // Use segments if available, otherwise parse lines
+    const dataRows = segments.length > 0
+        ? segments
+        : lines.map((line, i) => ({
+            lineNumber: i + 1,
+            text: typeof line === 'string' ? line : line.text,
+            confidence: line.confidence || 'certain'
+        }));
 
-        const rowContent = cells.map((cell, cellIdx) => {
-            const cellHtml = (cell || '')
-                .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
-                .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
-            return `<div class="editor-cell" data-line="${lineNum}" data-col="${cellIdx}" title="${cell || ''}">${cellHtml}</div>`;
-        }).join('');
-
-        // Pad with empty cells if needed
-        const emptyCells = Math.max(0, 4 - cells.length);
-        const emptyHtml = Array(emptyCells).fill('')
-            .map((_, i) => `<div class="editor-cell" data-line="${lineNum}" data-col="${cells.length + i}"></div>`)
-            .join('');
-
+    if (dataRows.length === 0) {
         html += `
-            <div class="editor-grid-row" data-line="${lineNum}">
-                <div class="line-num">${lineNum}</div>
-                ${rowContent}${emptyHtml}
+            <div class="editor-empty-state">
+                <p>Keine Transkription vorhanden.</p>
+                <p class="text-secondary">Lade ein Dokument und starte die Transkription.</p>
             </div>
         `;
-    });
+    } else {
+        dataRows.forEach((row) => {
+            const lineNum = row.lineNumber;
+            const confidence = row.confidence || 'certain';
+            const confidenceClass = confidence === 'uncertain' ? 'confidence-uncertain' :
+                                    confidence === 'likely' ? 'confidence-likely' : '';
+
+            // Get cell values
+            let cells;
+            if (row.fields && Object.keys(row.fields).length > 0) {
+                cells = columns.map(col => row.fields[col.id] || '');
+            } else if (row.text) {
+                const parts = row.text.replace(/^\||\|$/g, '').split('|').map(s => s.trim());
+                cells = columns.map((_, i) => parts[i] || '');
+            } else {
+                cells = columns.map(() => '');
+            }
+
+            // Skip header-like rows
+            if (row.text?.includes('---') || (cells[0]?.toLowerCase() === 'datum' && lineNum === 1)) {
+                return;
+            }
+
+            const cellsHtml = cells.map((cell, colIdx) => {
+                const displayCell = (cell || '')
+                    .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
+                    .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
+                return `<div class="editor-cell" data-line="${lineNum}" data-col="${colIdx}" title="${cell || ''}">${displayCell || '&nbsp;'}</div>`;
+            }).join('');
+
+            html += `
+                <div class="editor-grid-row ${confidenceClass}" data-line="${lineNum}" style="grid-template-columns: ${gridCols};">
+                    <div class="line-num">${lineNum}</div>
+                    ${cellsHtml}
+                </div>
+            `;
+        });
+    }
 
     container.innerHTML = html;
-    bindEditorEvents(container);
+    bindGridEditorEvents(container);
 }
 
 /**
- * Bind editor event listeners
+ * Bind event listeners for lines editor
  */
-function bindEditorEvents(container) {
-    // Row click for selection
+function bindLinesEditorEvents(container) {
+    container.querySelectorAll('.editor-line[data-line]').forEach(line => {
+        line.addEventListener('click', () => {
+            const lineNum = parseInt(line.getAttribute('data-line'));
+            appState.setSelection(lineNum);
+        });
+    });
+
+    container.querySelectorAll('.line-text[data-line]').forEach(cell => {
+        cell.addEventListener('dblclick', () => startEditing(cell));
+    });
+}
+
+/**
+ * Bind event listeners for grid editor
+ */
+function bindGridEditorEvents(container) {
     container.querySelectorAll('.editor-grid-row[data-line]').forEach(row => {
         row.addEventListener('click', (e) => {
-            // Don't select if clicking on an editable cell
             if (e.target.classList.contains('editor-cell') && !e.target.classList.contains('header')) {
                 return;
             }
@@ -182,7 +300,6 @@ function bindEditorEvents(container) {
         });
     });
 
-    // Cell double-click for inline editing
     container.querySelectorAll('.editor-cell[data-line]').forEach(cell => {
         cell.addEventListener('dblclick', () => startEditing(cell));
     });
@@ -199,10 +316,7 @@ function startEditing(cell) {
     editingCell = cell;
     const originalText = cell.textContent;
 
-    // Store original value
     cell.dataset.originalValue = originalText;
-
-    // Make cell editable
     cell.contentEditable = 'true';
     cell.classList.add('editing');
     cell.focus();
@@ -214,7 +328,6 @@ function startEditing(cell) {
     selection.removeAllRanges();
     selection.addRange(range);
 
-    // Event listeners for this edit session
     cell.addEventListener('keydown', handleCellKeyDown);
     cell.addEventListener('blur', handleCellBlur);
 }
@@ -229,10 +342,9 @@ function handleCellKeyDown(e) {
     } else if (e.key === 'Escape') {
         e.preventDefault();
         finishEditing(e.target, false);
-    } else if (e.key === 'Tab') {
+    } else if (e.key === 'Tab' && editorMode === 'grid') {
         e.preventDefault();
         finishEditing(e.target, true);
-        // Move to next cell
         navigateToNextCell(e.target, e.shiftKey ? -1 : 1);
     }
 }
@@ -241,7 +353,6 @@ function handleCellKeyDown(e) {
  * Handle blur on editing cell
  */
 function handleCellBlur(e) {
-    // Small delay to allow for button clicks
     setTimeout(() => {
         if (editingCell === e.target) {
             finishEditing(e.target, true);
@@ -265,39 +376,37 @@ function finishEditing(cell, save) {
     cell.classList.remove('editing');
 
     if (save && newValue !== originalValue) {
-        // Update state
         const lineNum = parseInt(cell.dataset.line);
-        const colIdx = parseInt(cell.dataset.col);
+        const colIdx = cell.dataset.col !== undefined ? parseInt(cell.dataset.col) : null;
 
-        // Update segment
         const state = appState.getState();
         const segment = state.transcription.segments?.find(s => s.lineNumber === lineNum);
+
         if (segment) {
-            if (segment.fields) {
+            if (colIdx !== null && segment.fields) {
                 const keys = Object.keys(segment.fields);
                 if (keys[colIdx]) {
                     segment.fields[keys[colIdx]] = newValue;
                 }
+                segment.text = Object.values(segment.fields).join(' | ');
+            } else {
+                segment.text = newValue;
             }
-            segment.text = Object.values(segment.fields || {}).join(' | ');
 
-            // Track correction
             appState.updateSegment(lineNum, {
                 text: segment.text,
                 fields: segment.fields
             });
         }
 
-        // Push to history
         pushHistory();
 
         // Re-render markers
-        cell.innerHTML = newValue
+        cell.innerHTML = (newValue || '&nbsp;')
             .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
             .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
     } else {
-        // Restore original value
-        cell.innerHTML = originalValue
+        cell.innerHTML = (originalValue || '&nbsp;')
             .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
             .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
     }
@@ -307,21 +416,21 @@ function finishEditing(cell, save) {
 }
 
 /**
- * Navigate to adjacent cell
+ * Navigate to adjacent cell (grid mode only)
  */
 function navigateToNextCell(currentCell, direction) {
     const line = parseInt(currentCell.dataset.line);
     const col = parseInt(currentCell.dataset.col);
+    const maxCol = document.querySelectorAll(`.editor-cell[data-line="${line}"]`).length - 1;
 
     let nextCol = col + direction;
     let nextLine = line;
 
-    // Wrap to next/previous row
-    if (nextCol > 3) {
+    if (nextCol > maxCol) {
         nextCol = 0;
         nextLine = line + 1;
     } else if (nextCol < 0) {
-        nextCol = 3;
+        nextCol = maxCol;
         nextLine = line - 1;
     }
 
@@ -338,24 +447,16 @@ function navigateToNextCell(currentCell, direction) {
 // Undo/Redo
 // ============================================
 
-/**
- * Push current state to history
- */
 function pushHistory() {
     const state = appState.getState();
     const snapshot = JSON.stringify(state.transcription.segments || state.transcription.lines);
 
-    // Don't push if identical to current
     if (history.stack[history.index] === snapshot) return;
 
-    // Remove any redo states
     history.stack = history.stack.slice(0, history.index + 1);
-
-    // Add new state
     history.stack.push(snapshot);
     history.index = history.stack.length - 1;
 
-    // Limit stack size
     if (history.stack.length > history.maxSize) {
         history.stack.shift();
         history.index--;
@@ -364,50 +465,35 @@ function pushHistory() {
     updateUndoRedoButtons();
 }
 
-/**
- * Undo last change
- */
 function undo() {
     if (history.index <= 0) return;
-
     history.index--;
     restoreFromHistory();
 }
 
-/**
- * Redo last undone change
- */
 function redo() {
     if (history.index >= history.stack.length - 1) return;
-
     history.index++;
     restoreFromHistory();
 }
 
-/**
- * Restore state from history
- */
 function restoreFromHistory() {
     const snapshot = history.stack[history.index];
     if (!snapshot) return;
 
     const data = JSON.parse(snapshot);
+    const state = appState.getState();
 
-    // Determine if it's segments or lines
     if (Array.isArray(data) && data[0]?.lineNumber !== undefined) {
-        appState.data.transcription.segments = data;
-        renderEditorFromSegments(data, appState.getState().transcription.columns);
+        state.transcription.segments = data;
     } else {
-        appState.data.transcription.lines = data;
-        renderEditor(data);
+        state.transcription.lines = data;
     }
 
+    renderEditor(state.transcription);
     updateUndoRedoButtons();
 }
 
-/**
- * Update undo/redo button states
- */
 function updateUndoRedoButtons() {
     const btnUndo = document.getElementById('btnUndo');
     const btnRedo = document.getElementById('btnRedo');
@@ -420,44 +506,35 @@ function updateUndoRedoButtons() {
 // Keyboard Shortcuts
 // ============================================
 
-/**
- * Handle global keyboard shortcuts
- */
 function handleKeyDown(e) {
-    // Don't intercept if in an input or editing cell
     if (editingCell || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         return;
     }
 
-    // Ctrl/Cmd + Z = Undo
     if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         undo();
-    }
-    // Ctrl/Cmd + Shift + Z or Ctrl + Y = Redo
-    else if ((e.ctrlKey || e.metaKey) && (e.key === 'Z' || e.key === 'y')) {
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'Z' || e.key === 'y')) {
         e.preventDefault();
         redo();
-    }
-    // Arrow keys for navigation
-    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        const selectedLine = appState.getState().ui.selectedLine;
-        if (selectedLine !== null) {
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        const state = appState.getState();
+        const selectedLine = state.ui?.selectedLine;
+        if (selectedLine !== null && selectedLine !== undefined) {
             e.preventDefault();
             const newLine = selectedLine + (e.key === 'ArrowUp' ? -1 : 1);
-            const row = document.querySelector(`.editor-grid-row[data-line="${newLine}"]`);
+            const row = document.querySelector(`[data-line="${newLine}"]`);
             if (row) {
                 appState.setSelection(newLine);
             }
         }
-    }
-    // Enter to start editing selected cell
-    else if (e.key === 'Enter') {
-        const selectedLine = appState.getState().ui.selectedLine;
-        if (selectedLine !== null) {
-            const firstCell = document.querySelector(
-                `.editor-cell[data-line="${selectedLine}"][data-col="0"]`
-            );
+    } else if (e.key === 'Enter') {
+        const state = appState.getState();
+        const selectedLine = state.ui?.selectedLine;
+        if (selectedLine !== null && selectedLine !== undefined) {
+            const firstCell = editorMode === 'grid'
+                ? document.querySelector(`.editor-cell[data-line="${selectedLine}"][data-col="0"]`)
+                : document.querySelector(`.line-text[data-line="${selectedLine}"]`);
             if (firstCell) {
                 e.preventDefault();
                 startEditing(firstCell);
@@ -466,5 +543,4 @@ function handleKeyDown(e) {
     }
 }
 
-// Export for external use
 export { undo, redo, pushHistory };

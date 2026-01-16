@@ -1253,3 +1253,301 @@ dialog[open] {
     display: flex;
     gap: var(--space-2);
 }
+
+/* ==========================================================================
+   GUIDED WORKFLOW SYSTEM
+   ========================================================================== */
+
+/* 1. WORKFLOW STEPPER */
+.workflow-stepper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.workflow-step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    cursor: default;
+}
+
+.workflow-step.active {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent-primary);
+}
+
+.workflow-step.completed {
+    color: var(--success);
+}
+
+.workflow-step-number {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.workflow-step.active .workflow-step-number {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.workflow-step.completed .workflow-step-number {
+    background: var(--success);
+    color: white;
+}
+
+.workflow-step-arrow {
+    color: var(--text-secondary);
+    opacity: 0.3;
+    font-size: 10px;
+}
+
+/* 2. PANEL HINTS */
+.panel-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: rgba(88, 166, 255, 0.05);
+    border-bottom: 1px solid rgba(88, 166, 255, 0.1);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.panel-hint.hidden {
+    display: none;
+}
+
+.panel-hint-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.panel-hint-dismiss {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 2px;
+    opacity: 0.5;
+}
+
+.panel-hint-dismiss:hover {
+    opacity: 1;
+}
+
+/* 3. INFO TOOLTIPS */
+.info-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 600;
+    cursor: help;
+    margin-left: var(--space-1);
+}
+
+.info-tooltip:hover {
+    background: rgba(88, 166, 255, 0.2);
+    color: var(--accent-primary);
+}
+
+.info-tooltip-content {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    padding: var(--space-3);
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.5;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-fast);
+    z-index: var(--z-tooltip);
+    pointer-events: none;
+}
+
+.info-tooltip-content::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--bg-tertiary);
+}
+
+.info-tooltip:hover .info-tooltip-content {
+    opacity: 1;
+    visibility: visible;
+}
+
+.info-tooltip-title {
+    font-weight: 600;
+    color: var(--accent-primary);
+    margin-bottom: var(--space-1);
+}
+
+/* 4. ONBOARDING TOAST */
+.toast.onboarding {
+    border-left: 3px solid var(--accent-primary);
+    max-width: 360px;
+}
+
+.toast.onboarding .toast-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--accent-primary);
+}
+
+/* Validation Empty State Enhancement */
+.validation-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    text-align: center;
+}
+
+.validation-empty-state.hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   FLEXIBLE EDITOR STYLES
+   ========================================================================== */
+
+/* Lines Editor Mode (for letters, diaries, manuscripts) */
+.editor-lines {
+    padding: var(--space-2);
+}
+
+.editor-line {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background-color var(--transition-fast);
+    cursor: default;
+}
+
+.editor-line:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.editor-line.active {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 2px solid var(--selection);
+    margin-left: -2px;
+}
+
+.editor-line .line-num {
+    flex-shrink: 0;
+    width: 2.5rem;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    opacity: 0.5;
+    padding-top: 2px;
+}
+
+.editor-line .line-text {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+    cursor: text;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s, outline 0.15s;
+}
+
+.editor-line .line-text:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.editor-line .line-text.editing {
+    background: rgba(var(--accent-rgb), 0.1);
+    outline: 1px solid var(--accent-primary);
+}
+
+/* Confidence Indicators */
+.confidence-uncertain {
+    border-left: 2px solid var(--error) !important;
+}
+
+.confidence-likely {
+    border-left: 2px solid var(--warning) !important;
+}
+
+/* Editor Empty State */
+.editor-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.editor-empty-state p {
+    margin-bottom: var(--space-2);
+}
+
+.editor-empty-state .text-secondary {
+    font-size: var(--text-xs);
+    opacity: 0.7;
+}
+
+/* Grid Editor - Dynamic Columns */
+.editor-grid-row {
+    display: grid;
+    gap: var(--space-2);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    align-items: center;
+    transition: background-color var(--transition-fast);
+}
+
+.editor-grid-row.editor-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}

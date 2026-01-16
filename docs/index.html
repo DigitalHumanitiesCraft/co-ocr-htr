@@ -148,9 +148,22 @@
         <section class="panel glass-panel" style="grid-column: 1;">
             <div class="panel-header">
                 <span>Document Viewer</span>
-                <div>
-                    <!-- Optional heavy tools -->
-                </div>
+                <span class="info-tooltip">i
+                    <div class="info-tooltip-content">
+                        <div class="info-tooltip-title">Dokument laden</div>
+                        Unterstützt Bilder (JPG, PNG) und PAGE-XML. Zoom mit Mausrad, verschieben per Drag.
+                    </div>
+                </span>
+            </div>
+            <!-- Panel Hint -->
+            <div class="panel-hint" id="viewerHint">
+                <svg class="panel-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 16v-4"></path>
+                    <path d="M12 8h.01"></path>
+                </svg>
+                <span>Lade ein Demo-Dokument oder uploade ein Bild (JPG, PNG) oder PAGE-XML.</span>
+                <button class="panel-hint-dismiss" data-dismiss-hint="viewer">×</button>
             </div>
             <div class="panel-content" style="background-color: #050505; position: relative; overflow: hidden;">
                 <!-- Empty State (shown when no document loaded) -->
@@ -228,7 +241,13 @@
         <section class="panel glass-panel" style="grid-column: 2;">
             <div class="panel-header">
                 <span>Transcription</span>
-                <div style="display: flex; gap: 4px; align-items: center;">
+                <span class="info-tooltip">i
+                    <div class="info-tooltip-content">
+                        <div class="info-tooltip-title">Kointelligenz</div>
+                        LLM liefert schnelle Erkennung, Experte bringt Urteilsvermögen. Doppelklick zum Bearbeiten, Enter zum Speichern.
+                    </div>
+                </span>
+                <div style="display: flex; gap: 4px; align-items: center; margin-left: auto;">
                     <button class="btn btn-primary btn-sm" id="btnTranscribe" title="Transcribe document with LLM">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 4px;">
                             <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
@@ -253,6 +272,16 @@
                         </svg></button>
                 </div>
             </div>
+            <!-- Panel Hint -->
+            <div class="panel-hint" id="editorHint">
+                <svg class="panel-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 16v-4"></path>
+                    <path d="M12 8h.01"></path>
+                </svg>
+                <span>Klicke "Transcribe" um das Dokument mit KI zu transkribieren. Doppelklick zum Bearbeiten.</span>
+                <button class="panel-hint-dismiss" data-dismiss-hint="editor">×</button>
+            </div>
             <div class="panel-content editor-container" id="editorContent">
                 <!-- Content injected by JS -->
             </div>
@@ -262,9 +291,25 @@
         <section class="panel glass-panel" style="grid-column: 3;">
             <div class="panel-header">
                 <span>Validation</span>
+                <span class="info-tooltip">i
+                    <div class="info-tooltip-content">
+                        <div class="info-tooltip-title">Hybride Validierung</div>
+                        Kombination aus deterministischen Regeln und LLM-Judge. Kategorien: sicher / prüfenswert / problematisch (keine Prozente).
+                    </div>
+                </span>
                 <span class="badge" id="validationBadge"
-                    style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary); display: none;">0
+                    style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary); display: none; margin-left: auto;">0
                     Issues</span>
+            </div>
+            <!-- Panel Hint -->
+            <div class="panel-hint" id="validationHint">
+                <svg class="panel-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 16v-4"></path>
+                    <path d="M12 8h.01"></path>
+                </svg>
+                <span>Validierung prüft Transkription auf Fehler und Unsicherheiten.</span>
+                <button class="panel-hint-dismiss" data-dismiss-hint="validation">×</button>
             </div>
             <div class="panel-content" id="validationContent">
                 <!-- Empty State -->
@@ -315,19 +360,42 @@
 
         <!-- STATUS BAR -->
         <footer class="status-bar glass">
-            <div style="display: flex; gap: var(--space-4);">
-                <span>
-                    Model: <span style="color: var(--text-primary);">Gemini 2.0 Flash</span> ▾
-                </span>
-                <span>
-                    Perspective: <span style="color: var(--text-primary);">Paleographic</span> ▾
-                </span>
+            <!-- Workflow Stepper -->
+            <div class="workflow-stepper" id="workflowStepper">
+                <div class="workflow-step active" data-step="1">
+                    <span class="workflow-step-number">1</span>
+                    <span>Laden</span>
+                </div>
+                <span class="workflow-step-arrow">→</span>
+                <div class="workflow-step" data-step="2">
+                    <span class="workflow-step-number">2</span>
+                    <span>Konfigurieren</span>
+                </div>
+                <span class="workflow-step-arrow">→</span>
+                <div class="workflow-step" data-step="3">
+                    <span class="workflow-step-number">3</span>
+                    <span>Transkribieren</span>
+                </div>
+                <span class="workflow-step-arrow">→</span>
+                <div class="workflow-step" data-step="4">
+                    <span class="workflow-step-number">4</span>
+                    <span>Validieren</span>
+                </div>
+                <span class="workflow-step-arrow">→</span>
+                <div class="workflow-step" data-step="5">
+                    <span class="workflow-step-number">5</span>
+                    <span>Korrigieren</span>
+                </div>
+                <span class="workflow-step-arrow">→</span>
+                <div class="workflow-step" data-step="6">
+                    <span class="workflow-step-number">6</span>
+                    <span>Exportieren</span>
+                </div>
             </div>
 
             <div style="display: flex; align-items: center; gap: var(--space-4);">
-                <span>Status: <span style="color: var(--success);">Ready</span></span>
-                <span>Last Change: 17:28</span>
-                <div class="status-indicator status-success" title="API Connected"></div>
+                <span id="statusProvider">Model: <span style="color: var(--text-primary);">Gemini 2.0 Flash</span></span>
+                <div class="status-indicator status-success" title="API Connected" id="statusIndicator"></div>
             </div>
         </footer>
 
