@@ -99,8 +99,8 @@ const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-    defaultModel: 'gemini-3.0-flash-preview',
-    models: ['gemini-3.0-flash-preview', 'gemini-3.0-pro-preview'],
+    defaultModel: 'gemini-3-flash-preview',
+    models: ['gemini-3-flash-preview', 'gemini-3-pro-preview'],
     authType: 'query', // API key in URL query param
     supportsVision: true
   },

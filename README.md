@@ -77,7 +77,7 @@ docs/
 
 | Provider | Models | Vision Support |
 |----------|--------|----------------|
-| Gemini | gemini-3.0-flash-preview, gemini-3.0-pro-preview | Yes |
+| Gemini | gemini-3-flash-preview, gemini-3-pro-preview | Yes |
 | OpenAI | gpt-4o-mini, gpt-4o, o1 | Yes |
 | Anthropic | claude-sonnet-4, claude-opus-4 | Yes |
 | DeepSeek | deepseek-chat, deepseek-reasoner | No |
