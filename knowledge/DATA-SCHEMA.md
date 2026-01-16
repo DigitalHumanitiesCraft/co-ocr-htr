@@ -29,12 +29,21 @@ interface TranscriptionData {
   model: string;
   raw: string;                   // Rohtext
   segments: Segment[];
+  columns?: ColumnDefinition[];  // Für strukturierte Dokumente
 }
 
 interface Segment {
+  lineNumber: number;            // Zeilennummer (für Synchronisation)
   text: string;
   confidence: 'certain' | 'likely' | 'uncertain';
   bounds?: BoundingBox;
+  fields?: Record<string, string>;  // Strukturierte Felder (DATUM, NAME, etc.)
+}
+
+interface ColumnDefinition {
+  id: string;                    // z.B. 'datum', 'name', 'beschreibung', 'betrag'
+  label: string;                 // z.B. 'DATUM', 'NAME', etc.
+  width: 'auto' | 'flex' | number;
 }
 
 interface BoundingBox {
@@ -73,12 +82,12 @@ interface Correction {
 }
 ```
 
-## Beispiel: Rechnungsbuch-Eintrag
+## Beispiel: Rechnungsbuch-Eintrag (aus UI-Mockup)
 
 ```json
 {
   "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "timestamp": "2026-01-16T17:08:00Z",
+  "timestamp": "2026-01-16T17:28:00Z",
   "document": {
     "filename": "Rechnungsbuch_1842_S15.jpg",
     "mimeType": "image/jpeg",
@@ -88,22 +97,97 @@ interface Correction {
   "transcription": {
     "provider": "gemini",
     "model": "gemini-2.0-flash",
-    "raw": "| Datum | Beschreibung | Betrag |\n|-------|--------------|--------|\n| 28. Mai | K. Schmidt, Eisenwaren | 23 Taler |\n| 28. Mai | L. [?] Müller, Kornkauf | 12 Taler |",
+    "raw": "...",
+    "columns": [
+      { "id": "datum", "label": "DATUM", "width": "auto" },
+      { "id": "name", "label": "NAME", "width": "auto" },
+      { "id": "beschreibung", "label": "BESCHREIBUNG", "width": "flex" },
+      { "id": "betrag", "label": "BETRAG", "width": "auto" }
+    ],
     "segments": [
       {
-        "text": "| Datum | Beschreibung | Betrag |",
+        "lineNumber": 3,
+        "text": "28. Mai | K. Schmidt | Eisenwaren | 23 Taler",
         "confidence": "certain",
-        "bounds": { "x": 50, "y": 70, "width": 350, "height": 25 }
+        "bounds": { "x": 28, "y": 255, "width": 482, "height": 35 },
+        "fields": {
+          "datum": "28. Mai",
+          "name": "K. Schmidt",
+          "beschreibung": "Eisenwaren",
+          "betrag": "23 Taler"
+        }
       },
       {
-        "text": "| 28. Mai | K. Schmidt, Eisenwaren | 23 Taler |",
-        "confidence": "certain",
-        "bounds": { "x": 50, "y": 100, "width": 350, "height": 25 }
-      },
-      {
-        "text": "| 28. Mai | L. [?] Müller, Kornkauf | 12 Taler |",
+        "lineNumber": 4,
+        "text": "28. Mai | [?] Schmidt | Pinsel... | 10 Taler 4 Gr",
         "confidence": "likely",
-        "bounds": { "x": 50, "y": 130, "width": 350, "height": 25 }
+        "bounds": { "x": 28, "y": 290, "width": 482, "height": 35 },
+        "fields": {
+          "datum": "28. Mai",
+          "name": "[?] Schmidt",
+          "beschreibung": "Pinsel...",
+          "betrag": "10 Taler 4 Gr"
+        }
+      },
+      {
+        "lineNumber": 5,
+        "text": "3. Juni | H. Müller | Tuchstoff | 15 Taler 4 Gr",
+        "confidence": "certain",
+        "bounds": { "x": 28, "y": 325, "width": 482, "height": 35 },
+        "fields": {
+          "datum": "3. Juni",
+          "name": "H. Müller",
+          "beschreibung": "Tuchstoff",
+          "betrag": "15 Taler 4 Gr"
+        }
+      },
+      {
+        "lineNumber": 6,
+        "text": "3. Juni | H. Müller | Tuchstoff | 15 Taler 4 Gr",
+        "confidence": "certain",
+        "bounds": { "x": 28, "y": 360, "width": 482, "height": 35 },
+        "fields": {
+          "datum": "3. Juni",
+          "name": "H. Müller",
+          "beschreibung": "Tuchstoff",
+          "betrag": "15 Taler 4 Gr"
+        }
+      },
+      {
+        "lineNumber": 7,
+        "text": "4. Juni | Stadtkasse | ... | 40 Taler",
+        "confidence": "likely",
+        "bounds": { "x": 28, "y": 395, "width": 482, "height": 35 },
+        "fields": {
+          "datum": "4. Juni",
+          "name": "Stadtkasse",
+          "beschreibung": "...",
+          "betrag": "40 Taler"
+        }
+      },
+      {
+        "lineNumber": 8,
+        "text": "5. Juni | Unbekannt | Lieferung | [?] Taler",
+        "confidence": "uncertain",
+        "bounds": { "x": 28, "y": 430, "width": 482, "height": 35 },
+        "fields": {
+          "datum": "5. Juni",
+          "name": "Unbekannt",
+          "beschreibung": "Lieferung",
+          "betrag": "[?] Taler"
+        }
+      },
+      {
+        "lineNumber": 10,
+        "text": "Total | | | 103 Taler 1...",
+        "confidence": "likely",
+        "bounds": { "x": 28, "y": 500, "width": 482, "height": 35 },
+        "fields": {
+          "datum": "Total",
+          "name": "",
+          "beschreibung": "",
+          "betrag": "103 Taler 1..."
+        }
       }
     ]
   },

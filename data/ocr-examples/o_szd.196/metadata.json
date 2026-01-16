@@ -1,0 +1,119 @@
+{
+  "object_id": "o:szd.196",
+  "title": "Rede über Stefan Zweig [II], SZ-AP2/L-S5.2",
+  "signature": "SZ-AP2/L",
+  "author": "Zweig, Stefan",
+  "language": "Französisch",
+  "language_code": "fr",
+  "owner": "Literaturarchiv Salzburg, https://stefanzweig.digital, CC-BY",
+  "rights": "CC-BY",
+  "images": [
+    {
+      "id": "IMG.1",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.1",
+      "width": 3995,
+      "height": 5992,
+      "order": 1
+    },
+    {
+      "id": "IMG.2",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.2",
+      "width": 3988,
+      "height": 5982,
+      "order": 2
+    },
+    {
+      "id": "IMG.3",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.3",
+      "width": 3975,
+      "height": 5962,
+      "order": 3
+    },
+    {
+      "id": "IMG.4",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.4",
+      "width": 3951,
+      "height": 5927,
+      "order": 4
+    },
+    {
+      "id": "IMG.5",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.5",
+      "width": 3993,
+      "height": 5990,
+      "order": 5
+    },
+    {
+      "id": "IMG.6",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.6",
+      "width": 3998,
+      "height": 5997,
+      "order": 6
+    },
+    {
+      "id": "IMG.7",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.7",
+      "width": 3976,
+      "height": 5964,
+      "order": 7
+    },
+    {
+      "id": "IMG.8",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.8",
+      "width": 3971,
+      "height": 5957,
+      "order": 8
+    },
+    {
+      "id": "IMG.9",
+      "url": "http://gams.uni-graz.at/o:szd.196/IMG.9",
+      "width": 3916,
+      "height": 5874,
+      "order": 9
+    },
+    {
+      "id": "IMG.10",
+      "url": "SZ_AP2_L_S5.2_010.jpg",
+      "width": null,
+      "height": null,
+      "order": 10
+    },
+    {
+      "id": "IMG.11",
+      "url": "SZ_AP2_L_S5.2_011.jpg",
+      "width": null,
+      "height": null,
+      "order": 11
+    },
+    {
+      "id": "IMG.12",
+      "url": "SZ_AP2_L_S5.2_012.jpg",
+      "width": null,
+      "height": null,
+      "order": 12
+    },
+    {
+      "id": "IMG.13",
+      "url": "SZ_AP2_L_S5.2_013.jpg",
+      "width": null,
+      "height": null,
+      "order": 13
+    },
+    {
+      "id": "IMG.14",
+      "url": "SZ_AP2_L_S5.2_014.jpg",
+      "width": null,
+      "height": null,
+      "order": 14
+    },
+    {
+      "id": "IMG.15",
+      "url": "SZ_AP2_L_S5.2_015.jpg",
+      "width": null,
+      "height": null,
+      "order": 15
+    }
+  ],
+  "container": "szd.facsimiles.lebensdokumente",
+  "download_date": "2025-10-22T15:07:35.132744"
+}

@@ -1,0 +1,35 @@
+{
+  "object_id": "o:szd.151",
+  "title": "Abwesenheitsnotiz II, SZ-SAM/L18",
+  "signature": "SZ-SAM/L18",
+  "author": "Zweig, Stefan",
+  "language": "Deutsch",
+  "language_code": "de",
+  "owner": "Literaturarchiv Salzburg, https://stefanzweig.digital, CC-BY",
+  "rights": "CC-BY",
+  "images": [
+    {
+      "id": "IMG.1",
+      "url": "http://gams.uni-graz.at/o:szd.151/IMG.1",
+      "width": 4912,
+      "height": 7360,
+      "order": 1
+    },
+    {
+      "id": "IMG.2",
+      "url": "http://gams.uni-graz.at/o:szd.151/IMG.2",
+      "width": 4912,
+      "height": 7360,
+      "order": 2
+    },
+    {
+      "id": "IMG.3",
+      "url": "http://gams.uni-graz.at/o:szd.151/IMG.3",
+      "width": 4912,
+      "height": 7360,
+      "order": 3
+    }
+  ],
+  "container": "szd.facsimiles.lebensdokumente",
+  "download_date": "2025-10-20T20:01:29.721665"
+}

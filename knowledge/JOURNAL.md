@@ -99,4 +99,202 @@ VALIDATION ──────┬──→ DATA-SCHEMA (ValidationResult)
 
 ---
 
+## 2026-01-16 | Session 2: UI-Mockup-Analyse und Integration
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Phase 1: Promptotyping-Prototyp-Analyse
+
+**Auftrag:** `Promptotyping/prototype/` Ordner analysieren für übertragbare Patterns.
+
+**Befund:** Anderes Projekt (Living Paper), aber nützliche Muster:
+
+| Pattern | Beschreibung | Übertragbar? |
+|---------|--------------|--------------|
+| Intersection Observer | Scroll-basierte Navigation | Ja |
+| Slide-Panel | Seitliches Panel mit Overlay | Ja |
+| CSS Variables | Strukturierte Farbpalette | Ja |
+| Terminal-UI | Monospace-Ästhetik | Teilweise |
+| TESTING.md | Manuelle Test-Checkliste | Ja |
+
+### Phase 2: UI-Mockup-Detailanalyse
+
+**Auftrag:** Screenshot des coOCR/HTR UI-Mockups analysieren.
+
+**Extrahierte Informationen:**
+
+#### Layout-Struktur
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ HEADER: Logo | Filename | Pagination | Upload | Settings | User    │
+├──────────────────┬────────────────────┬─────────────────────────────┤
+│ Document Viewer  │ Transcription      │ Validation                  │
+│ (40%)           │ (35%)              │ (25%)                       │
+│                 │                    │                             │
+│ Bounding Boxes  │ Structured Table   │ Rule-Based + AI Assistant   │
+│ Zoom Controls   │ Inline Markers     │ Expandable Cards            │
+└──────────────────┴────────────────────┴─────────────────────────────┘
+│ STATUS BAR: Model | Perspective | Status | Timestamp               │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### Erkannte Komponenten
+
+| Komponente | Details |
+|------------|---------|
+| **Document Viewer** | Bild mit farbigen Bounding Boxes, Zoom-Controls (+/-/Reset) |
+| **Transcription Table** | Spalten: #, DATUM, NAME, BESCHREIBUNG, BETRAG |
+| **Validation Panel** | Zwei Sektionen: ⚙️ RULE-BASED, ✨ AI ASSISTANT |
+| **Status Bar** | Model-Dropdown, Perspective-Dropdown, Status-Badge, Timestamp |
+
+#### Farbpalette (aus Mockup extrahiert)
+- Background: `#0d1117` (GitHub Dark)
+- Surface: `#161b22`
+- Border: `#30363d`
+- Success: `#3fb950`
+- Warning: `#d29922`
+- Error: `#f85149`
+
+### Phase 3: Knowledge-Base-Integration
+
+**Auftrag:** UI-Mockup-Erkenntnisse in Knowledge Base einarbeiten.
+
+**Aktualisierte Dokumente:**
+
+| Dokument | Änderungen |
+|----------|------------|
+| **DESIGN-SYSTEM.md** | Layout-Diagramm, Header-Elemente, Status Bar, Document Viewer CSS, Transcription Table CSS, Validation Panel, Card-Anatomie, Interaktions-Patterns |
+| **ARCHITECTURE.md** | Erweiterte EventBus-Events, Drei Synchronisations-Flows (Transcription→All, Viewer→All, Validation→All) |
+| **VALIDATION.md** | Panel-Struktur ASCII-Diagramm, Card-Anatomie, Card-Interaktion, Expandierter Zustand |
+| **DATA-SCHEMA.md** | `lineNumber` und `fields` zu Segment hinzugefügt, `ColumnDefinition` Interface, Beispiel mit strukturierten Feldern |
+| **INDEX.md** | UI-Komponenten Schnellreferenz, Version 1.1 Eintrag |
+
+### Kernerkenntnisse
+
+1. **Dreifach-Synchronisation:** Document Viewer ↔ Transcription ↔ Validation müssen bidirektional synchron bleiben
+2. **Tabellarische Transkription:** Strukturierte Spalten statt Freitext für Rechnungsbücher
+3. **Validation-Trennung:** RULE-BASED (deterministisch) vs. AI ASSISTANT (probabilistisch)
+4. **Card-Pattern:** Expandierbare Karten mit Status-Indikator (Border-Left)
+
+### Offene Punkte
+
+- [x] Git Commit für Knowledge-Base-Updates
+- [x] Prototyp an neue Erkenntnisse anpassen → Erledigt durch neuen modularen Prototyp v2
+- [x] EventBus-Implementation für Synchronisation → AppState mit EventTarget
+- [x] Transcription Table Komponente implementieren → editor.js mit CSS Grid
+
+---
+
+## 2026-01-16 | Session 3: Prototyp v2 Analyse und Implementierungsplan
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Phase 1: Neuer Prototyp Analyse
+
+**Auftrag:** `newer prototpye/` Ordner analysieren und mit Knowledge Base abgleichen.
+
+**Befund:** Signifikante Verbesserungen gegenüber Prototyp v1:
+
+| Aspekt | Prototyp v1 | Prototyp v2 |
+|--------|-------------|-------------|
+| Architektur | Monolithisch (1413 LOC) | Modular (322 HTML + 260 JS) |
+| State | DOM-basiert | AppState mit EventTarget |
+| CSS | Inline `<style>` | Externe Dateien mit Tokens |
+| JS | Inline `<script>` | ES6 Module |
+| Bounding Boxes | CSS-basiert | SVG-Overlay |
+
+### Phase 2: Modulstruktur dokumentiert
+
+**Analysierte Dateien:**
+
+| Datei | LOC | Funktion |
+|-------|-----|----------|
+| `js/main.js` | 15 | Entry Point, Module laden |
+| `js/state.js` | 61 | Zentraler State mit EventTarget |
+| `js/viewer.js` | 67 | Document Viewer, SVG Regions, Zoom |
+| `js/editor.js` | 77 | Grid-basierter Editor, Marker-Rendering |
+| `js/ui.js` | 40 | Validation-Interaktionen, Flash-Effekte |
+| `css/variables.css` | 52 | Design System Tokens |
+
+**Kernimplementierung - AppState:**
+
+```javascript
+class AppState extends EventTarget {
+  setSelection(lineNum) {
+    this.data.selectedLine = lineNum;
+    this.dispatchEvent(new CustomEvent('selectionChanged', { detail: { line: lineNum } }));
+  }
+}
+```
+
+→ Ersetzt den geplanten EventBus durch native Browser-API.
+
+### Phase 3: Knowledge Base Update
+
+**Aktualisierte Dokumente:**
+
+| Dokument | Änderungen |
+|----------|------------|
+| **ARCHITECTURE.md** | Aktuelle vs. Zielstruktur, AppState-Implementierung, Event-Listener-Code |
+| **DESIGN-SYSTEM.md** | Z-Index Layers, erweiterte Spacing/Transitions, Glass Morphism, Mobile Warning, Editor Grid, SVG Regions |
+| **INDEX.md** | IMPLEMENTATION-PLAN.md hinzugefügt, Version 1.2 |
+
+### Phase 4: Implementierungsplan erstellt
+
+**Neues Dokument:** `IMPLEMENTATION-PLAN.md`
+
+**7 Phasen definiert:**
+
+1. **Core Services** - LLM Service, Storage Service
+2. **Dialoge & Upload** - API Key Dialog, Bild-Upload
+3. **LLM Transkription** - Flow: Upload → LLM → Parser → State
+4. **Regelbasierte Validierung** - Deterministische Prüfungen
+5. **LLM-Judge Validierung** - Perspektiven-System
+6. **Export & Persistenz** - JSON/Markdown/TSV, Auto-Save
+7. **Polish & UX** - Inline-Editing, Undo/Redo, Shortcuts
+
+**Empfohlener nächster Schritt:** Phase 1.1 - LLM Service erstellen
+
+### Aktuelle Projektstruktur
+
+```
+coocr-htr/
+├── README.md
+├── CLAUDE.md
+├── knowledge/
+│   ├── INDEX.md
+│   ├── METHODOLOGY.md
+│   ├── DESIGN-SYSTEM.md
+│   ├── ARCHITECTURE.md
+│   ├── VALIDATION.md
+│   ├── DATA-SCHEMA.md
+│   ├── IMPLEMENTATION-PLAN.md  ← NEU
+│   └── JOURNAL.md
+├── src/
+│   └── index.html              # Prototyp v1 (monolithisch)
+├── newer prototpye/            # Prototyp v2 (modular)
+│   ├── index.html
+│   ├── css/
+│   │   ├── variables.css
+│   │   └── styles.css
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── state.js
+│   │   ├── viewer.js
+│   │   ├── editor.js
+│   │   └── ui.js
+│   └── assets/
+│       └── mock-document.jpg
+└── data/                       # Beispieldaten (User erstellt)
+```
+
+### Offene Punkte
+
+- [ ] Git Commit für Session 3 Updates
+- [ ] Data-Ordner mit Beispieldaten befüllen
+- [ ] Phase 1: LLM Service implementieren
+- [ ] Prototyp v2 nach `src/` migrieren
+
+---
+
 *Format: YYYY-MM-DD | Session N: Titel*

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="coOCR/HTR Workbench - Browser-based tool for historical document text recognition with expert-in-the-loop validation">
+    <title>coOCR/HTR Workbench</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Icons (using a simple SVG sprite system directly in body or font-awesome if user preferred, 
+         but adhering to instructions to keep it vanilla/simple, using text or simple SVGs inline for now) -->
+
+    <style>
+        /* Styles moved to css/styles.css */
+    </style>
+</head>
+
+<body>
+
+    <!-- Mobile Warning -->
+    <div class="mobile-warning">
+        <!-- Icon: Monitor -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+            style="margin-bottom: 1rem; color: var(--text-secondary);">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <h2>Desktop Recommended</h2>
+        <p style="color: var(--text-secondary); max-width: 300px; margin: 1rem auto;">
+            coOCR/HTR is optimized for large screens to display document, editor, and validation panels simultaneously.
+        </p>
+    </div>
+
+    <div class="app-container">
+
+        <!-- HEADER -->
+        <header class="app-header glass">
+            <div class="logo">
+                <!-- Icon: Layers/Stack -->
+                <svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                coOCR/HTR
+            </div>
+
+            <div style="display: flex; align-items: center; gap: var(--space-4);">
+                <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <div class="status-indicator status-success"></div>
+                    <span style="font-weight: 500; font-size: var(--text-sm);">Rechnungsbuch_1842_S15.jpg</span>
+                </div>
+
+                <div
+                    style="display: flex; align-items: center; gap: var(--space-2); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: var(--radius-sm);">
+                    <button class="icon-btn icon-sm" title="Previous Page"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg></button>
+                    <span
+                        style="font-size: var(--text-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums;">15
+                        / 47</span>
+                    <button class="icon-btn icon-sm" title="Next Page"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg></button>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button class="btn btn-primary" id="btnUpload" onclick="alert('Upload Dialog would open here')">
+                    <svg class="icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Upload
+                </button>
+                <button class="icon-btn icon-md" title="API Keys" onclick="alert('API Keys Dialog')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                            d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
+                        </path>
+                    </svg>
+                </button>
+                <button class="icon-btn icon-md" title="Export" onclick="alert('Export Dialog')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+                <button class="icon-btn icon-md" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+                <button class="icon-btn icon-md" title="Help">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- LEFT PANEL: DOCUMENT VIEWER -->
+        <section class="panel glass-panel" style="grid-column: 1;">
+            <div class="panel-header">
+                <span>Document Viewer</span>
+                <div>
+                    <!-- Optional heavy tools -->
+                </div>
+            </div>
+            <div class="panel-content" style="background-color: #050505; position: relative; overflow: hidden;">
+                <div class="image-container" id="imageWrapper">
+                    <img src="assets/mock-document.jpg" id="docImage" alt="Historical Document Page">
+                    <!-- SVG Overlay for Regions will be injected here or aligned on top -->
+                    <svg id="regionsOverlay" viewBox="0 0 1024 1024"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;">
+                        <!-- Regions will be added by JS -->
+                    </svg>
+                </div>
+
+                <!-- Floating Toolbar -->
+                <div class="viewer-toolbar glass">
+                    <button class="icon-btn icon-sm" title="Zoom Out" id="zoomOut"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg></button>
+                    <span class="btn btn-icon"
+                        style="font-size: var(--text-xs); width: 40px; border:none; background:none;"
+                        id="zoomLabel">100%</span>
+                    <button class="icon-btn icon-sm" title="Zoom In" id="zoomIn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg></button>
+                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <button class="icon-btn icon-sm" title="Fit Width">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <polyline points="9 21 3 21 3 15"></polyline>
+                            <line x1="21" y1="3" x2="14" y2="10"></line>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                        </svg>
+                    </button>
+                    <button class="icon-btn icon-sm" title="Fit Page">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M15 3h6v6"></path>
+                            <path d="M9 21H3v-6"></path>
+                            <path d="M21 3l-7 7"></path>
+                            <path d="M3 21l7-7"></path>
+                        </svg>
+                    </button>
+                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <button class="icon-btn icon-sm active" title="Select Region" style="color: var(--accent-primary);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MIDDLE PANEL: EDITOR -->
+        <section class="panel glass-panel" style="grid-column: 2;">
+            <div class="panel-header">
+                <span>Transcription</span>
+                <div style="display: flex; gap: 4px;">
+                    <button class="icon-btn icon-sm" title="Undo"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <path d="M9 14 4 9 9 4" />
+                            <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+                        </svg></button>
+                    <button class="icon-btn icon-sm" title="Redo"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+                            <path d="M15 4 20 9 15 14" />
+                        </svg></button>
+                </div>
+            </div>
+            <div class="panel-content editor-container" id="editorContent">
+                <!-- Content injected by JS -->
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: VALIDATION -->
+        <section class="panel glass-panel" style="grid-column: 3;">
+            <div class="panel-header">
+                <span>Validation</span>
+                <span class="badge"
+                    style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary);">5
+                    Issues</span>
+            </div>
+            <div class="panel-content">
+
+                <div class="validation-section">
+                    <div class="section-title" style="display:flex; align-items:center; gap:6px;">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                        Rule-Based
+                    </div>
+
+                    <div class="validation-card" data-line="3">
+                        <div class="card-header">
+                            <div class="status-indicator status-success"></div>
+                            <span class="card-title">Date Format Correct</span>
+                        </div>
+                        <div class="card-lines">Lines 3-7 (DD. Month)</div>
+                    </div>
+
+                    <div class="validation-card" data-line="12">
+                        <div class="card-header">
+                            <div class="status-indicator status-warning"></div>
+                            <span class="card-title">Sum Check Mismatch</span>
+                        </div>
+                        <div class="card-lines">Line 12 • Diff: 3 Taler</div>
+                        <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">▾
+                            Show Details</div>
+                        <div class="card-details">
+                            Calculated sum of previous entries does not match the total in this line.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="validation-section">
+                    <div class="section-title" style="display:flex; align-items:center; gap:6px;">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path
+                                d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z">
+                            </path>
+                        </svg>
+                        AI Assistant
+                    </div>
+
+                    <div class="validation-card">
+                        <div class="card-header">
+                            <div class="status-indicator status-success"></div>
+                            <span class="card-title">High Confidence</span>
+                        </div>
+                        <div class="card-lines">Overall Document Match</div>
+                    </div>
+
+                    <div class="validation-card" data-line="4">
+                        <div class="card-header">
+                            <div class="status-indicator status-warning"></div>
+                            <span class="card-title">Ambiguous Reading</span>
+                        </div>
+                        <div class="card-lines">Line 4 • Confidence: Low</div>
+                        <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">▾
+                            Show Details</div>
+                        <div class="card-details">
+                            Could be "Müller" (0.65) or "Möller" (0.30). Context suggests commonly occurring name.
+                        </div>
+                    </div>
+
+                    <div class="validation-card" data-line="9">
+                        <div class="card-header">
+                            <div class="status-indicator status-error"></div>
+                            <span class="card-title">Missing Column</span>
+                        </div>
+                        <div class="card-lines">Line 9</div>
+                        <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">▾
+                            Show Details</div>
+                        <div class="card-details">
+                            Expected 4 columns found 3. 'Amount' seems missing.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- STATUS BAR -->
+        <footer class="status-bar glass">
+            <div style="display: flex; gap: var(--space-4);">
+                <span>
+                    Model: <span style="color: var(--text-primary);">Gemini 2.0 Flash</span> ▾
+                </span>
+                <span>
+                    Perspective: <span style="color: var(--text-primary);">Paleographic</span> ▾
+                </span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: var(--space-4);">
+                <span>Status: <span style="color: var(--success);">Ready</span></span>
+                <span>Last Change: 17:28</span>
+                <div class="status-indicator status-success" title="API Connected"></div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- SCRIPTS -->
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
