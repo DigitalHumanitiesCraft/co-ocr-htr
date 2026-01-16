@@ -166,11 +166,46 @@ class LLMService {
   }
 
   /**
-   * Set the model for the active provider
-   * @param {string} modelName - Model name
+   * Set the model for a provider (or active provider if not specified)
+   * @param {string} providerOrModel - Provider name or model name
+   * @param {string} [modelName] - Model name (if first param is provider)
    */
-  setModel(modelName) {
-    this.activeModel = modelName;
+  setModel(providerOrModel, modelName) {
+    if (modelName !== undefined) {
+      // Two arguments: provider and model
+      if (!this.providers[providerOrModel]) {
+        throw new Error(`Unknown provider: ${providerOrModel}`);
+      }
+      this.providers[providerOrModel].activeModel = modelName;
+    } else {
+      // One argument: just model name for active provider
+      this.activeModel = providerOrModel;
+    }
+  }
+
+  /**
+   * Set API key for a provider
+   * @param {string} provider - Provider name
+   * @param {string} apiKey - API key
+   */
+  setApiKey(provider, apiKey) {
+    if (!this.providers[provider]) {
+      throw new Error(`Unknown provider: ${provider}`);
+    }
+    // Store in memory for immediate use (storage handles persistence)
+    this.providers[provider].apiKey = apiKey;
+  }
+
+  /**
+   * Set custom endpoint for a provider (mainly for Ollama)
+   * @param {string} provider - Provider name
+   * @param {string} endpoint - Endpoint URL
+   */
+  setEndpoint(provider, endpoint) {
+    if (!this.providers[provider]) {
+      throw new Error(`Unknown provider: ${provider}`);
+    }
+    this.providers[provider].endpoint = endpoint;
   }
 
   /**
@@ -453,7 +488,8 @@ class LLMService {
   }
 
   async _callOllama(model, prompt, imageBase64 = null) {
-    const ollamaUrl = storage.loadApiKey('ollama') || 'http://localhost:11434';
+    // Use endpoint from provider config (set via setEndpoint) or fallback
+    const ollamaUrl = this.providers.ollama.endpoint || 'http://localhost:11434';
 
     const body = {
       model,
