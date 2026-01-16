@@ -10,7 +10,8 @@
       "Bash(npx serve:*)",
       "Bash(timeout:*)",
       "Bash(git push:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dir:*)"
     ]
   }
 }

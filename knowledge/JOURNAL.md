@@ -1395,4 +1395,107 @@ From Gemini 3 Developer Guide:
 
 ---
 
+## 2026-01-16 | Session 12: Bug Analysis & Requirements Documentation
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: UI Empty State Fix
+
+**Task:** Start-Screen zeigt keine Drag-and-Drop Oberfläche.
+
+**Problem:** Beim frischen Start (Incognito) war der Empty State nicht sichtbar.
+
+**Lösung:**
+
+| Datei | Änderung |
+|-------|----------|
+| `index.html` | Empty State mit drop-zone-indicator |
+| `viewer.css` | z-index: 10 für .viewer-empty-state |
+| `upload.js` | Click-Handler für Drop Zone |
+| `main.js` | Auto-load Demo deaktiviert |
+
+### Phase 2: Kritische Bug-Analyse
+
+**Task:** Transkribierter Text erscheint nicht im Editor.
+
+**Symptom:**
+- HSA Brief → Transcribe → Console: "segments=41"
+- Editor-Zellen bleiben leer
+- 0 Regions im Viewer
+
+**Root Cause gefunden in `state.js:405-415`:**
+
+```javascript
+if (data.segments?.length > 0) {
+  this.data.regions = data.segments
+    .filter(s => s.bounds)  // ← BUG: LLM-Segments haben KEIN bounds!
+    .map(s => ({...}));
+}
+```
+
+**Erklärung:** LLM-Transkriptionen haben keine Koordinaten (`bounds`), daher werden alle Segments gefiltert → 0 Regions → Editor zeigt nichts.
+
+### Phase 3: Vollständige Analyse
+
+**Drei parallele Explore-Agents für:**
+
+1. **UI/UX Elements Dokumentation**
+   - Alle 3 Panels dokumentiert (Viewer, Editor, Validation)
+   - Feature-Matrix erstellt
+
+2. **Expert Workflow Analyse**
+   - 6-Schritt Workflow identifiziert
+   - Lücken in Validierung gefunden
+
+3. **Data Flow Bug Analysis**
+   - Exakte Bug-Location: `state.js:405`
+   - Bounds-Filter als Ursache
+
+### Phase 4: Requirements Documentation
+
+**Task:** Vollständiges Requirements-Dokument erstellen.
+
+**Erstellt:** `knowledge/REQUIREMENTS.md`
+
+**Inhalt:**
+- 26 implementierte Features (alle kategorisiert)
+- 9 offene Features (mit Prioritäten)
+- 4 bekannte Bugs (mit Ursachen und Lösungen)
+- Demo-Samples Übersicht
+- Validation Rules (8 Regeln)
+- LLM Provider Konfiguration
+
+### Identifizierte Bugs
+
+| Bug | Priorität | Ursache | Status |
+|-----|-----------|---------|--------|
+| Transkription nicht sichtbar | KRITISCH | bounds-Filter in state.js | Identifiziert |
+| PAGE-XML Wortfragmente | HOCH | falsches TextEquiv in page-xml.js | Identifiziert |
+| Tabellen-Prompt für Briefe | MITTEL | ein Prompt für alle Dokumente | Identifiziert |
+| Validation initial sichtbar | NIEDRIG | fehlende Conditional Display | Identifiziert |
+
+### Files Created/Modified
+
+| File | Action |
+|------|--------|
+| `knowledge/REQUIREMENTS.md` | NEU: Vollständige Requirements |
+| `knowledge/JOURNAL.md` | Session 12 dokumentiert |
+| `knowledge/INDEX.md` | REQUIREMENTS.md hinzugefügt |
+| `knowledge/DATA-SCHEMA.md` | Kleine Updates |
+
+### Open Items für nächste Session
+
+- [ ] Bug 1 fixen: Pseudo-Regions für LLM-Transkriptionen
+- [ ] Bug 2 fixen: PAGE-XML Direct Text
+- [ ] Bug 3 fixen: Dual-Prompts für Dokumenttypen
+- [ ] METS-XML Upload Integration
+
+### Commits
+
+| Commit | Description |
+|--------|-------------|
+| TBD | docs: add REQUIREMENTS.md and update documentation |
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*

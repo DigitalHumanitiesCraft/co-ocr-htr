@@ -102,8 +102,9 @@ async function initApp() {
     // Initialize guided workflow features
     initGuidedWorkflow();
 
-    // Auto-load demo dataset on startup
-    await autoLoadDemo();
+    // Don't auto-load demo - show empty state with drag & drop
+    // Users can load demos via the "Load Demo" button or header "Demo" button
+    // await autoLoadDemo();
 
     console.log('coOCR/HTR: Initialized');
 }
@@ -113,21 +114,12 @@ async function initApp() {
  */
 function initEmptyStateButtons() {
     const btnLoadDemo = document.getElementById('btnLoadDemo');
-    const btnUploadEmpty = document.getElementById('btnUploadEmpty');
     const samplesBtn = document.getElementById('btnSamples');
-    const btnUpload = document.getElementById('btnUpload');
 
     // "Load Demo" button opens the samples menu
     if (btnLoadDemo && samplesBtn) {
         btnLoadDemo.addEventListener('click', () => {
             samplesBtn.click();
-        });
-    }
-
-    // "Upload Image" button triggers upload dialog
-    if (btnUploadEmpty && btnUpload) {
-        btnUploadEmpty.addEventListener('click', () => {
-            btnUpload.click();
         });
     }
 }

@@ -8,7 +8,7 @@ status: active
 
 # Implementation Plan
 
-**Status:** Phase 2.3 - UI State Management
+**Status:** Phase 2.4 - Bug Fixes (siehe [REQUIREMENTS.md](REQUIREMENTS.md))
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
 ---
@@ -69,20 +69,36 @@ status: active
 ◀ Prev │ Page 3 / 6 │ Next ▶
 ```
 
-### 2.3 UI State Management ⏳ IN PROGRESS
+### 2.3 UI State Management ✅ COMPLETE
 
 **Problem:** Initial State zeigt falsches UI
 - Editor zeigt leere Tabelle statt Empty State ✅ FIXED
 - Viewer zeigt nicht den Empty State ✅ FIXED
-- Validation wird immer angezeigt ⏳
+- Drag & Drop Empty State ✅ FIXED (z-index)
 
 | Task | Status | File |
 |------|--------|------|
 | Editor: Empty State bei leerer Transkription | ✅ | `js/editor.js` |
 | Viewer: Initial Empty State | ✅ | `js/viewer.js` |
-| Validation: Conditional Display | ⏳ | `js/components/validation.js` |
-| Validation: Kompakteres Layout | ⏳ | `css/validation.css` |
-| Validation: Gruppierte, ausklappbare Items | ⏳ | `js/components/validation.js` |
+| Drag & Drop Visibility | ✅ | `css/viewer.css` (z-index fix) |
+
+### 2.4 Bug Fixes ⏳ IN PROGRESS
+
+**Bekannte Bugs (Details in [REQUIREMENTS.md](REQUIREMENTS.md)):**
+
+| Bug | Priorität | Status |
+|-----|-----------|--------|
+| Transkription nicht sichtbar (bounds-Filter) | KRITISCH | ⏳ Identifiziert |
+| PAGE-XML Wortfragmente | HOCH | ⏳ Identifiziert |
+| Tabellen-Prompt für Briefe | MITTEL | ⏳ Identifiziert |
+| Validation initial sichtbar | NIEDRIG | ⏳ Identifiziert |
+
+| Task | Status | File |
+|------|--------|------|
+| Pseudo-Regions für LLM | ⏳ | `js/state.js` |
+| PAGE-XML Direct Text | ⏳ | `js/services/parsers/page-xml.js` |
+| Dual-Prompts (table/text) | ⏳ | `js/services/llm.js` |
+| Validation Conditional Display | ⏳ | `js/components/validation.js` |
 
 **Idealer Zustand beim Start:**
 

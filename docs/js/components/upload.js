@@ -71,6 +71,15 @@ class UploadManager {
                 this.openFilePicker();
             };
         }
+
+        // Drop zone indicator click - open file picker
+        const dropZoneIndicator = document.querySelector('.drop-zone-indicator');
+        if (dropZoneIndicator) {
+            dropZoneIndicator.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openFilePicker();
+            });
+        }
     }
 
     /**
@@ -79,6 +88,8 @@ class UploadManager {
     setupDropZone() {
         // Use the panel content area as drop zone
         this.dropZone = document.querySelector('.panel-content');
+        this.emptyState = document.getElementById('viewerEmptyState');
+
         if (!this.dropZone) {
             console.warn('Drop zone element not found');
             return;
@@ -97,7 +108,7 @@ class UploadManager {
             this.dropZone.addEventListener(eventName, (e) => {
                 if (!this.isDragging) {
                     this.isDragging = true;
-                    this.showDropOverlay();
+                    this.showDropFeedback();
                 }
             }, false);
         });
@@ -111,11 +122,11 @@ class UploadManager {
                     const y = e.clientY;
                     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
                         this.isDragging = false;
-                        this.hideDropOverlay();
+                        this.hideDropFeedback();
                     }
                 } else {
                     this.isDragging = false;
-                    this.hideDropOverlay();
+                    this.hideDropFeedback();
                 }
             }, false);
         });
@@ -127,6 +138,31 @@ class UploadManager {
                 this.handleFile(file);
             }
         }, false);
+    }
+
+    /**
+     * Show drop feedback - highlight empty state or show overlay
+     */
+    showDropFeedback() {
+        // If empty state is visible, add dragging class
+        if (this.emptyState && !this.emptyState.classList.contains('hidden')) {
+            this.emptyState.classList.add('dragging');
+        } else {
+            // Show overlay for when document is loaded
+            this.showDropOverlay();
+        }
+    }
+
+    /**
+     * Hide drop feedback
+     */
+    hideDropFeedback() {
+        // Remove dragging class from empty state
+        if (this.emptyState) {
+            this.emptyState.classList.remove('dragging');
+        }
+        // Hide overlay
+        this.hideDropOverlay();
     }
 
     /**

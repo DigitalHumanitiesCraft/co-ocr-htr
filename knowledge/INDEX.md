@@ -19,6 +19,7 @@ knowledge/
 ├── ARCHITECTURE.md        ← Technical architecture (incl. event flows)
 ├── VALIDATION.md          ← Hybrid validation (incl. panel structure)
 ├── DATA-SCHEMA.md         ← Data structures (incl. table format)
+├── REQUIREMENTS.md        ← Feature status, bugs, requirements (NEW)
 ├── IMPLEMENTATION-PLAN.md ← Roadmap to completion
 └── JOURNAL.md             ← Development log
 ```
@@ -32,6 +33,7 @@ knowledge/
 | [ARCHITECTURE](ARCHITECTURE.md) | How is it built? | Development | METHODOLOGY |
 | [VALIDATION](VALIDATION.md) | How is it verified? | Development | METHODOLOGY, ARCHITECTURE |
 | [DATA-SCHEMA](DATA-SCHEMA.md) | What data? | Development | ARCHITECTURE |
+| [REQUIREMENTS](REQUIREMENTS.md) | What is done/open? | Development | ARCHITECTURE |
 | [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | What comes next? | Development | ARCHITECTURE |
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
 
@@ -83,3 +85,4 @@ METHODOLOGY ──────────────────────�
 | 1.1 | 2026-01-16 | UI mockup analysis integrated: triple sync, table structure, panel layout |
 | 1.2 | 2026-01-16 | Prototype v2 analysis: AppState with EventTarget, modular JS architecture, IMPLEMENTATION-PLAN.md |
 | 1.3 | 2026-01-16 | Translated to English |
+| 1.4 | 2026-01-16 | Added REQUIREMENTS.md with feature status, bugs, and requirements |
