@@ -15,7 +15,7 @@ Browser-based experimentation environment for integrating domain experts into OC
 
 ### Live Demo
 
-**[Try coOCR/HTR](https://digitalhumanitiecraft.github.io/co-ocr-htr/)**
+**[Try coOCR/HTR](http://dhcraft.org/co-ocr-htr)**
 
 1. Click "Load Demo" to try with sample data
 2. Or click the key icon to configure your own API key

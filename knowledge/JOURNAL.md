@@ -828,7 +828,7 @@ docs/
 | README aktualisiert | Fertig |
 | Live-Demo URL eingefuegt | Fertig |
 
-**Live-URL:** https://digitalhumanitiecraft.github.io/co-ocr-htr/
+**Live-URL:** http://dhcraft.org/co-ocr-htr
 
 ### Commits
 
