@@ -1,0 +1,31 @@
+{
+  "samples": [
+    {
+      "id": "raitbuch-0v1r",
+      "name": "Raitbuch 2, fol. 0v-1r",
+      "description": "Oberoesterreichisches Kirchenamt-Rechnungsbuch (16./17. Jh.)",
+      "language": "Fruehneuhochdeutsch",
+      "type": "table",
+      "image": "raitbuch/fol-0v-1r.jpg",
+      "pageXml": "raitbuch/fol-0v-1r.xml"
+    },
+    {
+      "id": "letter-hsa",
+      "name": "Handschriftlicher Brief",
+      "description": "Hugo Schuchardt Archiv - Korrespondenz",
+      "language": "Deutsch",
+      "type": "letter",
+      "image": "letter/image.jpg",
+      "pageXml": null
+    },
+    {
+      "id": "karteikarte-1",
+      "name": "Karteikarte",
+      "description": "Handschriftliche Karteikarte",
+      "language": "Deutsch",
+      "type": "card",
+      "image": "karteikarte/image.jpg",
+      "pageXml": null
+    }
+  ]
+}

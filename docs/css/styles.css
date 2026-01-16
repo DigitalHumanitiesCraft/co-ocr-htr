@@ -1127,3 +1127,115 @@ dialog[open] {
         transform: translateX(0);
     }
 }
+
+/* ==========================================================================
+   SAMPLES DROPDOWN MENU
+   ========================================================================== */
+
+.samples-dropdown {
+    position: relative;
+}
+
+.samples-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: var(--space-2);
+    min-width: 280px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: var(--z-overlay);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all var(--transition-fast);
+}
+
+.samples-menu.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.samples-menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    width: 100%;
+    padding: var(--space-3);
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.samples-menu-item:last-child {
+    border-bottom: none;
+}
+
+.samples-menu-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.samples-menu-item .sample-name {
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.samples-menu-item .sample-desc {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   VIEWER EMPTY STATE
+   ========================================================================== */
+
+.viewer-empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-6);
+    background: var(--bg-primary);
+}
+
+.viewer-empty-state.hidden {
+    display: none;
+}
+
+.empty-state-icon {
+    width: 64px;
+    height: 64px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-4);
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: var(--text-lg);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.empty-state-text {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    max-width: 280px;
+    margin-bottom: var(--space-4);
+}
+
+.empty-state-actions {
+    display: flex;
+    gap: var(--space-2);
+}

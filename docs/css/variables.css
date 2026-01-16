@@ -8,6 +8,7 @@
   --text-secondary: #8b949e;
   
   --accent-primary: #58a6ff;
+  --accent-rgb: 88, 166, 255;  /* RGB values for accent-primary (for rgba usage) */
   --accent-secondary: #1f6feb; /* Darker blue for interactions */
   
   --success: #3fb950;

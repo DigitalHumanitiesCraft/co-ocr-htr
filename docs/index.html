@@ -60,30 +60,24 @@
                 coOCR/HTR
             </div>
 
-            <div style="display: flex; align-items: center; gap: var(--space-4);">
-                <div style="display: flex; align-items: center; gap: var(--space-2);">
-                    <div class="status-indicator status-success"></div>
-                    <span style="font-weight: 500; font-size: var(--text-sm);">Rechnungsbuch_1842_S15.jpg</span>
-                </div>
-
-                <div
-                    style="display: flex; align-items: center; gap: var(--space-2); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: var(--radius-sm);">
-                    <button class="icon-btn icon-sm" title="Previous Page"><svg viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor">
-                            <polyline points="15 18 9 12 15 6"></polyline>
-                        </svg></button>
-                    <span
-                        style="font-size: var(--text-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums;">15
-                        / 47</span>
-                    <button class="icon-btn icon-sm" title="Next Page"><svg viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg></button>
-                </div>
+            <div class="header-doc-info" id="headerDocInfo" style="display: none;">
+                <div class="status-indicator status-success"></div>
+                <span id="headerFilename" style="font-weight: 500; font-size: var(--text-sm);"></span>
             </div>
 
             <div class="header-controls">
-                <button class="btn btn-primary" id="btnUpload" onclick="alert('Upload Dialog would open here')">
+                <!-- Samples Dropdown -->
+                <div class="samples-dropdown">
+                    <button class="btn btn-secondary" id="btnSamples">
+                        <svg class="icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Demo
+                    </button>
+                    <div class="samples-menu" id="samplesMenu"></div>
+                </div>
+
+                <button class="btn btn-primary" id="btnUpload">
                     <svg class="icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -92,14 +86,14 @@
                     </svg>
                     Upload
                 </button>
-                <button class="icon-btn icon-md" title="API Keys" onclick="alert('API Keys Dialog')">
+                <button class="icon-btn icon-md" title="API Keys" id="btnApiKeys">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path
                             d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
                         </path>
                     </svg>
                 </button>
-                <button class="icon-btn icon-md" title="Export" onclick="alert('Export Dialog')">
+                <button class="icon-btn icon-md" title="Export" id="btnExport">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -133,8 +127,28 @@
                 </div>
             </div>
             <div class="panel-content" style="background-color: #050505; position: relative; overflow: hidden;">
-                <div class="image-container" id="imageWrapper">
-                    <img src="assets/mock-document.jpg" id="docImage" alt="Historical Document Page">
+                <!-- Empty State (shown when no document loaded) -->
+                <div class="viewer-empty-state" id="viewerEmptyState">
+                    <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="10" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    <h3 class="empty-state-title">No Document Loaded</h3>
+                    <p class="empty-state-text">
+                        Load a demo document or upload your own image to get started.
+                    </p>
+                    <div class="empty-state-actions">
+                        <button class="btn btn-primary" id="btnLoadDemo">Load Demo</button>
+                        <button class="btn btn-secondary" id="btnUploadEmpty">Upload Image</button>
+                    </div>
+                </div>
+
+                <!-- Document Container (hidden until document loaded) -->
+                <div class="image-container" id="imageWrapper" style="display: none;">
+                    <img src="" id="docImage" alt="Historical Document Page">
                     <!-- SVG Overlay for Regions will be injected here or aligned on top -->
                     <svg id="regionsOverlay" viewBox="0 0 1024 1024"
                         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;">
