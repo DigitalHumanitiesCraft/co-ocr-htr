@@ -99,8 +99,8 @@ const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-    defaultModel: 'gemini-2.0-flash',
-    models: ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'],
+    defaultModel: 'gemini-3.0-flash-preview',
+    models: ['gemini-3.0-flash-preview', 'gemini-3.0-pro-preview'],
     authType: 'query', // API key in URL query param
     supportsVision: true
   },
@@ -108,15 +108,15 @@ const PROVIDERS = {
     name: 'OpenAI',
     endpoint: 'https://api.openai.com/v1/chat/completions',
     defaultModel: 'gpt-4o-mini',
-    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo'],
+    models: ['gpt-4o-mini', 'gpt-4o', 'o1', 'o1-mini'],
     authType: 'bearer',
     supportsVision: true
   },
   anthropic: {
     name: 'Anthropic',
     endpoint: 'https://api.anthropic.com/v1/messages',
-    defaultModel: 'claude-3-5-haiku-latest',
-    models: ['claude-3-5-haiku-latest', 'claude-3-5-sonnet-latest', 'claude-3-opus-latest'],
+    defaultModel: 'claude-sonnet-4-20250514',
+    models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-3-5-haiku-latest'],
     authType: 'header', // x-api-key header
     supportsVision: true
   },
@@ -132,7 +132,7 @@ const PROVIDERS = {
     name: 'Ollama (Local)',
     endpoint: 'http://localhost:11434/api/generate',
     defaultModel: 'llava',
-    models: ['llava', 'llava:13b', 'bakllava', 'deepseek-vl'],
+    models: ['llava', 'llava:13b', 'bakllava', 'llama3.2-vision'],
     authType: 'none',
     supportsVision: true
   }
