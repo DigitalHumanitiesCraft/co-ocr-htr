@@ -1,6 +1,13 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, validation, llm-judge]
+status: complete
+---
+
 # Hybride Validierung
 
-Kombination aus deterministischen Regeln und LLM-Einschätzungen.
+Kombination aus deterministischen Regeln und LLM-Einschaetzungen.
 
 **Abhängigkeiten:**
 - [METHODOLOGY](METHODOLOGY.md) (Begründung: LLM-Bias, Expert-in-the-Loop)

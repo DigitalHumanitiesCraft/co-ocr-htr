@@ -1,6 +1,13 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, roadmap, milestones]
+status: complete
+---
+
 # Implementierungsplan
 
-Roadmap vom aktuellen Prototyp v2 zur vollständigen Anwendung.
+Roadmap vom aktuellen Prototyp v2 zur vollstaendigen Anwendung.
 
 **Stand:** 2026-01-16
 **Basis:** `docs/` (Modularer Prototyp, GitHub Pages ready)

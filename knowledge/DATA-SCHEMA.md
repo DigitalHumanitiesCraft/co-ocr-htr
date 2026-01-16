@@ -1,6 +1,13 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, data-schema, page-xml]
+status: complete
+---
+
 # Datenstrukturen
 
-JSON-Schemas und Beispieldaten für coOCR/HTR.
+JSON-Schemas und Beispieldaten fuer coOCR/HTR.
 
 **Abhängigkeit:** [ARCHITECTURE](ARCHITECTURE.md) (Storage-Integration)
 

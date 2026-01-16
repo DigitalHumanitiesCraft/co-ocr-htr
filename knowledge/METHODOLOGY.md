@@ -1,6 +1,13 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, methodology, llm-bias]
+status: complete
+---
+
 # Methodische Grundlagen
 
-Wissenschaftliche Basis für Designentscheidungen in coOCR/HTR.
+Wissenschaftliche Basis fuer Designentscheidungen in coOCR/HTR.
 
 ## Promptotyping
 

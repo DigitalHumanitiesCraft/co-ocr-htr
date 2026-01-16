@@ -1,6 +1,13 @@
+---
+type: knowledge
+created: 2026-01-16
+tags: [coocr-htr, architecture, javascript]
+status: complete
+---
+
 # Technische Architektur
 
-Systemdesign für coOCR/HTR. Client-only, kein Backend.
+Systemdesign fuer coOCR/HTR. Client-only, kein Backend.
 
 **Abhängigkeit:** [METHODOLOGY](METHODOLOGY.md) (Begründung für Technologieentscheidungen)
 
