@@ -597,9 +597,79 @@ docs/
 
 ### Naechste Schritte
 
-- [ ] Milestone 5: Export Service
-- [ ] Milestone 6: Inline-Editing, Undo/Redo
+- [x] Milestone 5: Export Service
+- [x] Milestone 6: Inline-Editing, Undo/Redo
 - [ ] Milestone 7: Polish, GitHub Pages Deployment
+
+---
+
+## 2026-01-16 | Session 5b: Milestone 5-6 Abschluss
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Milestone 5: Export Service
+
+**Tasks erledigt:**
+
+| Task | Status | Datei |
+|------|--------|-------|
+| Export Service | Fertig | `js/services/export.js` |
+| Plain Text Export | Fertig | Tab-separiert |
+| JSON Export | Fertig | Mit Metadata-Option |
+| Markdown Export | Fertig | Mit Validierungsnotizen |
+| Download Trigger | Fertig | Blob + createObjectURL |
+
+### Milestone 6: UX Features
+
+**Tasks erledigt:**
+
+| Task | Status | Datei |
+|------|--------|-------|
+| Inline Editing | Fertig | `js/editor.js` |
+| Undo/Redo Stack | Fertig | `js/editor.js` |
+| Keyboard Shortcuts | Fertig | `js/editor.js` |
+| Cell CSS | Fertig | `css/styles.css` |
+
+**Inline Editing Features:**
+- Doppelklick auf Zelle startet Editing
+- Enter beendet und speichert
+- Escape bricht ab
+- Tab navigiert zur naechsten Zelle
+
+**Keyboard Shortcuts:**
+- Ctrl+Z / Cmd+Z: Undo
+- Ctrl+Shift+Z / Ctrl+Y: Redo
+- Pfeiltasten: Zeilen-Navigation
+- Enter: Editing starten
+
+### Commits
+
+| Commit | Beschreibung |
+|--------|--------------|
+| `4e78d0f` | Milestone 5: Export Service |
+| `5bd62bc` | Milestone 6: Inline Editing, Undo/Redo, Shortcuts |
+
+### Projektstand
+
+**Alle Kernfunktionen implementiert:**
+
+| Feature | Status |
+|---------|--------|
+| LLM-Provider (5) | Fertig |
+| Dialoge & Upload | Fertig |
+| PAGE-XML Import | Fertig |
+| LLM-Transkription | Fertig |
+| Regelbasierte Validierung | Fertig |
+| LLM-Judge Validierung | Fertig |
+| Export (txt, json, md) | Fertig |
+| Inline-Editing | Fertig |
+| Undo/Redo | Fertig |
+| Keyboard Shortcuts | Fertig |
+
+**Noch offen:**
+- [ ] Tests fuer alle neuen Services
+- [ ] End-to-End Test
+- [ ] GitHub Pages Aktivierung
 
 ---
 
