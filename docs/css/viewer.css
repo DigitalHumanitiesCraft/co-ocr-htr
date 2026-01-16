@@ -171,34 +171,99 @@
   text-align: center;
   padding: var(--space-6);
   background: var(--bg-primary);
+  z-index: 10; /* Above image-container when visible */
 }
 
 .viewer-empty-state.hidden {
   display: none;
 }
 
+/* Drop Zone Indicator - Main focus area */
+.viewer-empty-state .drop-zone-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-8) var(--space-6);
+  border: 2px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  background: rgba(var(--accent-rgb), 0.02);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  min-width: 280px;
+}
+
+.viewer-empty-state .drop-zone-indicator:hover {
+  border-color: var(--accent-primary);
+  background: rgba(var(--accent-rgb), 0.05);
+}
+
+/* Dragging state - activated via JS */
+.viewer-empty-state.dragging .drop-zone-indicator {
+  border-color: var(--accent-primary);
+  background: rgba(var(--accent-rgb), 0.1);
+  transform: scale(1.02);
+}
+
 .viewer-empty-state .empty-state-icon {
-  width: 64px;
-  height: 64px;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-4);
-  opacity: 0.5;
+  width: 48px;
+  height: 48px;
+  color: var(--accent-primary);
+  margin-bottom: var(--space-3);
+  opacity: 0.7;
+  transition: all var(--transition-fast);
+}
+
+.viewer-empty-state .drop-zone-indicator:hover .empty-state-icon {
+  opacity: 1;
+  transform: translateY(-2px);
 }
 
 .viewer-empty-state .empty-state-title {
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
 .viewer-empty-state .empty-state-text {
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  max-width: 280px;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
 }
 
+.viewer-empty-state .drop-formats {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  padding: var(--space-1) var(--space-2);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+}
+
+/* Divider */
+.viewer-empty-state .empty-state-divider {
+  display: flex;
+  align-items: center;
+  width: 200px;
+  margin: var(--space-4) 0;
+}
+
+.viewer-empty-state .empty-state-divider span {
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.viewer-empty-state .empty-state-divider::before,
+.viewer-empty-state .empty-state-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-muted);
+}
+
+/* Actions */
 .viewer-empty-state .empty-state-actions {
   display: flex;
   gap: var(--space-2);
