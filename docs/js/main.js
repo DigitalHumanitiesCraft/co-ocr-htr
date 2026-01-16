@@ -16,6 +16,7 @@ import { validationPanel } from './components/validation.js';
 // Services
 import { storage } from './services/storage.js';
 import { llmService } from './services/llm.js';
+import { exportService } from './services/export.js';
 import { pageXMLParser } from './services/parsers/page-xml.js';
 import { appState } from './state.js';
 
@@ -73,6 +74,21 @@ async function initApp() {
     window.addEventListener('unhandledrejection', (event) => {
         console.error('Unhandled promise rejection:', event.reason);
         dialogManager.showToast('An error occurred. Check console for details.', 'error');
+    });
+
+    // Export event handler
+    document.addEventListener('exportRequested', (event) => {
+        const { format, includeValidation, includeMetadata } = event.detail;
+        try {
+            const result = exportService.exportAndDownload(format, {
+                includeValidation,
+                includeMetadata
+            });
+            dialogManager.showToast(`Exported as ${result.filename}`, 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            dialogManager.showToast(`Export failed: ${error.message}`, 'error');
+        }
     });
 
     console.log('coOCR/HTR: Initialized');
