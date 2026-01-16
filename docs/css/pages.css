@@ -3,6 +3,13 @@
  * coOCR/HTR Design System v2.1
  */
 
+/* Override base.css body overflow for sub-pages */
+html, body {
+    height: auto !important;
+    overflow: visible !important;
+    overflow-y: auto !important;
+}
+
 /* ==========================================================================
    PAGE LAYOUT
    ========================================================================== */

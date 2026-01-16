@@ -89,6 +89,13 @@ function renderEditor(transcription) {
  * Detect which editor mode to use based on data structure
  */
 function detectEditorMode(transcription) {
+    // No data at all → lines mode (will show empty state)
+    const hasData = (transcription.segments?.length > 0) ||
+                    (transcription.lines?.length > 0);
+    if (!hasData) {
+        return 'lines';
+    }
+
     // Explicit columns defined → grid
     if (transcription.columns?.length > 0) {
         return 'grid';
@@ -172,6 +179,20 @@ function renderLinesEditor(container, transcription) {
  * Render grid-based editor (for account books, inventories)
  */
 function renderGridEditor(container, transcription) {
+    // If no data at all, show empty state instead of grid
+    const hasData = (transcription.segments?.length > 0) ||
+                    (transcription.lines?.length > 0);
+
+    if (!hasData) {
+        container.innerHTML = `
+            <div class="editor-empty-state">
+                <p>Keine Transkription vorhanden.</p>
+                <p class="text-secondary">Lade ein Dokument und starte die Transkription.</p>
+            </div>
+        `;
+        return;
+    }
+
     let html = '';
 
     // Determine columns
@@ -196,7 +217,7 @@ function renderGridEditor(container, transcription) {
         }
     }
 
-    // If no columns detected, use single TEXT column (no hardcoded assumptions)
+    // If no columns detected, use single TEXT column
     if (columns.length === 0) {
         columns = [
             { id: 'text', label: 'TEXT' }

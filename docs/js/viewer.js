@@ -328,6 +328,20 @@ export function initViewer() {
     // Initialize page navigation
     updatePageNavigation();
 
+    // Check initial state: show empty state if no document loaded
+    const initialState = appState.getState();
+    const hasDocument = initialState.document?.dataUrl ||
+        (initialState.image?.url && initialState.image.url !== 'assets/mock-document.jpg');
+
+    if (hasDocument) {
+        showDocument(initialState.document?.filename || 'Document');
+        if (initialState.document?.dataUrl || initialState.image?.url) {
+            img.src = initialState.document?.dataUrl || initialState.image.url;
+        }
+    } else {
+        showEmptyState();
+    }
+
     console.log('[Viewer] Ready - Pan: drag, Zoom: wheel/+/-, Fit: f, Reset: 0, Pages: ←/→');
 }
 
