@@ -8,7 +8,7 @@ status: active
 
 # Implementation Plan
 
-**Status:** Phase 2 in progress
+**Status:** Phase 2.3 - UI State Management
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
 ---
@@ -42,60 +42,72 @@ status: active
 
 ## Phase 2: Multi-Page & Documentation 🔄 IN PROGRESS
 
-### 2.1 Unterseiten (Help & About) ⏳
+### 2.1 Unterseiten ✅ COMPLETE
 
 | Task | Status | File |
 |------|--------|------|
-| `help.html` erstellen | ⏳ | `docs/help.html` |
-| `about.html` erstellen | ⏳ | `docs/about.html` |
-| `pages.css` Shared Styles | ⏳ | `docs/css/pages.css` |
-| Header-Links aktualisieren | ⏳ | `docs/index.html` |
+| `help.html` erstellen | ✅ | `docs/help.html` |
+| `about.html` erstellen | ✅ | `docs/about.html` |
+| `knowledge.html` erstellen | ✅ | `docs/knowledge.html` |
+| `pages.css` Shared Styles | ✅ | `docs/css/pages.css` |
+| Header-Links (Help/About/Knowledge) | ✅ | `docs/index.html` |
+| Scroll-Fix für Unterseiten | ✅ | `docs/css/pages.css` |
 
-**Help-Seite Inhalt:**
-- Quick Start (3 Schritte)
-- Workflow-Erklärung
-- Keyboard Shortcuts
-- API Key Anleitung
-- Troubleshooting/FAQ
-
-**About-Seite Inhalt:**
-- Projekt-Beschreibung
-- Methodologie (Critical Expert in the Loop)
-- Technologie-Stack
-- Credits/Team
-- Lizenz
-- Links (GitHub, Knowledge Base)
-
-### 2.2 Multi-Page Navigation ⏳
+### 2.2 Multi-Page Navigation ✅ COMPLETE
 
 | Task | Status | File |
 |------|--------|------|
-| State erweitern (pages[], currentPageIndex) | ⏳ | `js/state.js` |
-| Page Navigation UI | ⏳ | `index.html`, `js/viewer.js` |
-| Page Navigation CSS | ⏳ | `css/viewer.css` |
-| Samples Service Multi-Page | ⏳ | `js/services/samples.js` |
-| Upload Multi-File (Ordner) | ⏳ | `js/components/upload.js` |
-| METS-XML Integration | ⏳ | `js/services/samples.js` |
-| Editor pro Seite | ⏳ | `js/editor.js` |
-| Keyboard: ←/→ Navigation | ⏳ | `js/viewer.js` |
+| State erweitern (pages[], currentPageIndex) | ✅ | `js/state.js` |
+| Per-Page Transcriptions (pageTranscriptions) | ✅ | `js/state.js` |
+| Page Navigation UI | ✅ | `index.html`, `js/viewer.js` |
+| Samples Service Multi-Page | ✅ | `js/services/samples.js` |
+| Keyboard: ←/→ Navigation | ✅ | `js/viewer.js` |
+| Multi-Page Demo (Wecker 6 Seiten) | ✅ | `samples/wecker/` |
 
 **UI-Element:**
 ```
-◀ Prev │ Page 3 / 83 │ Next ▶
+◀ Prev │ Page 3 / 6 │ Next ▶
 ```
 
-**Datenquellen:**
-1. Ordner mit Bildern (alphabetisch sortiert)
-2. METS-XML (strukturiert mit Metadaten)
+### 2.3 UI State Management ⏳ IN PROGRESS
 
-### 2.3 Demo-Daten erweitern ⏳
+**Problem:** Initial State zeigt falsches UI
+- Editor zeigt leere Tabelle statt Empty State ✅ FIXED
+- Viewer zeigt nicht den Empty State ✅ FIXED
+- Validation wird immer angezeigt ⏳
+
+| Task | Status | File |
+|------|--------|------|
+| Editor: Empty State bei leerer Transkription | ✅ | `js/editor.js` |
+| Viewer: Initial Empty State | ✅ | `js/viewer.js` |
+| Validation: Conditional Display | ⏳ | `js/components/validation.js` |
+| Validation: Kompakteres Layout | ⏳ | `css/validation.css` |
+| Validation: Gruppierte, ausklappbare Items | ⏳ | `js/components/validation.js` |
+
+**Idealer Zustand beim Start:**
+
+| Panel | Ohne Dokument | Mit Dokument | Mit Transkription |
+|-------|---------------|--------------|-------------------|
+| Viewer | Empty: "Drop files" | Bild angezeigt | Bild + Regions |
+| Editor | Empty: "Keine Transkription" | Empty State | Tabelle mit Text |
+| Validation | Collapsed/Hidden | Hidden | Visible mit Ergebnissen |
+
+**Validation Panel Anforderungen:**
+1. Nur sichtbar wenn Dokument UND Transkription vorhanden
+2. Rule-Based + AI Assistant immer beide sichtbar (kompakt)
+3. Innerer Scroll für lange Listen
+4. Gruppierte Validierungen nach Kategorie
+5. Ausklappbare Detail-Ansicht
+
+### 2.4 Demo-Daten ✅ COMPLETE
 
 | Sample | Typ | Seiten | Status |
 |--------|-----|--------|--------|
-| Wecker Antidotarium | Multi-Page | 83 | ⏳ |
-| Stefan Zweig (METS) | Multi-Page | 3 | ⏳ |
-| Raitbuch (bestehend) | Single | 1 | ✅ |
-| HSA Brief (bestehend) | Single | 1 | ✅ |
+| Wecker Antidotarium | Multi-Page | 6 | ✅ |
+| Wecker Single Page | Single | 1 | ✅ |
+| Raitbuch | Single | 1 | ✅ |
+| HSA Brief | Single | 1 | ✅ |
+| Karteikarte | Single | 1 | ✅ |
 
 ---
 
@@ -127,8 +139,9 @@ status: active
 ```
 docs/
 ├── index.html              # Haupt-App
-├── help.html               # NEU: Hilfe-Seite
-├── about.html              # NEU: About-Seite
+├── help.html               # ✅ Hilfe-Seite
+├── about.html              # ✅ About-Seite
+├── knowledge.html          # ✅ Knowledge Base Seite
 ├── css/
 │   ├── variables.css       # Design Tokens
 │   ├── base.css            # Reset, Typography
@@ -138,11 +151,11 @@ docs/
 │   ├── editor.css          # Transcription Editor
 │   ├── viewer.css          # Document Viewer
 │   ├── validation.css      # Validation Panel
-│   └── pages.css           # NEU: Shared für Unterseiten
+│   └── pages.css           # ✅ Shared für Unterseiten
 ├── js/
 │   ├── main.js             # Entry Point
-│   ├── state.js            # Central State
-│   ├── viewer.js           # Pan/Zoom/Fit/Regions
+│   ├── state.js            # Central State + Multi-Page
+│   ├── viewer.js           # Pan/Zoom/Fit/Regions + Page Nav
 │   ├── editor.js           # Lines/Grid Editor
 │   ├── ui.js               # UI Interactions
 │   ├── components/
@@ -155,15 +168,16 @@ docs/
 │       ├── storage.js
 │       ├── validation.js
 │       ├── export.js
-│       ├── samples.js
+│       ├── samples.js      # Multi-Page Support
 │       └── parsers/
 │           ├── page-xml.js
-│           └── mets-xml.js # NEU
+│           └── mets-xml.js
 ├── samples/
-│   ├── index.json
+│   ├── index.json          # 5 Samples (1 Multi-Page)
 │   ├── raitbuch/
-│   ├── wecker/             # NEU: Multi-Page
-│   └── hsa-letter/
+│   ├── wecker/             # ✅ 6 Seiten + PAGE-XML
+│   ├── hsa-letter/
+│   └── karteikarte/
 └── assets/
     ├── logo.png
     └── logo-icon.png

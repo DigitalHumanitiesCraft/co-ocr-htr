@@ -5,6 +5,11 @@
  * - Rule-based validation results
  * - LLM-Judge results with perspective switching
  * - Clickable line references for navigation
+ *
+ * Display Logic:
+ * - Shows empty state when no transcription exists
+ * - Shows validation results when transcription is available
+ * - Both Rule-Based and AI sections always visible (compact)
  */
 
 import { validationEngine } from '../services/validation.js';
@@ -18,6 +23,9 @@ import { dialogManager } from './dialogs.js';
 class ValidationPanel {
     constructor() {
         this.panel = null;
+        this.emptyState = null;
+        this.ruleSection = null;
+        this.aiSection = null;
         this.isValidating = false;
         this.currentPerspective = 'paleographic';
     }
@@ -26,8 +34,12 @@ class ValidationPanel {
      * Initialize validation panel
      */
     init() {
-        // Find the validation panel content area
-        this.panel = document.querySelector('.panel:nth-child(4) .panel-content');
+        // Find panel elements
+        this.panel = document.getElementById('validationContent');
+        this.emptyState = document.getElementById('validationEmptyState');
+        this.ruleSection = document.getElementById('ruleBasedSection');
+        this.aiSection = document.getElementById('aiAssistantSection');
+
         if (!this.panel) {
             console.warn('Validation panel not found');
             return;
@@ -35,6 +47,30 @@ class ValidationPanel {
 
         this.bindEvents();
         this.setupPerspectiveDropdown();
+
+        // Check initial state
+        this.updateVisibility();
+    }
+
+    /**
+     * Update panel visibility based on transcription state
+     */
+    updateVisibility() {
+        const state = appState.getState();
+        const hasTranscription = state.transcription?.segments?.length > 0 ||
+                                  state.transcription?.lines?.length > 0;
+
+        if (hasTranscription) {
+            // Show validation sections, hide empty state
+            if (this.emptyState) this.emptyState.style.display = 'none';
+            if (this.ruleSection) this.ruleSection.style.display = 'block';
+            if (this.aiSection) this.aiSection.style.display = 'block';
+        } else {
+            // Show empty state, hide validation sections
+            if (this.emptyState) this.emptyState.style.display = 'flex';
+            if (this.ruleSection) this.ruleSection.style.display = 'none';
+            if (this.aiSection) this.aiSection.style.display = 'none';
+        }
     }
 
     /**
@@ -43,7 +79,20 @@ class ValidationPanel {
     bindEvents() {
         // Listen for transcription completion to trigger validation
         appState.addEventListener('transcriptionComplete', () => {
+            this.updateVisibility();
             this.runValidation();
+        });
+
+        // Listen for document load (reset validation)
+        appState.addEventListener('documentLoaded', () => {
+            this.updateVisibility();
+            this.clearValidation();
+        });
+
+        // Listen for page changes (multi-page support)
+        appState.addEventListener('pageChanged', () => {
+            this.updateVisibility();
+            this.clearValidation();
         });
 
         // Listen for validation state changes
@@ -56,6 +105,24 @@ class ValidationPanel {
         if (perspectiveLabel) {
             perspectiveLabel.style.cursor = 'pointer';
             perspectiveLabel.addEventListener('click', () => this.showPerspectiveMenu());
+        }
+    }
+
+    /**
+     * Clear validation results (e.g., when loading new document)
+     */
+    clearValidation() {
+        const ruleContent = document.getElementById('ruleBasedContent');
+        const aiContent = document.getElementById('aiAssistantContent');
+
+        if (ruleContent) ruleContent.innerHTML = '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">Run transcription to see rule-based checks.</p>';
+        if (aiContent) aiContent.innerHTML = '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">Configure API key for AI-powered analysis.</p>';
+
+        // Update badge
+        const badge = document.getElementById('validationBadge');
+        if (badge) {
+            badge.textContent = '0 Issues';
+            badge.style.display = 'none';
         }
     }
 
@@ -196,27 +263,49 @@ class ValidationPanel {
     render(results) {
         if (!this.panel) return;
 
+        // Update visibility
+        this.updateVisibility();
+
         // Update issue badge
-        const badge = document.querySelector('.panel:nth-child(4) .badge');
+        const badge = document.getElementById('validationBadge');
         if (badge && results.summary) {
-            badge.textContent = `${results.summary.totalIssues} Issues`;
-            badge.style.background = results.summary.totalIssues > 0
+            const issueCount = results.summary.totalIssues || 0;
+            badge.textContent = `${issueCount} Issues`;
+            badge.style.display = issueCount > 0 ? 'inline' : 'none';
+            badge.style.background = issueCount > 0
                 ? 'rgba(var(--warning-rgb), 0.2)'
                 : 'rgba(255,255,255,0.1)';
         }
 
-        // Render sections
-        this.panel.innerHTML = `
-            ${this.renderRuleSection(results.rules)}
-            ${this.renderLLMSection(results.llmJudge)}
-        `;
+        // Render into separate sections
+        const ruleContent = document.getElementById('ruleBasedContent');
+        const aiContent = document.getElementById('aiAssistantContent');
+
+        if (ruleContent) {
+            ruleContent.innerHTML = this.renderRuleCards(results.rules);
+        }
+
+        if (aiContent) {
+            aiContent.innerHTML = this.renderLLMCards(results.llmJudge);
+        }
 
         // Bind line click handlers
         this.bindLineClicks();
     }
 
     /**
-     * Render rule-based validation section
+     * Render rule-based validation cards (content only)
+     */
+    renderRuleCards(rules) {
+        if (!rules || rules.length === 0) {
+            return '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">No rule-based issues found.</p>';
+        }
+
+        return rules.map(rule => this.renderValidationCard(rule)).join('');
+    }
+
+    /**
+     * Render rule-based validation section (legacy, kept for compatibility)
      */
     renderRuleSection(rules) {
         if (!rules || rules.length === 0) {
@@ -240,7 +329,82 @@ class ValidationPanel {
     }
 
     /**
-     * Render LLM-Judge validation section
+     * Render LLM-Judge validation cards (content only)
+     */
+    renderLLMCards(llmResult) {
+        if (!llmResult) {
+            const hasApiKey = llmService.hasApiKey();
+            if (!hasApiKey) {
+                return `
+                    <div class="validation-card" style="opacity: 0.6;">
+                        <div class="card-header">
+                            <div class="status-indicator" style="background: var(--text-muted);"></div>
+                            <span class="card-title">Not configured</span>
+                        </div>
+                        <div class="card-lines">Configure API key to enable AI validation</div>
+                    </div>
+                `;
+            }
+            return '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">AI analysis will run after transcription.</p>';
+        }
+
+        const statusClass = {
+            certain: 'status-success',
+            likely: 'status-warning',
+            uncertain: 'status-error'
+        }[llmResult.confidence] || 'status-warning';
+
+        const confidenceLabel = {
+            certain: 'High Confidence',
+            likely: 'Medium Confidence',
+            uncertain: 'Low Confidence'
+        }[llmResult.confidence] || 'Unknown';
+
+        const perspective = validationEngine.getPerspectives()
+            .find(p => p.id === llmResult.perspective);
+
+        let html = `
+            <div class="validation-card">
+                <div class="card-header">
+                    <div class="status-indicator ${statusClass}"></div>
+                    <span class="card-title">${confidenceLabel}</span>
+                    <span class="perspective-badge" style="margin-left: auto; padding: 2px 8px; background: rgba(var(--accent-rgb), 0.2); border-radius: var(--radius-sm); font-size: var(--text-xs); color: var(--accent-primary);">${perspective?.name || llmResult.perspective}</span>
+                </div>
+                <div class="card-lines">${perspective?.description || 'Overall assessment'}</div>
+                ${llmResult.reasoning ? `
+                    <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">
+                        Show Analysis
+                    </div>
+                    <div class="card-details">
+                        ${llmResult.reasoning}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        // Add issue cards
+        if (llmResult.issues && llmResult.issues.length > 0) {
+            html += llmResult.issues.map(issue => `
+                <div class="validation-card" data-line="${issue.line || ''}">
+                    <div class="card-header">
+                        <div class="status-indicator status-warning"></div>
+                        <span class="card-title">${issue.text || 'Issue'}</span>
+                    </div>
+                    ${issue.line ? `<div class="card-lines">Line ${issue.line}</div>` : ''}
+                    ${issue.suggestion ? `
+                        <div class="card-details expanded">
+                            Suggestion: ${issue.suggestion}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        return html;
+    }
+
+    /**
+     * Render LLM-Judge validation section (legacy, kept for compatibility)
      */
     renderLLMSection(llmResult) {
         if (!llmResult) {
