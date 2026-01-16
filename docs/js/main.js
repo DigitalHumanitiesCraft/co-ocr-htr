@@ -160,7 +160,21 @@ async function initSamplesMenu() {
     // Close menu on outside click
     document.addEventListener('click', () => {
         samplesMenu.classList.remove('visible');
+        // Also close knowledge menu
+        const knowledgeMenu = document.getElementById('knowledgeMenu');
+        if (knowledgeMenu) knowledgeMenu.classList.remove('visible');
     });
+
+    // Initialize knowledge menu toggle
+    const knowledgeBtn = document.getElementById('btnKnowledge');
+    const knowledgeMenu = document.getElementById('knowledgeMenu');
+    if (knowledgeBtn && knowledgeMenu) {
+        knowledgeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            knowledgeMenu.classList.toggle('visible');
+            samplesMenu.classList.remove('visible'); // Close samples menu
+        });
+    }
 
     // Handle sample selection
     samplesMenu.addEventListener('click', async (e) => {

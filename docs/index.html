@@ -111,6 +111,29 @@
                         </path>
                     </svg>
                 </button>
+                <!-- Knowledge Vault Dropdown -->
+                <div class="samples-dropdown">
+                    <button class="icon-btn icon-md" title="Knowledge Vault" id="btnKnowledge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </button>
+                    <div class="samples-menu" id="knowledgeMenu">
+                        <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr/tree/main/knowledge" target="_blank" class="samples-menu-item">
+                            <span class="sample-name">Promptotyping Vault</span>
+                            <span class="sample-desc">Methodologie, Architektur, Validierung</span>
+                        </a>
+                        <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr/blob/main/knowledge/METHODOLOGY.md" target="_blank" class="samples-menu-item">
+                            <span class="sample-name">Methodology</span>
+                            <span class="sample-desc">Wissenschaftliche Grundlagen</span>
+                        </a>
+                        <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr/blob/main/knowledge/JOURNAL.md" target="_blank" class="samples-menu-item">
+                            <span class="sample-name">Development Journal</span>
+                            <span class="sample-desc">Entwicklungsprotokoll</span>
+                        </a>
+                    </div>
+                </div>
                 <button class="icon-btn icon-md" title="Help">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -239,13 +262,25 @@
         <section class="panel glass-panel" style="grid-column: 3;">
             <div class="panel-header">
                 <span>Validation</span>
-                <span class="badge"
-                    style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary);">5
+                <span class="badge" id="validationBadge"
+                    style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary); display: none;">0
                     Issues</span>
             </div>
-            <div class="panel-content">
+            <div class="panel-content" id="validationContent">
+                <!-- Empty State -->
+                <div class="validation-empty-state" id="validationEmptyState">
+                    <svg class="empty-state-icon" style="width: 48px; height: 48px; margin-bottom: var(--space-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                    </svg>
+                    <h4 style="color: var(--text-primary); margin-bottom: var(--space-2);">No Validation Yet</h4>
+                    <p style="color: var(--text-secondary); font-size: var(--text-xs); max-width: 200px; text-align: center;">
+                        Load a document and run transcription to see validation results here.
+                    </p>
+                </div>
 
-                <div class="validation-section">
+                <!-- Rule-Based Section (hidden until content) -->
+                <div class="validation-section" id="ruleBasedSection" style="display: none;">
                     <div class="section-title" style="display:flex; align-items:center; gap:6px;">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <circle cx="12" cy="12" r="3"></circle>
@@ -255,30 +290,13 @@
                         </svg>
                         Rule-Based
                     </div>
-
-                    <div class="validation-card" data-line="3">
-                        <div class="card-header">
-                            <div class="status-indicator status-success"></div>
-                            <span class="card-title">Date Format Correct</span>
-                        </div>
-                        <div class="card-lines">Lines 3-7 (DD. Month)</div>
-                    </div>
-
-                    <div class="validation-card" data-line="12">
-                        <div class="card-header">
-                            <div class="status-indicator status-warning"></div>
-                            <span class="card-title">Sum Check Mismatch</span>
-                        </div>
-                        <div class="card-lines">Line 12 • Diff: 3 Taler</div>
-                        <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">▾
-                            Show Details</div>
-                        <div class="card-details">
-                            Calculated sum of previous entries does not match the total in this line.
-                        </div>
+                    <div id="ruleBasedContent">
+                        <!-- Content injected by JS -->
                     </div>
                 </div>
 
-                <div class="validation-section">
+                <!-- AI Assistant Section (hidden until content) -->
+                <div class="validation-section" id="aiAssistantSection" style="display: none;">
                     <div class="section-title" style="display:flex; align-items:center; gap:6px;">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path
@@ -287,39 +305,8 @@
                         </svg>
                         AI Assistant
                     </div>
-
-                    <div class="validation-card">
-                        <div class="card-header">
-                            <div class="status-indicator status-success"></div>
-                            <span class="card-title">High Confidence</span>
-                        </div>
-                        <div class="card-lines">Overall Document Match</div>
-                    </div>
-
-                    <div class="validation-card" data-line="4">
-                        <div class="card-header">
-                            <div class="status-indicator status-warning"></div>
-                            <span class="card-title">Ambiguous Reading</span>
-                        </div>
-                        <div class="card-lines">Line 4 • Confidence: Low</div>
-                        <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">▾
-                            Show Details</div>
-                        <div class="card-details">
-                            Could be "Müller" (0.65) or "Möller" (0.30). Context suggests commonly occurring name.
-                        </div>
-                    </div>
-
-                    <div class="validation-card" data-line="9">
-                        <div class="card-header">
-                            <div class="status-indicator status-error"></div>
-                            <span class="card-title">Missing Column</span>
-                        </div>
-                        <div class="card-lines">Line 9</div>
-                        <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">▾
-                            Show Details</div>
-                        <div class="card-details">
-                            Expected 4 columns found 3. 'Amount' seems missing.
-                        </div>
+                    <div id="aiAssistantContent">
+                        <!-- Content injected by JS -->
                     </div>
                 </div>
 
