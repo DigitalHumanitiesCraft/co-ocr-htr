@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Environment variables (API keys etc.)
+.env
+.env.local
+.env.*.local
+*.env
+
+# API keys and secrets
+secrets/
+*.key
+*.pem
+credentials.json
+service-account.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Build output
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
