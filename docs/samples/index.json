@@ -1,31 +1,37 @@
 {
   "samples": [
     {
-      "id": "raitbuch-0v1r",
-      "name": "Raitbuch 2, fol. 0v-1r",
-      "description": "Oberoesterreichisches Kirchenamt-Rechnungsbuch (16./17. Jh.)",
-      "language": "Fruehneuhochdeutsch",
-      "type": "table",
-      "image": "raitbuch/fol-0v-1r.jpg",
-      "pageXml": "raitbuch/fol-0v-1r.xml"
+      "id": "wecker-p015",
+      "name": "Antidotarium (1617), S. 15",
+      "description": "Medizinisches Fachbuch - Vollständige PAGE-XML Transkription",
+      "language": "Latein",
+      "type": "print",
+      "image": "wecker/0015_p015.jpg",
+      "pageXml": "wecker/0015_p015.xml"
     },
     {
-      "id": "letter-hsa",
-      "name": "Handschriftlicher Brief",
-      "description": "Hugo Schuchardt Archiv - Korrespondenz",
-      "language": "Deutsch",
+      "id": "raitbuch-0v1r",
+      "name": "Raitbuch 2, fol. 0v-1r",
+      "description": "Oberösterreichisches Rechnungsbuch - Nur Bild (keine Transkription)",
+      "language": "Frühneuhochdeutsch",
+      "type": "table",
+      "image": "raitbuch/fol-0v-1r.jpg"
+    },
+    {
+      "id": "hsa-letter-2261",
+      "name": "HSA Brief 2261",
+      "description": "Handschriftlicher Brief - Nur Bild (Ground Truth als Referenz)",
+      "language": "Deutsch/Französisch",
       "type": "letter",
-      "image": "letter/image.jpg",
-      "pageXml": null
+      "image": "hsa-letter/image.jpg"
     },
     {
       "id": "karteikarte-1",
       "name": "Karteikarte",
-      "description": "Handschriftliche Karteikarte",
+      "description": "Handschriftliche Karteikarte - Nur Bild",
       "language": "Deutsch",
       "type": "card",
-      "image": "karteikarte/image.jpg",
-      "pageXml": null
+      "image": "karteikarte/image.jpg"
     }
   ]
 }

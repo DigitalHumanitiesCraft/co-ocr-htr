@@ -1,0 +1,434 @@
+/**
+ * layout.css - App Grid, Panels, Header, Footer, Responsive
+ * coOCR/HTR Design System v2.1
+ */
+
+/* ==========================================================================
+   APP CONTAINER (Main Grid)
+   ========================================================================== */
+
+.app-container {
+  display: grid;
+  grid-template-rows: 56px 1fr 36px;
+  grid-template-columns: 40fr 35fr 25fr;
+  height: 100vh;
+  width: 100vw;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background-color: var(--bg-primary);
+}
+
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
+
+.app-header {
+  grid-column: 1 / -1;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  justify-content: space-between;
+  position: relative;
+  z-index: var(--z-overlay);
+}
+
+.logo {
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.logo svg {
+  color: var(--accent-primary);
+}
+
+.logo-image {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.header-doc-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ==========================================================================
+   PANELS
+   ========================================================================== */
+
+.panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.panel-header {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+}
+
+.panel-header > span:first-child {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--text-xs);
+}
+
+.panel-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+/* Panel Hints */
+.panel-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--accent-muted);
+  border-bottom: 1px solid var(--accent-hover);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.panel-hint.hidden {
+  display: none;
+}
+
+.panel-hint-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.panel-hint-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: var(--text-sm);
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+
+.panel-hint-dismiss:hover {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   STATUS BAR / FOOTER
+   ========================================================================== */
+
+.status-bar {
+  grid-column: 1 / -1;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  justify-content: space-between;
+}
+
+/* Workflow Stepper */
+.workflow-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.workflow-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  cursor: default;
+}
+
+.workflow-step.active {
+  background: var(--accent-hover);
+  color: var(--accent-primary);
+}
+
+.workflow-step.completed {
+  color: var(--confident);
+}
+
+.workflow-step-number {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--surface-active);
+}
+
+.workflow-step.active .workflow-step-number {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.workflow-step.completed .workflow-step-number {
+  background: var(--confident);
+  color: white;
+}
+
+/* Checkmark for completed steps */
+.workflow-step.completed .workflow-step-number::before {
+  content: '✓';
+}
+
+.workflow-step-arrow {
+  color: var(--text-secondary);
+  opacity: 0.3;
+  font-size: 10px;
+}
+
+/* ==========================================================================
+   INFO TOOLTIPS
+   Default: opens downward (better for panel headers near top of screen)
+   ========================================================================== */
+
+.info-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-active);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: help;
+  transition: all var(--transition-fast);
+}
+
+.info-tooltip:hover {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.info-tooltip-content {
+  position: absolute;
+  /* Default: open downward */
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.5;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+  z-index: var(--z-tooltip);
+  pointer-events: none;
+  text-align: left;
+}
+
+/* Arrow pointing up (tooltip opens downward) */
+.info-tooltip-content::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-bottom-color: var(--bg-secondary);
+}
+
+/* Border arrow */
+.info-tooltip-content::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 9px solid transparent;
+  border-bottom-color: var(--border-default);
+  z-index: -1;
+}
+
+.info-tooltip:hover .info-tooltip-content {
+  opacity: 1;
+  visibility: visible;
+}
+
+.info-tooltip-title {
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+/* Variant: Tooltip opens upward (use class .tooltip-up on parent) */
+.info-tooltip.tooltip-up .info-tooltip-content {
+  top: auto;
+  bottom: calc(100% + 10px);
+}
+
+.info-tooltip.tooltip-up .info-tooltip-content::before {
+  bottom: auto;
+  top: 100%;
+  border-bottom-color: transparent;
+  border-top-color: var(--bg-secondary);
+}
+
+.info-tooltip.tooltip-up .info-tooltip-content::after {
+  bottom: auto;
+  top: 100%;
+  border-bottom-color: transparent;
+  border-top-color: var(--border-default);
+}
+
+/* Variant: Tooltip aligns left (use class .tooltip-left) */
+.info-tooltip.tooltip-left .info-tooltip-content {
+  left: 0;
+  transform: none;
+}
+
+.info-tooltip.tooltip-left .info-tooltip-content::before,
+.info-tooltip.tooltip-left .info-tooltip-content::after {
+  left: 16px;
+  transform: none;
+}
+
+/* Variant: Tooltip aligns right (use class .tooltip-right) */
+.info-tooltip.tooltip-right .info-tooltip-content {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.info-tooltip.tooltip-right .info-tooltip-content::before,
+.info-tooltip.tooltip-right .info-tooltip-content::after {
+  left: auto;
+  right: 16px;
+  transform: none;
+}
+
+/* ==========================================================================
+   DEMO INDICATOR
+   ========================================================================== */
+
+.demo-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--uncertain-bg);
+  border: 1px solid var(--uncertain-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--uncertain);
+  font-weight: 500;
+}
+
+.demo-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--uncertain);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   MOBILE WARNING
+   ========================================================================== */
+
+.mobile-warning {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-6);
+}
+
+.mobile-warning h2 {
+  margin-bottom: var(--space-2);
+}
+
+.mobile-warning p {
+  color: var(--text-secondary);
+  max-width: 300px;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .app-container {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Hide validation panel on smaller screens */
+  .panel:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    display: none;
+  }
+
+  .mobile-warning {
+    display: flex;
+  }
+}

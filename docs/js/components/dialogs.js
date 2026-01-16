@@ -29,6 +29,8 @@ class DialogManager {
         // Cache dialog elements
         this.dialogs.apiKey = document.getElementById('apiKeyDialog');
         this.dialogs.export = document.getElementById('exportDialog');
+        this.dialogs.settings = document.getElementById('settingsDialog');
+        this.dialogs.help = document.getElementById('helpDialog');
         this.toastContainer = document.getElementById('toastContainer');
 
         if (!this.dialogs.apiKey || !this.dialogs.export) {
@@ -38,6 +40,7 @@ class DialogManager {
 
         this.bindEvents();
         this.loadSavedApiKeys();
+        this.loadSavedSettings();
         this.updateProviderStatuses();
     }
 
@@ -79,6 +82,9 @@ class DialogManager {
         // Export Dialog specific
         this.bindExportDialogEvents();
 
+        // Settings Dialog specific
+        this.bindSettingsDialogEvents();
+
         // Header button bindings
         this.bindHeaderButtons();
 
@@ -117,6 +123,18 @@ class DialogManager {
         const exportBtn = document.querySelector('[title="Export"]');
         if (exportBtn) {
             exportBtn.onclick = () => this.openDialog('export');
+        }
+
+        // Settings button
+        const settingsBtn = document.querySelector('[title="Settings"]');
+        if (settingsBtn) {
+            settingsBtn.onclick = () => this.openDialog('settings');
+        }
+
+        // Help button
+        const helpBtn = document.querySelector('[title="Help"]');
+        if (helpBtn) {
+            helpBtn.onclick = () => this.openDialog('help');
         }
     }
 
@@ -163,6 +181,144 @@ class DialogManager {
         const downloadBtn = dialog.querySelector('#downloadExport');
         if (downloadBtn) {
             downloadBtn.addEventListener('click', () => this.handleExport());
+        }
+    }
+
+    /**
+     * Bind Settings Dialog specific events
+     */
+    bindSettingsDialogEvents() {
+        const dialog = this.dialogs.settings;
+        if (!dialog) return;
+
+        // Save settings button
+        const saveBtn = dialog.querySelector('#saveSettings');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveSettings());
+        }
+
+        // Clear session button
+        const clearSessionBtn = dialog.querySelector('#btnClearSession');
+        if (clearSessionBtn) {
+            clearSessionBtn.addEventListener('click', () => {
+                if (confirm('Clear current session? This will remove all unsaved transcription data.')) {
+                    storage.clearSession();
+                    appState.clearSession();
+                    this.showToast('Session cleared', 'success');
+                    // Reload page to reset state
+                    setTimeout(() => location.reload(), 500);
+                }
+            });
+        }
+
+        // Reset settings button
+        const resetBtn = dialog.querySelector('#btnResetSettings');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                if (confirm('Reset all settings to defaults?')) {
+                    this.resetSettings();
+                    this.showToast('Settings reset to defaults', 'success');
+                }
+            });
+        }
+    }
+
+    /**
+     * Load saved settings into form fields
+     */
+    loadSavedSettings() {
+        const settings = storage.loadSettings() || {};
+
+        // Editor settings
+        const autoSave = document.getElementById('settingAutoSave');
+        const showLineNumbers = document.getElementById('settingShowLineNumbers');
+        const highlightUncertain = document.getElementById('settingHighlightUncertain');
+
+        if (autoSave) autoSave.checked = settings.autoSave !== false;
+        if (showLineNumbers) showLineNumbers.checked = settings.showLineNumbers !== false;
+        if (highlightUncertain) highlightUncertain.checked = settings.highlightUncertain !== false;
+
+        // Validation settings
+        const autoValidate = document.getElementById('settingAutoValidate');
+        const defaultPerspective = document.getElementById('settingDefaultPerspective');
+
+        if (autoValidate) autoValidate.checked = settings.autoValidate === true;
+        if (defaultPerspective && settings.defaultPerspective) {
+            defaultPerspective.value = settings.defaultPerspective;
+        }
+
+        // Display settings
+        const showHints = document.getElementById('settingShowHints');
+        const showWorkflow = document.getElementById('settingShowWorkflow');
+
+        if (showHints) showHints.checked = settings.showHints !== false;
+        if (showWorkflow) showWorkflow.checked = settings.showWorkflow !== false;
+
+        // Apply workflow stepper visibility
+        this.applyWorkflowVisibility(settings.showWorkflow !== false);
+    }
+
+    /**
+     * Save settings from form fields
+     */
+    saveSettings() {
+        const settings = storage.loadSettings() || {};
+
+        // Editor settings
+        settings.autoSave = document.getElementById('settingAutoSave')?.checked ?? true;
+        settings.showLineNumbers = document.getElementById('settingShowLineNumbers')?.checked ?? true;
+        settings.highlightUncertain = document.getElementById('settingHighlightUncertain')?.checked ?? true;
+
+        // Validation settings
+        settings.autoValidate = document.getElementById('settingAutoValidate')?.checked ?? false;
+        settings.defaultPerspective = document.getElementById('settingDefaultPerspective')?.value || 'paleographic';
+
+        // Display settings
+        settings.showHints = document.getElementById('settingShowHints')?.checked ?? true;
+        settings.showWorkflow = document.getElementById('settingShowWorkflow')?.checked ?? true;
+
+        storage.saveSettings(settings);
+
+        // Apply settings immediately
+        this.applyWorkflowVisibility(settings.showWorkflow);
+
+        // Reset hint dismissals if hints are re-enabled
+        if (settings.showHints) {
+            delete settings.hint_viewer_dismissed;
+            delete settings.hint_editor_dismissed;
+            delete settings.hint_validation_dismissed;
+            storage.saveSettings(settings);
+        }
+
+        this.showToast('Settings saved', 'success');
+        this.closeDialog('settings');
+    }
+
+    /**
+     * Reset settings to defaults
+     */
+    resetSettings() {
+        const defaultSettings = {
+            autoSave: true,
+            showLineNumbers: true,
+            highlightUncertain: true,
+            autoValidate: false,
+            defaultPerspective: 'paleographic',
+            showHints: true,
+            showWorkflow: true
+        };
+
+        storage.saveSettings(defaultSettings);
+        this.loadSavedSettings();
+    }
+
+    /**
+     * Apply workflow stepper visibility
+     */
+    applyWorkflowVisibility(visible) {
+        const stepper = document.getElementById('workflowStepper');
+        if (stepper) {
+            stepper.style.display = visible ? 'flex' : 'none';
         }
     }
 

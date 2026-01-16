@@ -47,19 +47,19 @@
         <!-- HEADER -->
         <header class="app-header glass">
             <div class="logo">
-                <!-- Icon: Layers/Stack -->
-                <svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                    <polyline points="2 17 12 22 22 17"></polyline>
-                    <polyline points="2 12 12 17 22 12"></polyline>
-                </svg>
+                <img src="assets/logo-icon.png" alt="coOCR/HTR Logo" class="logo-image">
                 coOCR/HTR
             </div>
 
             <div class="header-doc-info" id="headerDocInfo" style="display: none;">
-                <div class="status-indicator status-success"></div>
+                <div class="status-indicator status-confident"></div>
                 <span id="headerFilename" style="font-weight: 500; font-size: var(--text-sm);"></span>
+            </div>
+
+            <!-- Demo Indicator (shown when demo data is loaded) -->
+            <div class="demo-indicator" id="demoIndicator" style="display: none;">
+                <span class="demo-indicator-dot"></span>
+                <span>DEMO</span>
             </div>
 
             <div class="header-controls">
@@ -163,7 +163,7 @@
                 <span>Load a demo document or upload an image (JPG, PNG) or PAGE-XML.</span>
                 <button class="panel-hint-dismiss" data-dismiss-hint="viewer">×</button>
             </div>
-            <div class="panel-content" style="background-color: #050505; position: relative; overflow: hidden;">
+            <div class="panel-content" style="background-color: var(--bg-viewer); position: relative; overflow: hidden;">
                 <!-- Empty State (shown when no document loaded) -->
                 <div class="viewer-empty-state" id="viewerEmptyState">
                     <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -208,7 +208,7 @@
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg></button>
-                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <div style="width: 1px; height: 16px; background: var(--border-default); margin: 0 4px;"></div>
                     <button class="icon-btn icon-sm" title="Fit Width">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="15 3 21 3 21 9"></polyline>
@@ -225,7 +225,7 @@
                             <path d="M3 21l7-7"></path>
                         </svg>
                     </button>
-                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <div style="width: 1px; height: 16px; background: var(--border-default); margin: 0 4px;"></div>
                     <button class="icon-btn icon-sm active" title="Select Region" style="color: var(--accent-primary);">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -257,7 +257,7 @@
                             </svg>
                         </span>
                     </button>
-                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <div style="width: 1px; height: 16px; background: var(--border-default); margin: 0 4px;"></div>
                     <button class="icon-btn icon-sm" id="btnUndo" title="Undo" disabled><svg viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <path d="M9 14 4 9 9 4" />
@@ -296,7 +296,7 @@
                     </div>
                 </span>
                 <span class="badge" id="validationBadge"
-                    style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary); display: none; margin-left: auto;">0
+                    style="background: var(--border-default); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary); display: none; margin-left: auto;">0
                     Issues</span>
             </div>
             <!-- Panel Hint -->
@@ -383,7 +383,7 @@
 
             <div style="display: flex; align-items: center; gap: var(--space-4);">
                 <span id="statusProvider">Model: <span style="color: var(--text-primary);">Gemini 2.0 Flash</span></span>
-                <div class="status-indicator status-success" title="API Connected" id="statusIndicator"></div>
+                <div class="status-indicator status-confident" title="API Connected" id="statusIndicator"></div>
             </div>
         </footer>
 
@@ -663,6 +663,255 @@
                         Download
                     </button>
                 </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Settings Dialog -->
+    <dialog id="settingsDialog" class="dialog">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Settings</h2>
+            <button class="dialog-close" data-close-dialog aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <!-- Editor Settings -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">Editor</h3>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="settingAutoSave" checked>
+                    <span>Auto-save session (every 30s)</span>
+                </label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="settingShowLineNumbers" checked>
+                    <span>Show line numbers</span>
+                </label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="settingHighlightUncertain" checked>
+                    <span>Highlight uncertain readings</span>
+                </label>
+            </div>
+
+            <!-- Validation Settings -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">Validation</h3>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="settingAutoValidate">
+                    <span>Auto-validate after transcription</span>
+                </label>
+                <div class="input-wrapper">
+                    <label for="settingDefaultPerspective">Default Perspective</label>
+                    <select id="settingDefaultPerspective">
+                        <option value="paleographic">Paleographic</option>
+                        <option value="linguistic">Linguistic</option>
+                        <option value="structural">Structural</option>
+                        <option value="domain">Domain Knowledge</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Display Settings -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">Display</h3>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="settingShowHints" checked>
+                    <span>Show panel hints for new users</span>
+                </label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="settingShowWorkflow" checked>
+                    <span>Show workflow stepper</span>
+                </label>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">Data</h3>
+                <div class="settings-actions">
+                    <button type="button" class="btn btn-secondary" id="btnClearSession">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Clear Session
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btnResetSettings">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                        Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <div class="dialog-actions">
+                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Help Dialog -->
+    <dialog id="helpDialog" class="dialog dialog-wide">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Help & Documentation</h2>
+            <button class="dialog-close" data-close-dialog aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <!-- Quick Start -->
+            <div class="help-section">
+                <h3 class="help-section-title">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                    Quick Start
+                </h3>
+                <ol class="help-steps">
+                    <li><strong>Load</strong> – Upload an image or load a demo document</li>
+                    <li><strong>Transcribe</strong> – Click "Transcribe" to process with AI</li>
+                    <li><strong>Validate</strong> – Review rule-based and AI suggestions</li>
+                    <li><strong>Export</strong> – Download as TXT, JSON, or Markdown</li>
+                </ol>
+            </div>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="help-section">
+                <h3 class="help-section-title">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                        <path d="M6 8h.001"></path>
+                        <path d="M10 8h.001"></path>
+                        <path d="M14 8h.001"></path>
+                        <path d="M18 8h.001"></path>
+                        <path d="M8 12h.001"></path>
+                        <path d="M12 12h.001"></path>
+                        <path d="M16 12h.001"></path>
+                        <path d="M7 16h10"></path>
+                    </svg>
+                    Keyboard Shortcuts
+                </h3>
+                <div class="shortcut-grid">
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>Z</kbd>
+                        <span>Undo</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd>
+                        <span>Redo</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>↑</kbd> <kbd>↓</kbd>
+                        <span>Navigate lines</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Enter</kbd>
+                        <span>Edit selected cell</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Escape</kbd>
+                        <span>Cancel editing</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Tab</kbd>
+                        <span>Next cell (grid mode)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confidence Markers -->
+            <div class="help-section">
+                <h3 class="help-section-title">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    Confidence Markers
+                </h3>
+                <div class="marker-legend">
+                    <div class="marker-item">
+                        <span class="marker-indicator confident"></span>
+                        <span><strong>Confident</strong> – High certainty reading</span>
+                    </div>
+                    <div class="marker-item">
+                        <span class="marker-indicator uncertain"></span>
+                        <span><strong>Uncertain</strong> – Needs expert review</span>
+                    </div>
+                    <div class="marker-item">
+                        <span class="marker-indicator problematic"></span>
+                        <span><strong>Problematic</strong> – Likely error or illegible</span>
+                    </div>
+                </div>
+                <p class="help-note">
+                    Use <code>[?]</code> for uncertain readings and <code>[illegible]</code> for unreadable text.
+                </p>
+            </div>
+
+            <!-- About -->
+            <div class="help-section help-about">
+                <div class="about-banner">
+                    <img src="assets/logo.png" alt="coOCR/HTR" class="about-logo-wide">
+                </div>
+                <div class="about-header">
+                    <div class="about-info">
+                        <h3 class="about-title">coOCR/HTR Workbench</h3>
+                        <p class="about-version">Version 2.1 &middot; Editorial Design</p>
+                    </div>
+                </div>
+                <p class="about-tagline">Expert-in-the-loop validation for historical document transcription</p>
+            </div>
+
+            <!-- Resources -->
+            <div class="help-section">
+                <h3 class="help-section-title">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    Resources
+                </h3>
+                <div class="help-links">
+                    <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr" target="_blank" class="help-link">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                        GitHub Repository
+                    </a>
+                    <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr/tree/main/knowledge" target="_blank" class="help-link">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                        Knowledge Vault
+                    </a>
+                    <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr/blob/main/knowledge/METHODOLOGY.md" target="_blank" class="help-link">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        Methodology
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <div class="dialog-actions">
+                <button type="button" class="btn btn-primary" data-close-dialog>Got it!</button>
             </div>
         </div>
     </dialog>

@@ -971,4 +971,315 @@ docs/
 
 ---
 
+## 2026-01-16 | Session 8: CSS Refactoring & Warm Editorial Theme
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: CSS Modularization
+
+**Task:** Refactor monolithic 1530-line `styles.css` into modular structure.
+
+**New CSS Architecture:**
+
+| File | Purpose | Lines |
+|------|---------|-------|
+| `variables.css` | Design tokens, colors, spacing | ~110 |
+| `base.css` | Reset, typography, utilities | ~120 |
+| `layout.css` | Grid, panels, header, tooltips | ~280 |
+| `components.css` | Buttons, inputs, status indicators | ~340 |
+| `dialogs.css` | Dialog system, tabs, upload zone | ~280 |
+| `editor.css` | Transcription editor, grid/lines modes | ~200 |
+| `viewer.css` | Document viewer, regions overlay | ~250 |
+| `validation.css` | Validation panel, cards | ~150 |
+| `styles.css` | Entry point with @imports | ~10 |
+
+**Benefits:**
+- Clear separation of concerns
+- Easier maintenance
+- Smaller file sizes for debugging
+- Consistent naming conventions
+
+### Phase 2: Theme Evolution
+
+**Timeline:**
+
+| Stage | Theme | Decision Basis |
+|-------|-------|----------------|
+| Initial | Dark (#0d1117) | GitHub Dark aesthetic |
+| Change 1 | Cold Light (#f5f5f5) | User request |
+| Change 2 | Warm Editorial | User mockup analysis |
+
+**Warm Editorial Theme (Final):**
+
+```css
+/* Backgrounds - Cream/Beige */
+--bg-primary: #faf8f5;      /* Warm off-white */
+--bg-secondary: #ffffff;     /* Pure white for panels */
+--bg-viewer: #f0ebe3;        /* Warm paper-like */
+
+/* Text - Warm Browns */
+--text-primary: #3d3229;     /* Dark warm brown */
+--text-secondary: #8a7e72;   /* Medium gray-brown */
+
+/* Status Colors - Archival Palette */
+--confident: #5a8a5a;        /* Muted forest green */
+--uncertain: #c4973a;        /* Warm amber/gold */
+--problematic: #b85c4a;      /* Muted terracotta red */
+```
+
+**Design Rationale:**
+- Archival/manuscript aesthetic
+- Reduced eye strain for extended editing
+- Colors evoke historical documents
+
+### Phase 3: Demo Auto-Load
+
+**Task:** Auto-load demo dataset on startup with visible indicator.
+
+**Implementation:**
+
+| Component | Description |
+|-----------|-------------|
+| `autoLoadDemo()` in main.js | Loads first sample if no user session |
+| Demo Indicator in header | Yellow dot + "DEMO" label |
+| `hideDemoIndicator()` | Called when user uploads own file |
+| Session check | `session?.data?.document?.filename` |
+
+**Bug Fixes:**
+- `storage.saveSetting()` → `storage.saveSettings({ key: value })`
+- Session check path corrected
+
+### Phase 4: UI Analysis - Open Issues
+
+**Task:** Analyze current UI state and document problems.
+
+**Problems Identified:**
+
+| # | Problem | Location | Severity |
+|---|---------|----------|----------|
+| 1 | Transkription nicht angezeigt | Editor Panel | Kritisch |
+| 2 | Panel-Hints verschwinden nicht | All Panels | Mittel |
+| 3 | Viewer-Hintergrund zu dunkel | Image Container | Mittel |
+| 4 | Toolbar kaum sichtbar | Viewer Toolbar | Mittel |
+| 5 | Bounding-Box Farben kalt | Region Overlay | Gering |
+| 6 | Tooltip wird abgeschnitten | Panel Headers | Gering (gelöst) |
+
+**Problem 1 Analysis - Transkription fehlt:**
+- PAGE-XML wird korrekt geparsed (pageXMLParser)
+- Event `pageXMLLoaded` wird gefeuert
+- `appState.setTranscription()` wird aufgerufen
+- ABER: `transcriptionComplete` Event wird nicht richtig gehandelt
+- Editor rendert nicht nach Demo-Load
+
+**Problem 2 Analysis - Panel-Hints:**
+- Hints sollten verschwinden wenn Dokument geladen ist
+- `updatePanelHints()` wird aufgerufen
+- Kondition prüft `appState.hasDocument` - aber Timing-Problem
+
+**Problem 3-5 Analysis - Visuelle Probleme:**
+- Hardcodierte Werte in index.html überschreiben CSS
+- `background-color: #050505` inline im image-container
+- Viewer background zu dunkel für warmes Theme
+
+### Phase 5: Fixes Implemented
+
+**Fix 1: Transkription anzeigen** ✅
+- Added `documentLoaded` event listener in `main.js` that checks for existing transcription
+- Added `regionsChanged` and `transcriptionComplete` listeners in `viewer.js` for region rendering
+- Editor already listens to `transcriptionComplete` - now regions render properly
+
+**Fix 2: Panel-Hints verbergen** ✅
+- Added new `documentLoaded` event handler in `main.js`
+- Checks if transcription segments already exist (from PAGE-XML)
+- Hides editor hint and updates workflow stepper accordingly
+
+**Fix 3: Viewer-Hintergrund** ✅
+- `index.html` already uses `var(--bg-viewer)` (warm paper-like #f0ebe3)
+- No inline style override needed
+
+**Fix 4: Toolbar sichtbarer** ✅
+- Changed `viewer.css` toolbar background to `rgba(255, 255, 255, 0.95)`
+- Set icon color to `var(--text-primary)` instead of secondary
+- Hover now uses `var(--bg-tertiary)` with accent color
+- Increased shadow to `--shadow-lg`
+
+**Fix 5: Region-Farben** ✅
+- Added new CSS variables in `variables.css`:
+  - `--region-stroke: #8b7355` (warm sienna brown)
+  - `--region-stroke-hover: #6d5a45`
+  - `--region-fill-hover: rgba(139, 115, 85, 0.1)`
+- Updated `viewer.css` to use these variables
+- Regions now blend with warm editorial theme
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `js/main.js` | Added `documentLoaded` listener for hint hiding |
+| `js/viewer.js` | Added region listeners for `regionsChanged` and `transcriptionComplete` |
+| `css/variables.css` | Added `--region-stroke`, `--region-stroke-hover`, `--region-fill-hover` |
+| `css/viewer.css` | Updated toolbar styling, region colors |
+| `knowledge/JOURNAL.md` | Documented all issues and fixes |
+
+### Phase 6: Settings & Help Dialogs
+
+**Task:** Implement missing dialogs for Settings and Help buttons.
+
+**Settings Dialog:**
+- Editor settings: Auto-save, line numbers, highlight uncertain
+- Validation settings: Auto-validate, default perspective
+- Display settings: Show hints, show workflow stepper
+- Data management: Clear session, reset to defaults
+
+**Help Dialog:**
+- Quick Start guide (4-step workflow)
+- Keyboard shortcuts grid
+- Confidence markers legend
+- Resource links (GitHub, Knowledge Vault, Methodology)
+
+**Files Modified:**
+
+| File | Changes |
+|------|---------|
+| `index.html` | Added `#settingsDialog` and `#helpDialog` |
+| `css/dialogs.css` | Added styles for settings sections, help layout, kbd, shortcuts grid |
+| `js/components/dialogs.js` | Added handlers for Settings and Help buttons |
+
+**New CSS Classes:**
+- `.settings-section`, `.settings-section-title`, `.settings-actions`
+- `.dialog-wide` (640px width for Help)
+- `.help-section`, `.help-section-title`, `.help-steps`
+- `.shortcut-grid`, `.shortcut-item`, `kbd`
+- `.marker-legend`, `.marker-item`, `.marker-indicator`
+- `.help-links`, `.help-link`, `.help-note`
+
+### Commits
+
+| Commit | Description |
+|--------|-------------|
+| TBD | feat: add Settings and Help dialogs with full functionality |
+
+---
+
+## 2026-01-16 | Session 9: Logo Integration
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: Logo Analysis
+
+**Task:** Analyze two logo candidates and integrate into application.
+
+**Logo Candidates:**
+
+| Logo | Format | Characteristics |
+|------|--------|-----------------|
+| Logo 1 (puoofl) | Horizontal, eye/wave | Elegant flowing lines, wide format |
+| Logo 2 (wdvlo9) | Compact circle | Abstract "Co"/Yin-Yang, square format |
+
+**Decision:** Logo 1 (puoofl) selected as primary logo - elegant eye/wave design with document symbolism.
+
+### Phase 2: Logo Integration
+
+**Implementation:**
+
+| Component | File | Changes |
+|-----------|------|---------|
+| Logo image | `docs/assets/logo.png` | Copied eye/wave logo |
+| Header | `index.html` | Replaced SVG icon with `<img class="logo-image">` |
+| CSS | `css/layout.css` | Added `.logo-image` class (28x28px, border-radius) |
+| Favicon | `favicon.svg` | Redesigned with warm colors and golden circle |
+
+**Favicon Design:**
+- Background: `#faf8f5` (--bg-primary)
+- Circle: `#c4973a` (--uncertain, golden amber)
+- Inner curves: Cream colored, suggesting collaboration
+
+### Color Alignment
+
+**Verified color consistency:**
+
+| Element | Color | Variable |
+|---------|-------|----------|
+| Logo gold | `#c4973a` | `--uncertain` |
+| Background | `#faf8f5` | `--bg-primary` |
+| Favicon matches | Design System v2.1 | Warm editorial palette |
+
+### Files Created/Modified
+
+| File | Action |
+|------|--------|
+| `docs/assets/logo.png` | Eye/Wave logo for About section |
+| `docs/assets/logo-icon.png` | Compact logo for Header |
+| `docs/index.html` | Header + Help Dialog logos |
+| `docs/css/layout.css` | Added `.logo-image` |
+| `docs/favicon.svg` | Redesigned with warm colors |
+
+---
+
+## 2026-01-16 | Session 10: Color System Refinement
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: Color Analysis
+
+**Problem:** Logo colors did not match UI color system.
+
+**Analysis:**
+
+| Element | Logo Color | UI Variable | Match? |
+|---------|------------|-------------|--------|
+| Logo Gold | `#b89850` | `--uncertain (#c4973a)` | Close but different |
+| Logo Brown | `#3d3229` | `--text-primary` | Exact match |
+| Accent Blue | `#4a7c9b` | Not in logo | Missing |
+
+**Issue:** No dedicated Brand color category - logo gold was conflated with status color `--uncertain`.
+
+### Phase 2: Brand Color Introduction
+
+**Solution:** Add separate Brand color category for identity elements.
+
+**New Variables in `variables.css`:**
+
+```css
+/* Brand - Logo colors (identity, distinct from functional colors) */
+--brand-gold: #b89850;           /* Logo gold - warm ochre */
+--brand-gold-rgb: 184, 152, 80;
+--brand-brown: #3d3229;          /* Logo brown - matches text-primary */
+
+/* Brand overlays */
+--brand-bg: rgba(184, 152, 80, 0.08);
+--brand-border: rgba(184, 152, 80, 0.25);
+--brand-glow: 0 0 12px rgba(184, 152, 80, 0.2);
+```
+
+### Phase 3: Color Function Matrix
+
+**Clear separation of concerns:**
+
+| Category | Purpose | Colors | Usage |
+|----------|---------|--------|-------|
+| **Brand** | Identity | Gold `#b89850`, Brown `#3d3229` | Logo, About section |
+| **Accent** | Interactive | Steel Blue `#4a7c9b` | Buttons, links, active states |
+| **Status** | Confidence | Green/Amber/Terracotta | Validation feedback |
+| **Neutral** | Layout | Cream/White/Brown | Backgrounds, text |
+| **Region** | Annotations | Sienna `#8b7355` | Bounding boxes |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `css/variables.css` | Added `--brand-gold`, `--brand-brown`, brand overlays |
+| `css/dialogs.css` | Updated `.help-about` to use brand colors |
+| `knowledge/DESIGN-SYSTEM.md` | Complete color documentation rewrite |
+
+### Logo Placement Correction
+
+**Issue:** Eye/Wave logo too wide for header, getting clipped.
+
+**Solution:**
+- Header: Compact circular logo (`logo-icon.png`)
+- Help Dialog About: Wide eye/wave logo (`logo.png`)
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*

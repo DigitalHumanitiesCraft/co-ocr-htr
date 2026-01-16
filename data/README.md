@@ -168,6 +168,19 @@ function polygonToBounds(points) {
 | `IN_PROGRESS` | In Bearbeitung |
 | `FINAL` | Abgeschlossen |
 
+## Demo-Samples für GitHub Pages
+
+Ausgewählte Beispiele sind nach `docs/samples/` kopiert und über GitHub Pages erreichbar:
+
+| Sample | Ordner | Beschreibung | Daten |
+|--------|--------|--------------|-------|
+| Wecker Antidotarium | `docs/samples/wecker/` | Lateinisches Fachbuch (1617) | Bild + PAGE-XML |
+| Raitbuch 2 | `docs/samples/raitbuch/` | Frühneuhochdeutsches Rechnungsbuch | Nur Bild |
+| HSA Brief | `docs/samples/hsa-letter/` | Handschriftlicher Brief | Nur Bild |
+| Karteikarte | `docs/samples/karteikarte/` | Handschriftliche Karteikarte | Nur Bild |
+
+**Hinweis:** Nur das Wecker-Sample enthält vollständige PAGE-XML Transkription mit Linien-Koordinaten. Die anderen Samples sind zum Testen der LLM-Transkription.
+
 ## Quellen
 
 - **Transkribus:** https://transkribus.eu/

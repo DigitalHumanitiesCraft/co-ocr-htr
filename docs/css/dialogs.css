@@ -1,0 +1,686 @@
+/**
+ * dialogs.css - Modal Dialogs, Tabs, Upload Zone, Export Options
+ * coOCR/HTR Design System v2.1
+ */
+
+/* ==========================================================================
+   DIALOG BASE (Native <dialog>)
+   ========================================================================== */
+
+dialog {
+  background: transparent;
+  border: none;
+  padding: 0;
+  max-width: 90vw;
+  max-height: 90vh;
+  margin: auto;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+dialog::backdrop {
+  background-color: rgba(13, 17, 23, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+dialog[open] {
+  animation: dialogOpen 0.2s ease-out;
+}
+
+@keyframes dialogOpen {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Dialog Container */
+.dialog-container,
+.dialog {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  width: 520px;
+  max-width: 100%;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   DIALOG STRUCTURE
+   ========================================================================== */
+
+.dialog-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.dialog-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.dialog-close:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.dialog-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dialog-body {
+  padding: var(--space-4);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.dialog-footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* ==========================================================================
+   DIALOG TABS
+   ========================================================================== */
+
+.dialog-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 var(--space-4);
+  gap: var(--space-1);
+  overflow-x: auto;
+}
+
+.dialog-tab {
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dialog-tab:hover {
+  color: var(--text-primary);
+}
+
+.dialog-tab.active {
+  color: var(--accent-primary);
+}
+
+.dialog-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+}
+
+.dialog-tab-panel {
+  display: none;
+}
+
+.dialog-tab-panel.active,
+.dialog-tab-panel[hidden="false"] {
+  display: block;
+}
+
+/* Provider Status in Tab */
+.dialog-tab .provider-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+
+.dialog-tab .provider-status[data-status="configured"] {
+  background: var(--confident);
+}
+
+/* ==========================================================================
+   PROVIDER PANELS (API Key Dialog)
+   ========================================================================== */
+
+.provider-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+  line-height: 1.6;
+}
+
+.provider-description a {
+  color: var(--accent-primary);
+}
+
+.provider-note {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+}
+
+.provider-note code {
+  background: var(--surface-active);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+/* Provider Status Box */
+.provider-status-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.provider-status-box.configured {
+  border-left: 2px solid var(--confident);
+}
+
+.provider-status-box.not-configured {
+  border-left: 2px solid var(--text-secondary);
+}
+
+/* ==========================================================================
+   UPLOAD ZONE
+   ========================================================================== */
+
+.upload-zone {
+  border: 2px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-8);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: var(--surface-hover);
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--accent-primary);
+  background: var(--accent-muted);
+}
+
+.upload-zone-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-3);
+  color: var(--text-secondary);
+}
+
+.upload-zone:hover .upload-zone-icon,
+.upload-zone.drag-over .upload-zone-icon {
+  color: var(--accent-primary);
+}
+
+.upload-zone-text {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.upload-zone-text strong {
+  color: var(--accent-primary);
+}
+
+.upload-zone-hint {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-2);
+  opacity: 0.7;
+}
+
+/* File Preview */
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface-hover);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-3);
+}
+
+.file-preview-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--bg-tertiary);
+}
+
+.file-preview-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-preview-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-preview-size {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.file-preview-remove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+}
+
+.file-preview-remove:hover {
+  color: var(--problematic);
+}
+
+/* ==========================================================================
+   EXPORT OPTIONS
+   ========================================================================== */
+
+.export-formats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.export-format-option {
+  cursor: pointer;
+}
+
+.export-format-option input[type="radio"] {
+  display: none;
+}
+
+.format-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.format-card:hover {
+  border-color: var(--accent-primary);
+  background: var(--accent-muted);
+}
+
+.export-format-option input:checked + .format-card {
+  border-color: var(--accent-primary);
+  background: var(--accent-hover);
+}
+
+.format-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-active);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.export-format-option input:checked + .format-card .format-icon {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.format-info {
+  flex: 1;
+}
+
+.format-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  display: block;
+}
+
+.format-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+/* Export Options Checkboxes */
+.export-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+   DROP ZONE (Legacy)
+   ========================================================================== */
+
+.drop-zone {
+  border: 1px dashed var(--border-default);
+  background: var(--surface-hover);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.drop-zone:hover {
+  border-color: var(--accent-primary);
+  background: var(--accent-muted);
+  color: var(--accent-primary);
+}
+
+/* ==========================================================================
+   SETTINGS DIALOG
+   ========================================================================== */
+
+.settings-section {
+  margin-bottom: var(--space-5);
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.settings-actions .btn {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ==========================================================================
+   HELP DIALOG
+   ========================================================================== */
+
+.dialog-wide {
+  width: 640px;
+}
+
+.help-section {
+  margin-bottom: var(--space-5);
+}
+
+.help-section:last-child {
+  margin-bottom: 0;
+}
+
+.help-section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.help-section-title svg {
+  color: var(--accent-primary);
+}
+
+/* Quick Start Steps */
+.help-steps {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.help-steps li {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+  line-height: 1.5;
+}
+
+.help-steps li strong {
+  color: var(--text-primary);
+}
+
+/* Keyboard Shortcuts */
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.shortcut-item span {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  color: var(--text-primary);
+  box-shadow: 0 1px 0 var(--border-default);
+}
+
+/* Confidence Markers Legend */
+.marker-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.marker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.marker-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.marker-indicator.confident {
+  background: var(--confident);
+}
+
+.marker-indicator.uncertain {
+  background: var(--uncertain);
+}
+
+.marker-indicator.problematic {
+  background: var(--problematic);
+}
+
+.help-note {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+}
+
+.help-note code {
+  background: var(--surface-active);
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+}
+
+/* Resource Links */
+.help-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.help-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  transition: all var(--transition-fast);
+}
+
+.help-link:hover {
+  background: var(--accent-hover);
+  color: var(--accent-primary);
+}
+
+.help-link svg {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.help-link:hover svg {
+  color: var(--accent-primary);
+}
+
+/* About Section in Help Dialog */
+.help-about {
+  background: linear-gradient(135deg, var(--brand-bg) 0%, var(--surface-hover) 100%);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.about-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.about-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.about-info {
+  flex: 1;
+}
+
+.about-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.about-version {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.about-tagline {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  font-style: italic;
+}
+
+.about-banner {
+  text-align: center;
+  margin-bottom: var(--space-3);
+}
+
+.about-logo-wide {
+  max-width: 200px;
+  height: auto;
+  object-fit: contain;
+}

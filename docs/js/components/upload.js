@@ -264,6 +264,9 @@ class UploadManager {
                     appState.setDocument(file, dataUrl);
                     appState.setImageDimensions(img.width, img.height);
 
+                    // Hide demo indicator when user uploads their own file
+                    this.hideDemoIndicator();
+
                     dialogManager.showToast(`Loaded: ${file.name}`, 'success');
                     resolve();
                 };
@@ -279,6 +282,17 @@ class UploadManager {
 
             reader.readAsDataURL(file);
         });
+    }
+
+    /**
+     * Hide demo indicator (user uploaded their own document)
+     */
+    hideDemoIndicator() {
+        const demoIndicator = document.getElementById('demoIndicator');
+        if (demoIndicator) {
+            demoIndicator.style.display = 'none';
+        }
+        appState.isDemo = false;
     }
 
     /**
@@ -300,6 +314,10 @@ class UploadManager {
                             detail: { filename: file.name, content: xmlString }
                         });
                         document.dispatchEvent(event);
+
+                        // Hide demo indicator when user uploads their own file
+                        this.hideDemoIndicator();
+
                         dialogManager.showToast(`Loaded PAGE-XML: ${file.name}`, 'success');
                     } else {
                         dialogManager.showToast('Not a valid PAGE-XML file', 'warning');

@@ -45,14 +45,7 @@ class AppState extends EventTarget {
       },
 
       // Bounding box regions (from LLM or PAGE-XML)
-      regions: [
-        { line: 3, x: 10, y: 22, w: 80, h: 5 },
-        { line: 4, x: 10, y: 29, w: 80, h: 5 },
-        { line: 5, x: 10, y: 36, w: 80, h: 5 },
-        { line: 6, x: 10, y: 43, w: 80, h: 5 },
-        { line: 7, x: 10, y: 50, w: 80, h: 5 },
-        { line: 8, x: 10, y: 57, w: 80, h: 5 },
-      ],
+      regions: [],
 
       // Transcription data
       transcription: {
@@ -62,19 +55,7 @@ class AppState extends EventTarget {
         raw: '',            // Raw response from LLM
         segments: [],       // Parsed segments with line numbers
         columns: [],        // Column definitions for structured data
-        // Legacy: markdown table lines (for backward compatibility)
-        lines: [
-          "| Datum   | Name         | Beschreibung   | Betrag      |",
-          "|---------|--------------|----------------|-------------|",
-          "| 28. Mai | K. Schmidt   | Eisenwaren     | 23 Taler    |",
-          "| 28. Mai | [?] Schmidt  | Pinsel...      | 10 Taler 4 Gr|",
-          "| 3. Juni | H. Müller    | Tuchstoff      | 15 Taler 4 Gr|",
-          "| 3. Juni | H. Müller    | Tuchstoff      | 15 Taler 4 Gr|",
-          "| 4. Juni | Stadtkasse   | [illegible]    | 40 Taler    |",
-          "| 5. Juni | Unbekannt    | Lieferung      | [?] Taler   |",
-          "|         |              |                |             |",
-          "| Total   |              |                | 103 Taler 12 Gr |"
-        ]
+        lines: []           // Markdown table lines (generated from segments)
       },
 
       // Validation state
@@ -158,7 +139,7 @@ class AppState extends EventTarget {
     // Also update legacy image for backward compatibility
     this.data.image.url = dataUrl;
 
-    // Reset transcription and validation
+    // Reset transcription, regions, and validation
     this.data.transcription = {
       ...this.data.transcription,
       id: null,
@@ -166,8 +147,10 @@ class AppState extends EventTarget {
       model: '',
       raw: '',
       segments: [],
+      columns: [],
       lines: []
     };
+    this.data.regions = [];  // Clear bounding boxes
     this.data.validation = {
       status: 'idle',
       rules: [],
