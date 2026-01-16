@@ -4,11 +4,13 @@ Browser-based experimentation environment for integrating domain experts into OC
 
 ## Features
 
-- **Multi-provider LLM Integration**: Gemini, OpenAI, Anthropic, DeepSeek, Ollama (local)
+- **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, DeepSeek, Ollama (local)
 - **Hybrid Validation**: Deterministic rules + LLM-as-judge with multiple perspectives
 - **Expert-in-the-Loop**: Critical expert validation workflow
 - **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
+- **Document Viewer**: Pan, zoom, fit controls with keyboard shortcuts
 - **PAGE-XML Import**: Compatible with Transkribus exports
+- **METS-XML Support**: Parse multi-page documents from METS metadata
 - **Guided Workflow**: Step-by-step hints and progress tracking
 - **Export Formats**: Plain text, JSON, Markdown
 - **No Dependencies**: Vanilla JavaScript, runs in any modern browser
@@ -69,7 +71,8 @@ docs/
 │       ├── storage.js      # LocalStorage wrapper
 │       ├── validation.js   # Validation engine
 │       └── parsers/
-│           └── page-xml.js # PAGE-XML import
+│           ├── page-xml.js # PAGE-XML import
+│           └── mets-xml.js # METS-XML import
 └── tests/                  # Vitest tests
 ```
 
@@ -103,16 +106,20 @@ npm test
 
 ### Project Status
 
-- [x] Milestone 0: Repository setup
-- [x] Milestone 1: Core services (Storage, LLM, State)
-- [x] Milestone 2: Dialogs & Upload
-- [x] Milestone 3: LLM Transcription
-- [x] Milestone 4: Validation (Rules + LLM-Judge)
-- [x] Milestone 5: Export (TXT, JSON, Markdown)
-- [x] Milestone 6: UX (Inline-edit, Undo/Redo, Shortcuts)
-- [x] Milestone 6.5: Bugfixes & Demo-Loader
-- [x] Milestone 7: GitHub Pages Deployment
-- [x] Milestone 8: Flexible Editor & Guided Workflow
+**Phase 1: Core Application** ✅ Complete
+- LLM Integration (5 providers), Gemini 3 optimization
+- Document Viewer with Pan/Zoom/Fit
+- Transcription Editor (lines/grid modes)
+- Hybrid Validation (Rules + LLM-Judge)
+- Export, PAGE-XML/METS-XML Import
+- Guided Workflow, Settings/Help Dialogs
+
+**Phase 2: Multi-Page & Documentation** 🔄 In Progress
+- Help & About pages
+- Multi-page navigation
+- Batch transcription
+
+See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
 
 ## License
 

@@ -196,13 +196,10 @@ function renderGridEditor(container, transcription) {
         }
     }
 
-    // Fallback to default columns
+    // If no columns detected, use single TEXT column (no hardcoded assumptions)
     if (columns.length === 0) {
         columns = [
-            { id: 'datum', label: 'Datum' },
-            { id: 'name', label: 'Name' },
-            { id: 'beschreibung', label: 'Beschreibung' },
-            { id: 'betrag', label: 'Betrag' }
+            { id: 'text', label: 'TEXT' }
         ];
     }
 

@@ -1282,4 +1282,117 @@ docs/
 
 ---
 
+## 2026-01-16 | Session 11: Gemini 3 API Optimization
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: Model Name Correction
+
+**Problem:** Initial Gemini 3 model names were incorrect.
+
+| Attempted | Correct | Result |
+|-----------|---------|--------|
+| `gemini-3.0-flash-preview` | `gemini-3-flash-preview` | 404 error fixed |
+| `gemini-3.0-pro-preview` | `gemini-3-pro-preview` | 404 error fixed |
+
+**Files Updated:**
+- `docs/js/services/llm.js` - Provider config
+- `docs/index.html` - Model dropdown
+- `docs/tests/llm.test.js` - Test expectations
+- `README.md` - Provider table
+
+### Phase 2: Gemini 3 Developer Guide Analysis
+
+**Task:** Analyze official Gemini 3 documentation for project improvements.
+
+**Key Findings:**
+
+| Feature | Description | Benefit for coOCR/HTR |
+|---------|-------------|----------------------|
+| `thinking_level` | Controls reasoning depth (high/low) | Better validation analysis |
+| `media_resolution` | Image quality setting | Improved OCR on historical documents |
+| Temperature=1.0 | Required for Gemini 3 | Prevents unexpected behavior |
+| Thought signatures | Multi-turn reasoning chains | Future: iterative validation |
+
+### Phase 3: Implementation
+
+**Changes to `_callGemini()` in llm.js:**
+
+```javascript
+// Before
+generationConfig: {
+  temperature: 0.1,  // Wrong for Gemini 3
+  maxOutputTokens: 8192
+}
+
+// After
+generationConfig: {
+  temperature: 1.0,  // Gemini 3 requirement
+  maxOutputTokens: 8192
+},
+// For images: better OCR quality
+media_resolution: 'high',
+// For validation: deeper reasoning
+thinking_config: { thinking_level: 'high' }
+```
+
+**Feature Matrix:**
+
+| Feature | Transcription | Validation |
+|---------|--------------|------------|
+| temperature | 1.0 | 1.0 |
+| media_resolution | high | - |
+| thinking_config | - | high |
+
+### Phase 4: Cleanup
+
+**Tasks Completed:**
+
+| Task | Status |
+|------|--------|
+| Delete defective konvolute transcriptions | Done |
+| Delete outdated docs/README.md | Done |
+| Update root README.md | Done |
+| Update CLAUDE.md | Done |
+| Update IMPLEMENTATION-PLAN.md (mark complete) | Done |
+| Update JOURNAL.md | Done |
+
+### Technical Details
+
+**Gemini 3 API Structure:**
+
+```javascript
+{
+  contents: [{ parts: [...] }],
+  generationConfig: {
+    temperature: 1.0,           // Required for Gemini 3
+    maxOutputTokens: 8192,
+    media_resolution: 'high',   // For images
+    thinking_config: {          // For complex analysis
+      thinking_level: 'high'    // or 'low'
+    }
+  }
+}
+```
+
+**Why temperature=1.0?**
+From Gemini 3 Developer Guide:
+> "Wenn Sie die Temperatur ändern (auf unter 1.0 setzen), kann dies zu unerwartetem Verhalten führen"
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/js/services/llm.js` | Gemini 3 config (temp, media_resolution, thinking_config) |
+| `knowledge/JOURNAL.md` | Session 11 documentation |
+
+### Commits
+
+| Commit | Description |
+|--------|-------------|
+| Previous | refactor: major cleanup and bugfixes |
+| This session | feat: optimize Gemini 3 API integration |
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*

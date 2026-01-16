@@ -257,6 +257,7 @@ class LLMService {
    */
   async transcribe(imageBase64, options = {}) {
     const config = this.getProviderConfig();
+    console.log(`[LLM] transcribe() provider=${this.activeProvider}`);
 
     if (!config.supportsVision) {
       throw new Error(`Provider ${config.name} does not support vision/image input`);
@@ -269,6 +270,7 @@ class LLMService {
 
     const prompt = options.prompt || TRANSCRIPTION_PROMPT;
     const model = this.getCurrentModel();
+    console.log(`[LLM] model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
 
     try {
       let response;
@@ -289,14 +291,17 @@ class LLMService {
           throw new Error(`Provider ${this.activeProvider} not implemented`);
       }
 
+      const segments = this._parseTranscriptionResponse(response);
+      console.log(`[LLM] transcribe() OK, segments=${segments.length}`);
       return {
         provider: this.activeProvider,
         model,
         raw: response,
-        segments: this._parseTranscriptionResponse(response),
+        segments,
         columns: this._extractColumns(response)
       };
     } catch (error) {
+      console.error(`[LLM] transcribe() FAILED:`, error.message);
       throw this._handleError(error);
     }
   }
@@ -313,6 +318,7 @@ class LLMService {
    */
   async validate(text, perspective = 'paleographic') {
     const config = this.getProviderConfig();
+    console.log(`[LLM] validate() perspective=${perspective} provider=${this.activeProvider}`);
     const apiKey = storage.loadApiKey(this.activeProvider);
 
     if (!apiKey && config.authType !== 'none') {
@@ -331,7 +337,11 @@ class LLMService {
       let response;
       switch (this.activeProvider) {
         case 'gemini':
-          response = await this._callGemini(apiKey, model, prompt);
+          // Use thinking mode for validation - deeper reasoning improves analysis
+          response = await this._callGemini(apiKey, model, prompt, null, {
+            useThinking: true,
+            thinkingLevel: 'high'
+          });
           break;
         case 'openai':
           response = await this._callOpenAI(apiKey, model, prompt);
@@ -349,8 +359,11 @@ class LLMService {
           throw new Error(`Provider ${this.activeProvider} not implemented`);
       }
 
-      return this._parseValidationResponse(response, perspective);
+      const result = this._parseValidationResponse(response, perspective);
+      console.log(`[LLM] validate() OK, confidence=${result.confidence}`);
+      return result;
     } catch (error) {
+      console.error(`[LLM] validate() FAILED:`, error.message);
       throw this._handleError(error);
     }
   }
@@ -359,7 +372,8 @@ class LLMService {
   // Provider-specific API calls
   // ============================================
 
-  async _callGemini(apiKey, model, prompt, imageBase64 = null) {
+  async _callGemini(apiKey, model, prompt, imageBase64 = null, options = {}) {
+    console.log(`[Gemini] API call model=${model} thinking=${options.useThinking || false} image=${imageBase64 ? 'yes' : 'no'}`);
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const parts = [{ text: prompt }];
@@ -372,28 +386,54 @@ class LLMService {
       });
     }
 
+    // Gemini 3 specific configuration
+    const requestBody = {
+      contents: [{ parts }],
+      generationConfig: {
+        // Gemini 3: Temperature should be 1.0 for best results
+        // Lower values can cause unexpected behavior
+        temperature: 1.0,
+        maxOutputTokens: 8192
+      }
+    };
+
+    // Add thinking_config for complex tasks (validation, analysis)
+    // thinking_level: "high" for more reasoning, "low" for faster responses
+    // NOTE: thinking_config may not be supported by all Gemini 3 preview models
+    if (options.useThinking) {
+      try {
+        requestBody.generationConfig.thinking_config = {
+          thinking_level: options.thinkingLevel || 'low'
+        };
+      } catch (e) {
+        console.warn('[Gemini] thinking_config not supported, skipping');
+      }
+    }
+
+    // NOTE: media_resolution parameter removed - not supported by gemini-3-flash-preview
+    // The API returns: "Invalid value at 'generation_config.media_resolution'"
+    // Images are processed at default resolution which is sufficient for OCR
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 8192
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
       const error = await response.json();
+      console.error(`[Gemini] API error: ${response.status}`, error.error?.message);
       throw new Error(error.error?.message || `Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log(`[Gemini] Response OK, length=${text.length} chars`);
+    return text;
   }
 
   async _callOpenAI(apiKey, model, prompt, imageBase64 = null) {
+    console.log(`[OpenAI] API call model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
     const content = [{ type: 'text', text: prompt }];
     if (imageBase64) {
       content.push({
