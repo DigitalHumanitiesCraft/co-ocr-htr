@@ -4,6 +4,40 @@ JSON-Schemas und Beispieldaten für coOCR/HTR.
 
 **Abhängigkeit:** [ARCHITECTURE](ARCHITECTURE.md) (Storage-Integration)
 
+## Quellentypen
+
+coOCR/HTR unterstützt verschiedene historische Dokumenttypen mit flexibler Editor-Darstellung.
+
+### Unterstützte Quellentypen
+
+| Typ | Struktur | Editor-Modus | Beispiel |
+|-----|----------|--------------|----------|
+| **Fließtext** | Zeilen ohne Spalten | `lines` | Briefe, Tagebücher, Manuskripte |
+| **Tabelle** | Zeilen mit Spalten | `grid` | Rechnungsbücher, Inventare, Register |
+| **Strukturiert** | Key-Value-Paare | `structured` | Karteikarten, Formulare |
+| **Gemischt** | Wechselnd | `auto` | Bücher mit Tabellen und Text |
+
+### Editor-Modi
+
+```typescript
+type EditorMode = 'lines' | 'grid' | 'structured' | 'auto';
+
+interface EditorConfig {
+  mode: EditorMode;
+  columns?: ColumnDefinition[];  // Nur für 'grid'
+  fields?: FieldDefinition[];    // Nur für 'structured'
+}
+```
+
+### Automatische Modus-Erkennung
+
+Der Editor wählt automatisch den Modus basierend auf:
+
+1. **PAGE-XML Struktur:** Wenn `TextRegion` mehrere `TextLine` ohne explizite Spalten enthält → `lines`
+2. **Pipe-Separator:** Wenn Text `|` enthält → `grid` mit automatischer Spaltenanzahl
+3. **Explizite Konfiguration:** `columns[]` im Schema → `grid`
+4. **Fallback:** `lines` (einfachster Modus)
+
 ## Hauptschema: Transcription
 
 ```typescript
