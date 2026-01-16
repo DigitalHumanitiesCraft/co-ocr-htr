@@ -386,6 +386,54 @@ Commit `40a6d9c` - Data-Dokumentation hinzugefügt
 | IMPLEMENTATION-PLAN.md Pfade aktualisieren | ✅ |
 | ARCHITECTURE.md Pfade aktualisieren | ✅ |
 
+### Phase 3: Milestone 1 - Core Services
+
+**Tasks erledigt:**
+
+| Task | Status | Datei |
+|------|--------|-------|
+| Storage Service | Fertig | `js/services/storage.js` |
+| State.js erweitert | Fertig | `js/state.js` |
+| LLM Service Basis | Fertig | `js/services/llm.js` |
+| Gemini Provider | Fertig | in llm.js |
+| OpenAI Provider | Fertig | in llm.js |
+| Anthropic Provider | Fertig | in llm.js |
+| DeepSeek Provider (API + Ollama) | Fertig | in llm.js |
+| LLM Service Tests | Fertig | `tests/llm.test.js` |
+
+**Implementierte Features:**
+
+1. **Storage Service** (~230 LOC)
+   - Settings CRUD mit Defaults
+   - API Key Speicherung (Base64-obfuskiert)
+   - Session Auto-Save/Restore
+   - Storage-Info Utility
+
+2. **State.js erweitert** (~440 LOC)
+   - Document Management (Upload, Dimensions)
+   - Transcription State (Provider, Segments, Lines)
+   - Validation State (Rules, LLM-Judge, Perspective)
+   - UI State (Loading, Dialogs, Errors)
+   - Session Auto-Save mit Storage Service
+   - Backward-Compatibility mit altem API
+
+3. **LLM Service** (~500 LOC)
+   - 5 Provider: Gemini, OpenAI, Anthropic, DeepSeek, Ollama
+   - Transkriptions-Prompt (historische Handschriften)
+   - Validierungs-Prompts (4 Perspektiven)
+   - Response-Parsing (Markdown-Tabellen, JSON)
+   - Error Handling mit Kategorisierung
+
+### Phase 4: Umbenennung zu docs/
+
+**Auftrag:** Ordner umbenennen für GitHub Pages Kompatibilität.
+
+| Aktion | Status |
+|--------|--------|
+| `src/index.html` geloescht | Fertig |
+| `prototype/` -> `docs/` | Fertig |
+| Dokumentation aktualisiert | Fertig |
+
 ### Aktuelle Projektstruktur
 
 ```
@@ -401,38 +449,44 @@ coocr-htr/
 │   ├── DATA-SCHEMA.md
 │   ├── IMPLEMENTATION-PLAN.md
 │   └── JOURNAL.md
-├── src/
-│   └── index.html              # Prototyp v1 (Legacy)
-├── prototype/                  # Prototyp v2 (Aktiv) ← UMBENANNT
+├── docs/                       # GitHub Pages ready
 │   ├── index.html
 │   ├── css/
 │   │   ├── variables.css
 │   │   └── styles.css
 │   ├── js/
 │   │   ├── main.js
-│   │   ├── state.js
+│   │   ├── state.js            # Erweitert
 │   │   ├── viewer.js
 │   │   ├── editor.js
 │   │   ├── ui.js
-│   │   ├── components/         ← NEU
-│   │   ├── services/           ← NEU
-│   │   │   └── parsers/        ← NEU
-│   │   └── utils/              ← NEU
-│   ├── tests/                  ← NEU
+│   │   ├── components/
+│   │   ├── services/
+│   │   │   ├── llm.js          # NEU
+│   │   │   ├── storage.js      # NEU
+│   │   │   └── parsers/
+│   │   └── utils/
+│   ├── tests/
+│   │   └── llm.test.js         # NEU
 │   ├── assets/
 │   │   └── mock-document.jpg
-│   ├── package.json            ← NEU
-│   └── vitest.config.js        ← NEU
+│   ├── package.json
+│   └── vitest.config.js
 └── data/
 ```
 
-### Nächste Schritte
+### Commits
 
-- [ ] Milestone 0 abschließen (Git Commit)
-- [ ] Milestone 1: Core Services implementieren
-  - Storage Service
-  - State-Erweiterung
-  - LLM Service mit allen Providern
+| Commit | Beschreibung |
+|--------|--------------|
+| `3cfb93c` | Milestone 0: Vorbereitung |
+| `0c4ae1c` | Milestone 1: Core Services |
+
+### Naechste Schritte
+
+- [ ] Milestone 2: Dialoge & Upload
+- [ ] Milestone 3: LLM-Transkription
+- [ ] Milestone 4: Validierung
 
 ---
 

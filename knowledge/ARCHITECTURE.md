@@ -50,7 +50,7 @@ Systemdesign für coOCR/HTR. Client-only, kein Backend.
 ### Aktuelle Implementierung (Prototyp v2)
 
 ```
-prototype/
+docs/
 ├── index.html              # Entry Point (322 LOC)
 ├── css/
 │   ├── variables.css       # Design System Tokens (52 LOC)
@@ -74,7 +74,7 @@ prototype/
 ### Zielstruktur (Vollständig)
 
 ```
-prototype/
+docs/
 ├── index.html              # Entry Point
 ├── css/
 │   ├── variables.css       # Design System Tokens
