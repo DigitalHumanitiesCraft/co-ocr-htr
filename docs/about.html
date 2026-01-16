@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="About coOCR/HTR - A browser-based tool for historical document transcription with expert-in-the-loop validation">
+    <title>About - coOCR/HTR</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body>
+    <div class="page-container">
+
+        <!-- HEADER (shared structure) -->
+        <header class="page-header">
+            <a href="index.html" class="logo">
+                <img src="assets/logo-icon.png" alt="coOCR/HTR Logo" class="logo-image">
+                coOCR/HTR
+            </a>
+            <a href="index.html" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to App
+            </a>
+        </header>
+
+        <!-- CONTENT -->
+        <main class="page-content">
+
+            <!-- Hero with Logo -->
+            <div style="text-align: center; margin-bottom: var(--space-8);">
+                <img src="assets/logo.png" alt="coOCR/HTR" style="max-width: 280px; margin-bottom: var(--space-4);">
+                <h1 class="page-title">About coOCR/HTR</h1>
+                <p class="page-subtitle">Collaborative OCR/HTR for Historical Documents</p>
+            </div>
+
+            <!-- Project Description -->
+            <section class="page-section">
+                <h2 class="section-title">The Project</h2>
+                <div class="section-content">
+                    <p>coOCR/HTR is a browser-based experimentation environment for integrating domain experts into OCR (Optical Character Recognition) and HTR (Handwritten Text Recognition) pipelines for historical documents.</p>
+                    <p>The tool combines the pattern recognition capabilities of Large Language Models with the critical judgment of human experts. It supports researchers in Digital Humanities who work with handwritten sources from the 16th-20th century: letters, account books, diaries, and registers.</p>
+                </div>
+            </section>
+
+            <!-- Methodology -->
+            <section class="page-section">
+                <h2 class="section-title">Methodology</h2>
+                <div class="section-content">
+                    <div class="info-card">
+                        <h3 class="info-card-title">Critical Expert in the Loop</h3>
+                        <div class="info-card-content">
+                            <p>The AI assists; the human decides. Every transcription is a hypothesis that requires expert validation. The interface positions the user as the expert operating a precision instrument, not a consumer of automated output.</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3 class="info-card-title">Categorical Confidence</h3>
+                        <div class="info-card-content">
+                            <p>Instead of misleading percentage scores (92.3% confidence), we use three meaningful categories: <strong style="color: var(--confident);">confident</strong>, <strong style="color: var(--uncertain);">uncertain</strong>, and <strong style="color: var(--problematic);">problematic</strong>. This avoids the "automation bias" where users over-trust high percentages.</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3 class="info-card-title">Hybrid Validation</h3>
+                        <div class="info-card-content">
+                            <p>Validation combines deterministic rules (date formats, currency patterns) with LLM-as-judge analysis from four perspectives: paleographic, linguistic, structural, and domain knowledge. This provides both reliable checks and contextual insights.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technology -->
+            <section class="page-section">
+                <h2 class="section-title">Technology</h2>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <svg class="tech-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                        <span>Vanilla JavaScript (ES6+)</span>
+                    </div>
+                    <div class="tech-item">
+                        <svg class="tech-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18"/>
+                        </svg>
+                        <span>No Build Process</span>
+                    </div>
+                    <div class="tech-item">
+                        <svg class="tech-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                        <span>CSS Custom Properties</span>
+                    </div>
+                    <div class="tech-item">
+                        <svg class="tech-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        <span>LocalStorage Persistence</span>
+                    </div>
+                    <div class="tech-item">
+                        <svg class="tech-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M2 12h20"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        <span>Multi-Provider LLM APIs</span>
+                    </div>
+                    <div class="tech-item">
+                        <svg class="tech-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <span>PAGE-XML / METS-XML</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Links -->
+            <section class="page-section">
+                <h2 class="section-title">Links</h2>
+                <div class="links-list">
+                    <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr" target="_blank" rel="noopener" class="link-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                        </svg>
+                        <div class="link-text">
+                            <div class="link-title">GitHub Repository</div>
+                            <div class="link-desc">Source code, issues, and contributions</div>
+                        </div>
+                    </a>
+                    <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr/tree/main/knowledge" target="_blank" rel="noopener" class="link-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        <div class="link-text">
+                            <div class="link-title">Knowledge Base</div>
+                            <div class="link-desc">Methodology, architecture, and design documentation</div>
+                        </div>
+                    </a>
+                    <a href="help.html" class="link-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <div class="link-text">
+                            <div class="link-title">Help</div>
+                            <div class="link-desc">User guide, shortcuts, and troubleshooting</div>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Credits -->
+            <section class="page-section">
+                <h2 class="section-title">Credits</h2>
+                <div class="section-content">
+                    <p>coOCR/HTR is developed as part of the Digital Humanities Craft initiative, exploring practical applications of AI in humanities research.</p>
+                    <p>Built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> using the promptotyping methodology - iterative development through AI dialogue.</p>
+                </div>
+            </section>
+
+            <!-- License -->
+            <section class="page-section">
+                <h2 class="section-title">License</h2>
+                <div class="section-content">
+                    <p>This project is open source under the <strong>MIT License</strong>.</p>
+                    <p>You are free to use, modify, and distribute this software for any purpose, including commercial applications.</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER (shared structure) -->
+        <footer class="page-footer">
+            <p>coOCR/HTR Workbench &middot; <a href="help.html">Help</a> &middot; <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr" target="_blank" rel="noopener">GitHub</a></p>
+        </footer>
+
+    </div>
+</body>
+
+</html>
