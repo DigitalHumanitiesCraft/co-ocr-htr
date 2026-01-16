@@ -545,75 +545,77 @@
 
     <!-- Export Dialog -->
     <dialog id="exportDialog" class="dialog">
-        <div class="dialog-header">
-            <h2 class="dialog-title">Export Transcription</h2>
-            <button class="dialog-close" data-close-dialog aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-
-        <div class="dialog-body">
-            <div class="export-formats">
-                <label class="export-format-option">
-                    <input type="radio" name="exportFormat" value="txt" checked>
-                    <div class="format-card">
-                        <span class="format-icon">TXT</span>
-                        <div class="format-info">
-                            <span class="format-name">Plain Text</span>
-                            <span class="format-desc">Tab-separated values, simple and portable</span>
-                        </div>
-                    </div>
-                </label>
-
-                <label class="export-format-option">
-                    <input type="radio" name="exportFormat" value="json">
-                    <div class="format-card">
-                        <span class="format-icon">JSON</span>
-                        <div class="format-info">
-                            <span class="format-name">JSON</span>
-                            <span class="format-desc">Full data with metadata and validation</span>
-                        </div>
-                    </div>
-                </label>
-
-                <label class="export-format-option">
-                    <input type="radio" name="exportFormat" value="md">
-                    <div class="format-card">
-                        <span class="format-icon">MD</span>
-                        <div class="format-info">
-                            <span class="format-name">Markdown</span>
-                            <span class="format-desc">Formatted table with validation notes</span>
-                        </div>
-                    </div>
-                </label>
-            </div>
-
-            <div class="export-options">
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" id="exportIncludeValidation" checked>
-                    <span>Include validation results</span>
-                </label>
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" id="exportIncludeMetadata">
-                    <span>Include metadata (timestamp, provider, model)</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="dialog-footer">
-            <div class="dialog-actions">
-                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
-                <button type="button" class="btn btn-primary" id="downloadExport">
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+        <div class="dialog-container">
+            <div class="dialog-header">
+                <h2 class="dialog-title">Export Transcription</h2>
+                <button class="dialog-close" data-close-dialog aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
-                    Download
                 </button>
+            </div>
+
+            <div class="dialog-body">
+                <div class="export-formats">
+                    <label class="export-format-option">
+                        <input type="radio" name="exportFormat" value="txt" checked>
+                        <div class="format-card">
+                            <span class="format-icon">TXT</span>
+                            <div class="format-info">
+                                <span class="format-name">Plain Text</span>
+                                <span class="format-desc">Tab-separated values, simple and portable</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="export-format-option">
+                        <input type="radio" name="exportFormat" value="json">
+                        <div class="format-card">
+                            <span class="format-icon">JSON</span>
+                            <div class="format-info">
+                                <span class="format-name">JSON</span>
+                                <span class="format-desc">Full data with metadata and validation</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="export-format-option">
+                        <input type="radio" name="exportFormat" value="md">
+                        <div class="format-card">
+                            <span class="format-icon">MD</span>
+                            <div class="format-info">
+                                <span class="format-name">Markdown</span>
+                                <span class="format-desc">Formatted table with validation notes</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="export-options">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" id="exportIncludeValidation" checked>
+                        <span>Include validation results</span>
+                    </label>
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" id="exportIncludeMetadata">
+                        <span>Include metadata (timestamp, provider, model)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="dialog-footer">
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                    <button type="button" class="btn btn-primary" id="downloadExport">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download
+                    </button>
+                </div>
             </div>
         </div>
     </dialog>
