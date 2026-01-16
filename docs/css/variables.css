@@ -3,7 +3,9 @@
   --bg-primary: #0d1117;
   --bg-secondary: #161b22;
   --bg-tertiary: #21262d;
-  --bg-rgb: 13, 17, 23;        /* RGB values for bg-primary (for rgba usage) */
+  --bg-tertiary-hover: #30363d;  /* Lighten tertiary for hover */
+  --bg-rgb: 13, 17, 23;          /* RGB values for bg-primary (for rgba usage) */
+  --bg-viewer: #050505;          /* Near-black for document viewer */
 
   --text-primary: #e6edf3;
   --text-secondary: #8b949e;
@@ -52,5 +54,12 @@
   /* Layers / Z-Index */
   --z-overlay: 100;
   --z-modal: 200;
+  --z-tooltip: 250;
   --z-toast: 300;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-muted: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-emphasis: rgba(255, 255, 255, 0.1);
 }

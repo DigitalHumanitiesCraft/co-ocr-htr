@@ -133,9 +133,8 @@ button {
 }
 
 .btn:hover {
-    background-color: #30363d;
-    /* Lighten tertiary */
-    border-color: #8b949e;
+    background-color: var(--bg-tertiary-hover);
+    border-color: var(--text-secondary);
 }
 
 .btn-primary {
@@ -199,58 +198,58 @@ button {
     }
 }
 
-/* MODALS */
+/* UTILITIES */
 .hidden {
     display: none !important;
 }
 
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(13, 17, 23, 0.8);
-    backdrop-filter: blur(4px);
-    z-index: var(--z-modal);
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+/* Icon spacing in buttons - automatic */
+.btn > svg:first-child {
+    margin-right: 6px;
+}
+
+/* Divider for toolbar/header controls */
+.divider-vertical {
+    width: 1px;
+    height: 16px;
+    background: var(--border-emphasis);
+    margin: 0 var(--space-1);
+}
+
+/* Header document info */
+.header-doc-info {
     display: flex;
     align-items: center;
-    justify-content: center;
-    opacity: 0;
-    animation: fadeIn 0.2s forwards;
-}
-
-.modal {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--bg-tertiary);
-    border-radius: var(--radius-lg);
-    width: 100%;
-    max-width: 500px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    transform: scale(0.95);
-    animation: scaleIn 0.2s forwards;
-}
-
-.modal-header {
-    padding: var(--space-4);
-    border-bottom: 1px solid var(--bg-tertiary);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
-    font-size: var(--text-base);
-    margin: 0;
-}
-
-.modal-body {
-    padding: var(--space-4);
-}
-
-.modal-footer {
-    padding: var(--space-4);
-    border-top: 1px solid var(--bg-tertiary);
-    display: flex;
-    justify-content: flex-end;
     gap: var(--space-2);
+}
+
+.header-doc-info .filename {
+    font-weight: 500;
+    font-size: var(--text-sm);
+}
+
+/* Mobile warning text */
+.mobile-warning-icon {
+    margin-bottom: var(--space-4);
+    color: var(--text-secondary);
+}
+
+.mobile-warning-text {
+    color: var(--text-secondary);
+    max-width: 300px;
+    margin: var(--space-4) auto;
 }
 
 /* UTILS inside Modals */
@@ -318,26 +317,7 @@ button {
     background: rgba(22, 27, 34, 0.6);
 }
 
-/* 2. Structured Editor (Grid) */
-.editor-grid-row {
-    display: grid;
-    grid-template-columns: 3rem 1.5fr 2fr 3fr 1.5fr;
-    /* LineNum, Date, Name, Desc, Amount */
-    gap: var(--space-2);
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    align-items: center;
-    transition: background-color var(--transition-fast);
-}
-
-.editor-grid-row:hover {
-    background-color: rgba(255, 255, 255, 0.02);
-}
-
-.editor-grid-row.active {
-    background-color: rgba(255, 193, 7, 0.1);
-    border-left: 2px solid var(--selection);
-}
+/* 2. Structured Editor (Grid) - see FLEXIBLE EDITOR STYLES section */
 
 .editor-cell {
     padding: 0 var(--space-2);
@@ -518,7 +498,7 @@ h3 {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #050505;
+    background-color: var(--bg-viewer);
     position: relative;
     overflow: hidden;
     cursor: grab;
@@ -603,7 +583,7 @@ h3 {
 /* VALIDATION SPECIFIC */
 .validation-section {
     padding: var(--space-3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-muted);
 }
 
 .section-title {
@@ -640,7 +620,7 @@ h3 {
     font-size: var(--text-xs);
     color: var(--text-primary);
     padding-top: var(--space-2);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border-muted);
     display: none;
 }
 
@@ -1456,7 +1436,7 @@ dialog[open] {
     align-items: flex-start;
     gap: var(--space-3);
     padding: var(--space-2) var(--space-2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-subtle);
     transition: background-color var(--transition-fast);
     cursor: default;
 }
@@ -1539,14 +1519,14 @@ dialog[open] {
     display: grid;
     gap: var(--space-2);
     padding: 4px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-subtle);
     align-items: center;
     transition: background-color var(--transition-fast);
 }
 
 .editor-grid-row.editor-header {
     background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-muted);
     position: sticky;
     top: 0;
     z-index: 1;

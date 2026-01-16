@@ -855,10 +855,112 @@ docs/
 
 ### Naechste Schritte (Optional)
 
-- [ ] Favicon hinzufuegen
+- [x] Favicon hinzugefuegt (bereits vorhanden)
 - [ ] Vitest Unit Tests vervollstaendigen
 - [ ] LLM-Transkription mit echtem API Key testen
 - [ ] Mobile Warnung verbessern
+
+---
+
+## 2026-01-16 | Session 7: Flexible Editor & Guided Workflow
+
+**Teilnehmer:** User, Claude Opus 4.5
+
+### Problemstellung
+
+**Auftrag:** Editor war hardcoded fuer Rechnungsbuch-Struktur (4 Spalten: Datum/Name/Beschreibung/Betrag). Soll flexible Quellentypen unterstuetzen.
+
+**Analyse der Knowledge-Dokumente:**
+- DATA-SCHEMA.md unterstuetzte bereits flexible Struktur
+- Editor-Code war nicht flexibel implementiert
+
+### Loesung: Flexible Editor-Modi
+
+**Automatische Modus-Erkennung:**
+
+| Bedingung | Modus |
+|-----------|-------|
+| `columns[]` definiert | grid |
+| Segmente mit `fields` | grid |
+| Text enthaelt `\|` | grid |
+| Standard/Fallback | lines |
+
+**Neue Editor-Modi:**
+
+| Modus | Verwendung | Beispiel |
+|-------|------------|----------|
+| `lines` | Fliesstext | Briefe, Tagebuecher, Manuskripte |
+| `grid` | Tabellen | Rechnungsbuecher, Inventare, Register |
+
+### Guided Workflow Features
+
+**Implementiert:**
+
+| Feature | Beschreibung |
+|---------|--------------|
+| Workflow Stepper | 6 Schritte in Status Bar (Laden → Exportieren) |
+| Panel Hints | Kontextuelle Hinweise pro Panel |
+| Info Tooltips | Methodologie-Erklaerungen in Panel-Headern |
+| Onboarding Toast | Willkommensnachricht fuer Erstbesucher |
+| Hint Dismissal | Hinweise koennen geschlossen werden (persistent) |
+
+### Implementierte Dateien
+
+| Datei | Aenderungen |
+|-------|-------------|
+| `js/editor.js` | Komplett refactored fuer flexible Modi |
+| `js/main.js` | `initGuidedWorkflow()`, `showOnboardingToast()` |
+| `index.html` | Panel Hints, Workflow Stepper, Info Tooltips |
+| `css/styles.css` | Lines Editor CSS, Workflow Stepper CSS |
+| `knowledge/DATA-SCHEMA.md` | Quellentypen-Dokumentation |
+
+### CSS/HTML Refactoring
+
+**CSS Verbesserungen:**
+
+| Problem | Loesung |
+|---------|---------|
+| Duplizierte `.editor-grid-row` | Zusammengefuehrt |
+| Hardcoded Farben (`#30363d`) | CSS-Variablen (`--bg-tertiary-hover`) |
+| Fehlende Border-Variablen | `--border-subtle`, `--border-muted` hinzugefuegt |
+| Verwaiste Modal-Styles | Entfernt (nutzen jetzt `<dialog>`) |
+
+**HTML Verbesserungen:**
+
+| Problem | Loesung |
+|---------|---------|
+| Leeres `<style>` Tag | Entfernt |
+| Inline Styles | Utility-Klassen erstellt |
+
+### Commits
+
+| Commit | Beschreibung |
+|--------|--------------|
+| `1823692` | feat: add flexible editor modes and guided workflow UX |
+
+### Projektstand
+
+**Milestone 8 abgeschlossen:**
+
+| Feature | Status |
+|---------|--------|
+| Flexible Editor (lines/grid) | Fertig |
+| Automatische Modus-Erkennung | Fertig |
+| Workflow Stepper | Fertig |
+| Panel Hints | Fertig |
+| Info Tooltips | Fertig |
+| Onboarding Toast | Fertig |
+| CSS Refactoring | Fertig |
+
+### Knowledge-Dokumente Status
+
+| Dokument | Status |
+|----------|--------|
+| DATA-SCHEMA.md | Aktualisiert mit Quellentypen |
+| JOURNAL.md | Aktualisiert (diese Session) |
+| README.md | Aktualisiert mit Milestone 8 |
+| ARCHITECTURE.md | Aktuell |
+| METHODOLOGY.md | Aktuell |
 
 ---
 
