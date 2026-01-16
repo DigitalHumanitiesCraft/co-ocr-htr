@@ -150,13 +150,14 @@
                 </div>
 
                 <!-- Document Container (hidden until document loaded) -->
-                <div class="image-container" id="imageWrapper" style="display: none;">
-                    <img src="" id="docImage" alt="Historical Document Page">
-                    <!-- SVG Overlay for Regions will be injected here or aligned on top -->
-                    <svg id="regionsOverlay" viewBox="0 0 1024 1024"
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;">
-                        <!-- Regions will be added by JS -->
-                    </svg>
+                <div class="image-container">
+                    <div id="imageWrapper" style="display: none;">
+                        <img src="" id="docImage" alt="Historical Document Page">
+                        <!-- SVG Overlay for Regions - positioned relative to imageWrapper -->
+                        <svg id="regionsOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <!-- Regions will be added by JS -->
+                        </svg>
+                    </div>
                 </div>
 
                 <!-- Floating Toolbar -->
