@@ -5,121 +5,106 @@ tags: [coocr-htr, architecture, javascript]
 status: complete
 ---
 
-# Technische Architektur
+# Technical Architecture
 
-Systemdesign fuer coOCR/HTR. Client-only, kein Backend.
+System design for coOCR/HTR. Client-only, no backend.
 
-**Abhängigkeit:** [METHODOLOGY](METHODOLOGY.md) (Begründung für Technologieentscheidungen)
+**Dependency:** [METHODOLOGY](METHODOLOGY.md) (Rationale for technology decisions)
 
-## Systemübersicht
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         BROWSER                             │
-├─────────────────────────────────────────────────────────────┤
-│  UI LAYER                                                   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │ Header   │ │ Document │ │ Editor   │ │Validation│       │
-│  │          │ │ Viewer   │ │          │ │ Panel    │       │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
-├─────────────────────────────────────────────────────────────┤
-│  APPLICATION LAYER                                          │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │   App    │ │ Document │ │Validation│ │  Export  │       │
-│  │Controller│ │ Manager  │ │  Engine  │ │  Service │       │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
-├─────────────────────────────────────────────────────────────┤
-│  SERVICE LAYER                                              │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │  LLM API │ │ Storage  │ │  Image   │ │  Event   │       │
-│  │          │ │          │ │ Processor│ │   Bus    │       │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
-├─────────────────────────────────────────────────────────────┤
-│  PERSISTENCE                                                │
-│  ┌────────────────┐ ┌────────────────────────────┐         │
-│  │  LocalStorage  │ │       IndexedDB            │         │
-│  │  (Settings,    │ │  (Dokumente, Sessions)     │         │
-│  │   API Keys)    │ │                            │         │
-│  └────────────────┘ └────────────────────────────┘         │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼ HTTPS
-┌─────────────────────────────────────────────────────────────┐
-│  EXTERNE APIs                                               │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │  Gemini  │ │  OpenAI  │ │ Anthropic│ │  Ollama  │       │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Dateistruktur
-
-### Aktuelle Implementierung (Prototyp v2)
+## System Overview
 
 ```
-docs/
-├── index.html              # Entry Point (322 LOC)
-├── css/
-│   ├── variables.css       # Design System Tokens (52 LOC)
-│   └── styles.css          # Komponenten-Styles (~400 LOC)
-├── js/
-│   ├── main.js             # Initialisierung (15 LOC)
-│   ├── state.js            # Zentraler State mit EventTarget (61 LOC)
-│   ├── viewer.js           # Document Viewer Logik (67 LOC)
-│   ├── editor.js           # Transcription Editor (77 LOC)
-│   ├── ui.js               # UI Interaktionen (40 LOC)
-│   ├── components/         # UI-Komponenten
-│   ├── services/           # Business Logic
-│   └── utils/              # Hilfsfunktionen
-├── tests/                  # Vitest Tests
-├── assets/
-│   └── mock-document.jpg   # Test-Dokument
-├── package.json            # Vitest Dependency
-└── vitest.config.js        # Test-Konfiguration
++-------------------------------------------------------------+
+|                         BROWSER                             |
++-------------------------------------------------------------+
+|  UI LAYER                                                   |
+|  +----------+ +----------+ +----------+ +----------+        |
+|  | Header   | | Document | | Editor   | |Validation|        |
+|  |          | | Viewer   | |          | | Panel    |        |
+|  +----------+ +----------+ +----------+ +----------+        |
++-------------------------------------------------------------+
+|  APPLICATION LAYER                                          |
+|  +----------+ +----------+ +----------+ +----------+        |
+|  |   App    | | Document | |Validation| |  Export  |        |
+|  |Controller| | Manager  | |  Engine  | |  Service |        |
+|  +----------+ +----------+ +----------+ +----------+        |
++-------------------------------------------------------------+
+|  SERVICE LAYER                                              |
+|  +----------+ +----------+ +----------+ +----------+        |
+|  |  LLM API | | Storage  | |  Image   | |  Event   |        |
+|  |          | |          | | Processor| |   Bus    |        |
+|  +----------+ +----------+ +----------+ +----------+        |
++-------------------------------------------------------------+
+|  PERSISTENCE                                                |
+|  +----------------+ +----------------------------+          |
+|  |  LocalStorage  | |       IndexedDB            |          |
+|  |  (Settings,    | |  (Documents, Sessions)     |          |
+|  |   API Keys)    | |                            |          |
+|  +----------------+ +----------------------------+          |
++-------------------------------------------------------------+
+                              |
+                              v HTTPS
++-------------------------------------------------------------+
+|  EXTERNAL APIs                                              |
+|  +----------+ +----------+ +----------+ +----------+        |
+|  |  Gemini  | |  OpenAI  | | Anthropic| |  Ollama  |        |
+|  +----------+ +----------+ +----------+ +----------+        |
++-------------------------------------------------------------+
 ```
 
-### Zielstruktur (Vollständig)
+## File Structure
+
+### Current Implementation
 
 ```
 docs/
 ├── index.html              # Entry Point
+├── favicon.png
 ├── css/
-│   ├── variables.css       # Design System Tokens
-│   └── styles.css          # Komponenten-Styles
+│   ├── variables.css       # Design System Tokens (60+ vars)
+│   └── styles.css          # Component Styles (~1500 LOC)
 ├── js/
-│   ├── main.js             # Initialisierung, Koordination
-│   ├── state.js            # Zentraler Zustand (EventTarget)
+│   ├── main.js             # Initialization, Workflow (~300 LOC)
+│   ├── state.js            # Central State with EventTarget (~450 LOC)
+│   ├── viewer.js           # Document Viewer Logic
+│   ├── editor.js           # Flexible Editor (lines/grid)
+│   ├── ui.js               # UI Interactions
 │   ├── components/
-│   │   ├── viewer.js       # Document Viewer
-│   │   ├── editor.js       # Transcription Editor
-│   │   ├── validation.js   # Validation Panel
-│   │   └── dialogs.js      # Modal Dialoge
-│   ├── services/
-│   │   ├── llm.js          # Provider-Abstraktion
-│   │   ├── storage.js      # LocalStorage/IndexedDB
-│   │   └── export.js       # Markdown/JSON/TSV Export
-│   └── utils/
-│       ├── validators.js   # Regex-Regeln
-│       └── parsers.js      # Markdown/Table Parsing
-└── assets/
-    └── icons/              # SVG Icons (inline im HTML)
+│   │   ├── dialogs.js      # Dialog Manager
+│   │   ├── upload.js       # Upload Component
+│   │   ├── transcription.js# Transcription UI
+│   │   └── validation.js   # Validation Panel
+│   └── services/
+│       ├── llm.js          # Multi-Provider LLM Service
+│       ├── storage.js      # LocalStorage Wrapper
+│       ├── validation.js   # Validation Engine
+│       ├── export.js       # Export Service
+│       ├── samples.js      # Demo Loader
+│       └── parsers/
+│           └── page-xml.js # PAGE-XML Parser
+├── samples/
+│   ├── index.json          # Sample Manifest
+│   └── raitbuch/           # Demo Data
+└── tests/
+    ├── llm.test.js
+    └── page-xml.test.js
 ```
 
-## Kernmodule
+## Core Modules
 
-### AppState (Implementiert)
+### AppState (Implemented)
 
-Zentraler State mit nativer EventTarget-API. Ersetzt den ursprünglichen EventBus durch den Browser-Standard.
+Central state using native EventTarget API. Replaces custom EventBus with browser standard.
 
 ```javascript
-// state.js - Tatsächliche Implementierung
+// state.js - Actual Implementation
 class AppState extends EventTarget {
   constructor() {
     super();
     this.data = {
       image: { url: string, width: number, height: number },
       regions: [{ line: number, x: number, y: number, w: number, h: number }],
-      transcription: string[],  // Markdown-Tabellenzeilen
+      transcription: string[],  // Markdown table lines
       zoom: number,
       selectedLine: number | null
     };
@@ -146,40 +131,44 @@ class AppState extends EventTarget {
 export const appState = new AppState();
 ```
 
-**Vorteile gegenüber Custom EventBus:**
-- Native Browser-API (keine Abhängigkeiten)
-- DevTools-Integration (Event-Debugging)
-- Memory-Management durch Browser
+**Advantages over Custom EventBus:**
+- Native Browser API (no dependencies)
+- DevTools integration (event debugging)
+- Memory management by browser
 
-### Event-Typen (Implementiert)
+### Event Types
 
-| Event | Payload | Auslöser |
-|-------|---------|----------|
-| `imageChanged` | `{ url }` | Bild geladen |
-| `selectionChanged` | `{ line }` | Zeile ausgewählt |
-| `zoomChanged` | `{ zoom }` | Zoom geändert |
+| Event | Payload | Trigger |
+|-------|---------|---------|
+| `imageChanged` | `{ url }` | Image loaded |
+| `selectionChanged` | `{ line }` | Line selected |
+| `zoomChanged` | `{ zoom }` | Zoom changed |
+| `transcriptionComplete` | `{ segments }` | LLM response parsed |
+| `validationComplete` | `{ results }` | Validation finished |
+| `segmentUpdated` | `{ index, text }` | Inline edit |
 
-### LLMService (Geplant)
+### LLMService (Implemented)
 
-Abstraktion für verschiedene Provider.
+Abstraction for different providers.
 
 ```javascript
 class LLMService {
-  setProvider(provider: 'gemini' | 'openai' | 'anthropic' | 'ollama');
+  setProvider(provider: 'gemini' | 'openai' | 'anthropic' | 'deepseek' | 'ollama');
   setApiKey(key: string);
   async transcribe(image: Blob, options): Promise<TranscriptionResult>;
   async validate(text: string, perspective: Perspective): Promise<ValidationResult>;
 }
 ```
 
-| Provider | Endpoint | Modell | Vision |
-|----------|----------|--------|--------|
-| Gemini | `generativelanguage.googleapis.com` | gemini-2.0-flash | ✅ |
-| OpenAI | `api.openai.com` | gpt-4o | ✅ |
-| Anthropic | `api.anthropic.com` | claude-3-5-sonnet | ✅ |
-| Ollama | `localhost:11434` | llava | ✅ |
+| Provider | Endpoint | Model | Vision |
+|----------|----------|-------|--------|
+| Gemini | `generativelanguage.googleapis.com` | gemini-2.0-flash | Yes |
+| OpenAI | `api.openai.com` | gpt-4o-mini | Yes |
+| Anthropic | `api.anthropic.com` | claude-3-haiku | Yes |
+| DeepSeek | `api.deepseek.com` | deepseek-chat | Yes |
+| Ollama | `localhost:11434` | llama3.2-vision | Yes |
 
-### Event-Listener Registrierung (Implementiert)
+### Event Listener Registration (Implemented)
 
 ```javascript
 // In viewer.js
@@ -216,89 +205,98 @@ appState.addEventListener('selectionChanged', (e) => {
 
 ### StorageService
 
-| Speicher | Typ | Inhalt | Limit |
-|----------|-----|--------|-------|
-| LocalStorage | Synchron | Settings, API Keys | 5MB |
-| IndexedDB | Asynchron | Dokumente, Sessions, History | Unbegrenzt |
+| Storage | Type | Content | Limit |
+|---------|------|---------|-------|
+| LocalStorage | Synchronous | Settings, API Keys | 5MB |
+| IndexedDB | Asynchronous | Documents, Sessions, History | Unlimited |
 
-## Datenflüsse
+## Data Flows
 
-### Upload → Transkription
+### Upload → Transcription
 
 ```
 Image Upload → Base64 Encode → LLM Request → Parse Response
-                                                    │
-                                                    ▼
+                                                    |
+                                                    v
     Export ← Corrections ← Expert Review ← Validation
 ```
 
-### Text-Bild-Synchronisation (Dreifach-Verknüpfung)
+### Text-Image Synchronization (Triple Linking)
 
-Alle drei Hauptpanels sind bidirektional verknüpft:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   DOCUMENT VIEWER ◄──────────────► TRANSCRIPTION            │
-│         │                               │                   │
-│         │                               │                   │
-│         ▼                               ▼                   │
-│   ┌─────────────────────────────────────────────┐          │
-│   │            VALIDATION PANEL                  │          │
-│   └─────────────────────────────────────────────┘          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Synchronisation Flow
+All three main panels are bidirectionally linked:
 
 ```
-User klickt Transcription-Zeile #4
-       ↓
++-------------------------------------------------------------+
+|                                                             |
+|   DOCUMENT VIEWER <----------------> TRANSCRIPTION          |
+|         |                               |                   |
+|         |                               |                   |
+|         v                               v                   |
+|   +---------------------------------------------+           |
+|   |            VALIDATION PANEL                  |           |
+|   +---------------------------------------------+           |
+|                                                             |
++-------------------------------------------------------------+
+```
+
+### Synchronization Flow
+
+```
+User clicks Transcription Line #4
+       |
    TranscriptionTable.onClick(lineNumber: 4)
-       ↓
-   EventBus.emit('transcription:lineSelected', { line: 4, bounds: {...} })
-       ↓
-   ┌───────────────────┬────────────────────────┐
-   ↓                   ↓                        ↓
-DocumentViewer    ValidationPanel           State
-.highlightBox(4)  .scrollToRelated(4)      .setSelectedLine(4)
+       |
+   appState.setSelection(4)
+       |
+   dispatchEvent('selectionChanged', { line: 4 })
+       |
+   +-------------------+------------------------+
+   |                   |                        |
+   v                   v                        v
+DocumentViewer    ValidationPanel           Editor
+.highlightBox(4)  .scrollToRelated(4)      .highlightRow(4)
 .scrollToRegion() .expandCard(4)
 ```
 
-### Umgekehrter Flow (Viewer → Transcription)
+### Reverse Flow (Viewer → Transcription)
 
 ```
-User klickt Bounding Box im Viewer
-       ↓
+User clicks Bounding Box in Viewer
+       |
    DocumentViewer.onBoxClick(boxId)
-       ↓
-   EventBus.emit('viewer:regionSelected', { boxId, lineNumber: 4 })
-       ↓
-   ┌───────────────────┬────────────────────────┐
-   ↓                   ↓                        ↓
+       |
+   appState.setSelection(lineNumber)
+       |
+   dispatchEvent('selectionChanged', { line: 4 })
+       |
+   +-------------------+------------------------+
+   |                   |                        |
+   v                   v                        v
 Transcription     ValidationPanel           State
-.scrollToLine(4)  .scrollToRelated(4)      .setSelectedLine(4)
+.scrollToLine(4)  .scrollToRelated(4)      (updated)
 .highlightRow(4)
 ```
 
 ### Validation → All Panels
 
 ```
-User klickt "Line 4" in Validation Card
-       ↓
+User clicks "Line 4" in Validation Card
+       |
    ValidationPanel.onLineRefClick(4)
-       ↓
-   EventBus.emit('validation:lineJump', { line: 4 })
-       ↓
-   ┌───────────────────┬────────────────────────┐
-   ↓                   ↓                        ↓
+       |
+   appState.setSelection(4)
+       |
+   dispatchEvent('selectionChanged', { line: 4 })
+       |
+   +-------------------+------------------------+
+   |                   |                        |
+   v                   v                        v
 DocumentViewer    Transcription             State
-.highlightBox(4)  .scrollToLine(4)         .setSelectedLine(4)
+.highlightBox(4)  .scrollToLine(4)         (updated)
 .scrollToRegion() .highlightRow(4)
 ```
 
-## API-Aufrufe
+## API Calls
 
 ### Gemini
 
@@ -328,7 +326,7 @@ fetch('https://api.openai.com/v1/chat/completions', {
     'Authorization': `Bearer ${API_KEY}`
   },
   body: JSON.stringify({
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     messages: [{
       role: 'user',
       content: [
@@ -342,15 +340,15 @@ fetch('https://api.openai.com/v1/chat/completions', {
 });
 ```
 
-## Fehlerbehandlung
+## Error Handling
 
-| Fehlertyp | Ursache | Handling |
-|-----------|---------|----------|
-| NetworkError | Keine Verbindung | Retry mit Backoff |
-| AuthError | Ungültiger API Key | Dialog zur Key-Eingabe |
-| RateLimitError | Zu viele Requests | Warten, Countdown |
-| QuotaError | Kontingent erschöpft | Alternative Provider |
-| StorageError | LocalStorage voll | Alte Sessions löschen |
+| Error Type | Cause | Handling |
+|------------|-------|----------|
+| NetworkError | No connection | Retry with backoff |
+| AuthError | Invalid API Key | Dialog for key entry |
+| RateLimitError | Too many requests | Wait, countdown |
+| QuotaError | Quota exhausted | Alternative provider |
+| StorageError | LocalStorage full | Delete old sessions |
 
 ```javascript
 async function withRetry(fn, maxRetries = 3) {
@@ -365,13 +363,13 @@ async function withRetry(fn, maxRetries = 3) {
 }
 ```
 
-## Sicherheit
+## Security
 
-### API-Key-Handling
+### API Key Handling
 
-Keys werden im LocalStorage gespeichert (Base64-Obfuskation, keine echte Verschlüsselung).
+Keys are stored in LocalStorage (Base64 obfuscation, not real encryption).
 
-**Warnung im UI:** "Verwenden Sie dieses Tool nicht auf öffentlichen Computern."
+**Warning in UI:** "Do not use this tool on public computers."
 
 ### Content Security Policy
 
@@ -383,32 +381,33 @@ Keys werden im LocalStorage gespeichert (Base64-Obfuskation, keine echte Verschl
     https://generativelanguage.googleapis.com
     https://api.openai.com
     https://api.anthropic.com
+    https://api.deepseek.com
     http://localhost:11434;
 ">
 ```
 
-## Technologieentscheidungen
+## Technology Decisions
 
-| Entscheidung | Begründung |
-|--------------|------------|
-| Kein Framework | Reduziert Komplexität, verbessert Langlebigkeit |
-| LocalStorage | Kein Backend nötig, sofortige Persistenz |
-| Fetch API | Nativ, ausreichend für REST |
-| ES6 Modules | Native Browser-Unterstützung, kein Bundler |
-| CSS Custom Properties | Theming ohne Präprozessor |
+| Decision | Rationale |
+|----------|-----------|
+| No Framework | Reduces complexity, improves longevity |
+| LocalStorage | No backend needed, instant persistence |
+| Fetch API | Native, sufficient for REST |
+| ES6 Modules | Native browser support, no bundler |
+| CSS Custom Properties | Theming without preprocessor |
 
-## Performance-Ziele
+## Performance Goals
 
-| Metrik | Ziel |
-|--------|------|
+| Metric | Target |
+|--------|--------|
 | HTML | <5 KB gzip |
 | CSS | <15 KB gzip |
 | JavaScript | <50 KB gzip |
 | Fonts | ~100 KB |
-| **Gesamt** | **<170 KB** |
+| **Total** | **<170 KB** |
 
 ---
 
-**Verweise:**
-- [VALIDATION](VALIDATION.md) für ValidationEngine-Details
-- [DATA-SCHEMA](DATA-SCHEMA.md) für Datenstrukturen
+**References:**
+- [VALIDATION](VALIDATION.md) for ValidationEngine details
+- [DATA-SCHEMA](DATA-SCHEMA.md) for data structures

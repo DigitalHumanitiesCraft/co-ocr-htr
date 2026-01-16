@@ -5,61 +5,61 @@ tags: [coocr-htr, methodology, llm-bias]
 status: complete
 ---
 
-# Methodische Grundlagen
+# Methodological Foundations
 
-Wissenschaftliche Basis fuer Designentscheidungen in coOCR/HTR.
+Scientific basis for design decisions in coOCR/HTR.
 
 ## Promptotyping
 
-Entwicklungsmethodik in vier Phasen:
+Development methodology in four phases:
 
-| Phase | Aktivität | coOCR/HTR-Anwendung |
-|-------|-----------|---------------------|
-| Preparation | Quellenanalyse, Kontextualisierung | Analyse bestehender OCR/HTR-Workflows |
-| Exploration | Iteratives Testen von Modellen/Prompts | VLM-Vergleich, Prompt-Optimierung |
-| Distillation | Konsolidierung in Dokumentation | Dieser knowledge/-Ordner |
-| Implementation | Umsetzung in Code | src/-Implementierung |
+| Phase | Activity | coOCR/HTR Application |
+|-------|----------|----------------------|
+| Preparation | Source analysis, contextualization | Analysis of existing OCR/HTR workflows |
+| Exploration | Iterative testing of models/prompts | VLM comparison, prompt optimization |
+| Distillation | Consolidation into documentation | This knowledge/ folder |
+| Implementation | Translation into code | docs/ implementation |
 
-**Prinzip:** Dokumentation vor Code. Iteration durch Dialog. Frühe Validierung.
+**Principle:** Documentation before code. Iteration through dialogue. Early validation.
 
 ## Critical Expert in the Loop
 
-Drei Expertise-Komponenten für OCR/HTR-Validierung:
+Three expertise components for OCR/HTR validation:
 
-| Komponente | Beschreibung | Beispiel |
-|------------|--------------|----------|
-| Domänenwissen | Faktische Korrektheit aus Quellenkenntnis | Historische Schriftformen, Terminologie |
-| Technisches Modellverständnis | LLM-Charakteristiken (Context, Temperature) | Stärken/Schwächen verschiedener VLMs |
-| Metakognitive Wachsamkeit | Reflexion über Blindstellen | Alternative Lesarten, die niemand erkannte |
+| Component | Description | Example |
+|-----------|-------------|---------|
+| Domain Knowledge | Factual correctness from source familiarity | Historical script forms, terminology |
+| Technical Model Understanding | LLM characteristics (context, temperature) | Strengths/weaknesses of different VLMs |
+| Metacognitive Vigilance | Reflection on blind spots | Alternative readings that nobody noticed |
 
-**Kernaussage:** Expertenwissen ist nicht ersetzbar. Die Maschine unterstützt, der Mensch entscheidet.
+**Core statement:** Expert knowledge is irreplaceable. The machine assists, the human decides.
 
-## LLM-Judge-Bias
+## LLM-Judge Bias
 
-Empirische Evidenz gegen numerische Konfidenzwerte:
+Empirical evidence against numerical confidence values:
 
-| Bias-Typ | Effekt | Messung |
-|----------|--------|---------|
-| Position Bias | Bevorzugung bestimmter Eingabepositionen | 56-83% Variation bei Position-Swaps |
-| Verbosity Bias | Längere Outputs höher bewertet | +5.5 bis +8.2 Prozentpunkte |
-| Self-Enhancement | Eigene Outputs bevorzugt | GPT-4: 70.5% Selbst-Präferenz |
-| Semantic Perturbation | Äquivalente Variationen → unterschiedliche Scores | 3-77% Performance-Degradierung |
+| Bias Type | Effect | Measurement |
+|-----------|--------|-------------|
+| Position Bias | Preference for certain input positions | 56-83% variation with position swaps |
+| Verbosity Bias | Longer outputs rated higher | +5.5 to +8.2 percentage points |
+| Self-Enhancement | Own outputs preferred | GPT-4: 70.5% self-preference |
+| Semantic Perturbation | Equivalent variations → different scores | 3-77% performance degradation |
 
-**Kalibrierungsgrenze:** Selbst optimierte Methoden erreichen maximal 47% Fehlerreduktion.
+**Calibration limit:** Even optimized methods achieve at most 47% error reduction.
 
-### Konsequenz für coOCR/HTR
+### Consequences for coOCR/HTR
 
-| Entscheidung | Begründung |
-|--------------|------------|
-| Keine numerischen Konfidenzwerte | Suggerieren Präzision, die nicht existiert |
-| Kategorielle Abstufungen | sicher / prüfenswert / problematisch |
-| Hybride Validierung | LLM-Judge + deterministische Regeln |
-| Visuelle Unterscheidung | Regelbasiert vs. KI-basiert erkennbar |
-| Multi-Judge-Option | Ensemble bei kritischen Dokumenten |
+| Decision | Rationale |
+|----------|-----------|
+| No numerical confidence values | Suggest precision that doesn't exist |
+| Categorical gradations | confident / uncertain / problematic |
+| Hybrid validation | LLM-Judge + deterministic rules |
+| Visual distinction | Rule-based vs. AI-based recognizable |
+| Multi-judge option | Ensemble for critical documents |
 
 ## Vision-Language Models
 
-### Architektur
+### Architecture
 
 ```
 Vision Encoder (CLIP/SigLIP/ViT)
@@ -69,56 +69,56 @@ Vision Encoder (CLIP/SigLIP/ViT)
     LLM Backbone
 ```
 
-### Emergente OCR/HTR-Fähigkeit
+### Emergent OCR/HTR Capability
 
-OCR/HTR war kein explizites Trainingsziel. Die Fähigkeit entsteht aus visuellem Reasoning.
+OCR/HTR was not an explicit training objective. The capability emerges from visual reasoning.
 
-**Folge:** Tabellenstrukturen werden gut erkannt (visuelle Muster), ungewohnte Buchstabenformen sind problematisch.
+**Consequence:** Table structures are well recognized (visual patterns), unfamiliar letter forms are problematic.
 
-### Dokumentspezifische Grenzen
+### Document-Specific Limitations
 
-| Problem | Beschreibung | Schweregrad |
-|---------|--------------|-------------|
-| Komplexe Layouts | Spaltenrekonstruktion, leere Zellen | Mittel |
-| Handschrift | Buchstaben-Zahlen-Verwechslung | Hoch |
-| Historische Schriften | Ungewohnte Buchstabenformen | Hoch |
-| Tabellen ohne Linien | Implizite Struktur | Mittel |
+| Problem | Description | Severity |
+|---------|-------------|----------|
+| Complex Layouts | Column reconstruction, empty cells | Medium |
+| Handwriting | Letter-number confusion | High |
+| Historical Scripts | Unfamiliar letter forms | High |
+| Tables without Lines | Implicit structure | Medium |
 
-**Quellenabhängigkeit:** Neuzeitliche Handschriften (19. Jh.) funktionieren gut. Mittelalterliche Schriften erfordern spezialisierte HTR-Modelle.
+**Source dependency:** Modern handwriting (19th c.) works well. Medieval scripts require specialized HTR models.
 
-## Interface-Design-Theorie
+## Interface Design Theory
 
 ### Visual Information Seeking Mantra (Shneiderman)
 
 > "Overview first, zoom and filter, then details on demand."
 
-**coOCR/HTR-Umsetzung:** Seitenübersicht → Einzelseite → Detailansicht eines Eintrags
+**coOCR/HTR implementation:** Page overview → Single page → Detail view of an entry
 
 ### Coordinated Multiple Views
 
-Bild, Text und Validierung sind verlinkt:
-- Klick auf Textstelle → Bildbereich hervorgehoben
-- Klick auf Validierungshinweis → Sprung zur Stelle
+Image, text, and validation are linked:
+- Click on text passage → Image region highlighted
+- Click on validation hint → Jump to location
 
 ### Progressive Disclosure
 
-- Basis-Interface für einfache Korrekturen
-- Erweiterte Optionen (Modellvergleich, Batch, Export-Konfiguration) bei Bedarf
+- Basic interface for simple corrections
+- Advanced options (model comparison, batch, export configuration) on demand
 
 ### Analytic Provenance
 
-Nachvollziehbarkeit aller Schritte: Modell, Korrekturen, Zeitstempel.
+Traceability of all steps: model, corrections, timestamp.
 
-## Zusammenfassung: Design-Prinzipien
+## Summary: Design Principles
 
-| Prinzip | Begründung | Verweis |
-|---------|------------|---------|
-| Hybride Validierung | LLM-Bias, epistemische Asymmetrie | → [VALIDATION](VALIDATION.md) |
-| Kategorielle Konfidenz | Position/Verbosity/Self-Enhancement-Bias | → [DESIGN-SYSTEM](DESIGN-SYSTEM.md) |
-| Expert-in-the-Loop | Domänenwissen nicht ersetzbar | → [VALIDATION](VALIDATION.md) |
-| Modellvielfalt | Quellenabhängige Erkennungsqualität | → [ARCHITECTURE](ARCHITECTURE.md) |
-| Lokale Kontrolle | Datenschutz, Kostenmanagement | → [ARCHITECTURE](ARCHITECTURE.md) |
+| Principle | Rationale | Reference |
+|-----------|-----------|-----------|
+| Hybrid Validation | LLM bias, epistemic asymmetry | → [VALIDATION](VALIDATION.md) |
+| Categorical Confidence | Position/Verbosity/Self-Enhancement bias | → [DESIGN-SYSTEM](DESIGN-SYSTEM.md) |
+| Expert-in-the-Loop | Domain knowledge irreplaceable | → [VALIDATION](VALIDATION.md) |
+| Model Diversity | Source-dependent recognition quality | → [ARCHITECTURE](ARCHITECTURE.md) |
+| Local Control | Privacy, cost management | → [ARCHITECTURE](ARCHITECTURE.md) |
 
 ---
 
-**Quellen:** Promptotyping-Methodik, Critical Expert in the Loop, LLM-Judge-Bias-Forschung, Vision-Language Models, Document AI, Shneiderman (Visual Information Seeking).
+**Sources:** Promptotyping methodology, Critical Expert in the Loop, LLM-Judge bias research, Vision-Language Models, Document AI, Shneiderman (Visual Information Seeking).
