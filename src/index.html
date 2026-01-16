@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>coOCR/HTR Workbench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ========================================
+       CSS VARIABLES (Design System)
+       ======================================== */
+    :root {
+      /* Backgrounds */
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --bg-hover: #30363d;
+
+      /* Text */
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+
+      /* Accents */
+      --accent-primary: #58a6ff;
+      --accent-hover: #79b8ff;
+
+      /* Status Colors */
+      --success: #3fb950;
+      --success-bg: rgba(63, 185, 80, 0.15);
+      --warning: #d29922;
+      --warning-bg: rgba(210, 153, 34, 0.15);
+      --error: #f85149;
+      --error-bg: rgba(248, 81, 73, 0.15);
+      --selection: #ffc107;
+      --selection-bg: rgba(255, 193, 7, 0.2);
+
+      /* Spacing */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+
+      /* Radii */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+
+      /* Fonts */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    /* ========================================
+       RESET & BASE
+       ======================================== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+    }
+
+    /* ========================================
+       MAIN LAYOUT
+       ======================================== */
+    .app {
+      display: grid;
+      grid-template-rows: 56px 1fr 36px;
+      height: 100vh;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 40fr 35fr 25fr;
+      gap: var(--space-2);
+      padding: var(--space-2);
+      overflow: hidden;
+    }
+
+    .panel {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow: auto;
+      padding: var(--space-3);
+    }
+
+    /* ========================================
+       HEADER
+       ======================================== */
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-4);
+      gap: var(--space-4);
+    }
+
+    .logo {
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-primary);
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, var(--accent-primary), #a855f7);
+      border-radius: var(--radius-sm);
+    }
+
+    .doc-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex: 1;
+    }
+
+    .doc-name {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    .save-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .save-dot.unsaved {
+      background: var(--warning);
+    }
+
+    .page-nav {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .page-nav button {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+
+    .page-nav button:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .header-btn {
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      transition: all 0.15s ease;
+    }
+
+    .header-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .header-btn.primary {
+      background: var(--accent-primary);
+      color: #fff;
+    }
+
+    .header-btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    /* ========================================
+       DOCUMENT VIEWER
+       ======================================== */
+    .viewer-container {
+      position: relative;
+      flex: 1;
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .document-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+    }
+
+    .bounding-boxes {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .bounding-box {
+      position: absolute;
+      border: 2px solid var(--accent-primary);
+      background: rgba(88, 166, 255, 0.1);
+      border-radius: 2px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .bounding-box:hover {
+      background: rgba(88, 166, 255, 0.25);
+    }
+
+    .bounding-box.selected {
+      border-color: var(--selection);
+      background: var(--selection-bg);
+    }
+
+    .viewer-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      margin-top: var(--space-2);
+    }
+
+    .zoom-control {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .zoom-slider {
+      width: 100px;
+      accent-color: var(--accent-primary);
+    }
+
+    .zoom-value {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 40px;
+    }
+
+    .toolbar-btn {
+      padding: var(--space-1) var(--space-2);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+
+    .toolbar-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    /* ========================================
+       EDITOR
+       ======================================== */
+    .editor-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .toggle-group {
+      display: flex;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+    }
+
+    .toggle-btn {
+      padding: var(--space-1) var(--space-2);
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-radius: 3px;
+      transition: all 0.15s ease;
+    }
+
+    .toggle-btn.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: var(--space-1);
+    }
+
+    .editor-actions button {
+      padding: var(--space-1) var(--space-2);
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: color 0.15s ease;
+    }
+
+    .editor-actions button:hover {
+      color: var(--text-primary);
+    }
+
+    .editor-content {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      flex: 1;
+      overflow: auto;
+    }
+
+    .editor-line {
+      display: flex;
+      padding: var(--space-1) 0;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .editor-line:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .editor-line.selected {
+      background: var(--selection-bg);
+    }
+
+    .line-number {
+      width: 32px;
+      text-align: right;
+      padding-right: var(--space-2);
+      color: var(--text-muted);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .line-content {
+      flex: 1;
+      white-space: pre;
+    }
+
+    .marker-uncertain {
+      background: rgba(255, 193, 7, 0.3);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    .marker-illegible {
+      background: rgba(248, 81, 73, 0.3);
+      padding: 0 2px;
+      border-radius: 2px;
+      font-style: italic;
+    }
+
+    /* ========================================
+       TOOLTIPS
+       ======================================== */
+    .tooltip-trigger {
+      position: relative;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-primary);
+      border: 1px solid var(--bg-hover);
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-3);
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.15s ease;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--bg-hover);
+    }
+
+    .tooltip-trigger:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* SVG Icons */
+    .icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .icon-sm {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-indicator.success {
+      background: var(--success);
+    }
+
+    .status-indicator.warning {
+      background: var(--warning);
+    }
+
+    .status-indicator.error {
+      background: var(--error);
+    }
+
+    /* ========================================
+       VALIDATION PANEL
+       ======================================== */
+    .validation-section {
+      margin-bottom: var(--space-4);
+    }
+
+    .validation-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-2);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .validation-card {
+      padding: var(--space-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-2);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .validation-card:hover {
+      background: var(--bg-hover);
+    }
+
+    .validation-card.success {
+      border-left-color: var(--success);
+    }
+
+    .validation-card.warning {
+      border-left-color: var(--warning);
+    }
+
+    .validation-card.error {
+      border-left-color: var(--error);
+    }
+
+    .validation-card.selected {
+      background: var(--selection-bg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    .card-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-icon .status-indicator {
+      width: 10px;
+      height: 10px;
+    }
+
+    .card-text {
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .card-details {
+      margin-top: var(--space-2);
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--bg-secondary);
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: none;
+    }
+
+    .validation-card.expanded .card-details {
+      display: block;
+    }
+
+    .details-toggle {
+      font-size: 11px;
+      color: var(--accent-primary);
+      margin-top: var(--space-1);
+    }
+
+    .details-toggle:hover {
+      text-decoration: underline;
+    }
+
+    /* ========================================
+       STATUS BAR
+       ======================================== */
+    .status-bar {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-4);
+      gap: var(--space-4);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .status-select {
+      background: var(--bg-tertiary);
+      border: none;
+      color: var(--text-primary);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .status-spacer {
+      flex: 1;
+    }
+
+    .kbd {
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    /* ========================================
+       DIALOGS
+       ======================================== */
+    .dialog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .dialog-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .dialog {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow: auto;
+      transform: scale(0.95);
+      transition: transform 0.2s ease;
+    }
+
+    .dialog-overlay.open .dialog {
+      transform: scale(1);
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--bg-tertiary);
+    }
+
+    .dialog-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .dialog-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      font-size: 18px;
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+    }
+
+    .dialog-close:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .dialog-body {
+      padding: var(--space-4);
+    }
+
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-2);
+      padding: var(--space-4);
+      border-top: 1px solid var(--bg-tertiary);
+    }
+
+    .dialog-btn {
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .dialog-btn.secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    .dialog-btn.secondary:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .dialog-btn.primary {
+      background: var(--accent-primary);
+      color: #fff;
+    }
+
+    .dialog-btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--bg-hover);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      text-align: center;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent-primary);
+      background: rgba(88, 166, 255, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-3);
+    }
+
+    .upload-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: var(--space-2);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: var(--space-2);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--bg-hover);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 13px;
+      transition: border-color 0.15s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: var(--space-2);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-1);
+    }
+
+    /* ========================================
+       TOAST
+       ======================================== */
+    .toast-container {
+      position: fixed;
+      top: 72px;
+      right: var(--space-4);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .toast {
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--success);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.error {
+      border-left-color: var(--error);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- ========== HEADER ========== -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon"></div>
+        <span>coOCR/HTR</span>
+      </div>
+
+      <div class="doc-info">
+        <div class="doc-name">
+          <span class="save-dot" id="saveDot"></span>
+          <span>Rechnungsbuch_1842_S15.jpg</span>
+        </div>
+        <div class="page-nav">
+          <button onclick="changePage(-1)">‹</button>
+          <span>Seite <strong id="currentPage">15</strong> von 47</span>
+          <button onclick="changePage(1)">›</button>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="header-btn" onclick="openDialog('uploadDialog')">📤 Upload</button>
+        <button class="header-btn" onclick="openDialog('apiDialog')">🔑 API Keys</button>
+        <button class="header-btn" onclick="openDialog('exportDialog')">📥 Export</button>
+        <button class="header-btn">⚙️</button>
+        <button class="header-btn">❓</button>
+      </div>
+    </header>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content">
+      <!-- Document Viewer Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Document Viewer</span>
+        </div>
+        <div class="panel-content" style="display: flex; flex-direction: column;">
+          <div class="viewer-container" id="viewerContainer">
+            <!-- Mock Document Image (SVG placeholder) -->
+            <svg class="document-image" viewBox="0 0 400 500" style="background: #f5f0e1; width: 90%; height: auto;">
+              <rect width="400" height="500" fill="#f5f0e1" />
+              <text x="20" y="40" font-family="serif" font-size="12" fill="#2c1810">Rechnungsbuch 1842</text>
+              <line x1="20" y1="50" x2="380" y2="50" stroke="#2c1810" stroke-width="0.5" />
+
+              <!-- Table Headers -->
+              <text x="30" y="80" font-family="serif" font-size="10" fill="#2c1810">Datum</text>
+              <text x="100" y="80" font-family="serif" font-size="10" fill="#2c1810">Beschreibung</text>
+              <text x="280" y="80" font-family="serif" font-size="10" fill="#2c1810">Betrag</text>
+
+              <!-- Table Lines -->
+              <line x1="20" y1="90" x2="380" y2="90" stroke="#2c1810" stroke-width="0.3" />
+
+              <!-- Handwritten-style entries -->
+              <text x="30" y="115" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">28.
+                Mai</text>
+              <text x="100" y="115" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">K.
+                Schmidt, Eisenwaren</text>
+              <text x="280" y="115" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">23
+                Taler</text>
+
+              <text x="30" y="145" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">28.
+                Mai</text>
+              <text x="100" y="145" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">K.
+                Schmidt, Eisenwaren</text>
+              <text x="280" y="145" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">5
+                Groschen</text>
+
+              <text x="30" y="175" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">28.
+                Mai</text>
+              <text x="100" y="175" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">L.
+                Müller, Kornkauf</text>
+              <text x="280" y="175" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">12
+                Taler</text>
+
+              <text x="30" y="205" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">29.
+                Mai</text>
+              <text x="100" y="205" font-family="cursive" font-size="11" fill="#1a0f08"
+                style="font-style: italic;">Lieferung von Holz</text>
+              <text x="280" y="205" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">41
+                Taler</text>
+
+              <text x="30" y="235" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">29.
+                Mai</text>
+              <text x="100" y="235" font-family="cursive" font-size="11" fill="#1a0f08"
+                style="font-style: italic;">Unbekannte Ausgabe</text>
+              <text x="280" y="235" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">15
+                Taler</text>
+
+              <text x="30" y="265" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">30.
+                Mai</text>
+              <text x="100" y="265" font-family="cursive" font-size="11" fill="#1a0f08"
+                style="font-style: italic;">Gehalt für Bedienstete</text>
+              <text x="280" y="265" font-family="cursive" font-size="11" fill="#1a0f08" style="font-style: italic;">200
+                Taler</text>
+            </svg>
+
+            <!-- Bounding Boxes -->
+            <div class="bounding-boxes" id="boundingBoxes">
+              <div class="bounding-box" data-line="1" style="top: 20%; left: 5%; width: 90%; height: 5%;"></div>
+              <div class="bounding-box" data-line="2" style="top: 26%; left: 5%; width: 90%; height: 5%;"></div>
+              <div class="bounding-box selected" data-line="3" style="top: 32%; left: 5%; width: 90%; height: 5%;">
+              </div>
+              <div class="bounding-box" data-line="4" style="top: 38%; left: 5%; width: 90%; height: 5%;"></div>
+              <div class="bounding-box" data-line="5" style="top: 44%; left: 5%; width: 90%; height: 5%;"></div>
+              <div class="bounding-box" data-line="6" style="top: 50%; left: 5%; width: 90%; height: 5%;"></div>
+            </div>
+          </div>
+
+          <div class="viewer-toolbar">
+            <div class="zoom-control">
+              <button class="toolbar-btn" onclick="zoom(-10)">−</button>
+              <input type="range" class="zoom-slider" min="50" max="200" value="100" id="zoomSlider">
+              <button class="toolbar-btn" onclick="zoom(10)">+</button>
+              <span class="zoom-value" id="zoomValue">100%</span>
+            </div>
+            <button class="toolbar-btn">Fit Width</button>
+            <button class="toolbar-btn">Fit Page</button>
+            <button class="toolbar-btn">✏️ Draw Region</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Transcription Editor</span>
+          <div class="editor-controls">
+            <div class="toggle-group">
+              <button class="toggle-btn active">Editing</button>
+              <button class="toggle-btn">View</button>
+            </div>
+            <div class="editor-actions">
+              <button title="Undo">↩ Undo</button>
+              <button title="Redo">↪ Redo</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-content">
+          <div class="editor-content" id="editorContent">
+            <div class="editor-line" data-line="1" onclick="selectLine(1)">
+              <span class="line-number">1</span>
+              <span class="line-content">| Datum | Beschreibung | Betrag |</span>
+            </div>
+            <div class="editor-line" data-line="2" onclick="selectLine(2)">
+              <span class="line-number">2</span>
+              <span class="line-content">|-------|--------------|--------|</span>
+            </div>
+            <div class="editor-line selected" data-line="3" onclick="selectLine(3)">
+              <span class="line-number">3</span>
+              <span class="line-content">| 28. Mai | K. Schmidt, Eisenwaren | 23 Taler |</span>
+            </div>
+            <div class="editor-line" data-line="4" onclick="selectLine(4)">
+              <span class="line-number">4</span>
+              <span class="line-content">| 28. Mai | K. Schmidt, Eisenwaren | 5 Groschen |</span>
+            </div>
+            <div class="editor-line" data-line="5" onclick="selectLine(5)">
+              <span class="line-number">5</span>
+              <span class="line-content">| 28. Mai | L. <span class="marker-uncertain">[?]</span> Müller, Kornkauf | 12
+                Taler |</span>
+            </div>
+            <div class="editor-line" data-line="6" onclick="selectLine(6)">
+              <span class="line-number">6</span>
+              <span class="line-content">| 29. Mai | Lieferung von Holz | 41 Taler |</span>
+            </div>
+            <div class="editor-line" data-line="7" onclick="selectLine(7)">
+              <span class="line-number">7</span>
+              <span class="line-content">| 29. Mai | <span class="marker-illegible">[illegible]</span> Ausgabe | 15
+                Taler |</span>
+            </div>
+            <div class="editor-line" data-line="8" onclick="selectLine(8)">
+              <span class="line-number">8</span>
+              <span class="line-content">| 30. Mai | Gehalt für Bedienstete | 200 Taler |</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Validation Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Validierung</span>
+        </div>
+        <div class="panel-content" id="validationPanel">
+          <!-- Regelbasiert Section -->
+          <div class="validation-section">
+            <div class="section-header">
+              <span>⚙️</span>
+              <span>Regelbasiert</span>
+            </div>
+
+            <div class="validation-card success" data-line="3" onclick="selectValidation(this, 3)">
+              <div class="card-header">
+                <span class="card-icon">✅</span>
+                <div class="card-text">
+                  <div class="card-title">Datumsformat korrekt (DD. MM.)</div>
+                  <div class="card-meta">Zeile 3-8</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="validation-card warning" data-line="5" onclick="selectValidation(this, 5)">
+              <div class="card-header">
+                <span class="card-icon">⚠️</span>
+                <div class="card-text">
+                  <div class="card-title">Unsichere Transkription [?]</div>
+                  <div class="card-meta">Zeile 5</div>
+                  <button class="details-toggle" onclick="toggleDetails(event, this)">▾ Details</button>
+                </div>
+              </div>
+              <div class="card-details">
+                Der Name könnte auch "Möller" oder "Mühler" sein. Die Handschrift ist an dieser Stelle schwer lesbar.
+              </div>
+            </div>
+          </div>
+
+          <!-- KI-Einschätzung Section -->
+          <div class="validation-section">
+            <div class="section-header">
+              <span>🤖</span>
+              <span>KI-Einschätzung</span>
+            </div>
+
+            <div class="validation-card success" onclick="selectValidation(this, null)">
+              <div class="card-header">
+                <span class="card-icon">✅</span>
+                <div class="card-text">
+                  <div class="card-title">Text-zu-Bild-Konsistenz hoch</div>
+                  <div class="card-meta">Gesamtdokument</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="validation-card warning" data-line="5" onclick="selectValidation(this, 5)">
+              <div class="card-header">
+                <span class="card-icon">⚠️</span>
+                <div class="card-text">
+                  <div class="card-title">Möglicher Lesefehler bei Name</div>
+                  <div class="card-meta">Zeile 5</div>
+                  <button class="details-toggle" onclick="toggleDetails(event, this)">▾ Details</button>
+                </div>
+              </div>
+              <div class="card-details">
+                Die KI erkennt mit 73% Wahrscheinlichkeit "Müller" und mit 27% "Möller". Eine manuelle Prüfung wird
+                empfohlen.
+              </div>
+            </div>
+
+            <div class="validation-card error" data-line="7" onclick="selectValidation(this, 7)">
+              <div class="card-header">
+                <span class="card-icon">❌</span>
+                <div class="card-text">
+                  <div class="card-title">Unleserliche Stelle</div>
+                  <div class="card-meta">Zeile 7</div>
+                  <button class="details-toggle" onclick="toggleDetails(event, this)">▾ Details</button>
+                </div>
+              </div>
+              <div class="card-details">
+                Diese Stelle konnte weder automatisch noch manuell transkribiert werden. Mögliche Ursachen: Tintenfleck,
+                Beschädigung des Originals.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ========== STATUS BAR ========== -->
+    <footer class="status-bar">
+      <div class="status-item">
+        <span>Modell:</span>
+        <select class="status-select">
+          <option>Gemini 2.0 Flash</option>
+          <option>GPT-4o</option>
+          <option>Claude 3.5 Sonnet</option>
+        </select>
+      </div>
+      <div class="status-item">
+        <span>Perspektive:</span>
+        <select class="status-select">
+          <option>Paläographisch</option>
+          <option>Sprachlich</option>
+          <option>Strukturell</option>
+          <option>Domänenwissen</option>
+        </select>
+      </div>
+      <div class="status-item">
+        <button class="header-btn primary" onclick="analyze()">▶ Analysieren</button>
+      </div>
+      <div class="status-spacer"></div>
+      <div class="status-item">
+        <span>Letzte Änderung: 17:08</span>
+      </div>
+      <div class="status-item">
+        <span class="status-dot"></span>
+        <span>API verbunden</span>
+      </div>
+      <div class="status-item">
+        <span class="kbd">Ctrl+S</span>
+        <span>speichern</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========== DIALOGS ========== -->
+
+  <!-- Upload Dialog -->
+  <div class="dialog-overlay" id="uploadDialog" onclick="closeDialog(event, 'uploadDialog')">
+    <div class="dialog" onclick="event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="dialog-title">Dokument hochladen</span>
+        <button class="dialog-close" onclick="closeDialog(event, 'uploadDialog')">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="upload-zone">
+          <div class="upload-icon">📄</div>
+          <div>Datei hierher ziehen oder klicken zum Auswählen</div>
+          <div class="upload-hint">JPEG, PNG, TIFF, PDF (max. 20 MB)</div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="dialog-btn secondary" onclick="closeDialog(event, 'uploadDialog')">Abbrechen</button>
+        <button class="dialog-btn primary" onclick="mockUpload()">Öffnen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Keys Dialog -->
+  <div class="dialog-overlay" id="apiDialog" onclick="closeDialog(event, 'apiDialog')">
+    <div class="dialog" onclick="event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="dialog-title">API Keys verwalten</span>
+        <button class="dialog-close" onclick="closeDialog(event, 'apiDialog')">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-group">
+          <label class="form-label">Google Gemini</label>
+          <input type="password" class="form-input" placeholder="API Key eingeben..." value="••••••••••••••••••">
+        </div>
+        <div class="form-group">
+          <label class="form-label">OpenAI</label>
+          <input type="password" class="form-input" placeholder="API Key eingeben...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Anthropic</label>
+          <input type="password" class="form-input" placeholder="API Key eingeben...">
+        </div>
+        <div class="form-hint">
+          <span>ℹ️</span>
+          <span>Keys werden nur lokal im Browser gespeichert (LocalStorage). Verwenden Sie dieses Tool nicht auf
+            öffentlichen Computern.</span>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="dialog-btn secondary" onclick="closeDialog(event, 'apiDialog')">Abbrechen</button>
+        <button class="dialog-btn primary" onclick="saveKeys()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Dialog -->
+  <div class="dialog-overlay" id="exportDialog" onclick="closeDialog(event, 'exportDialog')">
+    <div class="dialog" onclick="event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="dialog-title">Exportieren</span>
+        <button class="dialog-close" onclick="closeDialog(event, 'exportDialog')">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-group">
+          <label class="form-label">Format</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label><input type="radio" name="format" checked> Markdown (.md)</label>
+            <label><input type="radio" name="format"> JSON (.json) – mit Metadaten</label>
+            <label><input type="radio" name="format"> TSV (.tsv) – nur Tabellendaten</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Optionen</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label><input type="checkbox" checked> Validierungshinweise einschließen</label>
+            <label><input type="checkbox" checked> Bildregionen-Koordinaten</label>
+            <label><input type="checkbox"> Originalbild einbetten (Base64)</label>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="dialog-btn secondary" onclick="closeDialog(event, 'exportDialog')">Abbrechen</button>
+        <button class="dialog-btn primary" onclick="mockExport()">Exportieren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ========================================
+    // SIMPLE PROTOTYPE LOGIC
+    // ========================================
+
+    // Select a line in the editor and highlight corresponding region
+    function selectLine(lineNum) {
+      // Remove previous selections
+      document.querySelectorAll('.editor-line.selected').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('.bounding-box.selected').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('.validation-card.selected').forEach(el => el.classList.remove('selected'));
+
+      // Select editor line
+      const line = document.querySelector(`.editor-line[data-line="${lineNum}"]`);
+      if (line) line.classList.add('selected');
+
+      // Select corresponding bounding box
+      const box = document.querySelector(`.bounding-box[data-line="${lineNum}"]`);
+      if (box) box.classList.add('selected');
+    }
+
+    // Select from validation panel
+    function selectValidation(card, lineNum) {
+      // Remove previous card selections
+      document.querySelectorAll('.validation-card.selected').forEach(el => el.classList.remove('selected'));
+      card.classList.add('selected');
+
+      if (lineNum) {
+        selectLine(lineNum);
+      }
+    }
+
+    // Toggle validation card details
+    function toggleDetails(event, btn) {
+      event.stopPropagation();
+      const card = btn.closest('.validation-card');
+      card.classList.toggle('expanded');
+      btn.textContent = card.classList.contains('expanded') ? '▴ Details' : '▾ Details';
+    }
+
+    // Bounding box click handlers
+    document.querySelectorAll('.bounding-box').forEach(box => {
+      box.addEventListener('click', () => {
+        const lineNum = box.dataset.line;
+        selectLine(parseInt(lineNum));
+      });
+    });
+
+    // Zoom functionality
+    function zoom(delta) {
+      const slider = document.getElementById('zoomSlider');
+      let value = parseInt(slider.value) + delta;
+      value = Math.max(50, Math.min(200, value));
+      slider.value = value;
+      document.getElementById('zoomValue').textContent = value + '%';
+    }
+
+    document.getElementById('zoomSlider').addEventListener('input', function () {
+      document.getElementById('zoomValue').textContent = this.value + '%';
+    });
+
+    // Page navigation
+    function changePage(delta) {
+      const pageEl = document.getElementById('currentPage');
+      let page = parseInt(pageEl.textContent) + delta;
+      page = Math.max(1, Math.min(47, page));
+      pageEl.textContent = page;
+      showToast(`Seite ${page} geladen`);
+    }
+
+    // Dialog functions
+    function openDialog(id) {
+      document.getElementById(id).classList.add('open');
+    }
+
+    function closeDialog(event, id) {
+      if (event.target === event.currentTarget || event.target.classList.contains('dialog-close') || event.target.classList.contains('dialog-btn')) {
+        document.getElementById(id).classList.remove('open');
+      }
+    }
+
+    // Mock actions
+    function mockUpload() {
+      closeDialog(event, 'uploadDialog');
+      showToast('Dokument geladen ✓');
+    }
+
+    function saveKeys() {
+      closeDialog(event, 'apiDialog');
+      showToast('API Keys gespeichert ✓');
+    }
+
+    function mockExport() {
+      closeDialog(event, 'exportDialog');
+      showToast('Exportiert als Markdown ✓');
+    }
+
+    function analyze() {
+      showToast('Analyse gestartet...');
+      setTimeout(() => {
+        showToast('Transkription abgeschlossen ✓');
+      }, 2000);
+    }
+
+    // Toast notifications
+    function showToast(message, isError = false) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast' + (isError ? ' error' : '');
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('saveDot').classList.remove('unsaved');
+        showToast('Gespeichert ✓');
+      }
+    });
+
+    // Mark as unsaved when editing
+    document.getElementById('editorContent').addEventListener('input', () => {
+      document.getElementById('saveDot').classList.add('unsaved');
+    });
+  </script>
+</body>
+
+</html>
