@@ -14,7 +14,7 @@ import { appState } from '../state.js';
  */
 class ExportService {
     constructor() {
-        this.formats = ['txt', 'json', 'md'];
+        this.formats = ['txt', 'json', 'md', 'xml'];
     }
 
     /**
@@ -54,6 +54,12 @@ class ExportService {
                 content = this.exportMarkdown(state, includeValidation);
                 mimeType = 'text/markdown';
                 extension = 'md';
+                break;
+            case 'xml':
+            case 'pagexml':
+                content = this.exportPageXml(state);
+                mimeType = 'application/xml';
+                extension = 'xml';
                 break;
             default:
                 throw new Error(`Unknown export format: ${format}`);
@@ -215,6 +221,109 @@ class ExportService {
         lines.push(`*Exported ${new Date().toLocaleString()}*`);
 
         return lines.join('\n');
+    }
+
+    /**
+     * Export as PAGE-XML (2019-07-15 schema)
+     */
+    exportPageXml(state) {
+        const timestamp = new Date().toISOString();
+        const filename = state.document.filename || 'unknown';
+        const segments = state.transcription.segments || [];
+        const regions = state.regions || [];
+
+        // Try to get image dimensions from state
+        const imageWidth = state.image?.naturalWidth || state.document?.width || 0;
+        const imageHeight = state.image?.naturalHeight || state.document?.height || 0;
+
+        const lines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<PcGts xmlns="http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15"',
+            '       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+            '       xsi:schemaLocation="http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15 http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15/pagecontent.xsd">',
+            '  <Metadata>',
+            '    <Creator>coOCR/HTR</Creator>',
+            `    <Created>${timestamp}</Created>`,
+            `    <LastChange>${timestamp}</LastChange>`,
+            '  </Metadata>',
+            `  <Page imageFilename="${this.escapeXml(filename)}" imageWidth="${imageWidth}" imageHeight="${imageHeight}">`,
+            '    <TextRegion id="region_0" type="paragraph">',
+            '      <Coords points="0,0 ' + imageWidth + ',0 ' + imageWidth + ',' + imageHeight + ' 0,' + imageHeight + '"/>',
+        ];
+
+        // Add text lines
+        segments.forEach((segment, index) => {
+            const lineId = segment.id || `line_${index + 1}`;
+            const region = regions[index];
+
+            // Generate coordinates
+            let coordsPoints;
+            if (region && !region.synthetic && imageWidth > 0 && imageHeight > 0) {
+                // Convert percentage to absolute coordinates
+                const x1 = Math.round((region.x / 100) * imageWidth);
+                const y1 = Math.round((region.y / 100) * imageHeight);
+                const x2 = Math.round(((region.x + region.w) / 100) * imageWidth);
+                const y2 = Math.round(((region.y + region.h) / 100) * imageHeight);
+                coordsPoints = `${x1},${y1} ${x2},${y1} ${x2},${y2} ${x1},${y2}`;
+            } else if (segment.polygon) {
+                // Use existing polygon from import
+                coordsPoints = segment.polygon;
+            } else {
+                // Fallback: estimate based on line number
+                const lineHeight = imageHeight / Math.max(segments.length, 1);
+                const y1 = Math.round(index * lineHeight);
+                const y2 = Math.round((index + 1) * lineHeight);
+                coordsPoints = `0,${y1} ${imageWidth},${y1} ${imageWidth},${y2} 0,${y2}`;
+            }
+
+            lines.push(`      <TextLine id="${lineId}">`);
+            lines.push(`        <Coords points="${coordsPoints}"/>`);
+
+            // Add baseline if available
+            if (segment.baseline) {
+                lines.push(`        <Baseline points="${segment.baseline}"/>`);
+            }
+
+            // Add text content
+            const text = this.escapeXml(segment.text || '');
+            const confidence = this.mapConfidenceToNumber(segment.confidence);
+
+            lines.push(`        <TextEquiv${confidence ? ` conf="${confidence}"` : ''}>`);
+            lines.push(`          <Unicode>${text}</Unicode>`);
+            lines.push('        </TextEquiv>');
+            lines.push('      </TextLine>');
+        });
+
+        lines.push('    </TextRegion>');
+        lines.push('  </Page>');
+        lines.push('</PcGts>');
+
+        return lines.join('\n');
+    }
+
+    /**
+     * Escape XML special characters
+     */
+    escapeXml(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+    }
+
+    /**
+     * Map categorical confidence to numeric value
+     */
+    mapConfidenceToNumber(confidence) {
+        const map = {
+            certain: 0.95,
+            likely: 0.75,
+            uncertain: 0.5
+        };
+        return map[confidence] || null;
     }
 
     /**

@@ -2,11 +2,12 @@
  * Upload Component
  *
  * Handles file uploads via button click and drag & drop.
- * Supports images (JPG, PNG, TIFF) and PAGE-XML files.
+ * Supports images (JPG, PNG, TIFF), PAGE-XML, and METS-XML files.
  */
 
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
+import { metsXMLParser } from '../services/parsers/mets-xml.js';
 
 // Supported file types
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/tiff', 'image/webp'];
@@ -188,7 +189,7 @@ class UploadManager {
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
                 <p>Drop file to upload</p>
-                <span class="drop-hint">Images (JPG, PNG, TIFF) or PAGE-XML</span>
+                <span class="drop-hint">Images (JPG, PNG, TIFF), PAGE-XML, or METS-XML</span>
             </div>
         `;
 
@@ -343,6 +344,13 @@ class UploadManager {
                 const xmlString = e.target.result;
 
                 try {
+                    // Check if it's a METS-XML file
+                    if (metsXMLParser.isMetsXML(xmlString)) {
+                        await this.handleMETSFile(file, xmlString);
+                        resolve();
+                        return;
+                    }
+
                     // Check if it's a PAGE-XML file
                     if (xmlString.includes('PcGts') || xmlString.includes('page/2019')) {
                         // Dispatch event for PAGE-XML parser to handle
@@ -355,9 +363,12 @@ class UploadManager {
                         this.hideDemoIndicator();
 
                         dialogManager.showToast(`Loaded PAGE-XML: ${file.name}`, 'success');
-                    } else {
-                        dialogManager.showToast('Not a valid PAGE-XML file', 'warning');
+                        resolve();
+                        return;
                     }
+
+                    // Unknown XML format
+                    dialogManager.showToast('Not a valid PAGE-XML or METS-XML file', 'warning');
                     resolve();
                 } catch (error) {
                     reject(error);
@@ -370,6 +381,55 @@ class UploadManager {
 
             reader.readAsText(file);
         });
+    }
+
+    /**
+     * Handle METS-XML file upload
+     * @param {File} file - The METS-XML file
+     * @param {string} xmlString - The XML content
+     */
+    async handleMETSFile(file, xmlString) {
+        try {
+            // Parse METS-XML
+            const metsData = metsXMLParser.parse(xmlString);
+
+            if (metsData.pages.length === 0) {
+                dialogManager.showToast('METS-XML contains no page references', 'warning');
+                return;
+            }
+
+            // Set pages in state for multi-page navigation
+            const pages = metsData.pages.map((page, index) => ({
+                id: page.id,
+                order: page.order,
+                image: page.image,
+                thumbnail: page.thumbnail,
+                width: page.width,
+                height: page.height,
+                label: `Page ${page.order}`
+            }));
+
+            // Set pages in state
+            appState.setPages(pages);
+
+            // Set metadata
+            if (metsData.metadata) {
+                appState.data.meta.mets = metsData.metadata;
+                appState.data.meta.title = metsData.metadata.title || file.name;
+            }
+
+            // Hide demo indicator
+            this.hideDemoIndicator();
+
+            dialogManager.showToast(
+                `Loaded METS: ${metsData.metadata.title || file.name} (${pages.length} pages)`,
+                'success'
+            );
+
+        } catch (error) {
+            console.error('METS-XML parsing error:', error);
+            dialogManager.showToast(`Failed to parse METS-XML: ${error.message}`, 'error');
+        }
     }
 }
 

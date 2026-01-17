@@ -139,13 +139,10 @@ class PageXMLParser {
             const points = coords?.getAttribute('points') || '';
             const bounds = this.polygonToBounds(points, pageDimensions);
 
-            // Get text content
-            const textEquiv = this.findElement(line, 'TextEquiv');
-            const unicode = this.findElement(textEquiv, 'Unicode');
-            const text = unicode?.textContent || '';
+            // Get text content - prioritize direct TextEquiv of TextLine
+            const { text, conf } = this.extractLineText(line);
 
-            // Get confidence if available
-            const conf = textEquiv?.getAttribute('conf');
+            // Map confidence
             const confidence = this.mapConfidence(conf);
 
             // Get baseline if available
@@ -165,6 +162,89 @@ class PageXMLParser {
         });
 
         return segments;
+    }
+
+    /**
+     * Extract text from a TextLine element
+     * Prioritizes direct TextEquiv child, falls back to concatenating Word elements
+     * @param {Element} line - TextLine element
+     * @returns {object} { text, conf }
+     */
+    extractLineText(line) {
+        // 1. Try to find direct TextEquiv child of TextLine (not nested in Word)
+        const directTextEquiv = this.findDirectChild(line, 'TextEquiv');
+        if (directTextEquiv) {
+            const unicode = this.findElement(directTextEquiv, 'Unicode');
+            const text = unicode?.textContent || '';
+            if (text.trim()) {
+                return {
+                    text,
+                    conf: directTextEquiv.getAttribute('conf')
+                };
+            }
+        }
+
+        // 2. Fallback: Concatenate text from Word elements
+        const words = this.findDirectChildren(line, 'Word');
+        if (words.length > 0) {
+            const wordTexts = words.map(word => {
+                const textEquiv = this.findElement(word, 'TextEquiv');
+                const unicode = this.findElement(textEquiv, 'Unicode');
+                return unicode?.textContent || '';
+            }).filter(t => t);
+
+            return {
+                text: wordTexts.join(' '),
+                conf: null // No single confidence for concatenated words
+            };
+        }
+
+        // 3. Last resort: use findElement (recursive search)
+        const textEquiv = this.findElement(line, 'TextEquiv');
+        const unicode = this.findElement(textEquiv, 'Unicode');
+        return {
+            text: unicode?.textContent || '',
+            conf: textEquiv?.getAttribute('conf')
+        };
+    }
+
+    /**
+     * Find direct child element by local name (not recursive)
+     * @param {Element} parent - Parent element
+     * @param {string} localName - Element local name
+     * @returns {Element|null} Found element or null
+     */
+    findDirectChild(parent, localName) {
+        for (const child of parent.children) {
+            if (child.localName === localName || child.tagName === localName) {
+                return child;
+            }
+            // Handle namespaced elements
+            if (child.tagName.endsWith(':' + localName)) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find all direct children by local name (not recursive)
+     * @param {Element} parent - Parent element
+     * @param {string} localName - Element local name
+     * @returns {Array} Array of found elements
+     */
+    findDirectChildren(parent, localName) {
+        const result = [];
+        for (const child of parent.children) {
+            if (child.localName === localName || child.tagName === localName) {
+                result.push(child);
+            }
+            // Handle namespaced elements
+            if (child.tagName.endsWith(':' + localName)) {
+                result.push(child);
+            }
+        }
+        return result;
     }
 
     /**

@@ -12,7 +12,7 @@ Browser-based experimentation environment for integrating domain experts into OC
 - **PAGE-XML Import**: Compatible with Transkribus exports
 - **METS-XML Support**: Parse multi-page documents from METS metadata
 - **Guided Workflow**: Step-by-step hints and progress tracking
-- **Export Formats**: Plain text, JSON, Markdown
+- **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15)
 - **No Dependencies**: Vanilla JavaScript, runs in any modern browser
 
 ## Quick Start
@@ -106,18 +106,15 @@ npm test
 
 ### Project Status
 
-**Phase 1: Core Application** ✅ Complete
+**Phase 1-2: Core Application** ✅ Complete
 - LLM Integration (5 providers), Gemini 3 optimization
-- Document Viewer with Pan/Zoom/Fit
-- Transcription Editor (lines/grid modes)
-- Hybrid Validation (Rules + LLM-Judge)
-- Export, PAGE-XML/METS-XML Import
-- Guided Workflow, Settings/Help Dialogs
+- Document Viewer, Transcription Editor, Hybrid Validation
+- PAGE-XML/METS-XML Import & Export
+- Multi-page navigation, Help & About pages
 
-**Phase 2: Multi-Page & Documentation** 🔄 In Progress
-- Help & About pages
-- Multi-page navigation
-- Batch transcription
+**Phase 4: Polish & Release** 🔄 In Progress
+- 118 unit tests passing (export, validation, llm, page-xml)
+- E2E tests, performance audit planned
 
 See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
 
