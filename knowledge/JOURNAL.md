@@ -1498,4 +1498,125 @@ if (data.segments?.length > 0) {
 
 ---
 
+## 2026-01-17 | Session 13: Bug Fixes, Features & Tests
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: Critical Bug Fixes
+
+**Task:** Fix all 4 identified bugs from Session 12.
+
+| Bug | Lösung | Datei |
+|-----|--------|-------|
+| LLM-Segmente ohne bounds | Pseudo-Regionen generieren | `state.js` |
+| PAGE-XML Wortfragmente | `extractLineText()` + Word-Fallback | `page-xml.js` |
+| Tabellen-Prompt für alle | Dual-Prompts + UI-Selector | `llm.js`, `index.html` |
+| Validation initial sichtbar | Conditional display | `validation.js` |
+
+**Bug 1.1: Pseudo-Regionen**
+```javascript
+// state.js - Gleichmäßig verteilte Regionen für LLM-Segmente
+if (!s.bounds || s.bounds.width === 0) {
+  const heightPercent = 100 / totalSegments;
+  return { line, x: 2, y: index * heightPercent, w: 96, h: heightPercent, synthetic: true };
+}
+```
+
+**Bug 1.2: PAGE-XML Text-Extraktion**
+```javascript
+// page-xml.js - Direktes TextEquiv bevorzugen, dann Word-Fallback
+extractLineText(line) {
+  const directTextEquiv = this.findDirectChild(line, 'TextEquiv');
+  if (directTextEquiv) return unicode.textContent;
+  const words = this.findDirectChildren(line, 'Word');
+  if (words.length > 0) return words.map(w => ...).join(' ');
+}
+```
+
+**Bug 1.3: Dual-Prompt-System**
+- `TRANSCRIPTION_PROMPT_TABLE` für Rechnungsbücher
+- `TRANSCRIPTION_PROMPT_TEXT` für Briefe/Fließtext
+- UI-Dropdown: "Dokumenttyp" (Tabelle/Fließtext)
+
+### Phase 2: Feature Implementation
+
+| Feature | Beschreibung | Datei |
+|---------|--------------|-------|
+| PAGE-XML Export | PAGE 2019-07-15 Schema | `export.js` |
+| XML Export Dialog | Option im Export-Dialog | `index.html` |
+| METS-XML Upload | Parser-Integration | `upload.js` |
+
+**PAGE-XML Export Features:**
+- Metadata (Creator, Created, LastChange)
+- Page mit imageFilename, Dimensionen
+- TextRegion mit TextLine-Elementen
+- Coords points, TextEquiv mit Unicode
+- Confidence-Mapping (certain→0.95, likely→0.75, uncertain→0.5)
+
+### Phase 3: Test Implementation
+
+| Test-Datei | Tests | Abdeckung |
+|------------|-------|-----------|
+| `llm.test.js` | 28 | Provider, Transcription, Validation |
+| `page-xml.test.js` | 26 | Parser, Segments, Metadata |
+| `export.test.js` | 32 | Alle Formate, XML-Escaping |
+| `validation.test.js` | 32 | Regeln, Marker, Summary |
+| **Gesamt** | **118** | |
+
+**Test-Fixes benötigt:**
+1. `jsdom` als Dev-Dependency hinzugefügt
+2. pagexml alias: Filename-Extension statt Format geprüft
+3. Markdown table: Field-Keys an Header-Konvertierung angepasst
+4. Summary calculation: Korrekter Property-Pfad (`summary.counts.success`)
+
+### Phase 4: Documentation Update
+
+| Datei | Änderung |
+|-------|----------|
+| `ACTIONPLAN.md` | 512 → 60 Zeilen (-89%), komprimiert |
+| `IMPLEMENTATION-PLAN.md` | Phase 2 ✅, Phase 4 🔄, Bugs ✅ |
+| `README.md` | PAGE-XML Export, 118 Tests |
+| `INDEX.md` | ACTIONPLAN.md hinzugefügt |
+
+### Files Modified
+
+| Datei | Änderungen |
+|-------|------------|
+| `docs/js/state.js` | Pseudo-Regionen für LLM-Segmente |
+| `docs/js/services/llm.js` | Dual-Prompt-System |
+| `docs/js/services/parsers/page-xml.js` | extractLineText(), findDirectChild() |
+| `docs/js/services/export.js` | exportPageXml() |
+| `docs/js/components/validation.js` | updateVisibility() |
+| `docs/js/components/transcription.js` | documentType-Integration |
+| `docs/js/components/upload.js` | METS-XML Handler |
+| `docs/index.html` | Dokumenttyp-Dropdown, XML-Export-Option |
+| `docs/tests/export.test.js` | 32 neue Tests |
+| `docs/tests/validation.test.js` | 32 neue Tests |
+
+### Commits
+
+| Commit | Beschreibung |
+|--------|--------------|
+| `11adef4` | test: add comprehensive tests for export and validation services |
+| `dce0b94` | feat: add PAGE-XML export UI and METS-XML upload support |
+| `6645959` | fix: resolve 4 critical bugs and add PAGE-XML export |
+| `e6567c9` | docs: add comprehensive action plan for open issues |
+| `e481a64` | docs: update documentation to reflect completed fixes |
+
+### Project Status
+
+**Abgeschlossen:**
+- 4 kritische Bugs behoben
+- PAGE-XML Export implementiert
+- METS-XML Upload integriert
+- 118 Unit Tests (100% passing)
+- Dokumentation aktualisiert und komprimiert
+
+**Offen:**
+- Phase 3: Batch-Processing
+- Phase 4: E2E Tests, Performance Audit
+- Optional: Refactoring (llm.js, viewer.js, validation.js)
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
