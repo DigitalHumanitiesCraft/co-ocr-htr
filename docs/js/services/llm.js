@@ -9,7 +9,19 @@ import { storage } from './storage.js';
 // Prompts
 // ============================================
 
-const TRANSCRIPTION_PROMPT = `Du bist ein Experte für historische Handschriften des 16.-19. Jahrhunderts.
+/**
+ * Document types for prompt selection
+ */
+const DOCUMENT_TYPES = {
+  table: 'table',
+  text: 'text',
+  auto: 'auto'
+};
+
+/**
+ * Prompt for tabular documents (account books, registers, lists)
+ */
+const TRANSCRIPTION_PROMPT_TABLE = `Du bist ein Experte für historische Handschriften des 16.-19. Jahrhunderts.
 
 Aufgabe: Transkribiere das Bild in eine strukturierte Markdown-Tabelle.
 
@@ -25,6 +37,41 @@ Regeln:
 
 Ausgabeformat: Nur die Markdown-Tabelle, keine Erklärungen oder Kommentare.
 Beginne direkt mit der Header-Zeile: | Spalte1 | Spalte2 | ...`;
+
+/**
+ * Prompt for continuous text documents (letters, manuscripts, protocols)
+ */
+const TRANSCRIPTION_PROMPT_TEXT = `Du bist ein Experte für historische Handschriften des 16.-19. Jahrhunderts.
+
+Aufgabe: Transkribiere das Bild zeilenweise als Fließtext.
+
+Regeln:
+- Eine Zeile pro Dokumentzeile (Zeilenumbrüche beibehalten)
+- Absätze durch Leerzeilen trennen
+- Unsichere Lesungen mit [?] markieren (z.B. "[?] Schmidt")
+- Unleserliche Stellen mit [illegible] markieren
+- Abkürzungen originalgetreu beibehalten oder mit {Auflösung} expandieren
+- Durchstreichungen mit ~~Text~~ markieren
+- Ergänzungen/Einfügungen mit ^Text^ markieren
+
+Ausgabeformat: Nur der transkribierte Text, keine Erklärungen oder Kommentare.
+Beginne direkt mit der ersten Zeile des Dokuments.`;
+
+/**
+ * Get the appropriate prompt for the document type
+ * @param {string} documentType - 'table', 'text', or 'auto'
+ * @returns {string} The transcription prompt
+ */
+function getTranscriptionPrompt(documentType = 'auto') {
+  if (documentType === 'text') {
+    return TRANSCRIPTION_PROMPT_TEXT;
+  }
+  // Default to table prompt (also for 'auto' - user can switch if needed)
+  return TRANSCRIPTION_PROMPT_TABLE;
+}
+
+// Legacy alias for backwards compatibility
+const TRANSCRIPTION_PROMPT = TRANSCRIPTION_PROMPT_TABLE;
 
 const VALIDATION_PROMPTS = {
   paleographic: `Analysiere den folgenden transkribierten Text aus paläographischer Sicht:
@@ -268,7 +315,9 @@ class LLMService {
       throw new Error(`No API key configured for ${config.name}`);
     }
 
-    const prompt = options.prompt || TRANSCRIPTION_PROMPT;
+    // Select prompt based on document type (table vs text)
+    const documentType = options.documentType || 'auto';
+    const prompt = options.prompt || getTranscriptionPrompt(documentType);
     const model = this.getCurrentModel();
     console.log(`[LLM] model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
 

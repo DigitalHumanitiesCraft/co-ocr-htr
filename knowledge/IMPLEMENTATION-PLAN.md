@@ -8,7 +8,7 @@ status: active
 
 # Implementation Plan
 
-**Status:** Phase 2.4 - Bug Fixes (siehe [REQUIREMENTS.md](REQUIREMENTS.md))
+**Status:** Phase 4 - Polish & Release (Bug Fixes ✅ Complete)
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
 ---
@@ -40,7 +40,7 @@ status: active
 
 ---
 
-## Phase 2: Multi-Page & Documentation 🔄 IN PROGRESS
+## Phase 2: Multi-Page & Documentation ✅ COMPLETE
 
 ### 2.1 Unterseiten ✅ COMPLETE
 
@@ -82,38 +82,14 @@ status: active
 | Viewer: Initial Empty State | ✅ | `js/viewer.js` |
 | Drag & Drop Visibility | ✅ | `css/viewer.css` (z-index fix) |
 
-### 2.4 Bug Fixes ⏳ IN PROGRESS
+### 2.4 Bug Fixes ✅ COMPLETE
 
-**Bekannte Bugs (Details in [REQUIREMENTS.md](REQUIREMENTS.md)):**
-
-| Bug | Priorität | Status |
-|-----|-----------|--------|
-| Transkription nicht sichtbar (bounds-Filter) | KRITISCH | ⏳ Identifiziert |
-| PAGE-XML Wortfragmente | HOCH | ⏳ Identifiziert |
-| Tabellen-Prompt für Briefe | MITTEL | ⏳ Identifiziert |
-| Validation initial sichtbar | NIEDRIG | ⏳ Identifiziert |
-
-| Task | Status | File |
-|------|--------|------|
-| Pseudo-Regions für LLM | ⏳ | `js/state.js` |
-| PAGE-XML Direct Text | ⏳ | `js/services/parsers/page-xml.js` |
-| Dual-Prompts (table/text) | ⏳ | `js/services/llm.js` |
-| Validation Conditional Display | ⏳ | `js/components/validation.js` |
-
-**Idealer Zustand beim Start:**
-
-| Panel | Ohne Dokument | Mit Dokument | Mit Transkription |
-|-------|---------------|--------------|-------------------|
-| Viewer | Empty: "Drop files" | Bild angezeigt | Bild + Regions |
-| Editor | Empty: "Keine Transkription" | Empty State | Tabelle mit Text |
-| Validation | Collapsed/Hidden | Hidden | Visible mit Ergebnissen |
-
-**Validation Panel Anforderungen:**
-1. Nur sichtbar wenn Dokument UND Transkription vorhanden
-2. Rule-Based + AI Assistant immer beide sichtbar (kompakt)
-3. Innerer Scroll für lange Listen
-4. Gruppierte Validierungen nach Kategorie
-5. Ausklappbare Detail-Ansicht
+| Bug | Lösung | Status |
+|-----|--------|--------|
+| Transkription nicht sichtbar | Pseudo-Regionen in `state.js` | ✅ |
+| PAGE-XML Wortfragmente | `extractLineText()` + Word-Fallback | ✅ |
+| Tabellen-Prompt für Briefe | Dual-Prompts + UI-Selector | ✅ |
+| Validation initial sichtbar | Conditional display | ✅ |
 
 ### 2.4 Demo-Daten ✅ COMPLETE
 
@@ -138,12 +114,12 @@ status: active
 
 ---
 
-## Phase 4: Polish & Release 📋 PLANNED
+## Phase 4: Polish & Release 🔄 IN PROGRESS
 
 | Task | Status | Beschreibung |
 |------|--------|--------------|
-| PAGE-XML Export | 📋 | Koordinaten + Text exportieren |
-| Vitest Unit Tests | 📋 | Kritische Services testen |
+| PAGE-XML Export | ✅ | PAGE 2019-07-15 Schema |
+| Vitest Unit Tests | ✅ | 118 Tests (export, validation, llm, page-xml) |
 | E2E Test | 📋 | Vollständiger Workflow-Test |
 | Performance Audit | 📋 | Lighthouse, große Dokumente |
 | README vervollständigen | 📋 | Screenshots, GIF-Demo |
