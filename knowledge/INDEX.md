@@ -15,12 +15,13 @@ Central knowledge repository for the coOCR/HTR project. Each document has a defi
 knowledge/
 ├── INDEX.md               ← Navigation (this document)
 ├── METHODOLOGY.md         ← Scientific foundations
-├── DESIGN-SYSTEM.md       ← UI/UX specification (incl. UI mockup analysis)
-├── ARCHITECTURE.md        ← Technical architecture (incl. event flows)
-├── VALIDATION.md          ← Hybrid validation (incl. panel structure)
-├── DATA-SCHEMA.md         ← Data structures (incl. table format)
-├── REQUIREMENTS.md        ← Feature status, bugs, requirements (NEW)
+├── DESIGN-SYSTEM.md       ← UI/UX specification
+├── ARCHITECTURE.md        ← Technical architecture
+├── VALIDATION.md          ← Hybrid validation
+├── DATA-SCHEMA.md         ← Data structures
+├── REQUIREMENTS.md        ← Feature status, bugs
 ├── IMPLEMENTATION-PLAN.md ← Roadmap to completion
+├── ACTIONPLAN.md          ← Sprint-Tracking (compact)
 └── JOURNAL.md             ← Development log
 ```
 
@@ -35,6 +36,7 @@ knowledge/
 | [DATA-SCHEMA](DATA-SCHEMA.md) | What data? | Development | ARCHITECTURE |
 | [REQUIREMENTS](REQUIREMENTS.md) | What is done/open? | Development | ARCHITECTURE |
 | [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | What comes next? | Development | ARCHITECTURE |
+| [ACTIONPLAN](ACTIONPLAN.md) | Sprint status? | Development | IMPLEMENTATION-PLAN |
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
 
 ## Core Concepts (Quick Reference)
