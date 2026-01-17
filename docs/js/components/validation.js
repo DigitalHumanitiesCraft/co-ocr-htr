@@ -53,21 +53,43 @@ class ValidationPanel {
     }
 
     /**
-     * Update panel visibility based on transcription state
+     * Update panel visibility based on document and transcription state
+     *
+     * Display logic:
+     * - No document: Hide entire panel content (collapsed)
+     * - Document but no transcription: Show empty state with hint
+     * - Document with transcription: Show validation sections
      */
     updateVisibility() {
         const state = appState.getState();
+        const hasDocument = state.pages?.length > 0 || state.imageData;
         const hasTranscription = state.transcription?.segments?.length > 0 ||
                                   state.transcription?.lines?.length > 0;
 
-        if (hasTranscription) {
-            // Show validation sections, hide empty state
+        // Get the main panel container
+        const panelContent = this.panel;
+
+        if (!hasDocument) {
+            // No document: hide all content, show minimal state
+            if (this.emptyState) {
+                this.emptyState.style.display = 'flex';
+                this.emptyState.querySelector('h4').textContent = 'No Document';
+                this.emptyState.querySelector('p').textContent = 'Load a document to enable validation.';
+            }
+            if (this.ruleSection) this.ruleSection.style.display = 'none';
+            if (this.aiSection) this.aiSection.style.display = 'none';
+        } else if (hasTranscription) {
+            // Document + transcription: show validation sections
             if (this.emptyState) this.emptyState.style.display = 'none';
             if (this.ruleSection) this.ruleSection.style.display = 'block';
             if (this.aiSection) this.aiSection.style.display = 'block';
         } else {
-            // Show empty state, hide validation sections
-            if (this.emptyState) this.emptyState.style.display = 'flex';
+            // Document but no transcription: show empty state with hint
+            if (this.emptyState) {
+                this.emptyState.style.display = 'flex';
+                this.emptyState.querySelector('h4').textContent = 'No Validation Yet';
+                this.emptyState.querySelector('p').textContent = 'Run transcription to see validation results.';
+            }
             if (this.ruleSection) this.ruleSection.style.display = 'none';
             if (this.aiSection) this.aiSection.style.display = 'none';
         }
