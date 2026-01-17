@@ -83,8 +83,12 @@ class TranscriptionManager {
             const imageUrl = state.document.dataUrl || state.image.url;
             const base64 = await this.getImageBase64(imageUrl);
 
-            // Call LLM service
-            const result = await llmService.transcribe(base64);
+            // Get document type from UI
+            const documentTypeSelect = document.getElementById('documentType');
+            const documentType = documentTypeSelect?.value || 'table';
+
+            // Call LLM service with document type
+            const result = await llmService.transcribe(base64, { documentType });
 
             // Update state with transcription
             appState.setTranscription({
