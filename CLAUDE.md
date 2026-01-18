@@ -86,3 +86,8 @@ Alle Designentscheidungen sind in `knowledge/` dokumentiert und begründet.
 - ES6 Modules (native)
 - CSS Custom Properties für Theming
 - Kommentare erklären "warum", Code erklärt "was"
+- **Keine Emojis** - Verwende stattdessen:
+  - `[x]` fuer abgeschlossen
+  - `[~]` fuer in Arbeit
+  - `[ ]` fuer geplant
+  - `(green)`, `(yellow)`, `(red)` fuer Statusfarben in Dokumentation

@@ -7,24 +7,24 @@ status: complete
 
 # Aktionsplan: Status
 
-## Sprint 1: Kritische Bugs ✅ COMPLETE
+## Sprint 1: Kritische Bugs [x] COMPLETE
 
 | Bug | Problem | Lösung | Status |
 |-----|---------|--------|--------|
-| 1.1 | LLM-Segmente ohne bounds werden gefiltert | Pseudo-Regionen generieren in `state.js` | ✅ |
-| 1.2 | PAGE-XML zeigt nur Wortfragmente | `extractLineText()` mit Word-Fallback | ✅ |
-| 1.3 | Tabellen-Prompt für alle Dokumente | Dual-Prompts + UI-Selector | ✅ |
-| 1.4 | Validation Panel initial sichtbar | Conditional display in `validation.js` | ✅ |
+| 1.1 | LLM-Segmente ohne bounds werden gefiltert | Pseudo-Regionen generieren in `state.js` | [x] |
+| 1.2 | PAGE-XML zeigt nur Wortfragmente | `extractLineText()` mit Word-Fallback | [x] |
+| 1.3 | Tabellen-Prompt für alle Dokumente | Dual-Prompts + UI-Selector | [x] |
+| 1.4 | Validation Panel initial sichtbar | Conditional display in `validation.js` | [x] |
 
-## Sprint 2: Features ✅ COMPLETE
+## Sprint 2: Features [x] COMPLETE
 
 | Feature | Beschreibung | Status |
 |---------|--------------|--------|
-| 2.1 METS-XML Upload | Parser in Upload-UI integriert | ✅ |
-| 2.2 PAGE-XML Export | Export mit PAGE 2019-07-15 Schema | ✅ |
-| 2.2b Export-Dialog | XML-Option im UI | ✅ |
+| 2.1 METS-XML Upload | Parser in Upload-UI integriert | [x] |
+| 2.2 PAGE-XML Export | Export mit PAGE 2019-07-15 Schema | [x] |
+| 2.2b Export-Dialog | XML-Option im UI | [x] |
 
-## Sprint 3: Tests ✅ COMPLETE
+## Sprint 3: Tests [x] COMPLETE
 
 | Test-Datei | Tests | Abdeckung |
 |------------|-------|-----------|

@@ -81,10 +81,9 @@ docs/
 | Provider | Models | Vision Support |
 |----------|--------|----------------|
 | Gemini | gemini-3-flash-preview, gemini-3-pro-preview | Yes |
-| OpenAI | gpt-4o-mini, gpt-4o, o1 | Yes |
-| Anthropic | claude-sonnet-4, claude-opus-4 | Yes |
-| DeepSeek | deepseek-chat, deepseek-reasoner | No |
-| Ollama | llava, llama3.2-vision | Yes |
+| OpenAI | gpt-5.2, gpt-5.2-pro | Yes |
+| Anthropic | claude-haiku-4.5, claude-sonnet-4.5, claude-opus-4.5 | Yes |
+| Ollama | deepseek-ocr, llava, llama3.2-vision | Yes |
 
 ## Documentation
 
@@ -106,13 +105,13 @@ npm test
 
 ### Project Status
 
-**Phase 1-2: Core Application** ✅ Complete
+**Phase 1-2: Core Application** - Complete
 - LLM Integration (5 providers), Gemini 3 optimization
 - Document Viewer, Transcription Editor, Hybrid Validation
 - PAGE-XML/METS-XML Import & Export
 - Multi-page navigation, Help & About pages
 
-**Phase 4: Polish & Release** 🔄 In Progress
+**Phase 4: Polish & Release** - In Progress
 - 118 unit tests passing (export, validation, llm, page-xml)
 - E2E tests, performance audit planned
 

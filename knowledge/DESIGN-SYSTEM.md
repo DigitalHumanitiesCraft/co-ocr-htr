@@ -316,12 +316,12 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 
 | Section | Icon | Source | Characteristic |
 |---------|------|--------|----------------|
-| Rule-Based | ⚙ | Deterministic rules | Always same result |
-| AI Analysis | ◇ | LLM perspectives | May vary, context-dependent |
+| Rule-Based | (gear) | Deterministic rules | Always same result |
+| AI Analysis | (diamond) | LLM perspectives | May vary, context-dependent |
 
 **Section Header:**
 ```
-⚙ RULE-BASED                    (11px, uppercase, tracking)
+RULE-BASED                    (11px, uppercase, tracking)
 ```
 
 ### 6.4 Validation Card
@@ -353,7 +353,7 @@ Every validation result uses THREE redundant signals:
 | Signal | Confident | Uncertain | Problematic |
 |--------|-----------|-----------|-------------|
 | **1. Color** | `--confident` | `--uncertain` | `--problematic` |
-| **2. Icon** | ✓ Checkmark | ? Question | ! Exclamation |
+| **2. Icon** | Checkmark | Question | Exclamation |
 | **3. Position** | Success section | Warning section | Error section |
 
 **Perspective Icons:**
@@ -387,7 +387,7 @@ I. Load ─── II. Transcribe ─── III. Validate ─── IV. Export
 **Structure:**
 ```
 ┌─────────────────────────────────────────┐
-│ HEADER                            ✕     │
+│ HEADER                            X     │
 ├─────────────────────────────────────────┤
 │ [Tab 1] [Tab 2] [Tab 3]                 │  (optional)
 ├─────────────────────────────────────────┤
@@ -415,7 +415,7 @@ I. Load ─── II. Transcribe ─── III. Validate ─── IV. Export
 **Structure:**
 ```
 ┌─ 3px left border (status color) ──────────────────┐
-│  [Icon]  Message text here                    ✕   │
+│  [Icon]  Message text here                    X   │
 └───────────────────────────────────────────────────┘
 ```
 

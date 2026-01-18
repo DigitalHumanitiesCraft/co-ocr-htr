@@ -335,7 +335,7 @@ const DB_SCHEMA = {
 
 ## Validation Notes
 
-- ⚠️ Line 4: Uncertain reading [?] – Name could be "Möller"
+- WARNING: Line 4: Uncertain reading [?] - Name could be "Moeller"
 ```
 
 ### JSON (complete)

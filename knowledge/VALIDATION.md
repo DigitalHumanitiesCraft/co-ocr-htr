@@ -151,9 +151,9 @@ No numeric values (→ [METHODOLOGY](METHODOLOGY.md): LLM Bias).
 
 | Category | Internal | UI | Meaning |
 |----------|----------|-----|---------|
-| `certain` | `success` | ✅ Green | High agreement |
-| `likely` | `warning` | ⚠️ Orange | Expert should review |
-| `uncertain` | `error` | ❌ Red | Likely incorrect |
+| `certain` | `success` | Green | High agreement |
+| `likely` | `warning` | Orange | Expert should review |
+| `uncertain` | `error` | Red | Likely incorrect |
 
 ## ValidationResult Format
 
@@ -180,31 +180,31 @@ interface ValidationResult {
 │ Validation                    5 Issues  │
 ├─────────────────────────────────────────┤
 │                                         │
-│ ⚙️ RULE-BASED                            │
+│ RULE-BASED                               │
 │ ┌─────────────────────────────────────┐ │
-│ │ 🟢 Date Format Correct              │ │
+│ │ [OK] Date Format Correct            │ │
 │ │    Lines 3-7 (DD. Month)            │ │
 │ └─────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────┐ │
-│ │ 🟡 Sum Check Mismatch               │ │
-│ │    Line 12 • Diff: 3 Taler          │ │
-│ │    ▸ Show Details                   │ │
+│ │ [!] Sum Check Mismatch              │ │
+│ │    Line 12 - Diff: 3 Taler          │ │
+│ │    > Show Details                   │ │
 │ └─────────────────────────────────────┘ │
 │                                         │
-│ ✨ AI ASSISTANT                          │
+│ AI ASSISTANT                            │
 │ ┌─────────────────────────────────────┐ │
-│ │ 🟢 High Confidence                  │ │
+│ │ [OK] High Confidence                │ │
 │ │    Overall Document Match           │ │
 │ └─────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────┐ │
-│ │ 🟡 Ambiguous Reading                │ │
-│ │    Line 4 • Confidence: Low         │ │
-│ │    ▸ Show Details                   │ │
+│ │ [!] Ambiguous Reading               │ │
+│ │    Line 4 - Confidence: Low         │ │
+│ │    > Show Details                   │ │
 │ └─────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────┐ │
-│ │ 🔴 Missing Column                   │ │
+│ │ [X] Missing Column                  │ │
 │ │    Line 9                           │ │
-│ │    ▸ Show Details                   │ │
+│ │    > Show Details                   │ │
 │ └─────────────────────────────────────┘ │
 │                                         │
 └─────────────────────────────────────────┘
@@ -221,17 +221,17 @@ interface ValidationResult {
 
 | Section | Icon | Color |
 |---------|------|-------|
-| RULE-BASED | ⚙️ | `--text-secondary` |
-| AI ASSISTANT | ✨ | `--text-secondary` |
+| RULE-BASED | (gear) | `--text-secondary` |
+| AI ASSISTANT | (sparkle) | `--text-secondary` |
 
 ### Card Anatomy
 
 ```
 ┌─ Border-Left (3px, Status color) ────────────────────┐
 │                                                      │
-│  🟢 Title                                            │
-│     Meta-Info (Line X • Additional Info)             │
-│     ▸ Show Details (clickable, blue)                 │
+│  [OK] Title                                          │
+│     Meta-Info (Line X - Additional Info)             │
+│     > Show Details (clickable, blue)                 │
 │                                                      │
 └──────────────────────────────────────────────────────┘
 ```
@@ -249,9 +249,9 @@ interface ValidationResult {
 
 ```
 ┌─────────────────────────────────────┐
-│ 🟡 Sum Check Mismatch               │
-│    Line 12 • Diff: 3 Taler          │
-│    ▾ Hide Details                   │
+│ [!] Sum Check Mismatch              │
+│    Line 12 - Diff: 3 Taler          │
+│    v Hide Details                   │
 │ ┌─────────────────────────────────┐ │
 │ │ Expected sum: 106 Taler         │ │
 │ │ Found sum: 103 Taler            │ │
@@ -266,16 +266,16 @@ interface ValidationResult {
 
 | Section | Characteristic | Description |
 |---------|----------------|-------------|
-| ⚙️ RULE-BASED | Deterministic | Always same result, Regex/Logic |
-| ✨ AI ASSISTANT | Probabilistic | May vary, context-dependent |
+| RULE-BASED | Deterministic | Always same result, Regex/Logic |
+| AI ASSISTANT | Probabilistic | May vary, context-dependent |
 
 ### Status Indicators
 
 | Status | Color | Dot | Description |
 |--------|-------|-----|-------------|
-| Success | `--success` (#3fb950) | 🟢 | Check passed |
-| Warning | `--warning` (#d29922) | 🟡 | Expert should review |
-| Error | `--error` (#f85149) | 🔴 | Error detected |
+| Success | `--success` (#3fb950) | (green) | Check passed |
+| Warning | `--warning` (#d29922) | (yellow) | Expert should review |
+| Error | `--error` (#f85149) | (red) | Error detected |
 
 **Note:** In the UI, filled circles (●) are used instead of emojis.
 

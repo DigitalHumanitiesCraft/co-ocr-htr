@@ -154,32 +154,24 @@ const PROVIDERS = {
   openai: {
     name: 'OpenAI',
     endpoint: 'https://api.openai.com/v1/chat/completions',
-    defaultModel: 'gpt-4o-mini',
-    models: ['gpt-4o-mini', 'gpt-4o', 'o1', 'o1-mini'],
+    defaultModel: 'gpt-5.2',
+    models: ['gpt-5.2', 'gpt-5.2-pro'],
     authType: 'bearer',
     supportsVision: true
   },
   anthropic: {
     name: 'Anthropic',
     endpoint: 'https://api.anthropic.com/v1/messages',
-    defaultModel: 'claude-sonnet-4-20250514',
-    models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-3-5-haiku-latest'],
+    defaultModel: 'claude-sonnet-4-5-20250514',
+    models: ['claude-haiku-4-5-20250514', 'claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514'],
     authType: 'header', // x-api-key header
     supportsVision: true
-  },
-  deepseek: {
-    name: 'DeepSeek',
-    endpoint: 'https://api.deepseek.com/v1/chat/completions',
-    defaultModel: 'deepseek-chat',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
-    authType: 'bearer',
-    supportsVision: false // DeepSeek API doesn't support vision yet
   },
   ollama: {
     name: 'Ollama (Local)',
     endpoint: 'http://localhost:11434/api/generate',
-    defaultModel: 'llava',
-    models: ['llava', 'llava:13b', 'bakllava', 'llama3.2-vision'],
+    defaultModel: 'deepseek-ocr',
+    models: ['deepseek-ocr', 'deepseek-ocr:3b', 'llava', 'llama3.2-vision'],
     authType: 'none',
     supportsVision: true
   }
@@ -398,9 +390,6 @@ class LLMService {
         case 'anthropic':
           response = await this._callAnthropic(apiKey, model, prompt);
           break;
-        case 'deepseek':
-          response = await this._callDeepSeek(apiKey, model, prompt);
-          break;
         case 'ollama':
           response = await this._callOllama(model, prompt);
           break;
@@ -550,30 +539,6 @@ class LLMService {
 
     const data = await response.json();
     return data.content?.[0]?.text || '';
-  }
-
-  async _callDeepSeek(apiKey, model, prompt) {
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 4096,
-        temperature: 0.1
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || `DeepSeek API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || '';
   }
 
   async _callOllama(model, prompt, imageBase64 = null) {

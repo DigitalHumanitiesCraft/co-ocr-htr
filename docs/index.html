@@ -425,10 +425,6 @@
                 Anthropic
                 <span class="provider-status" data-status="unconfigured"></span>
             </button>
-            <button class="dialog-tab" role="tab" data-provider="deepseek" aria-selected="false">
-                DeepSeek
-                <span class="provider-status" data-status="unconfigured"></span>
-            </button>
             <button class="dialog-tab" role="tab" data-provider="ollama" aria-selected="false">
                 Ollama
                 <span class="provider-status" data-status="unconfigured"></span>
@@ -492,9 +488,8 @@
                 <div class="input-wrapper">
                     <label for="openaiModel">Model</label>
                     <select id="openaiModel">
-                        <option value="gpt-4o-mini" selected>GPT-4o Mini (Recommended)</option>
-                        <option value="gpt-4o">GPT-4o</option>
-                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-5.2" selected>GPT-5.2 (Recommended)</option>
+                        <option value="gpt-5.2-pro">GPT-5.2 Pro</option>
                     </select>
                 </div>
             </div>
@@ -524,45 +519,11 @@
                 <div class="input-wrapper">
                     <label for="anthropicModel">Model</label>
                     <select id="anthropicModel">
-                        <option value="claude-3-5-haiku-latest" selected>Claude 3.5 Haiku (Recommended)</option>
-                        <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
-                        <option value="claude-3-opus-latest">Claude 3 Opus</option>
+                        <option value="claude-sonnet-4-5-20250514" selected>Claude Sonnet 4.5 (Recommended)</option>
+                        <option value="claude-haiku-4-5-20250514">Claude Haiku 4.5</option>
+                        <option value="claude-opus-4-5-20250514">Claude Opus 4.5</option>
                     </select>
                 </div>
-            </div>
-
-            <!-- DeepSeek Panel -->
-            <div class="dialog-tab-panel" data-panel="deepseek" role="tabpanel" hidden>
-                <p class="provider-description">
-                    DeepSeek API. Get your API key from
-                    <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek Platform</a>.
-                </p>
-                <div class="input-wrapper">
-                    <label for="deepseekApiKey">API Key</label>
-                    <div class="input-with-toggle">
-                        <input type="password" id="deepseekApiKey" placeholder="sk-..." autocomplete="off">
-                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
-                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="input-wrapper">
-                    <label for="deepseekModel">Model</label>
-                    <select id="deepseekModel">
-                        <option value="deepseek-chat" selected>DeepSeek Chat</option>
-                        <option value="deepseek-coder">DeepSeek Coder</option>
-                    </select>
-                </div>
-                <p class="provider-note">
-                    Note: DeepSeek API does not support vision. Use Ollama with DeepSeek-VL for image transcription.
-                </p>
             </div>
 
             <!-- Ollama Panel -->
@@ -570,7 +531,7 @@
                 <p class="provider-description">
                     Local LLM via Ollama. Install from
                     <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>
-                    and run <code>ollama serve</code>.
+                    and run <code>ollama serve</code>. Requires Ollama v0.13.0+.
                 </p>
                 <div class="input-wrapper">
                     <label for="ollamaEndpoint">Endpoint</label>
@@ -579,12 +540,12 @@
                 <div class="input-wrapper">
                     <label for="ollamaModel">Model</label>
                     <div class="input-with-button">
-                        <input type="text" id="ollamaModel" value="llava" placeholder="llava">
+                        <input type="text" id="ollamaModel" value="deepseek-ocr" placeholder="deepseek-ocr">
                         <button type="button" class="btn btn-secondary" id="ollamaRefreshModels">Refresh</button>
                     </div>
                 </div>
                 <div class="provider-note">
-                    Recommended models for vision: <code>llava</code>, <code>llava:13b</code>, <code>bakllava</code>
+                    Recommended: <code>deepseek-ocr</code> (optimiert für OCR). Alternativen: <code>llava</code>, <code>llama3.2-vision</code>
                 </div>
             </div>
         </div>

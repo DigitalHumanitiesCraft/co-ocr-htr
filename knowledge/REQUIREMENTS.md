@@ -18,89 +18,89 @@ Vollständige Übersicht aller Anforderungen, implementierter Features und offen
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| 3-Spalten Layout | ✅ | `index.html` | Viewer, Editor, Validation nebeneinander |
-| Central State (EventTarget) | ✅ | `js/state.js` | Native Browser EventTarget für State Management |
-| Design System | ✅ | `css/*.css` | 8 modulare CSS-Dateien mit Design Tokens |
-| Warm Editorial Theme | ✅ | `css/variables.css` | Archival-Farbpalette für Manuskript-Ästhetik |
+| 3-Spalten Layout | [x] | `index.html` | Viewer, Editor, Validation nebeneinander |
+| Central State (EventTarget) | [x] | `js/state.js` | Native Browser EventTarget für State Management |
+| Design System | [x] | `css/*.css` | 8 modulare CSS-Dateien mit Design Tokens |
+| Warm Editorial Theme | [x] | `css/variables.css` | Archival-Farbpalette für Manuskript-Ästhetik |
 
 ### 1.2 Document Viewer
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| Image Display | ✅ | `js/viewer.js` | Bild-Anzeige mit SVG Overlay |
-| SVG Regions | ✅ | `js/viewer.js` | Bounding Boxes als SVG-Rechtecke |
-| Pan Control | ✅ | `js/viewer.js` | Drag zum Verschieben |
-| Zoom Controls | ✅ | `js/viewer.js` | +/- Buttons, Zoom-Slider |
-| Fit-to-Width | ✅ | `js/viewer.js` | Auto-Anpassung an Panel-Breite |
-| Multi-Page Navigation | ✅ | `js/viewer.js` | Prev/Next Buttons, Seitenzähler |
-| Drag & Drop Upload | ✅ | `js/components/upload.js` | Dateien per Drag & Drop laden |
-| Empty State | ✅ | `index.html`, `viewer.css` | Drop-Zone Indikator |
+| Image Display | [x] | `js/viewer.js` | Bild-Anzeige mit SVG Overlay |
+| SVG Regions | [x] | `js/viewer.js` | Bounding Boxes als SVG-Rechtecke |
+| Pan Control | [x] | `js/viewer.js` | Drag zum Verschieben |
+| Zoom Controls | [x] | `js/viewer.js` | +/- Buttons, Zoom-Slider |
+| Fit-to-Width | [x] | `js/viewer.js` | Auto-Anpassung an Panel-Breite |
+| Multi-Page Navigation | [x] | `js/viewer.js` | Prev/Next Buttons, Seitenzähler |
+| Drag & Drop Upload | [x] | `js/components/upload.js` | Dateien per Drag & Drop laden |
+| Empty State | [x] | `index.html`, `viewer.css` | Drop-Zone Indikator |
 
 ### 1.3 Transcription Editor
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| Flexible Modes | ✅ | `js/editor.js` | Lines-Mode (Briefe) + Grid-Mode (Tabellen) |
-| Auto-Mode Detection | ✅ | `js/editor.js` | Automatische Erkennung des Dokumenttyps |
-| Inline Editing | ✅ | `js/editor.js` | Doppelklick zum Bearbeiten |
-| Undo/Redo Stack | ✅ | `js/editor.js` | Ctrl+Z / Ctrl+Shift+Z |
-| Keyboard Shortcuts | ✅ | `js/editor.js` | Pfeiltasten, Enter, Escape |
-| Triple Synchronization | ✅ | `js/*.js` | Viewer ↔ Editor ↔ Validation |
+| Flexible Modes | [x] | `js/editor.js` | Lines-Mode (Briefe) + Grid-Mode (Tabellen) |
+| Auto-Mode Detection | [x] | `js/editor.js` | Automatische Erkennung des Dokumenttyps |
+| Inline Editing | [x] | `js/editor.js` | Doppelklick zum Bearbeiten |
+| Undo/Redo Stack | [x] | `js/editor.js` | Ctrl+Z / Ctrl+Shift+Z |
+| Keyboard Shortcuts | [x] | `js/editor.js` | Pfeiltasten, Enter, Escape |
+| Triple Synchronization | [x] | `js/*.js` | Viewer ↔ Editor ↔ Validation |
 
 ### 1.4 LLM Integration
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| Gemini Provider | ✅ | `js/services/llm.js` | Google Gemini 2.0/3.0 Flash |
-| OpenAI Provider | ✅ | `js/services/llm.js` | GPT-4o-mini |
-| Anthropic Provider | ✅ | `js/services/llm.js` | Claude 3 Haiku |
-| DeepSeek Provider | ✅ | `js/services/llm.js` | API + Ollama |
-| Ollama Provider | ✅ | `js/services/llm.js` | Lokale Modelle |
-| Gemini 3 Optimierung | ✅ | `js/services/llm.js` | temperature=1.0, media_resolution, thinking_config |
-| Transcription Prompt | ✅ | `js/services/llm.js` | Historische Handschriften |
+| Gemini Provider | [x] | `js/services/llm.js` | Google Gemini 2.0/3.0 Flash |
+| OpenAI Provider | [x] | `js/services/llm.js` | GPT-4o-mini |
+| Anthropic Provider | [x] | `js/services/llm.js` | Claude 3 Haiku |
+| DeepSeek Provider | [x] | `js/services/llm.js` | API + Ollama |
+| Ollama Provider | [x] | `js/services/llm.js` | Lokale Modelle |
+| Gemini 3 Optimierung | [x] | `js/services/llm.js` | temperature=1.0, media_resolution, thinking_config |
+| Transcription Prompt | [x] | `js/services/llm.js` | Historische Handschriften |
 
 ### 1.5 Validation
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| Rule-Based Validation | ✅ | `js/services/validation.js` | 8 deterministische Regeln |
-| LLM-Judge Validation | ✅ | `js/services/llm.js` | 4 Perspektiven |
-| Paleographic Perspective | ✅ | `js/services/llm.js` | Buchstabenformen, Ligaturen |
-| Linguistic Perspective | ✅ | `js/services/llm.js` | Grammatik, historische Orthographie |
-| Structural Perspective | ✅ | `js/services/llm.js` | Tabellen, Summen, Verweise |
-| Domain Perspective | ✅ | `js/services/llm.js` | Fachbegriffe, Plausibilität |
-| Validation Panel UI | ✅ | `js/components/validation.js` | Rule-Based + AI Assistant Sections |
+| Rule-Based Validation | [x] | `js/services/validation.js` | 8 deterministische Regeln |
+| LLM-Judge Validation | [x] | `js/services/llm.js` | 4 Perspektiven |
+| Paleographic Perspective | [x] | `js/services/llm.js` | Buchstabenformen, Ligaturen |
+| Linguistic Perspective | [x] | `js/services/llm.js` | Grammatik, historische Orthographie |
+| Structural Perspective | [x] | `js/services/llm.js` | Tabellen, Summen, Verweise |
+| Domain Perspective | [x] | `js/services/llm.js` | Fachbegriffe, Plausibilität |
+| Validation Panel UI | [x] | `js/components/validation.js` | Rule-Based + AI Assistant Sections |
 
 ### 1.6 Import/Export
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| Image Upload | ✅ | `js/components/upload.js` | JPG, PNG, TIFF, WebP |
-| PAGE-XML Import | ✅ | `js/services/parsers/page-xml.js` | Transkribus-Format |
-| METS-XML Parser | ✅ | `js/services/parsers/mets-xml.js` | Parser existiert |
-| TXT Export | ✅ | `js/services/export.js` | Tab-separiert |
-| JSON Export | ✅ | `js/services/export.js` | Mit Metadaten |
-| Markdown Export | ✅ | `js/services/export.js` | Mit Validation Notes |
+| Image Upload | [x] | `js/components/upload.js` | JPG, PNG, TIFF, WebP |
+| PAGE-XML Import | [x] | `js/services/parsers/page-xml.js` | Transkribus-Format |
+| METS-XML Parser | [x] | `js/services/parsers/mets-xml.js` | Parser existiert |
+| TXT Export | [x] | `js/services/export.js` | Tab-separiert |
+| JSON Export | [x] | `js/services/export.js` | Mit Metadaten |
+| Markdown Export | [x] | `js/services/export.js` | Mit Validation Notes |
 
 ### 1.7 UI Components
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| Settings Dialog | ✅ | `js/components/dialogs.js` | Editor, Validation, Display Settings |
-| Help Dialog | ✅ | `js/components/dialogs.js` | Quick Start, Shortcuts, Legend |
-| API Key Dialog | ✅ | `js/components/dialogs.js` | Provider-Tabs, Passwort-Toggle |
-| Export Dialog | ✅ | `js/components/dialogs.js` | Format-Auswahl, Optionen |
-| Demo Loader | ✅ | `js/services/samples.js` | 5 Demo-Dokumente |
-| Toast Notifications | ✅ | `js/components/dialogs.js` | Success, Warning, Error |
-| Workflow Stepper | ✅ | `index.html` | 6-Schritt-Anzeige |
-| Panel Hints | ✅ | `index.html` | Kontextuelle Hilfe |
+| Settings Dialog | [x] | `js/components/dialogs.js` | Editor, Validation, Display Settings |
+| Help Dialog | [x] | `js/components/dialogs.js` | Quick Start, Shortcuts, Legend |
+| API Key Dialog | [x] | `js/components/dialogs.js` | Provider-Tabs, Passwort-Toggle |
+| Export Dialog | [x] | `js/components/dialogs.js` | Format-Auswahl, Optionen |
+| Demo Loader | [x] | `js/services/samples.js` | 5 Demo-Dokumente |
+| Toast Notifications | [x] | `js/components/dialogs.js` | Success, Warning, Error |
+| Workflow Stepper | [x] | `index.html` | 6-Schritt-Anzeige |
+| Panel Hints | [x] | `index.html` | Kontextuelle Hilfe |
 
 ### 1.8 Persistenz
 
 | Feature | Status | Datei | Beschreibung |
 |---------|--------|-------|--------------|
-| LocalStorage Settings | ✅ | `js/services/storage.js` | API Keys, Preferences |
-| Session Auto-Save | ✅ | `js/state.js` | Dokument, Transkription, UI State |
+| LocalStorage Settings | [x] | `js/services/storage.js` | API Keys, Preferences |
+| Session Auto-Save | [x] | `js/state.js` | Dokument, Transkription, UI State |
 
 ---
 
@@ -191,9 +191,9 @@ this.data.regions = data.segments
 
 | Sample ID | Name | Typ | Seiten | PAGE-XML |
 |-----------|------|-----|--------|----------|
-| wecker-multipage | Antidotarium (1617) - 6 Seiten | print | 6 | ✅ |
-| wecker-p015 | Antidotarium (1617), S. 15 | print | 1 | ✅ |
-| raitbuch-0v1r | Raitbuch 2, fol. 0v-1r | table | 1 | ✅ |
+| wecker-multipage | Antidotarium (1617) - 6 Seiten | print | 6 | [x] |
+| wecker-p015 | Antidotarium (1617), S. 15 | print | 1 | [x] |
+| raitbuch-0v1r | Raitbuch 2, fol. 0v-1r | table | 1 | [x] |
 | hsa-letter-2261 | HSA Brief 2261 | letter | 1 | - |
 | karteikarte-1 | Karteikarte | card | 1 | - |
 
@@ -218,11 +218,10 @@ this.data.regions = data.segments
 
 | Provider | Endpoint | Model | Vision | Besonderheiten |
 |----------|----------|-------|--------|----------------|
-| Gemini | generativelanguage.googleapis.com | gemini-2.0-flash | ✅ | temperature=1.0, media_resolution=high |
-| OpenAI | api.openai.com | gpt-4o-mini | ✅ | Standard |
-| Anthropic | api.anthropic.com | claude-3-haiku | ✅ | Standard |
-| DeepSeek | api.deepseek.com | deepseek-chat | ✅ | API-Version |
-| Ollama | localhost:11434 | llama3.2-vision | ✅ | Lokal |
+| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | [x] | temperature=1.0 |
+| OpenAI | api.openai.com | gpt-5.2 | [x] | Standard |
+| Anthropic | api.anthropic.com | claude-sonnet-4.5 | [x] | Standard |
+| Ollama | localhost:11434 | deepseek-ocr | [x] | Lokal, OCR-optimiert (erfordert Ollama v0.13.0+) |
 
 ---
 

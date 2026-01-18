@@ -151,7 +151,7 @@ VALIDATION ──────┬──→ DATA-SCHEMA (ValidationResult)
 |-----------|---------|
 | **Document Viewer** | Image with colored bounding boxes, zoom controls (+/-/Reset) |
 | **Transcription Table** | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT |
-| **Validation Panel** | Two sections: ⚙️ RULE-BASED, ✨ AI ASSISTANT |
+| **Validation Panel** | Two sections: RULE-BASED, AI ASSISTANT |
 | **Status Bar** | Model dropdown, Perspective dropdown, Status badge, Timestamp |
 
 #### Color Palette (extracted from mockup)
@@ -386,12 +386,12 @@ Commit `40a6d9c` - Data documentation added
 
 | Task | Status |
 |------|--------|
-| Rename folder `newer prototpye` → `prototype` | ✅ |
-| Create project structure (`js/services/`, `js/components/`, `tests/`) | ✅ |
-| Create `package.json` with Vitest | ✅ |
-| Create `vitest.config.js` | ✅ |
-| Update IMPLEMENTATION-PLAN.md paths | ✅ |
-| Update ARCHITECTURE.md paths | ✅ |
+| Rename folder `newer prototpye` → `prototype` | [x] |
+| Create project structure (`js/services/`, `js/components/`, `tests/`) | [x] |
+| Create `package.json` with Vitest | [x] |
+| Create `vitest.config.js` | [x] |
+| Update IMPLEMENTATION-PLAN.md paths | [x] |
+| Update ARCHITECTURE.md paths | [x] |
 
 ### Phase 3: Milestone 1 - Core Services
 
@@ -1083,27 +1083,27 @@ docs/
 
 ### Phase 5: Fixes Implemented
 
-**Fix 1: Transkription anzeigen** ✅
+**Fix 1: Transkription anzeigen** [x]
 - Added `documentLoaded` event listener in `main.js` that checks for existing transcription
 - Added `regionsChanged` and `transcriptionComplete` listeners in `viewer.js` for region rendering
 - Editor already listens to `transcriptionComplete` - now regions render properly
 
-**Fix 2: Panel-Hints verbergen** ✅
+**Fix 2: Panel-Hints verbergen** [x]
 - Added new `documentLoaded` event handler in `main.js`
 - Checks if transcription segments already exist (from PAGE-XML)
 - Hides editor hint and updates workflow stepper accordingly
 
-**Fix 3: Viewer-Hintergrund** ✅
+**Fix 3: Viewer-Hintergrund** [x]
 - `index.html` already uses `var(--bg-viewer)` (warm paper-like #f0ebe3)
 - No inline style override needed
 
-**Fix 4: Toolbar sichtbarer** ✅
+**Fix 4: Toolbar sichtbarer** [x]
 - Changed `viewer.css` toolbar background to `rgba(255, 255, 255, 0.95)`
 - Set icon color to `var(--text-primary)` instead of secondary
 - Hover now uses `var(--bg-tertiary)` with accent color
 - Increased shadow to `--shadow-lg`
 
-**Fix 5: Region-Farben** ✅
+**Fix 5: Region-Farben** [x]
 - Added new CSS variables in `variables.css`:
   - `--region-stroke: #8b7355` (warm sienna brown)
   - `--region-stroke-hover: #6d5a45`
@@ -1574,7 +1574,7 @@ extractLineText(line) {
 | Datei | Änderung |
 |-------|----------|
 | `ACTIONPLAN.md` | 512 → 60 Zeilen (-89%), komprimiert |
-| `IMPLEMENTATION-PLAN.md` | Phase 2 ✅, Phase 4 🔄, Bugs ✅ |
+| `IMPLEMENTATION-PLAN.md` | Phase 2 [x], Phase 4 [~], Bugs [x] |
 | `README.md` | PAGE-XML Export, 118 Tests |
 | `INDEX.md` | ACTIONPLAN.md hinzugefügt |
 
