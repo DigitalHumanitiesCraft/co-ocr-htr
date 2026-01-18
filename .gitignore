@@ -40,3 +40,5 @@ build/
 tmp/
 temp/
 *.tmp
+.claude/settings.local.json
+nul
