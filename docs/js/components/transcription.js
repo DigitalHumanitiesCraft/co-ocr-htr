@@ -177,14 +177,14 @@ class TranscriptionManager {
         if (loading) {
             this.transcribeBtn.disabled = true;
             this.transcribeBtn.classList.add('loading');
-            if (btnText) btnText.style.display = 'none';
-            if (btnSpinner) btnSpinner.style.display = 'inline-flex';
+            if (btnText) btnText.hidden = true;
+            if (btnSpinner) btnSpinner.hidden = false;
             appState.setLoading(true, 'Transcribing...');
         } else {
             this.transcribeBtn.disabled = false;
             this.transcribeBtn.classList.remove('loading');
-            if (btnText) btnText.style.display = 'inline';
-            if (btnSpinner) btnSpinner.style.display = 'none';
+            if (btnText) btnText.hidden = false;
+            if (btnSpinner) btnSpinner.hidden = true;
             appState.setLoading(false);
         }
     }

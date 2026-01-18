@@ -26,23 +26,57 @@
 
 <body>
 
+    <!-- SVG Icon Sprite (hidden, referenced via <use>) -->
+    <svg xmlns="http://www.w3.org/2000/svg" hidden>
+        <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </symbol>
+        <symbol id="icon-eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </symbol>
+        <symbol id="icon-eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </symbol>
+        <symbol id="icon-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16v-4"></path>
+            <path d="M12 8h.01"></path>
+        </symbol>
+        <symbol id="icon-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle>
+        </symbol>
+    </svg>
+
     <!-- Mobile Warning -->
     <div class="mobile-warning">
         <!-- Icon: Monitor -->
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-            style="margin-bottom: 1rem; color: var(--text-secondary);">
+            class="mobile-warning-icon">
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
             <line x1="8" y1="21" x2="16" y2="21"></line>
             <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
         <h2>Desktop Recommended</h2>
-        <p style="color: var(--text-secondary); max-width: 300px; margin: 1rem auto;">
+        <p class="mobile-warning-text">
             coOCR/HTR is optimized for large screens to display document, editor, and validation panels simultaneously.
         </p>
     </div>
 
-    <div class="app-container">
+    <main class="app-container">
 
         <!-- HEADER -->
         <header class="app-header glass">
@@ -51,13 +85,13 @@
                 coOCR/HTR
             </div>
 
-            <div class="header-doc-info" id="headerDocInfo" style="display: none;">
+            <div class="header-doc-info" id="headerDocInfo" hidden>
                 <div class="status-indicator status-confident"></div>
-                <span id="headerFilename" style="font-weight: 500; font-size: var(--text-sm);"></span>
+                <span id="headerFilename" class="header-filename"></span>
             </div>
 
             <!-- Demo Indicator (shown when demo data is loaded) -->
-            <div class="demo-indicator" id="demoIndicator" style="display: none;">
+            <div class="demo-indicator" id="demoIndicator" hidden>
                 <span class="demo-indicator-dot"></span>
                 <span>DEMO</span>
             </div>
@@ -66,7 +100,7 @@
                 <!-- Samples Dropdown -->
                 <div class="samples-dropdown">
                     <button class="btn btn-secondary" id="btnSamples">
-                        <svg class="icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <svg class="icon-sm icon-btn-label" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                         </svg>
                         Demo
@@ -75,8 +109,7 @@
                 </div>
 
                 <button class="btn btn-primary" id="btnUpload">
-                    <svg class="icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor">
+                    <svg class="icon-sm icon-btn-label" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -84,7 +117,7 @@
                     Upload
                 </button>
                 <button class="btn btn-secondary" id="btnIIIF" title="Load from IIIF repository">
-                    <svg class="icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg class="icon-sm icon-btn-label" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <circle cx="8.5" cy="8.5" r="1.5"></circle>
                         <polyline points="21 15 16 10 5 21"></polyline>
@@ -137,7 +170,7 @@
         </header>
 
         <!-- LEFT PANEL: DOCUMENT VIEWER -->
-        <section class="panel glass-panel" style="grid-column: 1;">
+        <section class="panel glass-panel panel-col-1">
             <div class="panel-header">
                 <span>Document Viewer</span>
                 <span class="info-tooltip">i
@@ -157,7 +190,7 @@
                 <span>Load a demo document or upload an image (JPG, PNG) or PAGE-XML.</span>
                 <button class="panel-hint-dismiss" data-dismiss-hint="viewer">×</button>
             </div>
-            <div class="panel-content" style="background-color: var(--bg-viewer); position: relative; overflow: hidden;">
+            <div class="panel-content viewer-panel-content">
                 <!-- Empty State with Drag & Drop (shown when no document loaded) -->
                 <div class="viewer-empty-state" id="viewerEmptyState">
                     <div class="drop-zone-indicator">
@@ -182,12 +215,12 @@
                 </div>
 
                 <!-- OpenSeadragon Viewer Container -->
-                <div id="osd-viewer" class="osd-viewer" style="display: none;">
+                <div id="osd-viewer" class="osd-viewer" hidden>
                     <!-- OpenSeadragon renders here -->
                 </div>
 
                 <!-- Page Navigation (hidden for single-page documents) -->
-                <div class="page-navigation" id="pageNavigation" style="display: none;">
+                <div class="page-navigation" id="pageNavigation" hidden>
                     <button class="icon-btn icon-sm" id="btnPrevPage" title="Previous Page" disabled>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="15 18 9 12 15 6"></polyline>
@@ -207,9 +240,7 @@
                             stroke="currentColor">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg></button>
-                    <span class="btn btn-icon"
-                        style="font-size: var(--text-xs); width: 40px; border:none; background:none;"
-                        id="zoomLabel">100%</span>
+                    <span class="zoom-label" id="zoomLabel">100%</span>
                     <button class="icon-btn icon-sm" title="Zoom In" id="zoomIn"><svg viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -255,7 +286,7 @@
         </section>
 
         <!-- MIDDLE PANEL: EDITOR -->
-        <section class="panel glass-panel" style="grid-column: 2;">
+        <section class="panel glass-panel panel-col-2">
             <div class="panel-header">
                 <span>Transcription</span>
                 <span class="info-tooltip">i
@@ -264,23 +295,23 @@
                         LLM provides fast recognition, expert brings judgment. Double-click to edit, Enter to save.
                     </div>
                 </span>
-                <div style="display: flex; gap: 4px; align-items: center; margin-left: auto;">
-                    <select id="documentType" title="Document type for transcription" style="padding: 4px 8px; font-size: var(--text-xs); background: var(--bg-tertiary); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer;">
+                <div class="flex-center gap-1 ml-auto">
+                    <select id="documentType" class="document-type-select" title="Document type for transcription">
                         <option value="table">Table</option>
                         <option value="text">Text</option>
                     </select>
                     <button class="btn btn-primary btn-sm" id="btnTranscribe" title="Transcribe document with LLM">
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 4px;">
+                        <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
                         </svg>
                         <span class="btn-text">Transcribe</span>
-                        <span class="btn-spinner" style="display: none;">
+                        <span class="btn-spinner" hidden>
                             <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
                             </svg>
                         </span>
                     </button>
-                    <div style="width: 1px; height: 16px; background: var(--border-default); margin: 0 4px;"></div>
+                    <div class="divider-vertical"></div>
                     <button class="icon-btn icon-sm" id="btnUndo" title="Undo" disabled><svg viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <path d="M9 14 4 9 9 4" />
@@ -309,7 +340,7 @@
         </section>
 
         <!-- RIGHT PANEL: VALIDATION -->
-        <section class="panel glass-panel" style="grid-column: 3;">
+        <section class="panel glass-panel panel-col-3">
             <div class="panel-header">
                 <span>Validation</span>
                 <span class="info-tooltip">i
@@ -318,9 +349,7 @@
                         Combines deterministic rules with LLM-Judge. Categories: confident / uncertain / problematic (no percentages).
                     </div>
                 </span>
-                <span class="badge" id="validationBadge"
-                    style="background: var(--border-default); padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--text-secondary); display: none; margin-left: auto;">0
-                    Issues</span>
+                <span class="validation-badge ml-auto" id="validationBadge" hidden>0 Issues</span>
             </div>
             <!-- Panel Hint -->
             <div class="panel-hint" id="validationHint">
@@ -335,19 +364,19 @@
             <div class="panel-content" id="validationContent">
                 <!-- Empty State -->
                 <div class="validation-empty-state" id="validationEmptyState">
-                    <svg class="empty-state-icon" style="width: 48px; height: 48px; margin-bottom: var(--space-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <svg class="empty-state-icon validation-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M9 12l2 2 4-4"></path>
                         <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
                     </svg>
-                    <h4 style="color: var(--text-primary); margin-bottom: var(--space-2);">No Validation Yet</h4>
-                    <p style="color: var(--text-secondary); font-size: var(--text-xs); max-width: 200px; text-align: center;">
+                    <h4 class="validation-empty-title">No Validation Yet</h4>
+                    <p class="validation-empty-text">
                         Load a document and run transcription to see validation results here.
                     </p>
                 </div>
 
                 <!-- Rule-Based Section (hidden until content) -->
-                <div class="validation-section" id="ruleBasedSection" style="display: none;">
-                    <div class="section-title" style="display:flex; align-items:center; gap:6px;">
+                <div class="validation-section" id="ruleBasedSection" hidden>
+                    <div class="section-title">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path
@@ -362,8 +391,8 @@
                 </div>
 
                 <!-- AI Assistant Section (hidden until content) -->
-                <div class="validation-section" id="aiAssistantSection" style="display: none;">
-                    <div class="section-title" style="display:flex; align-items:center; gap:6px;">
+                <div class="validation-section" id="aiAssistantSection" hidden>
+                    <div class="section-title">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path
                                 d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z">
@@ -404,13 +433,13 @@
                 </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: var(--space-4);">
-                <span id="statusProvider">Model: <span style="color: var(--text-primary);">Gemini 3 Flash</span></span>
+            <div class="status-bar-right">
+                <span id="statusProvider">Model: <span class="model-name">Gemini 3 Flash</span></span>
                 <div class="status-indicator status-confident" title="API Connected" id="statusIndicator"></div>
             </div>
         </footer>
 
-    </div>
+    </main>
 
     <!-- DIALOGS -->
 
@@ -419,10 +448,7 @@
         <div class="dialog-header">
             <h2 class="dialog-title">API Configuration</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
@@ -457,14 +483,8 @@
                     <div class="input-with-toggle">
                         <input type="password" id="geminiApiKey" placeholder="AIza..." autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
-                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
+                            <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
+                            <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
                         </button>
                     </div>
                 </div>
@@ -488,14 +508,8 @@
                     <div class="input-with-toggle">
                         <input type="password" id="openaiApiKey" placeholder="sk-..." autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
-                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
+                            <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
+                            <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
                         </button>
                     </div>
                 </div>
@@ -519,14 +533,8 @@
                     <div class="input-with-toggle">
                         <input type="password" id="anthropicApiKey" placeholder="sk-ant-..." autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
-                            <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
+                            <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
+                            <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
                         </button>
                     </div>
                 </div>
@@ -649,7 +657,7 @@
                 <div class="dialog-actions">
                     <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
                     <button type="button" class="btn btn-primary" id="downloadExport">
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -666,10 +674,7 @@
         <div class="dialog-header">
             <h2 class="dialog-title">Settings</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
@@ -727,14 +732,14 @@
                 <h3 class="settings-section-title">Data</h3>
                 <div class="settings-actions">
                     <button type="button" class="btn btn-secondary" id="btnClearSession">
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                         </svg>
                         Clear Session
                     </button>
                     <button type="button" class="btn btn-secondary" id="btnResetSettings">
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                             <path d="M3 3v5h5"></path>
                         </svg>
@@ -757,10 +762,7 @@
         <div class="dialog-header">
             <h2 class="dialog-title">Help & Documentation</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
@@ -915,10 +917,7 @@
         <div class="dialog-header">
             <h2 class="dialog-title">Load IIIF Resource</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
@@ -948,7 +947,7 @@
             </div>
 
             <!-- Preview area (hidden until manifest loaded) -->
-            <div class="iiif-preview" id="iiifPreview" style="display: none;">
+            <div class="iiif-preview" id="iiifPreview" hidden>
                 <div class="iiif-preview-header">
                     <span class="iiif-preview-label">Manifest Preview</span>
                     <span class="iiif-preview-version" id="iiifVersion"></span>
@@ -961,7 +960,7 @@
             </div>
 
             <!-- Loading state -->
-            <div class="iiif-loading" id="iiifLoading" style="display: none;">
+            <div class="iiif-loading" id="iiifLoading" hidden>
                 <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
                 </svg>
@@ -969,7 +968,7 @@
             </div>
 
             <!-- Error state -->
-            <div class="iiif-error" id="iiifError" style="display: none;">
+            <div class="iiif-error" id="iiifError" hidden>
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -984,7 +983,7 @@
             <div class="dialog-actions">
                 <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
                 <button type="button" class="btn btn-primary" id="iiifLoadManifest">
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
