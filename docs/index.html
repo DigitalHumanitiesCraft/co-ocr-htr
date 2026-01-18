@@ -83,6 +83,14 @@
                     </svg>
                     Upload
                 </button>
+                <button class="btn btn-secondary" id="btnIIIF" title="Load from IIIF repository">
+                    <svg class="icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    IIIF
+                </button>
                 <button class="icon-btn icon-md" title="API Keys" id="btnApiKeys">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path
@@ -897,6 +905,91 @@
         <div class="dialog-footer">
             <div class="dialog-actions">
                 <button type="button" class="btn btn-primary" data-close-dialog>Got it!</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- IIIF Dialog -->
+    <dialog id="iiifDialog" class="dialog">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Load IIIF Resource</h2>
+            <button class="dialog-close" data-close-dialog aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <p class="provider-description">
+                Load images from IIIF-compatible repositories. Supports Presentation API v2 and v3 manifests.
+            </p>
+
+            <div class="input-wrapper">
+                <label for="iiifManifestUrl">Manifest URL</label>
+                <input type="url" id="iiifManifestUrl" placeholder="https://example.org/iiif/manifest.json" autocomplete="url">
+            </div>
+
+            <div class="iiif-examples">
+                <span class="iiif-examples-label">Examples:</span>
+                <div class="iiif-example-links">
+                    <button type="button" class="btn-link" data-iiif-example="https://iiif.bodleian.ox.ac.uk/iiif/manifest/ae9f6cca-ae5c-4149-8fe4-95e6eca1f73c.json">
+                        Bodleian Library
+                    </button>
+                    <button type="button" class="btn-link" data-iiif-example="https://gallica.bnf.fr/iiif/ark:/12148/btv1b8449691v/manifest.json">
+                        Gallica (BnF)
+                    </button>
+                    <button type="button" class="btn-link" data-iiif-example="https://api.digitale-sammlungen.de/iiif/presentation/v2/bsb00026283/manifest">
+                        BSB Munich
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview area (hidden until manifest loaded) -->
+            <div class="iiif-preview" id="iiifPreview" style="display: none;">
+                <div class="iiif-preview-header">
+                    <span class="iiif-preview-label">Manifest Preview</span>
+                    <span class="iiif-preview-version" id="iiifVersion"></span>
+                </div>
+                <div class="iiif-preview-content">
+                    <div class="iiif-preview-title" id="iiifTitle"></div>
+                    <div class="iiif-preview-info" id="iiifInfo"></div>
+                    <div class="iiif-preview-pages" id="iiifPages"></div>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div class="iiif-loading" id="iiifLoading" style="display: none;">
+                <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
+                </svg>
+                <span>Loading manifest...</span>
+            </div>
+
+            <!-- Error state -->
+            <div class="iiif-error" id="iiifError" style="display: none;">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <span id="iiifErrorMessage"></span>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" id="iiifLoadPreview">Preview</button>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                <button type="button" class="btn btn-primary" id="iiifLoadManifest" disabled>
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 6px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Load
+                </button>
             </div>
         </div>
     </dialog>

@@ -8,6 +8,7 @@
 import { storage } from '../services/storage.js';
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
+import { loadIIIFManifest } from '../viewer.js';
 
 // Provider configuration
 const PROVIDERS = ['gemini', 'openai', 'anthropic', 'ollama'];
@@ -20,6 +21,7 @@ class DialogManager {
     constructor() {
         this.dialogs = {};
         this.currentProvider = 'gemini';
+        this.iiifManifestData = null;
     }
 
     /**
@@ -31,6 +33,7 @@ class DialogManager {
         this.dialogs.export = document.getElementById('exportDialog');
         this.dialogs.settings = document.getElementById('settingsDialog');
         this.dialogs.help = document.getElementById('helpDialog');
+        this.dialogs.iiif = document.getElementById('iiifDialog');
         this.toastContainer = document.getElementById('toastContainer');
 
         if (!this.dialogs.apiKey || !this.dialogs.export) {
@@ -85,6 +88,9 @@ class DialogManager {
         // Settings Dialog specific
         this.bindSettingsDialogEvents();
 
+        // IIIF Dialog specific
+        this.bindIIIFDialogEvents();
+
         // Header button bindings
         this.bindHeaderButtons();
 
@@ -136,6 +142,12 @@ class DialogManager {
         if (helpBtn) {
             helpBtn.onclick = () => this.openDialog('help');
         }
+
+        // IIIF button
+        const iiifBtn = document.getElementById('btnIIIF');
+        if (iiifBtn) {
+            iiifBtn.onclick = () => this.openDialog('iiif');
+        }
     }
 
     /**
@@ -182,6 +194,233 @@ class DialogManager {
         if (downloadBtn) {
             downloadBtn.addEventListener('click', () => this.handleExport());
         }
+    }
+
+    /**
+     * Bind IIIF Dialog specific events
+     */
+    bindIIIFDialogEvents() {
+        const dialog = this.dialogs.iiif;
+        if (!dialog) return;
+
+        // Example links
+        dialog.querySelectorAll('[data-iiif-example]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const url = btn.dataset.iiifExample;
+                const input = document.getElementById('iiifManifestUrl');
+                if (input) {
+                    input.value = url;
+                    this.resetIIIFPreview();
+                }
+            });
+        });
+
+        // Preview button
+        const previewBtn = document.getElementById('iiifLoadPreview');
+        if (previewBtn) {
+            previewBtn.addEventListener('click', () => this.previewIIIFManifest());
+        }
+
+        // Load button
+        const loadBtn = document.getElementById('iiifLoadManifest');
+        if (loadBtn) {
+            loadBtn.addEventListener('click', () => this.loadIIIFFromDialog());
+        }
+
+        // Enter key in input
+        const urlInput = document.getElementById('iiifManifestUrl');
+        if (urlInput) {
+            urlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.previewIIIFManifest();
+                }
+            });
+        }
+    }
+
+    /**
+     * Preview IIIF manifest (fetch and display info without loading)
+     */
+    async previewIIIFManifest() {
+        const urlInput = document.getElementById('iiifManifestUrl');
+        const url = urlInput?.value?.trim();
+
+        if (!url) {
+            this.showToast('Please enter a manifest URL', 'warning');
+            return;
+        }
+
+        // Validate URL format
+        try {
+            new URL(url);
+        } catch {
+            this.showToast('Invalid URL format', 'error');
+            return;
+        }
+
+        // Show loading state
+        this.setIIIFLoadingState(true);
+        this.resetIIIFPreview();
+
+        try {
+            const response = await fetch(url, {
+                signal: AbortSignal.timeout(15000)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const manifest = await response.json();
+
+            // Detect version
+            const context = manifest['@context'];
+            const version = Array.isArray(context)
+                ? (context.some(c => c.includes('presentation/3')) ? 3 : 2)
+                : (context?.includes('presentation/3') ? 3 : 2);
+
+            // Extract canvases
+            const canvases = version === 3
+                ? manifest.items
+                : manifest.sequences?.[0]?.canvases;
+
+            if (!canvases || canvases.length === 0) {
+                throw new Error('No canvases found in manifest');
+            }
+
+            // Extract title
+            const title = version === 3
+                ? (manifest.label?.en?.[0] || manifest.label?.de?.[0] || manifest.label || 'Untitled')
+                : (manifest.label || 'Untitled');
+
+            // Store manifest data for loading
+            this.iiifManifestData = {
+                url,
+                manifest,
+                version,
+                title: typeof title === 'object' ? JSON.stringify(title) : title,
+                pageCount: canvases.length
+            };
+
+            // Display preview
+            this.displayIIIFPreview();
+
+            // Enable load button
+            const loadBtn = document.getElementById('iiifLoadManifest');
+            if (loadBtn) loadBtn.disabled = false;
+
+        } catch (error) {
+            console.error('[IIIF] Preview failed:', error);
+            this.showIIIFError(error.message);
+        } finally {
+            this.setIIIFLoadingState(false);
+        }
+    }
+
+    /**
+     * Display IIIF preview information
+     */
+    displayIIIFPreview() {
+        if (!this.iiifManifestData) return;
+
+        const previewEl = document.getElementById('iiifPreview');
+        const versionEl = document.getElementById('iiifVersion');
+        const titleEl = document.getElementById('iiifTitle');
+        const infoEl = document.getElementById('iiifInfo');
+        const pagesEl = document.getElementById('iiifPages');
+
+        if (previewEl) previewEl.style.display = 'block';
+        if (versionEl) versionEl.textContent = `v${this.iiifManifestData.version}`;
+        if (titleEl) titleEl.textContent = this.iiifManifestData.title;
+        if (infoEl) infoEl.textContent = `${this.iiifManifestData.pageCount} page${this.iiifManifestData.pageCount !== 1 ? 's' : ''}`;
+
+        // Show first few page labels if available
+        if (pagesEl && this.iiifManifestData.manifest) {
+            const canvases = this.iiifManifestData.version === 3
+                ? this.iiifManifestData.manifest.items
+                : this.iiifManifestData.manifest.sequences?.[0]?.canvases;
+
+            if (canvases && canvases.length > 0) {
+                const labels = canvases.slice(0, 5).map((c, i) => {
+                    const label = this.iiifManifestData.version === 3
+                        ? (c.label?.en?.[0] || c.label?.de?.[0] || `Page ${i + 1}`)
+                        : (c.label || `Page ${i + 1}`);
+                    return typeof label === 'object' ? `Page ${i + 1}` : label;
+                });
+                const suffix = canvases.length > 5 ? ', ...' : '';
+                pagesEl.textContent = labels.join(', ') + suffix;
+            }
+        }
+    }
+
+    /**
+     * Load IIIF manifest from dialog
+     */
+    async loadIIIFFromDialog() {
+        if (!this.iiifManifestData) {
+            this.showToast('Please preview the manifest first', 'warning');
+            return;
+        }
+
+        try {
+            this.setIIIFLoadingState(true);
+
+            // Use the viewer's loadIIIFManifest function
+            await loadIIIFManifest(this.iiifManifestData.url);
+
+            this.showToast(`Loaded ${this.iiifManifestData.pageCount} pages from IIIF`, 'success');
+            this.closeDialog('iiif');
+
+            // Reset state
+            this.iiifManifestData = null;
+            this.resetIIIFPreview();
+
+        } catch (error) {
+            console.error('[IIIF] Load failed:', error);
+            this.showToast(`Failed to load: ${error.message}`, 'error');
+        } finally {
+            this.setIIIFLoadingState(false);
+        }
+    }
+
+    /**
+     * Set IIIF loading state
+     */
+    setIIIFLoadingState(loading) {
+        const loadingEl = document.getElementById('iiifLoading');
+        const previewBtn = document.getElementById('iiifLoadPreview');
+        const loadBtn = document.getElementById('iiifLoadManifest');
+
+        if (loadingEl) loadingEl.style.display = loading ? 'flex' : 'none';
+        if (previewBtn) previewBtn.disabled = loading;
+        if (loadBtn && loading) loadBtn.disabled = true;
+    }
+
+    /**
+     * Show IIIF error message
+     */
+    showIIIFError(message) {
+        const errorEl = document.getElementById('iiifError');
+        const errorMsg = document.getElementById('iiifErrorMessage');
+
+        if (errorEl) errorEl.style.display = 'flex';
+        if (errorMsg) errorMsg.textContent = message;
+    }
+
+    /**
+     * Reset IIIF preview state
+     */
+    resetIIIFPreview() {
+        const previewEl = document.getElementById('iiifPreview');
+        const errorEl = document.getElementById('iiifError');
+        const loadBtn = document.getElementById('iiifLoadManifest');
+
+        if (previewEl) previewEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'none';
+        if (loadBtn) loadBtn.disabled = true;
+
+        this.iiifManifestData = null;
     }
 
     /**
