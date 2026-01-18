@@ -162,11 +162,10 @@ class LLMService {
 
 | Provider | Endpoint | Model | Vision |
 |----------|----------|-------|--------|
-| Gemini | `generativelanguage.googleapis.com` | gemini-2.0-flash | Yes |
-| OpenAI | `api.openai.com` | gpt-4o-mini | Yes |
-| Anthropic | `api.anthropic.com` | claude-3-haiku | Yes |
-| DeepSeek | `api.deepseek.com` | deepseek-chat | Yes |
-| Ollama | `localhost:11434` | llama3.2-vision | Yes |
+| Gemini | `generativelanguage.googleapis.com` | gemini-3-flash-preview | Yes |
+| OpenAI | `api.openai.com` | gpt-5.2 | Yes |
+| Anthropic | `api.anthropic.com` | claude-sonnet-4.5 | Yes |
+| Ollama | `localhost:11434` | deepseek-ocr | Yes |
 
 ### Event Listener Registration (Implemented)
 
@@ -326,7 +325,7 @@ fetch('https://api.openai.com/v1/chat/completions', {
     'Authorization': `Bearer ${API_KEY}`
   },
   body: JSON.stringify({
-    model: 'gpt-4o-mini',
+    model: 'gpt-5.2',
     messages: [{
       role: 'user',
       content: [
