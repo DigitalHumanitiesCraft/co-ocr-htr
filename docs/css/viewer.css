@@ -43,7 +43,7 @@
 .region-box.selected {
   stroke: var(--selection);
   stroke-width: 3px;
-  fill: rgba(255, 193, 7, 0.15);
+  fill: var(--selection-bg);
   opacity: 1;
   animation: region-pulse 1.5s ease-in-out;
 }
@@ -52,15 +52,15 @@
 @keyframes region-pulse {
   0% {
     stroke-width: 3px;
-    fill: rgba(255, 193, 7, 0.3);
+    fill: var(--selection-bg-hover);
   }
   50% {
     stroke-width: 4px;
-    fill: rgba(255, 193, 7, 0.2);
+    fill: var(--selection-bg-active);
   }
   100% {
     stroke-width: 3px;
-    fill: rgba(255, 193, 7, 0.15);
+    fill: var(--selection-bg);
   }
 }
 
