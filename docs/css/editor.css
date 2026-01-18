@@ -37,7 +37,7 @@
 }
 
 .editor-line.active {
-  background-color: rgba(255, 193, 7, 0.15);
+  background-color: var(--selection-bg);
   border-left: 3px solid var(--selection);
   margin-left: -3px;
   animation: line-highlight 0.3s ease-out;
@@ -46,10 +46,10 @@
 /* Highlight animation for newly selected line */
 @keyframes line-highlight {
   0% {
-    background-color: rgba(255, 193, 7, 0.3);
+    background-color: var(--selection-bg-hover);
   }
   100% {
-    background-color: rgba(255, 193, 7, 0.15);
+    background-color: var(--selection-bg);
   }
 }
 
@@ -118,7 +118,7 @@
 }
 
 .editor-grid-row.active {
-  background-color: rgba(255, 193, 7, 0.15);
+  background-color: var(--selection-bg);
   animation: line-highlight 0.3s ease-out;
 }
 

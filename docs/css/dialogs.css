@@ -739,7 +739,7 @@ kbd {
   justify-content: space-between;
   align-items: center;
   padding: var(--space-2) var(--space-3);
-  background: rgba(52, 211, 153, 0.1);
+  background: var(--confident-bg);
   border-bottom: 1px solid var(--confident);
 }
 
@@ -755,7 +755,7 @@ kbd {
   font-size: var(--text-xs);
   color: var(--text-secondary);
   background: var(--surface-active);
-  padding: 2px 6px;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
 }
 
@@ -800,10 +800,7 @@ kbd {
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+/* Note: @keyframes spin is defined in base.css */
 
 /* IIIF Error State */
 .iiif-error {
@@ -812,7 +809,7 @@ kbd {
   gap: var(--space-2);
   padding: var(--space-3);
   margin-top: var(--space-3);
-  background: rgba(248, 113, 113, 0.1);
+  background: var(--problematic-bg);
   border: 1px solid var(--problematic);
   border-radius: var(--radius-md);
   color: var(--problematic);

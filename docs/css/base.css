@@ -129,20 +129,26 @@ code {
 }
 
 /* ==========================================================================
-   FOCUS STATES
+   FOCUS STATES (Accessibility)
    ========================================================================== */
 
 :focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--accent-primary);
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: 1px;
+}
+
+/* Remove default focus for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* ==========================================================================
@@ -190,3 +196,19 @@ textarea:focus-visible {
 .animate-slideUp { animation: slideUp var(--transition-fast); }
 .animate-spin { animation: spin 1s linear infinite; }
 .animate-pulse { animation: pulse 2s ease-in-out infinite; }
+
+/* ==========================================================================
+   REDUCED MOTION (Accessibility)
+   Respects user preference for reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -45,6 +45,10 @@
   --error: var(--problematic);
   --error-rgb: 184, 92, 74;
   --selection: #e8c547;            /* Golden yellow for selection */
+  --selection-rgb: 232, 197, 71;
+  --selection-bg: rgba(232, 197, 71, 0.15);
+  --selection-bg-hover: rgba(232, 197, 71, 0.3);
+  --selection-bg-active: rgba(232, 197, 71, 0.2);
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
@@ -75,11 +79,19 @@
   --transition-fast: 150ms ease;
   --transition-medium: 300ms ease;
 
-  /* Layers / Z-Index */
-  --z-overlay: 100;
-  --z-modal: 200;
-  --z-tooltip: 250;
-  --z-toast: 300;
+  /* Layers / Z-Index (systematic) */
+  --z-dropdown: 100;
+  --z-sticky: 150;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-dialog: 300;
+  --z-tooltip: 400;
+  --z-toast: 500;
+
+  /* Focus Ring */
+  --focus-ring-color: var(--accent-primary);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
 
   /* Borders - Warm, subtle */
   --border-subtle: rgba(61, 50, 41, 0.04);
