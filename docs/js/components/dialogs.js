@@ -9,6 +9,8 @@ import { storage } from '../services/storage.js';
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 import { loadIIIFManifest } from '../viewer.js';
+import { getById, select, selectAll, show, hide, focusDelayed } from '../utils/dom.js';
+import { IIIF_CONTEXT_V3, IIIF_VERSION, TOAST_DURATION_DEFAULT, TOAST_ANIMATION_DURATION, PAGE_RELOAD_DELAY, DIALOG_FOCUS_DELAY, DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
 
 // Provider configuration
 const PROVIDERS = ['gemini', 'openai', 'anthropic', 'ollama'];
@@ -29,12 +31,12 @@ class DialogManager {
      */
     init() {
         // Cache dialog elements
-        this.dialogs.apiKey = document.getElementById('apiKeyDialog');
-        this.dialogs.export = document.getElementById('exportDialog');
-        this.dialogs.settings = document.getElementById('settingsDialog');
-        this.dialogs.help = document.getElementById('helpDialog');
-        this.dialogs.iiif = document.getElementById('iiifDialog');
-        this.toastContainer = document.getElementById('toastContainer');
+        this.dialogs.apiKey = getById('apiKeyDialog');
+        this.dialogs.export = getById('exportDialog');
+        this.dialogs.settings = getById('settingsDialog');
+        this.dialogs.help = getById('helpDialog');
+        this.dialogs.iiif = getById('iiifDialog');
+        this.toastContainer = getById('toastContainer');
 
         if (!this.dialogs.apiKey || !this.dialogs.export) {
             console.warn('Dialog elements not found in DOM');
@@ -52,7 +54,7 @@ class DialogManager {
      */
     bindEvents() {
         // Generic close buttons
-        document.querySelectorAll('[data-close-dialog]').forEach(btn => {
+        selectAll('[data-close-dialog]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const dialog = e.target.closest('dialog');
                 if (dialog) this.closeDialog(dialog);
@@ -72,7 +74,7 @@ class DialogManager {
         // Close on Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const openDialog = document.querySelector('dialog[open]');
+                const openDialog = select('dialog[open]');
                 if (openDialog) {
                     this.closeDialog(openDialog);
                 }
@@ -95,21 +97,21 @@ class DialogManager {
         this.bindHeaderButtons();
 
         // Password visibility toggles
-        document.querySelectorAll('[data-toggle-password]').forEach(btn => {
+        selectAll('[data-toggle-password]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const wrapper = e.target.closest('.input-with-toggle');
-                const input = wrapper.querySelector('input');
-                const showIcon = wrapper.querySelector('.icon-show');
-                const hideIcon = wrapper.querySelector('.icon-hide');
+                const input = select('input', wrapper);
+                const showIcon = select('.icon-show', wrapper);
+                const hideIcon = select('.icon-hide', wrapper);
 
                 if (input.type === 'password') {
                     input.type = 'text';
-                    showIcon.style.display = 'none';
-                    hideIcon.style.display = 'block';
+                    showIcon.hidden = true;
+                    hideIcon.hidden = false;
                 } else {
                     input.type = 'password';
-                    showIcon.style.display = 'block';
-                    hideIcon.style.display = 'none';
+                    showIcon.hidden = false;
+                    hideIcon.hidden = true;
                 }
             });
         });
@@ -120,33 +122,33 @@ class DialogManager {
      */
     bindHeaderButtons() {
         // API Keys button
-        const apiKeysBtn = document.querySelector('[title="API Keys"]');
+        const apiKeysBtn = select('[title="API Keys"]');
         if (apiKeysBtn) {
-            apiKeysBtn.onclick = () => this.openDialog('apiKey');
+            apiKeysBtn.addEventListener('click', () => this.openDialog('apiKey'));
         }
 
         // Export button
-        const exportBtn = document.querySelector('[title="Export"]');
+        const exportBtn = select('[title="Export"]');
         if (exportBtn) {
-            exportBtn.onclick = () => this.openDialog('export');
+            exportBtn.addEventListener('click', () => this.openDialog('export'));
         }
 
         // Settings button
-        const settingsBtn = document.querySelector('[title="Settings"]');
+        const settingsBtn = select('[title="Settings"]');
         if (settingsBtn) {
-            settingsBtn.onclick = () => this.openDialog('settings');
+            settingsBtn.addEventListener('click', () => this.openDialog('settings'));
         }
 
         // Help button
-        const helpBtn = document.querySelector('[title="Help"]');
+        const helpBtn = select('[title="Help"]');
         if (helpBtn) {
-            helpBtn.onclick = () => this.openDialog('help');
+            helpBtn.addEventListener('click', () => this.openDialog('help'));
         }
 
         // IIIF button
-        const iiifBtn = document.getElementById('btnIIIF');
+        const iiifBtn = getById('btnIIIF');
         if (iiifBtn) {
-            iiifBtn.onclick = () => this.openDialog('iiif');
+            iiifBtn.addEventListener('click', () => this.openDialog('iiif'));
         }
     }
 
@@ -158,26 +160,26 @@ class DialogManager {
         if (!dialog) return;
 
         // Tab switching
-        dialog.querySelectorAll('.dialog-tab').forEach(tab => {
+        selectAll('.dialog-tab', dialog).forEach(tab => {
             tab.addEventListener('click', () => {
                 this.switchProviderTab(tab.dataset.provider);
             });
         });
 
         // Save button
-        const saveBtn = dialog.querySelector('#saveApiKeys');
+        const saveBtn = select('#saveApiKeys', dialog);
         if (saveBtn) {
             saveBtn.addEventListener('click', () => this.saveApiKeys());
         }
 
         // Test connection button
-        const testBtn = dialog.querySelector('#testApiConnection');
+        const testBtn = select('#testApiConnection', dialog);
         if (testBtn) {
             testBtn.addEventListener('click', () => this.testConnection());
         }
 
         // Ollama refresh models
-        const refreshBtn = dialog.querySelector('#ollamaRefreshModels');
+        const refreshBtn = select('#ollamaRefreshModels', dialog);
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.refreshOllamaModels());
         }
@@ -190,7 +192,7 @@ class DialogManager {
         const dialog = this.dialogs.export;
         if (!dialog) return;
 
-        const downloadBtn = dialog.querySelector('#downloadExport');
+        const downloadBtn = select('#downloadExport', dialog);
         if (downloadBtn) {
             downloadBtn.addEventListener('click', () => this.handleExport());
         }
@@ -204,10 +206,10 @@ class DialogManager {
         if (!dialog) return;
 
         // Example links
-        dialog.querySelectorAll('[data-iiif-example]').forEach(btn => {
+        selectAll('[data-iiif-example]', dialog).forEach(btn => {
             btn.addEventListener('click', () => {
                 const url = btn.dataset.iiifExample;
-                const input = document.getElementById('iiifManifestUrl');
+                const input = getById('iiifManifestUrl');
                 if (input) {
                     input.value = url;
                     this.resetIIIFPreview();
@@ -216,19 +218,19 @@ class DialogManager {
         });
 
         // Preview button
-        const previewBtn = document.getElementById('iiifLoadPreview');
+        const previewBtn = getById('iiifLoadPreview');
         if (previewBtn) {
             previewBtn.addEventListener('click', () => this.previewIIIFManifest());
         }
 
         // Load button - directly loads without requiring preview
-        const loadBtn = document.getElementById('iiifLoadManifest');
+        const loadBtn = getById('iiifLoadManifest');
         if (loadBtn) {
             loadBtn.addEventListener('click', () => this.loadIIIFDirectly());
         }
 
         // Enter key in input - directly load
-        const urlInput = document.getElementById('iiifManifestUrl');
+        const urlInput = getById('iiifManifestUrl');
         if (urlInput) {
             urlInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {

@@ -8,11 +8,12 @@
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
 import { metsXMLParser } from '../services/parsers/mets-xml.js';
+import { getById, select, hide } from '../utils/dom.js';
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from '../utils/constants.js';
 
 // Supported file types
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/tiff', 'image/webp'];
 const SUPPORTED_XML_TYPES = ['text/xml', 'application/xml'];
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 /**
  * Upload Manager
@@ -39,14 +40,14 @@ class UploadManager {
      */
     createFileInput() {
         // Check if already exists
-        this.fileInput = document.getElementById('fileInput');
+        this.fileInput = getById('fileInput');
         if (this.fileInput) return;
 
         this.fileInput = document.createElement('input');
         this.fileInput.type = 'file';
         this.fileInput.id = 'fileInput';
         this.fileInput.accept = [...SUPPORTED_IMAGE_TYPES, '.xml'].join(',');
-        this.fileInput.style.display = 'none';
+        this.fileInput.hidden = true;
         document.body.appendChild(this.fileInput);
     }
 
@@ -65,16 +66,16 @@ class UploadManager {
         });
 
         // Upload button
-        const uploadBtn = document.getElementById('btnUpload');
+        const uploadBtn = getById('btnUpload');
         if (uploadBtn) {
-            uploadBtn.onclick = (e) => {
+            uploadBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.openFilePicker();
-            };
+            });
         }
 
         // Drop zone indicator click - open file picker
-        const dropZoneIndicator = document.querySelector('.drop-zone-indicator');
+        const dropZoneIndicator = select('.drop-zone-indicator');
         if (dropZoneIndicator) {
             dropZoneIndicator.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -88,8 +89,8 @@ class UploadManager {
      */
     setupDropZone() {
         // Use the panel content area as drop zone
-        this.dropZone = document.querySelector('.panel-content');
-        this.emptyState = document.getElementById('viewerEmptyState');
+        this.dropZone = select('.panel-content');
+        this.emptyState = getById('viewerEmptyState');
 
         if (!this.dropZone) {
             console.warn('Drop zone element not found');
@@ -252,7 +253,7 @@ class UploadManager {
     validateFile(file) {
         // Check file size
         if (file.size > MAX_FILE_SIZE) {
-            return { valid: false, error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB.` };
+            return { valid: false, error: `File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.` };
         }
 
         // Check file type
@@ -325,10 +326,7 @@ class UploadManager {
      * Hide demo indicator (user uploaded their own document)
      */
     hideDemoIndicator() {
-        const demoIndicator = document.getElementById('demoIndicator');
-        if (demoIndicator) {
-            demoIndicator.style.display = 'none';
-        }
+        hide('demoIndicator');
         appState.isDemo = false;
     }
 

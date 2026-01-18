@@ -70,6 +70,16 @@ code {
   display: none !important;
 }
 
+/* Display utilities for visibility toggle patterns */
+.d-none { display: none !important; }
+.d-block { display: block; }
+.d-flex { display: flex; }
+.d-inline { display: inline; }
+.d-inline-flex { display: inline-flex; }
+
+/* Visibility toggle classes (used with JS) */
+[hidden] { display: none !important; }
+
 .sr-only {
   position: absolute;
   width: 1px;
