@@ -58,15 +58,22 @@ System design for coOCR/HTR. Client-only, no backend.
 
 ```
 docs/
-├── index.html              # Entry Point
+├── index.html              # Entry Point + OpenSeadragon CDN
 ├── favicon.png
 ├── css/
 │   ├── variables.css       # Design System Tokens (60+ vars)
-│   └── styles.css          # Component Styles (~1500 LOC)
+│   ├── styles.css          # Entry point with @imports
+│   ├── base.css            # Reset, typography
+│   ├── layout.css          # Grid, panels, header
+│   ├── components.css      # Buttons, inputs
+│   ├── dialogs.css         # Dialog system
+│   ├── editor.css          # Transcription editor
+│   ├── viewer.css          # OpenSeadragon viewer styles
+│   └── validation.css      # Validation panel
 ├── js/
 │   ├── main.js             # Initialization, Workflow (~300 LOC)
 │   ├── state.js            # Central State with EventTarget (~450 LOC)
-│   ├── viewer.js           # Document Viewer Logic
+│   ├── viewer.js           # OpenSeadragon Viewer (~520 LOC)
 │   ├── editor.js           # Flexible Editor (lines/grid)
 │   ├── ui.js               # UI Interactions
 │   ├── components/
@@ -78,16 +85,19 @@ docs/
 │       ├── llm.js          # Multi-Provider LLM Service
 │       ├── storage.js      # LocalStorage Wrapper
 │       ├── validation.js   # Validation Engine
-│       ├── export.js       # Export Service
+│       ├── export.js       # Export Service (incl. PAGE-XML)
 │       ├── samples.js      # Demo Loader
 │       └── parsers/
-│           └── page-xml.js # PAGE-XML Parser
+│           ├── page-xml.js # PAGE-XML Parser
+│           └── mets-xml.js # METS-XML Parser
 ├── samples/
 │   ├── index.json          # Sample Manifest
 │   └── raitbuch/           # Demo Data
 └── tests/
     ├── llm.test.js
-    └── page-xml.test.js
+    ├── page-xml.test.js
+    ├── export.test.js
+    └── validation.test.js
 ```
 
 ## Core Modules
@@ -167,19 +177,61 @@ class LLMService {
 | Anthropic | `api.anthropic.com` | claude-sonnet-4.5 | Yes |
 | Ollama | `localhost:11434` | deepseek-ocr | Yes |
 
+### Document Viewer (OpenSeadragon)
+
+IIIF-compatible image viewer with SVG overlay for region synchronization.
+
+**Dependencies (CDN):**
+```html
+<script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/openseadragon.min.js"></script>
+<script src="https://openseadragon.github.io/svg-overlay/openseadragon-svg-overlay.js"></script>
+```
+
+**Key Features:**
+| Feature | Implementation |
+|---------|----------------|
+| Pan/Zoom | Built-in (wheel, drag, double-click) |
+| Rotation | `viewer.viewport.setRotation(degrees)` |
+| Flip | `viewer.viewport.setFlip(boolean)` |
+| Local Images | `viewer.open({ type: 'image', url })` |
+| IIIF Images | `viewer.open(infoJsonUrl)` |
+| SVG Overlay | `viewer.svgOverlay()` for regions |
+
+**Coordinate System:**
+OpenSeadragon SVG Overlay uses viewport coordinates:
+- X: 0-1 (normalized to image width)
+- Y: 0-aspectRatio (normalized to image width, NOT height)
+
+```javascript
+const aspectRatio = imgHeight / imgWidth;
+const x = reg.x / 100;                    // PAGE-XML percent to 0-1
+const y = (reg.y / 100) * aspectRatio;    // Must multiply by aspect ratio
+```
+
+**Keyboard Shortcuts:**
+| Key | Action |
+|-----|--------|
+| `+` / `=` | Zoom in |
+| `-` | Zoom out |
+| `0` | Reset view (incl. rotation) |
+| `f` | Fit to view |
+| `r` | Rotate left |
+| `R` | Rotate right |
+| `h` | Flip horizontal |
+
 ### Event Listener Registration (Implemented)
 
 ```javascript
-// In viewer.js
+// In viewer.js (OpenSeadragon)
 appState.addEventListener('selectionChanged', (e) => {
-  document.querySelectorAll('.region-box.selected').forEach(el => el.classList.remove('selected'));
-  const regionEl = document.querySelector(`.region-box[data-line="${e.detail.line}"]`);
-  if (regionEl) regionEl.classList.add('selected');
+  highlightRegion(e.detail.line);
+  panToRegion(e.detail.line);
 });
 
-appState.addEventListener('zoomChanged', (e) => {
-  img.style.transform = `scale(${e.detail.zoom / 100})`;
-  zoomLabel.textContent = `${e.detail.zoom}%`;
+viewer.addHandler('zoom', (e) => {
+  const zoomPercent = Math.round(e.zoom * 100);
+  zoomLabel.textContent = `${zoomPercent}%`;
+  appState.setZoom(zoomPercent);
 });
 
 // In editor.js

@@ -10,7 +10,7 @@ import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 
 // Provider configuration
-const PROVIDERS = ['gemini', 'openai', 'anthropic', 'deepseek', 'ollama'];
+const PROVIDERS = ['gemini', 'openai', 'anthropic', 'ollama'];
 
 /**
  * Dialog Manager
@@ -517,8 +517,7 @@ class DialogManager {
                 const keyFormats = {
                     gemini: /^AIza/,
                     openai: /^sk-/,
-                    anthropic: /^sk-ant-/,
-                    deepseek: /^sk-/
+                    anthropic: /^sk-ant-/
                 };
 
                 const pattern = keyFormats[provider];

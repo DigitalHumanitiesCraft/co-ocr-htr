@@ -401,33 +401,18 @@ class AppState extends EventTarget {
       lines: data.lines || this._segmentsToLines(data.segments || [])
     };
 
-    // Update regions from segments if available
+    // Update regions from segments - only use real coordinates (from PAGE-XML)
+    // LLM transcriptions without coordinates will not have regions displayed
     if (data.segments?.length > 0) {
-      const totalSegments = data.segments.length;
-      this.data.regions = data.segments.map((s, index) => {
-        // Use real bounds if available
-        if (s.bounds && s.bounds.width > 0 && s.bounds.height > 0) {
-          return {
-            line: s.lineNumber,
-            x: s.bounds.x,
-            y: s.bounds.y,
-            w: s.bounds.width,
-            h: s.bounds.height
-          };
-        }
-        // Generate pseudo-region for segments without bounds (e.g., LLM-generated)
-        // Distribute evenly across image height
-        const heightPercent = 100 / totalSegments;
-        const margin = Math.min(1, heightPercent * 0.1); // Small gap between regions
-        return {
+      this.data.regions = data.segments
+        .filter(s => s.bounds && s.bounds.width > 0 && s.bounds.height > 0)
+        .map(s => ({
           line: s.lineNumber,
-          x: 2,
-          y: index * heightPercent + margin,
-          w: 96,
-          h: heightPercent - (margin * 2),
-          synthetic: true // Marker for generated regions
-        };
-      });
+          x: s.bounds.x,
+          y: s.bounds.y,
+          w: s.bounds.width,
+          h: s.bounds.height
+        }));
     }
 
     this.data.meta.updatedAt = new Date().toISOString();
