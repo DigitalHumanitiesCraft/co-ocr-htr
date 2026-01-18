@@ -2139,4 +2139,79 @@ Created `docs/js/utils/` folder with centralized utilities:
 
 ---
 
+## 2026-01-18 | Session 18: Testing & Deployment Status
+
+**Participants:** User, Claude Opus 4.5
+
+### Projektstatus Übersicht
+
+**Vollständig implementiert und deployed:**
+
+| Komponente | Status |
+|------------|--------|
+| Document Viewer (OpenSeadragon) | [x] Mit IIIF Support |
+| Transcription Editor | [x] Lines/Grid Modes |
+| Validation Panel | [x] Rule-based + LLM-Judge |
+| LLM Integration | [x] 5 Provider (Gemini, OpenAI, Anthropic, DeepSeek, Ollama) |
+| IIIF Support | [x] Manifest laden, Seitennavigation |
+| PAGE-XML Import/Export | [x] Vollständig |
+| Export Formate | [x] TXT, JSON, Markdown, PAGE-XML |
+| Inline Editing | [x] Mit Undo/Redo |
+| Demo Samples | [x] 3 Beispieldokumente |
+| Settings & Help Dialogs | [x] Vollständig |
+| CSS Modular Architecture | [x] 9 Dateien |
+| JS Utility Modules | [x] 3 Module (constants, dom, textFormatting) |
+
+### Live Deployment
+
+**URL:** https://digitalhumanitiecraft.github.io/co-ocr-htr/
+
+**GitHub:** https://github.com/DigitalHumanitiesCraft/co-ocr-htr
+
+### Test Coverage
+
+| Test-Datei | Tests |
+|------------|-------|
+| `llm.test.js` | 28 |
+| `page-xml.test.js` | 26 |
+| `export.test.js` | 32 |
+| `validation.test.js` | 32 |
+| **Gesamt** | **118** |
+
+### Offene Features (Optional)
+
+| Feature | Priorität | Beschreibung |
+|---------|-----------|--------------|
+| PDF Multi-Page Support | Niedrig | Mehrseitige PDFs laden |
+| Auto-Save | Niedrig | Entwürfe automatisch speichern |
+| E2E Tests | Niedrig | Playwright/Cypress Integration |
+| Performance Audit | Niedrig | Große Dokumente (100+ Seiten) |
+
+### Wartungsstatus
+
+Das Projekt ist feature-complete und produktionsbereit. Alle 7 Milestones aus dem ursprünglichen IMPLEMENTATION-PLAN.md sind abgeschlossen, plus zusätzliche Features:
+
+- Milestone 0: Preparation [x]
+- Milestone 1: Core Services [x]
+- Milestone 2: Dialogs & Upload [x]
+- Milestone 3: LLM Transcription [x]
+- Milestone 4: Validation [x]
+- Milestone 5: Export [x]
+- Milestone 6: UX (Inline-Edit, Undo/Redo) [x]
+- Milestone 7: Polish & Demo Loader [x]
+- Milestone 8: Flexible Editor [x]
+- Milestone 9: OpenSeadragon Viewer Rewrite [x]
+- Milestone 10: IIIF Dialog [x]
+- Milestone 11: CSS/HTML Refactoring [x]
+- Milestone 12: JS Utilities [x]
+
+### Commits (Session 17-18)
+
+| Commit | Beschreibung |
+|--------|--------------|
+| `e0f1475` | refactor: extract JS utility modules for DOM, text formatting, and constants |
+| `e1ffb83` | style: improve CSS accessibility and consistency |
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
