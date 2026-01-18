@@ -31,7 +31,7 @@ async function initApp() {
     const settings = storage.loadSettings();
 
     // Configure LLM service with saved API keys
-    const providers = ['gemini', 'openai', 'anthropic', 'deepseek'];
+    const providers = ['gemini', 'openai', 'anthropic'];
     providers.forEach(provider => {
         const key = storage.loadApiKey(provider);
         if (key) {

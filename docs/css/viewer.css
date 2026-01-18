@@ -1,79 +1,67 @@
 /**
  * viewer.css - Document Viewer Styles
  * coOCR/HTR Design System v2.1
+ * OpenSeadragon Integration
  */
 
 /* ==========================================================================
-   IMAGE CONTAINER
+   OPENSEADRAGON CONTAINER
    ========================================================================== */
 
-.image-container {
+#osd-viewer {
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--bg-viewer);
-  position: relative;
-  overflow: hidden;
-  cursor: grab;
+  background: var(--bg-viewer);
 }
 
-.image-container:active {
-  cursor: grabbing;
-}
-
-/* Image Wrapper (positions SVG overlay) */
-#imageWrapper {
-  position: relative;
-  display: inline-block;
-  max-width: 90%;
-  max-height: 90%;
-}
-
-#docImage {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  transition: transform 0.1s ease-out;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+/* Hide OSD's default navigation controls (we use our own toolbar) */
+#osd-viewer .navigator {
+  display: none !important;
 }
 
 /* ==========================================================================
-   REGIONS OVERLAY (SVG)
+   REGIONS OVERLAY (SVG via OpenSeadragon svg-overlay)
    ========================================================================== */
-
-#regionsOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
 
 .region-box {
   fill: transparent;
   stroke: var(--region-stroke);
-  stroke-width: 1.5px;
+  stroke-width: 2px;
   cursor: pointer;
-  pointer-events: auto;
-  transition: all 0.2s ease;
-  opacity: 0.7;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+  opacity: 0.6;
+  /* Stroke doesn't scale with zoom */
+  vector-effect: non-scaling-stroke;
 }
 
 .region-box:hover {
   fill: var(--region-fill-hover);
   stroke: var(--region-stroke-hover);
-  stroke-width: 2px;
   opacity: 1;
 }
 
 .region-box.selected {
   stroke: var(--selection);
-  stroke-width: 2px;
-  fill: rgba(255, 193, 7, 0.1);
+  stroke-width: 3px;
+  fill: rgba(255, 193, 7, 0.15);
   opacity: 1;
+  animation: region-pulse 1.5s ease-in-out;
+}
+
+/* Pulse animation for newly selected region */
+@keyframes region-pulse {
+  0% {
+    stroke-width: 3px;
+    fill: rgba(255, 193, 7, 0.3);
+  }
+  50% {
+    stroke-width: 4px;
+    fill: rgba(255, 193, 7, 0.2);
+  }
+  100% {
+    stroke-width: 3px;
+    fill: rgba(255, 193, 7, 0.15);
+  }
 }
 
 /* Confidence-based region colors */
@@ -137,8 +125,8 @@
 }
 
 .viewer-toolbar .icon-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Zoom Label */
@@ -171,7 +159,7 @@
   text-align: center;
   padding: var(--space-6);
   background: var(--bg-primary);
-  z-index: 10; /* Above image-container when visible */
+  z-index: 10; /* Above osd-viewer when visible */
 }
 
 .viewer-empty-state.hidden {
@@ -270,7 +258,7 @@
 }
 
 /* ==========================================================================
-   PAGE NAVIGATION (Future: Multi-page support)
+   PAGE NAVIGATION (Multi-page support)
    ========================================================================== */
 
 .page-navigation {
@@ -287,6 +275,7 @@
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);
   color: var(--text-secondary);
+  z-index: 10;
 }
 
 .page-navigation .page-info {

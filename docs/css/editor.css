@@ -37,9 +37,20 @@
 }
 
 .editor-line.active {
-  background-color: rgba(255, 193, 7, 0.1);
-  border-left: 2px solid var(--selection);
-  margin-left: -2px;
+  background-color: rgba(255, 193, 7, 0.15);
+  border-left: 3px solid var(--selection);
+  margin-left: -3px;
+  animation: line-highlight 0.3s ease-out;
+}
+
+/* Highlight animation for newly selected line */
+@keyframes line-highlight {
+  0% {
+    background-color: rgba(255, 193, 7, 0.3);
+  }
+  100% {
+    background-color: rgba(255, 193, 7, 0.15);
+  }
 }
 
 /* Line Number */
@@ -107,7 +118,8 @@
 }
 
 .editor-grid-row.active {
-  background-color: rgba(255, 193, 7, 0.1);
+  background-color: rgba(255, 193, 7, 0.15);
+  animation: line-highlight 0.3s ease-out;
 }
 
 /* Grid Header Row */

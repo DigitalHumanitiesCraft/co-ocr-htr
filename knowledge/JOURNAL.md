@@ -1615,7 +1615,147 @@ extractLineText(line) {
 **Offen:**
 - Phase 3: Batch-Processing
 - Phase 4: E2E Tests, Performance Audit
-- Optional: Refactoring (llm.js, viewer.js, validation.js)
+
+---
+
+## 2026-01-18 | Session 14: OpenSeadragon Viewer Rewrite
+
+**Participants:** User, Claude Opus 4.5
+
+### Problem Statement
+
+**Issue:** Region-Overlay Synchronisation funktionierte nicht korrekt.
+
+**Symptome:**
+- Regions erschienen in der falschen Position (links oben statt über dem Text)
+- SVG viewBox="0 0 100 100" mit preserveAspectRatio="none" funktionierte nicht für nicht-quadratische Bilder
+- Eigene Pan/Zoom-Implementierung mit Transform war fehleranfällig
+
+**Analyse:** Der alte Viewer-Code war organisch gewachsen mit mehreren interagierenden Problemen:
+- Custom Pan/Zoom mit CSS Transform
+- SVG Overlay musste manuell synchronisiert werden
+- Koordinatensystem-Mismatch zwischen Bild und Overlay
+
+### Solution: Complete Rewrite with OpenSeadragon
+
+**Entscheidung:** Komplettes Rewrite mit OpenSeadragon + IIIF-Support statt inkrementeller Fixes.
+
+**Vorteile:**
+1. **Korrekte Region-Overlay** - SVG wird automatisch transformiert
+2. **IIIF Support** - Bilder von externen Repositorien laden
+3. **Professionelles Pan/Zoom** - Smooth, touch-fähig, bewährt
+4. **Vereinfachter Code** - OpenSeadragon übernimmt komplexe Logik
+
+### Implementation
+
+**Phase 1: Dependencies**
+
+| Datei | Aenderung |
+|-------|----------|
+| `index.html` | OpenSeadragon 4.1 + SVG Overlay Plugin via CDN |
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/openseadragon.min.js"></script>
+<script src="https://openseadragon.github.io/svg-overlay/openseadragon-svg-overlay.js"></script>
+```
+
+**Phase 2: HTML Structure**
+
+| Alt | Neu |
+|-----|-----|
+| `<div class="image-container"><div id="imageWrapper">...</div></div>` | `<div id="osd-viewer" class="osd-viewer">` |
+| `<img id="docImage">` + `<svg id="regionsOverlay">` | OpenSeadragon rendert intern |
+
+**Phase 3: viewer.js Rewrite (~500 LOC)**
+
+| Feature | Implementation |
+|---------|----------------|
+| OpenSeadragon Init | `OpenSeadragon({ id: 'osd-viewer', ... })` |
+| SVG Overlay | `viewer.svgOverlay()` |
+| Local Images | `viewer.open({ type: 'image', url, buildPyramid: false })` |
+| IIIF Images | `viewer.open(infoJsonUrl)` |
+| Regions | `svgOverlay.node()` + SVG rect elements |
+| Pan/Zoom | Built-in (wheel, drag, dblclick) |
+| Selection Sync | `viewer.viewport.panTo(new OpenSeadragon.Point(x, y))` |
+| Rotation | `viewer.viewport.setRotation()` |
+| Flip | `viewer.viewport.setFlip()` |
+
+**Phase 4: Koordinaten-Konvertierung (Aspect Ratio Fix)**
+
+Das OpenSeadragon SVG Overlay verwendet ein spezielles Koordinatensystem:
+- X-Koordinate: 0-1 (normalisiert auf Bildbreite)
+- Y-Koordinate: 0 bis aspectRatio (normalisiert auf Bildbreite, NICHT Bildhoehe)
+
+```javascript
+// PAGE-XML speichert als Prozent (0-100)
+// OSD SVG Overlay: X normalisiert auf Breite, Y muss mit Aspect Ratio multipliziert werden
+const aspectRatio = imgHeight / imgWidth;
+const x = reg.x / 100;
+const y = (reg.y / 100) * aspectRatio;
+const w = reg.w / 100;
+const h = (reg.h / 100) * aspectRatio;
+```
+
+**Phase 5: Rotation und Flip Controls**
+
+| Feature | Keyboard | Button |
+|---------|----------|--------|
+| Rotate Left | `r` | btnRotateLeft |
+| Rotate Right | `R` (Shift+R) | btnRotateRight |
+| Flip Horizontal | `h` | btnFlipH |
+| Reset View | `0` | btnResetView |
+
+**Phase 6: CSS Updates**
+
+| Aenderung | Beschreibung |
+|----------|--------------|
+| `#osd-viewer` | Container-Styles |
+| `.region-box` | SVG Overlay Styles mit `vector-effect: non-scaling-stroke` |
+| `.viewer-toolbar .icon-btn svg` | Icon-Groesse auf 20px erhoeht |
+
+### IIIF Support (Prepared)
+
+| Feature | Status |
+|---------|--------|
+| IIIF Image API | Bereit (via OpenSeadragon) |
+| IIIF Presentation API | `loadIIIFManifest()` implementiert |
+| Multi-Page via Manifest | Unterstuetzt |
+
+### Files Modified
+
+| Datei | Aenderung |
+|-------|----------|
+| `docs/index.html` | OSD Scripts + HTML Structure + Rotation/Flip Buttons |
+| `docs/js/viewer.js` | Komplettes Rewrite (~520 LOC) |
+| `docs/css/viewer.css` | OSD Container + Region Styles + Icon-Groesse |
+| `knowledge/VIEWER-REWRITE-PLAN.md` | Planungs-Dokument |
+
+### Architecture Comparison
+
+**Alt:**
+```
+image-container
+  imageWrapper (transform: translate + scale)
+    docImage
+    regionsOverlay (SVG, viewBox: 0 0 100 100)
+```
+
+**Neu:**
+```
+#osd-viewer (OpenSeadragon Container)
+  Canvas (Bild-Rendering, managed by OSD)
+  SVG Overlay (via svg-overlay Plugin)
+    rect (viewport coordinates with aspect ratio)
+```
+
+### Results
+
+- [x] Region-Synchronisation funktioniert korrekt
+- [x] Regionen bleiben bei allen Zoom-Stufen exakt ueber den Textzeilen
+- [x] Klick auf Region waehlt Zeile im Editor
+- [x] Klick auf Zeile im Editor pannt zur Region
+- [x] Rotation und Flip funktionieren
+- [x] Smooth Pan und Zoom mit Maus/Touch
 
 ---
 

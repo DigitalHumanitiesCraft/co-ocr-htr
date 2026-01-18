@@ -1,317 +1,170 @@
 /**
- * coOCR/HTR - Document Viewer Logic
- * Enhanced with Pan, Zoom, and Fit controls
+ * coOCR/HTR - Document Viewer (OpenSeadragon)
+ * IIIF-compatible image viewer with SVG overlay for regions
  */
 import { appState } from './state.js';
 
-// Viewer state
-let isPanning = false;
-let startX = 0;
-let startY = 0;
-let scrollLeft = 0;
-let scrollTop = 0;
-let currentZoom = 100;
-let panX = 0;
-let panY = 0;
+let viewer = null;
+let svgOverlay = null;
 
 export function initViewer() {
-    const img = document.getElementById('docImage');
-    const svg = document.getElementById('regionsOverlay');
+    const container = document.getElementById('osd-viewer');
     const zoomLabel = document.getElementById('zoomLabel');
-    const imageWrapper = document.getElementById('imageWrapper');
-    const imageContainer = document.querySelector('.image-container');
     const emptyState = document.getElementById('viewerEmptyState');
     const headerDocInfo = document.getElementById('headerDocInfo');
     const headerFilename = document.getElementById('headerFilename');
 
-    if (!img || !svg || !imageContainer) {
-        console.error("[Viewer] Elements not found");
+    if (!container) {
+        console.error('[Viewer] OSD container not found');
         return;
     }
 
-    console.log('[Viewer] Initializing with pan, zoom, and fit controls');
+    console.log('[Viewer] Initializing OpenSeadragon viewer');
 
-    // Helper: Apply transform (zoom + pan)
-    function applyTransform() {
-        const scale = currentZoom / 100;
-        imageWrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-        imageWrapper.style.transformOrigin = 'center center';
-        if (zoomLabel) zoomLabel.textContent = `${currentZoom}%`;
-    }
+    // Initialize OpenSeadragon
+    viewer = OpenSeadragon({
+        id: 'osd-viewer',
+        prefixUrl: 'https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/images/',
 
-    // Helper: Set zoom level
-    function setZoom(newZoom, centerX = null, centerY = null) {
-        const oldZoom = currentZoom;
-        currentZoom = Math.max(25, Math.min(400, newZoom));
+        // No initial image
+        tileSources: [],
 
-        // If center point provided, adjust pan to zoom towards that point
-        if (centerX !== null && centerY !== null) {
-            const scale = currentZoom / oldZoom;
-            panX = centerX - (centerX - panX) * scale;
-            panY = centerY - (centerY - panY) * scale;
-        }
+        // UI options - we use our own toolbar
+        showNavigationControl: false,
+        showZoomControl: false,
+        showHomeControl: false,
+        showFullPageControl: false,
 
-        applyTransform();
-        appState.setZoom(currentZoom);
-        console.log(`[Viewer] Zoom: ${currentZoom}%`);
-    }
+        // Behavior
+        gestureSettingsMouse: {
+            clickToZoom: false,
+            dblClickToZoom: true
+        },
+        gestureSettingsTouch: {
+            pinchToZoom: true
+        },
 
-    // Helper: Reset view
-    function resetView() {
-        currentZoom = 100;
-        panX = 0;
-        panY = 0;
-        applyTransform();
-        appState.setZoom(currentZoom);
-        console.log('[Viewer] View reset');
-    }
+        // Animation
+        animationTime: 0.3,
+        springStiffness: 10,
 
-    // Helper: Fit to container
-    function fitToContainer(mode = 'contain') {
-        if (!img.naturalWidth || !img.naturalHeight) return;
+        // Constraints
+        minZoomLevel: 0.5,
+        maxZoomLevel: 10,
+        visibilityRatio: 0.5,
 
-        const containerRect = imageContainer.getBoundingClientRect();
-        const imgWidth = img.naturalWidth;
-        const imgHeight = img.naturalHeight;
-
-        let newZoom;
-        if (mode === 'width') {
-            newZoom = (containerRect.width * 0.9 / imgWidth) * 100;
-        } else if (mode === 'height') {
-            newZoom = (containerRect.height * 0.9 / imgHeight) * 100;
-        } else {
-            // Contain - fit both dimensions
-            const scaleX = containerRect.width * 0.9 / imgWidth;
-            const scaleY = containerRect.height * 0.9 / imgHeight;
-            newZoom = Math.min(scaleX, scaleY) * 100;
-        }
-
-        panX = 0;
-        panY = 0;
-        setZoom(newZoom);
-        console.log(`[Viewer] Fit ${mode}: ${Math.round(newZoom)}%`);
-    }
-
-    // Helper: Show document view, hide empty state
-    function showDocument(filename) {
-        if (emptyState) emptyState.classList.add('hidden');
-        if (imageWrapper) imageWrapper.style.display = 'block';
-        if (headerDocInfo) headerDocInfo.style.display = 'flex';
-        if (headerFilename && filename) headerFilename.textContent = filename;
-    }
-
-    // Helper: Show empty state, hide document view
-    function showEmptyState() {
-        if (emptyState) emptyState.classList.remove('hidden');
-        if (imageWrapper) imageWrapper.style.display = 'none';
-        if (headerDocInfo) headerDocInfo.style.display = 'none';
-    }
-
-    // ============================================
-    // PAN (Drag to move)
-    // ============================================
-
-    imageContainer.addEventListener('mousedown', (e) => {
-        // Only pan with left mouse button, not on regions
-        if (e.button !== 0 || e.target.classList.contains('region-box')) return;
-
-        isPanning = true;
-        startX = e.clientX - panX;
-        startY = e.clientY - panY;
-        imageContainer.style.cursor = 'grabbing';
-        e.preventDefault();
+        // Background
+        background: 'transparent'
     });
 
-    document.addEventListener('mousemove', (e) => {
-        if (!isPanning) return;
+    // Initialize SVG Overlay
+    svgOverlay = viewer.svgOverlay();
 
-        panX = e.clientX - startX;
-        panY = e.clientY - startY;
-        applyTransform();
+    // Setup toolbar controls
+    setupToolbarControls();
+
+    // Setup state listeners
+    setupStateListeners();
+
+    // Setup page navigation
+    setupPageNavigation();
+
+    // Check initial state
+    checkInitialState();
+
+    console.log('[Viewer] OpenSeadragon ready - Pan: drag, Zoom: wheel/dblclick, Fit: toolbar');
+}
+
+// ============================================
+// TOOLBAR CONTROLS
+// ============================================
+
+function setupToolbarControls() {
+    const zoomLabel = document.getElementById('zoomLabel');
+
+    // Zoom tracking
+    viewer.addHandler('zoom', (e) => {
+        const zoomPercent = Math.round(e.zoom * 100);
+        if (zoomLabel) zoomLabel.textContent = `${zoomPercent}%`;
+        appState.setZoom(zoomPercent);
     });
 
-    document.addEventListener('mouseup', () => {
-        if (isPanning) {
-            isPanning = false;
-            imageContainer.style.cursor = 'grab';
-        }
-    });
-
-    // ============================================
-    // MOUSE WHEEL ZOOM
-    // ============================================
-
-    imageContainer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-
-        // Get mouse position relative to container
-        const rect = imageContainer.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left - rect.width / 2;
-        const mouseY = e.clientY - rect.top - rect.height / 2;
-
-        // Zoom in/out based on scroll direction
-        const delta = e.deltaY > 0 ? -10 : 10;
-        setZoom(currentZoom + delta, mouseX, mouseY);
-    }, { passive: false });
-
-    // ============================================
-    // ZOOM CONTROLS (Buttons)
-    // ============================================
-
+    // Zoom In button
     document.getElementById('zoomIn')?.addEventListener('click', () => {
-        setZoom(currentZoom + 10);
+        viewer.viewport.zoomBy(1.2);
     });
 
+    // Zoom Out button
     document.getElementById('zoomOut')?.addEventListener('click', () => {
-        setZoom(currentZoom - 10);
+        viewer.viewport.zoomBy(0.8);
     });
 
-    // Fit Width button
-    document.querySelector('[title="Fit Width"]')?.addEventListener('click', () => {
-        fitToContainer('width');
+    // Fit to View button
+    document.getElementById('btnFitView')?.addEventListener('click', () => {
+        viewer.viewport.goHome();
     });
 
-    // Fit Height button
-    document.querySelector('[title="Fit Height"]')?.addEventListener('click', () => {
-        fitToContainer('height');
+    // Reset View button (also resets rotation)
+    document.getElementById('btnResetView')?.addEventListener('click', () => {
+        viewer.viewport.goHome();
+        viewer.viewport.setRotation(0);
+        viewer.viewport.setFlip(false);
     });
 
-    // Reset/Fit button (toggle icon)
-    document.querySelector('[title="Reset View"]')?.addEventListener('click', () => {
-        resetView();
+    // Rotate Left button (-90 degrees)
+    document.getElementById('btnRotateLeft')?.addEventListener('click', () => {
+        rotateLeft();
     });
 
-    // ============================================
-    // PAGE NAVIGATION
-    // ============================================
-
-    const pageNavigation = document.getElementById('pageNavigation');
-    const pageInfo = document.getElementById('pageInfo');
-    const btnPrevPage = document.getElementById('btnPrevPage');
-    const btnNextPage = document.getElementById('btnNextPage');
-
-    function updatePageNavigation() {
-        const pageCount = appState.getPageCount();
-        const currentIndex = appState.data.currentPageIndex;
-
-        if (pageCount > 1) {
-            pageNavigation.style.display = 'flex';
-            pageInfo.textContent = `Page ${currentIndex + 1} / ${pageCount}`;
-            btnPrevPage.disabled = currentIndex === 0;
-            btnNextPage.disabled = currentIndex >= pageCount - 1;
-        } else {
-            pageNavigation.style.display = 'none';
-        }
-    }
-
-    btnPrevPage?.addEventListener('click', () => {
-        appState.prevPage();
+    // Rotate Right button (+90 degrees)
+    document.getElementById('btnRotateRight')?.addEventListener('click', () => {
+        rotateRight();
     });
 
-    btnNextPage?.addEventListener('click', () => {
-        appState.nextPage();
+    // Flip Horizontal button
+    document.getElementById('btnFlipH')?.addEventListener('click', () => {
+        flipHorizontal();
     });
 
-    // ============================================
-    // STATE EVENTS
-    // ============================================
-
-    // React to document load
-    appState.addEventListener('documentLoaded', (e) => {
-        showDocument(e.detail.filename);
-        resetView();
-        updatePageNavigation();
-        // Re-render regions (will be empty after setDocument clears them)
-        const currentState = appState.getState();
-        renderRegions(currentState.regions);
-    });
-
-    // React to pages loaded (multi-page documents)
-    appState.addEventListener('pagesLoaded', (e) => {
-        console.log(`[Viewer] Pages loaded: ${e.detail.count}`);
-        updatePageNavigation();
-    });
-
-    // React to page changes
-    appState.addEventListener('pageChanged', (e) => {
-        console.log(`[Viewer] Page changed to ${e.detail.index + 1}/${e.detail.total}`);
-        showDocument(e.detail.filename);
-        resetView();
-        updatePageNavigation();
-        // Regions will be updated via imageChanged event
-    });
-
-    // React to image changes
-    appState.addEventListener('imageChanged', (e) => {
-        if (!e.detail.url) return;
-        img.src = e.detail.url;
-        showDocument(appState.data.document.filename);
-        // Auto-fit when image loads
-        img.onload = () => {
-            fitToContainer('contain');
-            // Render regions after image loads
-            const currentState = appState.getState();
-            renderRegions(currentState.regions);
-        };
-    });
-
-    appState.addEventListener('zoomChanged', (e) => {
-        if (e.detail.zoom !== currentZoom) {
-            currentZoom = e.detail.zoom;
-            applyTransform();
-        }
-    });
-
-    appState.addEventListener('selectionChanged', (e) => {
-        document.querySelectorAll('.region-box.selected').forEach(el => el.classList.remove('selected'));
-        const regionEl = document.querySelector(`.region-box[data-line="${e.detail.line}"]`);
-        if (regionEl) {
-            regionEl.classList.add('selected');
-        }
-    });
-
-    // Render initial regions
-    const state = appState.getState();
-    renderRegions(state.regions);
-
-    // Listen for regions changes (e.g., from PAGE-XML import)
-    appState.addEventListener('regionsChanged', () => {
-        const currentState = appState.getState();
-        renderRegions(currentState.regions);
-    });
-
-    // Also re-render regions when transcription completes
-    appState.addEventListener('transcriptionComplete', () => {
-        const currentState = appState.getState();
-        renderRegions(currentState.regions);
-    });
-
-    // ============================================
-    // KEYBOARD SHORTCUTS
-    // ============================================
-
+    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         // Only when not typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
         // + or = to zoom in
         if (e.key === '+' || e.key === '=') {
-            setZoom(currentZoom + 10);
+            viewer.viewport.zoomBy(1.2);
             e.preventDefault();
         }
         // - to zoom out
         if (e.key === '-') {
-            setZoom(currentZoom - 10);
+            viewer.viewport.zoomBy(0.8);
             e.preventDefault();
         }
         // 0 to reset
         if (e.key === '0') {
-            resetView();
+            viewer.viewport.goHome();
+            viewer.viewport.setRotation(0);
+            viewer.viewport.setFlip(false);
             e.preventDefault();
         }
         // f to fit
         if (e.key === 'f' && !e.ctrlKey && !e.metaKey) {
-            fitToContainer('contain');
+            viewer.viewport.goHome();
+            e.preventDefault();
+        }
+        // r to rotate left, R (shift+r) to rotate right
+        if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
+            rotateLeft();
+            e.preventDefault();
+        }
+        if (e.key === 'R' && !e.ctrlKey && !e.metaKey) {
+            rotateRight();
+            e.preventDefault();
+        }
+        // h to flip horizontal
+        if (e.key === 'h' && !e.ctrlKey && !e.metaKey) {
+            flipHorizontal();
             e.preventDefault();
         }
         // Arrow left/right for page navigation
@@ -324,56 +177,413 @@ export function initViewer() {
             e.preventDefault();
         }
     });
-
-    // Initialize page navigation
-    updatePageNavigation();
-
-    // Check initial state: show empty state if no document loaded
-    const initialState = appState.getState();
-    const hasDocument = initialState.document?.dataUrl ||
-        (initialState.image?.url && initialState.image.url !== 'assets/mock-document.jpg');
-
-    if (hasDocument) {
-        showDocument(initialState.document?.filename || 'Document');
-        if (initialState.document?.dataUrl || initialState.image?.url) {
-            img.src = initialState.document?.dataUrl || initialState.image.url;
-        }
-    } else {
-        showEmptyState();
-    }
-
-    console.log('[Viewer] Ready - Pan: drag, Zoom: wheel/+/-, Fit: f, Reset: 0, Pages: ←/→');
 }
 
+// ============================================
+// ROTATION & FLIP
+// ============================================
+
+function rotateLeft() {
+    if (!viewer || !viewer.viewport) return;
+    const current = viewer.viewport.getRotation();
+    viewer.viewport.setRotation(current - 90);
+    console.log(`[Viewer] Rotated to ${current - 90}°`);
+}
+
+function rotateRight() {
+    if (!viewer || !viewer.viewport) return;
+    const current = viewer.viewport.getRotation();
+    viewer.viewport.setRotation(current + 90);
+    console.log(`[Viewer] Rotated to ${current + 90}°`);
+}
+
+function flipHorizontal() {
+    if (!viewer || !viewer.viewport) return;
+    const isFlipped = viewer.viewport.getFlip();
+    viewer.viewport.setFlip(!isFlipped);
+    console.log(`[Viewer] Flipped: ${!isFlipped}`);
+}
+
+// ============================================
+// STATE LISTENERS
+// ============================================
+
+function setupStateListeners() {
+    // Document loaded
+    appState.addEventListener('documentLoaded', (e) => {
+        console.log('[Viewer] Document loaded:', e.detail.filename);
+        showViewer(e.detail.filename);
+    });
+
+    // Pages loaded (multi-page)
+    appState.addEventListener('pagesLoaded', (e) => {
+        console.log(`[Viewer] Pages loaded: ${e.detail.count}`);
+        updatePageNavigation();
+    });
+
+    // Page changed
+    appState.addEventListener('pageChanged', (e) => {
+        console.log(`[Viewer] Page changed to ${e.detail.index + 1}/${e.detail.total}`);
+        showViewer(e.detail.filename);
+        updatePageNavigation();
+    });
+
+    // Image changed
+    appState.addEventListener('imageChanged', (e) => {
+        if (e.detail.url) {
+            loadImage(e.detail.url);
+        }
+    });
+
+    // Regions changed
+    appState.addEventListener('regionsChanged', () => {
+        renderRegions(appState.getState().regions);
+    });
+
+    // Transcription complete
+    appState.addEventListener('transcriptionComplete', () => {
+        renderRegions(appState.getState().regions);
+    });
+
+    // Selection changed
+    appState.addEventListener('selectionChanged', (e) => {
+        highlightRegion(e.detail.line);
+        panToRegion(e.detail.line);
+    });
+
+    // Zoom changed from outside
+    appState.addEventListener('zoomChanged', (e) => {
+        if (!viewer || !viewer.viewport) return;
+        const currentZoom = viewer.viewport.getZoom();
+        const targetZoom = e.detail.zoom / 100;
+        if (Math.abs(currentZoom - targetZoom) > 0.01) {
+            viewer.viewport.zoomTo(targetZoom);
+        }
+    });
+}
+
+// ============================================
+// PAGE NAVIGATION
+// ============================================
+
+function setupPageNavigation() {
+    const btnPrevPage = document.getElementById('btnPrevPage');
+    const btnNextPage = document.getElementById('btnNextPage');
+
+    btnPrevPage?.addEventListener('click', () => {
+        appState.prevPage();
+    });
+
+    btnNextPage?.addEventListener('click', () => {
+        appState.nextPage();
+    });
+}
+
+function updatePageNavigation() {
+    const pageNavigation = document.getElementById('pageNavigation');
+    const pageInfo = document.getElementById('pageInfo');
+    const btnPrevPage = document.getElementById('btnPrevPage');
+    const btnNextPage = document.getElementById('btnNextPage');
+
+    const pageCount = appState.getPageCount();
+    const currentIndex = appState.data.currentPageIndex;
+
+    if (pageCount > 1) {
+        if (pageNavigation) pageNavigation.style.display = 'flex';
+        if (pageInfo) pageInfo.textContent = `Page ${currentIndex + 1} / ${pageCount}`;
+        if (btnPrevPage) btnPrevPage.disabled = currentIndex === 0;
+        if (btnNextPage) btnNextPage.disabled = currentIndex >= pageCount - 1;
+    } else {
+        if (pageNavigation) pageNavigation.style.display = 'none';
+    }
+}
+
+// ============================================
+// IMAGE LOADING
+// ============================================
+
+function loadImage(url) {
+    if (!viewer) return;
+
+    // Detect type
+    if (url.startsWith('data:') || url.match(/\.(jpg|jpeg|png|gif|webp|tiff?)$/i)) {
+        // Local image or Data-URL
+        loadLocalImage(url);
+    } else if (url.includes('/info.json') || url.includes('iiif')) {
+        // IIIF Image
+        loadIIIFImage(url);
+    } else {
+        // Fallback: treat as local image
+        loadLocalImage(url);
+    }
+}
+
+function loadLocalImage(url) {
+    // Get image dimensions for TileSource
+    const img = new Image();
+    img.onload = () => {
+        viewer.open({
+            type: 'image',
+            url: url,
+            buildPyramid: false
+        });
+
+        // Store dimensions for coordinate conversion
+        appState.setImageDimensions(img.naturalWidth, img.naturalHeight);
+
+        // Render regions after image opens
+        viewer.addOnceHandler('open', () => {
+            renderRegions(appState.getState().regions);
+        });
+
+        console.log(`[Viewer] Loaded image: ${img.naturalWidth}x${img.naturalHeight}`);
+    };
+    img.onerror = () => {
+        console.error('[Viewer] Failed to load image:', url);
+    };
+    img.src = url;
+}
+
+function loadIIIFImage(url) {
+    // IIIF info.json URL
+    let infoUrl = url;
+    if (!url.endsWith('/info.json')) {
+        infoUrl = url.replace(/\/?$/, '/info.json');
+    }
+
+    viewer.open(infoUrl);
+
+    viewer.addOnceHandler('open', () => {
+        renderRegions(appState.getState().regions);
+    });
+
+    console.log(`[Viewer] Loading IIIF: ${infoUrl}`);
+}
+
+// ============================================
+// IIIF MANIFEST SUPPORT
+// ============================================
+
+export async function loadIIIFManifest(manifestUrl) {
+    try {
+        const response = await fetch(manifestUrl);
+        const manifest = await response.json();
+
+        // Detect manifest version
+        const version = manifest['@context']?.includes('presentation/3') ? 3 : 2;
+
+        // Extract canvases
+        const canvases = version === 3
+            ? manifest.items
+            : manifest.sequences?.[0]?.canvases;
+
+        if (!canvases || canvases.length === 0) {
+            throw new Error('No canvases found in manifest');
+        }
+
+        // Build pages for multi-page support
+        const pages = canvases.map((canvas, index) => {
+            const imageUrl = version === 3
+                ? canvas.items?.[0]?.items?.[0]?.body?.id
+                : canvas.images?.[0]?.resource?.['@id'];
+
+            return {
+                index,
+                id: canvas['@id'] || canvas.id,
+                label: canvas.label || `Page ${index + 1}`,
+                dataUrl: imageUrl,
+                width: canvas.width,
+                height: canvas.height
+            };
+        });
+
+        // Update state
+        appState.setPages(pages);
+
+        console.log(`[Viewer] Loaded IIIF manifest: ${pages.length} pages`);
+        return pages;
+
+    } catch (error) {
+        console.error('[Viewer] Failed to load IIIF manifest:', error);
+        throw error;
+    }
+}
+
+// ============================================
+// REGIONS OVERLAY
+// ============================================
+
 function renderRegions(regions) {
-    const svg = document.getElementById('regionsOverlay');
+    if (!svgOverlay || !viewer) return;
+
+    // Get SVG node from overlay
+    const svg = svgOverlay.node();
     if (!svg) return;
 
-    svg.innerHTML = ''; // clear
+    // Clear existing regions
+    svg.innerHTML = '';
+
+    if (!regions || regions.length === 0) {
+        console.log('[Viewer] No regions to render');
+        return;
+    }
+
+    // Get image dimensions for aspect ratio calculation
+    const state = appState.getState();
+    const imgWidth = state.image?.width || 1;
+    const imgHeight = state.image?.height || 1;
+    const aspectRatio = imgHeight / imgWidth;
+
+    console.log(`[Viewer] Image dimensions: ${imgWidth}x${imgHeight}, aspect ratio: ${aspectRatio.toFixed(3)}`);
 
     regions.forEach(reg => {
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", reg.x + "%");
-        rect.setAttribute("y", reg.y + "%");
-        rect.setAttribute("width", reg.w + "%");
-        rect.setAttribute("height", reg.h + "%");
-        rect.setAttribute("class", "region-box");
-        rect.setAttribute("data-line", reg.line);
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
 
-        // Add confidence class if available
+        // Convert coordinates: PAGE-XML stores as percent (0-100)
+        // OpenSeadragon SVG Overlay uses viewport coordinates:
+        // - X is normalized to image width (0-1)
+        // - Y is normalized to image width too, so multiply by aspect ratio
+        const x = reg.x / 100;
+        const y = (reg.y / 100) * aspectRatio;
+        const w = reg.w / 100;
+        const h = (reg.h / 100) * aspectRatio;
+
+        rect.setAttribute('x', x);
+        rect.setAttribute('y', y);
+        rect.setAttribute('width', w);
+        rect.setAttribute('height', h);
+        rect.setAttribute('class', 'region-box');
+        rect.setAttribute('data-line', reg.line);
+
+        // Confidence class
         if (reg.confidence) {
             rect.classList.add(reg.confidence);
         }
 
-        rect.onclick = (e) => {
+        // Click handler
+        rect.addEventListener('click', (e) => {
             e.stopPropagation();
             appState.setSelection(reg.line);
-        };
+        });
+
         svg.appendChild(rect);
     });
 
     console.log(`[Viewer] Rendered ${regions.length} regions`);
 }
 
-// Export for external use
-export { renderRegions };
+function highlightRegion(lineNumber) {
+    // Remove old selection
+    document.querySelectorAll('.region-box.selected')
+        .forEach(el => el.classList.remove('selected'));
+
+    // Mark new selection
+    const regionEl = document.querySelector(`.region-box[data-line="${lineNumber}"]`);
+    if (regionEl) {
+        regionEl.classList.add('selected');
+    }
+}
+
+function panToRegion(lineNumber) {
+    const regionEl = document.querySelector(`.region-box[data-line="${lineNumber}"]`);
+    if (!regionEl || !viewer) return;
+
+    // Get region coordinates (already in viewport coordinates from renderRegions)
+    const x = parseFloat(regionEl.getAttribute('x'));
+    const y = parseFloat(regionEl.getAttribute('y'));
+    const w = parseFloat(regionEl.getAttribute('width'));
+    const h = parseFloat(regionEl.getAttribute('height'));
+
+    // Calculate center in viewport coordinates
+    const centerX = x + w / 2;
+    const centerY = y + h / 2;
+
+    // Pan to region center
+    viewer.viewport.panTo(new OpenSeadragon.Point(centerX, centerY));
+
+    // Optionally zoom to show the region better
+    // const currentZoom = viewer.viewport.getZoom();
+    // if (currentZoom < 1.5) {
+    //     viewer.viewport.zoomTo(1.5);
+    // }
+}
+
+// ============================================
+// UI STATE
+// ============================================
+
+function showViewer(filename) {
+    const emptyState = document.getElementById('viewerEmptyState');
+    const osdViewer = document.getElementById('osd-viewer');
+    const headerDocInfo = document.getElementById('headerDocInfo');
+    const headerFilename = document.getElementById('headerFilename');
+
+    if (emptyState) emptyState.classList.add('hidden');
+    if (osdViewer) osdViewer.style.display = 'block';
+    if (headerDocInfo) headerDocInfo.style.display = 'flex';
+    if (headerFilename && filename) headerFilename.textContent = filename;
+}
+
+function showEmptyState() {
+    const emptyState = document.getElementById('viewerEmptyState');
+    const osdViewer = document.getElementById('osd-viewer');
+    const headerDocInfo = document.getElementById('headerDocInfo');
+
+    if (emptyState) emptyState.classList.remove('hidden');
+    if (osdViewer) osdViewer.style.display = 'none';
+    if (headerDocInfo) headerDocInfo.style.display = 'none';
+}
+
+function checkInitialState() {
+    const state = appState.getState();
+    const hasDocument = state.document?.dataUrl ||
+        (state.image?.url && state.image.url !== 'assets/mock-document.jpg');
+
+    if (hasDocument) {
+        showViewer(state.document?.filename || 'Document');
+        const imageUrl = state.document?.dataUrl || state.image?.url;
+        if (imageUrl) {
+            loadImage(imageUrl);
+        }
+    } else {
+        showEmptyState();
+    }
+
+    // Initialize page navigation
+    updatePageNavigation();
+}
+
+// ============================================
+// EXPORTS
+// ============================================
+
+export function zoomIn() {
+    viewer?.viewport.zoomBy(1.2);
+}
+
+export function zoomOut() {
+    viewer?.viewport.zoomBy(0.8);
+}
+
+export function fitToContainer() {
+    viewer?.viewport.goHome();
+}
+
+export function resetView() {
+    viewer?.viewport.goHome();
+    viewer?.viewport.setRotation(0);
+    viewer?.viewport.setFlip(false);
+}
+
+export function rotate(degrees) {
+    if (!viewer || !viewer.viewport) return;
+    const current = viewer.viewport.getRotation();
+    viewer.viewport.setRotation(current + degrees);
+}
+
+export function flip() {
+    if (!viewer || !viewer.viewport) return;
+    viewer.viewport.setFlip(!viewer.viewport.getFlip());
+}
+
+export { viewer, renderRegions };
