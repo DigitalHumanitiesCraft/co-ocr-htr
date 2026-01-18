@@ -1759,4 +1759,109 @@ image-container
 
 ---
 
+## 2026-01-18 | Session 15: IIIF Dialog Implementation
+
+**Participants:** User, Claude Opus 4.5
+
+### Task
+
+**Request:** Implement IIIF Dialog UI for loading images from external IIIF repositories.
+
+**Context:** The `loadIIIFManifest()` function in viewer.js was already implemented in Session 14, but lacked a user-facing dialog.
+
+### Implementation
+
+**Components Created:**
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| IIIF Dialog HTML | `index.html` | Native dialog with URL input, examples, preview |
+| IIIF Button | Header | Opens IIIF dialog |
+| Dialog Logic | `dialogs.js` | Preview, load, error handling |
+| CSS Styles | `dialogs.css` | IIIF-specific styling |
+
+**Dialog Features:**
+
+| Feature | Description |
+|---------|-------------|
+| URL Input | Text field for IIIF Manifest URL |
+| Example Links | Pre-filled URLs (Bodleian, Gallica, BSB) |
+| Preview Mode | Fetch manifest and show metadata before loading |
+| Version Detection | Auto-detect IIIF v2 or v3 |
+| Page Count | Shows number of canvases in manifest |
+| Error Handling | Timeout, HTTP errors, invalid manifest |
+| Loading State | Spinner during fetch operations |
+
+**Workflow:**
+
+```
+1. Click "IIIF" button in header
+2. Enter manifest URL (or click example)
+3. Click "Preview" to fetch and validate
+4. See manifest title, version, page count
+5. Click "Load" to import into viewer
+6. Dialog closes, first page displays
+```
+
+**Example Manifests Included:**
+
+| Repository | Type | URL |
+|------------|------|-----|
+| Bodleian Library | v2 | Oxford manuscripts |
+| Gallica (BnF) | v2 | French national library |
+| BSB Munich | v2 | Bavarian State Library |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/index.html` | IIIF Dialog HTML, IIIF Button in header |
+| `docs/js/components/dialogs.js` | IIIF event bindings, preview/load functions |
+| `docs/css/dialogs.css` | IIIF dialog styling (~130 lines) |
+| `knowledge/JOURNAL.md` | Session 15 documentation |
+
+### Technical Details
+
+**Preview Implementation:**
+
+```javascript
+async previewIIIFManifest() {
+  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  const manifest = await response.json();
+
+  // Version detection
+  const version = context?.includes('presentation/3') ? 3 : 2;
+
+  // Extract canvases
+  const canvases = version === 3 ? manifest.items : manifest.sequences?.[0]?.canvases;
+}
+```
+
+**CSS Classes Added:**
+
+- `.iiif-examples`, `.iiif-examples-label`, `.iiif-example-links`
+- `.btn-link` (inline link-style button)
+- `.iiif-preview`, `.iiif-preview-header`, `.iiif-preview-content`
+- `.iiif-preview-title`, `.iiif-preview-info`, `.iiif-preview-pages`
+- `.iiif-loading`, `.iiif-error`
+
+### Integration with Existing Code
+
+The IIIF Dialog integrates with:
+
+1. **viewer.js** - `loadIIIFManifest()` handles the actual manifest loading
+2. **state.js** - `setPages()` stores multi-page documents
+3. **Page Navigation** - Existing next/prev buttons work with IIIF pages
+
+### Results
+
+- [x] IIIF button visible in header
+- [x] Dialog opens with URL input
+- [x] Example links pre-fill URLs
+- [x] Preview shows manifest metadata
+- [x] Load button imports into viewer
+- [x] Error handling for invalid URLs/manifests
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
