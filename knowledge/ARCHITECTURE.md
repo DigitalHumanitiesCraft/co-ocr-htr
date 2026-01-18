@@ -244,6 +244,15 @@ appState.addEventListener('selectionChanged', (e) => {
   }
 });
 
+// Editor reacts to page changes (IIIF, multi-page)
+appState.addEventListener('pageChanged', () => {
+  renderEditor(appState.getState().transcription);
+});
+
+appState.addEventListener('pagesLoaded', () => {
+  renderEditor(appState.getState().transcription);
+});
+
 // In ui.js
 appState.addEventListener('selectionChanged', (e) => {
   const valCard = document.querySelector(`.validation-card[data-line="${e.detail.line}"]`);
@@ -252,6 +261,27 @@ appState.addEventListener('selectionChanged', (e) => {
     // Flash effect
   }
 });
+```
+
+### IIIF Integration
+
+**Dialog Features:**
+| Feature | Implementation |
+|---------|----------------|
+| Manifest URL Input | Text input with URL validation |
+| Example Links | Pre-filled URLs (Bodleian, Gallica, BSB) |
+| Preview | Optional - fetch and display metadata |
+| Direct Load | Enter key or Load button loads immediately |
+| Version Detection | Auto-detect IIIF Presentation API v2/v3 |
+
+**Workflow:**
+```
+1. Open IIIF Dialog (header button or empty state)
+2. Enter manifest URL or click example
+3. Click Load (or press Enter)
+4. Manifest parsed, pages extracted
+5. First page displayed in viewer
+6. Navigation buttons enable page switching
 ```
 
 ### StorageService

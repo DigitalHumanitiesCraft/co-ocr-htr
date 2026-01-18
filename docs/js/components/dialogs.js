@@ -221,21 +221,55 @@ class DialogManager {
             previewBtn.addEventListener('click', () => this.previewIIIFManifest());
         }
 
-        // Load button
+        // Load button - directly loads without requiring preview
         const loadBtn = document.getElementById('iiifLoadManifest');
         if (loadBtn) {
-            loadBtn.addEventListener('click', () => this.loadIIIFFromDialog());
+            loadBtn.addEventListener('click', () => this.loadIIIFDirectly());
         }
 
-        // Enter key in input
+        // Enter key in input - directly load
         const urlInput = document.getElementById('iiifManifestUrl');
         if (urlInput) {
             urlInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    this.previewIIIFManifest();
+                    this.loadIIIFDirectly();
                 }
             });
+        }
+    }
+
+    /**
+     * Load IIIF manifest directly (skip preview)
+     */
+    async loadIIIFDirectly() {
+        const urlInput = document.getElementById('iiifManifestUrl');
+        const url = urlInput?.value?.trim();
+
+        if (!url) {
+            this.showToast('Please enter a manifest URL', 'warning');
+            return;
+        }
+
+        try {
+            new URL(url);
+        } catch {
+            this.showToast('Invalid URL format', 'error');
+            return;
+        }
+
+        this.setIIIFLoadingState(true);
+        this.resetIIIFPreview();
+
+        try {
+            await loadIIIFManifest(url);
+            this.showToast('IIIF manifest loaded', 'success');
+            this.closeDialog('iiif');
+        } catch (error) {
+            console.error('[IIIF] Load failed:', error);
+            this.showIIIFError(error.message);
+        } finally {
+            this.setIIIFLoadingState(false);
         }
     }
 
@@ -414,11 +448,9 @@ class DialogManager {
     resetIIIFPreview() {
         const previewEl = document.getElementById('iiifPreview');
         const errorEl = document.getElementById('iiifError');
-        const loadBtn = document.getElementById('iiifLoadManifest');
 
         if (previewEl) previewEl.style.display = 'none';
         if (errorEl) errorEl.style.display = 'none';
-        if (loadBtn) loadBtn.disabled = true;
 
         this.iiifManifestData = null;
     }

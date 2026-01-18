@@ -50,16 +50,18 @@ knowledge/
 | Promptotyping | Iterative development through AI dialogue | METHODOLOGY |
 | Triple Synchronization | Viewer ↔ Transcription ↔ Validation | ARCHITECTURE |
 | Tabular Transcription | Structured fields instead of free text | DATA-SCHEMA |
+| IIIF Integration | Load images from external repositories | ARCHITECTURE |
 
 ## UI Components (Quick Reference)
 
 | Component | Description | Document |
 |-----------|-------------|----------|
-| Document Viewer | Image + Bounding Boxes + Zoom | DESIGN-SYSTEM |
+| Document Viewer | OpenSeadragon + SVG Overlay + Zoom | DESIGN-SYSTEM |
 | Transcription Table | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT | DESIGN-SYSTEM |
 | Validation Panel | Rule-Based + AI Assistant sections | VALIDATION |
 | Status Bar | Model, Perspective, Status, Timestamp | DESIGN-SYSTEM |
 | Inline Markers | [?], [illegible], ... | DESIGN-SYSTEM |
+| IIIF Dialog | Load manifests from external repositories | ARCHITECTURE |
 
 ## Relationships
 
@@ -88,3 +90,4 @@ METHODOLOGY ──────────────────────�
 | 1.2 | 2026-01-16 | Prototype v2 analysis: AppState with EventTarget, modular JS architecture, IMPLEMENTATION-PLAN.md |
 | 1.3 | 2026-01-16 | Translated to English |
 | 1.4 | 2026-01-16 | Added REQUIREMENTS.md with feature status, bugs, and requirements |
+| 1.5 | 2026-01-18 | Added IIIF Integration, OpenSeadragon viewer, IIIF Dialog |

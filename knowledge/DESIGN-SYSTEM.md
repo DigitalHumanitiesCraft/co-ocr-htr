@@ -238,16 +238,27 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 
 **Purpose:** Display document image with interactive bounding boxes.
 
+**Implementation:** OpenSeadragon with SVG Overlay plugin.
+
 **Empty State:**
 - Light gray background
 - Upload icon (line drawing)
 - Text: "Drop image here or click Upload"
-- Two buttons: "Load Demo" / "Upload Image"
+- Two buttons: "Load Demo" / "Load IIIF"
 
 **Loaded State:**
-- Document image centered with shadow
-- SVG overlay for bounding boxes
+- Document image with deep zoom support
+- SVG overlay for bounding boxes (viewport-normalized coordinates)
 - Zoom toolbar at bottom center
+- Page navigation for multi-page documents
+
+**Input Sources:**
+| Source | Method |
+|--------|--------|
+| Local Image | Drag & drop or Upload button |
+| IIIF Manifest | IIIF Dialog (v2 and v3 supported) |
+| PAGE-XML | Upload with matching image |
+| Demo | Load Demo button |
 
 **Zoom Controls:**
 ```

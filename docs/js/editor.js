@@ -53,6 +53,26 @@ export function initEditor() {
         updateUndoRedoButtons();
     });
 
+    // React to page changes (multi-page documents, IIIF)
+    appState.addEventListener('pageChanged', () => {
+        const state = appState.getState();
+        renderEditor(state.transcription);
+        // Clear history for new page
+        history.stack = [];
+        history.index = -1;
+        updateUndoRedoButtons();
+    });
+
+    // React to new pages loaded (IIIF manifest, folder upload)
+    appState.addEventListener('pagesLoaded', () => {
+        const state = appState.getState();
+        renderEditor(state.transcription);
+        // Clear history for new document set
+        history.stack = [];
+        history.index = -1;
+        updateUndoRedoButtons();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown);
 
