@@ -122,6 +122,15 @@ function initEmptyStateButtons() {
             samplesBtn.click();
         });
     }
+
+    // "Load IIIF" button opens the IIIF dialog
+    const btnLoadIIIF = document.getElementById('btnLoadIIIF');
+    const btnIIIF = document.getElementById('btnIIIF');
+    if (btnLoadIIIF && btnIIIF) {
+        btnLoadIIIF.addEventListener('click', () => {
+            btnIIIF.click();
+        });
+    }
 }
 
 /**

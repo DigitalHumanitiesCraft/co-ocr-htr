@@ -1862,6 +1862,71 @@ The IIIF Dialog integrates with:
 - [x] Load button imports into viewer
 - [x] Error handling for invalid URLs/manifests
 
+### Bug Fixes (Session 15 continued)
+
+**Issue 1: Editor not clearing on IIIF load**
+
+When loading a new IIIF manifest, the transcription from the previous document remained visible.
+
+**Root Cause:** Editor only listened to `documentLoaded` event, not `pageChanged` or `pagesLoaded`.
+
+**Fix:** Added event listeners in `editor.js`:
+
+```javascript
+// React to page changes (multi-page documents, IIIF)
+appState.addEventListener('pageChanged', () => {
+    const state = appState.getState();
+    renderEditor(state.transcription);
+    history.stack = [];
+    history.index = -1;
+    updateUndoRedoButtons();
+});
+
+// React to new pages loaded (IIIF manifest, folder upload)
+appState.addEventListener('pagesLoaded', () => {
+    const state = appState.getState();
+    renderEditor(state.transcription);
+    history.stack = [];
+    history.index = -1;
+    updateUndoRedoButtons();
+});
+```
+
+**Issue 2: IIIF Dialog required Preview before Load**
+
+Users had to click "Preview" before "Load" would work - unintuitive UX.
+
+**Fix:**
+1. Load button now calls `loadIIIFDirectly()` instead of `loadIIIFFromDialog()`
+2. Removed `disabled` attribute from Load button
+3. Enter key in URL input directly loads manifest
+
+**Issue 3: No IIIF option in empty state**
+
+The empty state only showed "Load Demo" button.
+
+**Fix:** Added "Load IIIF" button next to "Load Demo" in empty state:
+
+```html
+<div class="empty-state-actions">
+    <button class="btn btn-secondary btn-sm" id="btnLoadDemo">Load Demo</button>
+    <button class="btn btn-secondary btn-sm" id="btnLoadIIIF">Load IIIF</button>
+</div>
+```
+
+### Files Modified (Bug Fixes)
+
+| File | Changes |
+|------|---------|
+| `docs/js/editor.js` | Added `pageChanged` and `pagesLoaded` event listeners |
+| `docs/js/components/dialogs.js` | Load button calls `loadIIIFDirectly()`, removed disabled logic |
+| `docs/index.html` | Added "Load IIIF" button, removed `disabled` from Load button |
+| `docs/js/main.js` | Added click handler for `btnLoadIIIF` |
+
+### Known Issues
+
+- **Page navigation lag**: Slight delay when navigating pages in large IIIF manifests (1000+ pages). This is expected behavior due to image loading.
+
 ---
 
 *Format: YYYY-MM-DD | Session N: Title*
