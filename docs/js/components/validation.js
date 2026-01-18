@@ -16,6 +16,9 @@ import { validationEngine } from '../services/validation.js';
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
+import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
+import { MENU_CLOSE_DELAY } from '../utils/constants.js';
+import { getConfidenceLabel, getStatusClass } from '../utils/textFormatting.js';
 
 /**
  * Validation Panel Manager
@@ -35,10 +38,10 @@ class ValidationPanel {
      */
     init() {
         // Find panel elements
-        this.panel = document.getElementById('validationContent');
-        this.emptyState = document.getElementById('validationEmptyState');
-        this.ruleSection = document.getElementById('ruleBasedSection');
-        this.aiSection = document.getElementById('aiAssistantSection');
+        this.panel = getById('validationContent');
+        this.emptyState = getById('validationEmptyState');
+        this.ruleSection = getById('ruleBasedSection');
+        this.aiSection = getById('aiAssistantSection');
 
         if (!this.panel) {
             console.warn('Validation panel not found');
@@ -72,26 +75,26 @@ class ValidationPanel {
         if (!hasDocument) {
             // No document: hide all content, show minimal state
             if (this.emptyState) {
-                this.emptyState.style.display = 'flex';
-                this.emptyState.querySelector('h4').textContent = 'No Document';
-                this.emptyState.querySelector('p').textContent = 'Load a document to enable validation.';
+                this.emptyState.hidden = false;
+                setText(select('h4', this.emptyState), 'No Document');
+                setText(select('p', this.emptyState), 'Load a document to enable validation.');
             }
-            if (this.ruleSection) this.ruleSection.style.display = 'none';
-            if (this.aiSection) this.aiSection.style.display = 'none';
+            hide(this.ruleSection);
+            hide(this.aiSection);
         } else if (hasTranscription) {
             // Document + transcription: show validation sections
-            if (this.emptyState) this.emptyState.style.display = 'none';
-            if (this.ruleSection) this.ruleSection.style.display = 'block';
-            if (this.aiSection) this.aiSection.style.display = 'block';
+            hide(this.emptyState);
+            show(this.ruleSection);
+            show(this.aiSection);
         } else {
             // Document but no transcription: show empty state with hint
             if (this.emptyState) {
-                this.emptyState.style.display = 'flex';
-                this.emptyState.querySelector('h4').textContent = 'No Validation Yet';
-                this.emptyState.querySelector('p').textContent = 'Run transcription to see validation results.';
+                this.emptyState.hidden = false;
+                setText(select('h4', this.emptyState), 'No Validation Yet');
+                setText(select('p', this.emptyState), 'Run transcription to see validation results.');
             }
-            if (this.ruleSection) this.ruleSection.style.display = 'none';
-            if (this.aiSection) this.aiSection.style.display = 'none';
+            hide(this.ruleSection);
+            hide(this.aiSection);
         }
     }
 
@@ -134,17 +137,14 @@ class ValidationPanel {
      * Clear validation results (e.g., when loading new document)
      */
     clearValidation() {
-        const ruleContent = document.getElementById('ruleBasedContent');
-        const aiContent = document.getElementById('aiAssistantContent');
-
-        if (ruleContent) ruleContent.innerHTML = '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">Run transcription to see rule-based checks.</p>';
-        if (aiContent) aiContent.innerHTML = '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">Configure API key for AI-powered analysis.</p>';
+        setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Run transcription to see rule-based checks.</p>');
+        setHTML('aiAssistantContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Configure API key for AI-powered analysis.</p>');
 
         // Update badge
-        const badge = document.getElementById('validationBadge');
+        const badge = getById('validationBadge');
         if (badge) {
             badge.textContent = '0 Issues';
-            badge.style.display = 'none';
+            badge.hidden = true;
         }
     }
 
@@ -156,7 +156,7 @@ class ValidationPanel {
         const current = perspectives.find(p => p.id === this.currentPerspective);
 
         // Update status bar display
-        const perspectiveEl = document.querySelector('.status-bar span:nth-child(2) span');
+        const perspectiveEl = select('.status-bar span:nth-child(2) span');
         if (perspectiveEl && current) {
             perspectiveEl.textContent = current.name;
         }
@@ -169,7 +169,7 @@ class ValidationPanel {
         const perspectives = validationEngine.getPerspectives();
 
         // Create dropdown menu
-        let menu = document.getElementById('perspectiveMenu');
+        let menu = getById('perspectiveMenu');
         if (menu) {
             menu.remove();
             return; // Toggle off
@@ -187,7 +187,7 @@ class ValidationPanel {
         `).join('');
 
         // Position menu
-        const trigger = document.querySelector('.status-bar span:nth-child(2)');
+        const trigger = select('.status-bar span:nth-child(2)');
         if (trigger) {
             const rect = trigger.getBoundingClientRect();
             menu.style.position = 'fixed';
@@ -218,7 +218,7 @@ class ValidationPanel {
                     document.removeEventListener('click', closeMenu);
                 }
             });
-        }, 0);
+        }, MENU_CLOSE_DELAY);
     }
 
     /**
@@ -289,27 +289,19 @@ class ValidationPanel {
         this.updateVisibility();
 
         // Update issue badge
-        const badge = document.getElementById('validationBadge');
+        const badge = getById('validationBadge');
         if (badge && results.summary) {
             const issueCount = results.summary.totalIssues || 0;
             badge.textContent = `${issueCount} Issues`;
-            badge.style.display = issueCount > 0 ? 'inline' : 'none';
+            badge.hidden = issueCount === 0;
             badge.style.background = issueCount > 0
                 ? 'rgba(var(--warning-rgb), 0.2)'
                 : 'rgba(255,255,255,0.1)';
         }
 
         // Render into separate sections
-        const ruleContent = document.getElementById('ruleBasedContent');
-        const aiContent = document.getElementById('aiAssistantContent');
-
-        if (ruleContent) {
-            ruleContent.innerHTML = this.renderRuleCards(results.rules);
-        }
-
-        if (aiContent) {
-            aiContent.innerHTML = this.renderLLMCards(results.llmJudge);
-        }
+        setHTML('ruleBasedContent', this.renderRuleCards(results.rules));
+        setHTML('aiAssistantContent', this.renderLLMCards(results.llmJudge));
 
         // Bind line click handlers
         this.bindLineClicks();
@@ -320,7 +312,7 @@ class ValidationPanel {
      */
     renderRuleCards(rules) {
         if (!rules || rules.length === 0) {
-            return '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">No rule-based issues found.</p>';
+            return '<p class="text-secondary text-xs" style="padding: var(--space-2);">No rule-based issues found.</p>';
         }
 
         return rules.map(rule => this.renderValidationCard(rule)).join('');
@@ -367,7 +359,7 @@ class ValidationPanel {
                     </div>
                 `;
             }
-            return '<p class="text-secondary" style="font-size: var(--text-xs); padding: var(--space-2);">AI analysis will run after transcription.</p>';
+            return '<p class="text-secondary text-xs" style="padding: var(--space-2);">AI analysis will run after transcription.</p>';
         }
 
         const statusClass = {
@@ -554,7 +546,7 @@ class ValidationPanel {
      * Bind click handlers for line navigation
      */
     bindLineClicks() {
-        this.panel.querySelectorAll('.validation-card[data-line]').forEach(card => {
+        selectAll('.validation-card[data-line]', this.panel).forEach(card => {
             card.style.cursor = 'pointer';
             card.addEventListener('click', (e) => {
                 // Don't navigate if clicking on details toggle

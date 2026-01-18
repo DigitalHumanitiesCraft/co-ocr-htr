@@ -8,6 +8,8 @@
  * - 'auto': Automatically detect from data structure
  */
 import { appState } from './state.js';
+import { getById, select, selectAll, addClass, removeClass, setDisabled } from './utils/dom.js';
+import { applyMarkers, getConfidenceClass } from './utils/textFormatting.js';
 
 // History for undo/redo
 const history = {
@@ -23,13 +25,13 @@ let editingCell = null;
 let editorMode = 'auto';
 
 export function initEditor() {
-    const container = document.getElementById('editorContent');
+    const container = getById('editorContent');
     if (!container) return;
 
     // React to selection
     appState.addEventListener('selectionChanged', (e) => {
-        document.querySelectorAll('.editor-grid-row.active, .editor-line.active').forEach(el => el.classList.remove('active'));
-        const lineEl = document.querySelector(`[data-line="${e.detail.line}"]`);
+        selectAll('.editor-grid-row.active, .editor-line.active').forEach(el => el.classList.remove('active'));
+        const lineEl = select(`[data-line="${e.detail.line}"]`);
         if (lineEl) {
             lineEl.classList.add('active');
             lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -77,8 +79,8 @@ export function initEditor() {
     document.addEventListener('keydown', handleKeyDown);
 
     // Bind undo/redo buttons
-    const btnUndo = document.getElementById('btnUndo');
-    const btnRedo = document.getElementById('btnRedo');
+    const btnUndo = getById('btnUndo');
+    const btnRedo = getById('btnRedo');
     if (btnUndo) btnUndo.addEventListener('click', undo);
     if (btnRedo) btnRedo.addEventListener('click', redo);
 
@@ -91,7 +93,7 @@ export function initEditor() {
  * Main render function - determines mode and renders accordingly
  */
 function renderEditor(transcription) {
-    const container = document.getElementById('editorContent');
+    const container = getById('editorContent');
     if (!container) return;
 
     // Determine editor mode
@@ -173,13 +175,9 @@ function renderLinesEditor(container, transcription) {
             const text = line.text || '';
             const confidence = line.confidence || 'certain';
 
-            // Apply markers
-            const displayText = text
-                .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
-                .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
-
-            const confidenceClass = confidence === 'uncertain' ? 'confidence-uncertain' :
-                                    confidence === 'likely' ? 'confidence-likely' : '';
+            // Apply markers using utility
+            const displayText = applyMarkers(text);
+            const confidenceClass = getConfidenceClass(confidence);
 
             html += `
                 <div class="editor-line ${confidenceClass}" data-line="${lineNum}">
@@ -279,8 +277,7 @@ function renderGridEditor(container, transcription) {
         dataRows.forEach((row) => {
             const lineNum = row.lineNumber;
             const confidence = row.confidence || 'certain';
-            const confidenceClass = confidence === 'uncertain' ? 'confidence-uncertain' :
-                                    confidence === 'likely' ? 'confidence-likely' : '';
+            const confidenceClass = getConfidenceClass(confidence);
 
             // Get cell values
             let cells;
@@ -299,9 +296,7 @@ function renderGridEditor(container, transcription) {
             }
 
             const cellsHtml = cells.map((cell, colIdx) => {
-                const displayCell = (cell || '')
-                    .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
-                    .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
+                const displayCell = applyMarkers(cell || '');
                 return `<div class="editor-cell" data-line="${lineNum}" data-col="${colIdx}" title="${cell || ''}">${displayCell || '&nbsp;'}</div>`;
             }).join('');
 
@@ -322,14 +317,14 @@ function renderGridEditor(container, transcription) {
  * Bind event listeners for lines editor
  */
 function bindLinesEditorEvents(container) {
-    container.querySelectorAll('.editor-line[data-line]').forEach(line => {
+    selectAll('.editor-line[data-line]', container).forEach(line => {
         line.addEventListener('click', () => {
             const lineNum = parseInt(line.getAttribute('data-line'));
             appState.setSelection(lineNum);
         });
     });
 
-    container.querySelectorAll('.line-text[data-line]').forEach(cell => {
+    selectAll('.line-text[data-line]', container).forEach(cell => {
         cell.addEventListener('dblclick', () => startEditing(cell));
     });
 }
@@ -338,7 +333,7 @@ function bindLinesEditorEvents(container) {
  * Bind event listeners for grid editor
  */
 function bindGridEditorEvents(container) {
-    container.querySelectorAll('.editor-grid-row[data-line]').forEach(row => {
+    selectAll('.editor-grid-row[data-line]', container).forEach(row => {
         row.addEventListener('click', (e) => {
             if (e.target.classList.contains('editor-cell') && !e.target.classList.contains('header')) {
                 return;
@@ -348,7 +343,7 @@ function bindGridEditorEvents(container) {
         });
     });
 
-    container.querySelectorAll('.editor-cell[data-line]').forEach(cell => {
+    selectAll('.editor-cell[data-line]', container).forEach(cell => {
         cell.addEventListener('dblclick', () => startEditing(cell));
     });
 }
@@ -449,14 +444,10 @@ function finishEditing(cell, save) {
 
         pushHistory();
 
-        // Re-render markers
-        cell.innerHTML = (newValue || '&nbsp;')
-            .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
-            .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
+        // Re-render markers using utility
+        cell.innerHTML = applyMarkers(newValue) || '&nbsp;';
     } else {
-        cell.innerHTML = (originalValue || '&nbsp;')
-            .replace(/\[\?\]/g, '<span class="marker-uncertain" title="Unsicher">[?]</span>')
-            .replace(/\[illegible\]/g, '<span class="marker-illegible" title="Unleserlich">...</span>');
+        cell.innerHTML = applyMarkers(originalValue) || '&nbsp;';
     }
 
     delete cell.dataset.originalValue;
@@ -469,7 +460,7 @@ function finishEditing(cell, save) {
 function navigateToNextCell(currentCell, direction) {
     const line = parseInt(currentCell.dataset.line);
     const col = parseInt(currentCell.dataset.col);
-    const maxCol = document.querySelectorAll(`.editor-cell[data-line="${line}"]`).length - 1;
+    const maxCol = selectAll(`.editor-cell[data-line="${line}"]`).length - 1;
 
     let nextCol = col + direction;
     let nextLine = line;
@@ -482,9 +473,7 @@ function navigateToNextCell(currentCell, direction) {
         nextLine = line - 1;
     }
 
-    const nextCell = document.querySelector(
-        `.editor-cell[data-line="${nextLine}"][data-col="${nextCol}"]`
-    );
+    const nextCell = select(`.editor-cell[data-line="${nextLine}"][data-col="${nextCol}"]`);
 
     if (nextCell) {
         startEditing(nextCell);
@@ -543,11 +532,8 @@ function restoreFromHistory() {
 }
 
 function updateUndoRedoButtons() {
-    const btnUndo = document.getElementById('btnUndo');
-    const btnRedo = document.getElementById('btnRedo');
-
-    if (btnUndo) btnUndo.disabled = history.index <= 0;
-    if (btnRedo) btnRedo.disabled = history.index >= history.stack.length - 1;
+    setDisabled('btnUndo', history.index <= 0);
+    setDisabled('btnRedo', history.index >= history.stack.length - 1);
 }
 
 // ============================================
@@ -571,7 +557,7 @@ function handleKeyDown(e) {
         if (selectedLine !== null && selectedLine !== undefined) {
             e.preventDefault();
             const newLine = selectedLine + (e.key === 'ArrowUp' ? -1 : 1);
-            const row = document.querySelector(`[data-line="${newLine}"]`);
+            const row = select(`[data-line="${newLine}"]`);
             if (row) {
                 appState.setSelection(newLine);
             }
@@ -581,8 +567,8 @@ function handleKeyDown(e) {
         const selectedLine = state.ui?.selectedLine;
         if (selectedLine !== null && selectedLine !== undefined) {
             const firstCell = editorMode === 'grid'
-                ? document.querySelector(`.editor-cell[data-line="${selectedLine}"][data-col="0"]`)
-                : document.querySelector(`.line-text[data-line="${selectedLine}"]`);
+                ? select(`.editor-cell[data-line="${selectedLine}"][data-col="0"]`)
+                : select(`.line-text[data-line="${selectedLine}"]`);
             if (firstCell) {
                 e.preventDefault();
                 startEditing(firstCell);

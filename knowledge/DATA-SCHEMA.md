@@ -1,7 +1,8 @@
 ---
 type: knowledge
 created: 2026-01-16
-tags: [coocr-htr, data-schema, page-xml]
+updated: 2026-01-18
+tags: [coocr-htr, data-schema, page-xml, utilities]
 status: complete
 ---
 
@@ -488,6 +489,140 @@ Available in `data/`:
 | Schliemann | 21 | Images only | JPG |
 
 See [data/README.md](../data/README.md) for details.
+
+---
+
+## JavaScript Utility Modules
+
+Centralized utility modules in `docs/js/utils/` to reduce code duplication.
+
+### constants.js
+
+Centralized magic numbers, configuration values, and string constants.
+
+```typescript
+// Timing Constants
+export const TOAST_DURATION_DEFAULT = 3000;
+export const TOAST_DURATION_ERROR = 5000;
+export const AUTO_SAVE_DELAY = 2000;
+export const MENU_CLOSE_DELAY = 150;
+
+// File Limits
+export const MAX_FILE_SIZE = 50 * 1024 * 1024;  // 50MB
+export const SUPPORTED_IMAGE_TYPES: string[];
+export const SUPPORTED_DOCUMENT_TYPES: string[];
+
+// IIIF Constants
+export const IIIF_CONTEXT_V3 = 'presentation/3';
+export const IIIF_VERSION = { V2: 2, V3: 3 };
+
+// Storage Keys
+export const STORAGE_KEYS = {
+  SETTINGS: 'coocr_settings',
+  API_KEYS: 'coocr_apikeys',
+  RECENT_FILES: 'coocr_recent',
+  TRANSCRIPTION_DRAFT: 'coocr_draft'
+};
+
+// Event Names
+export const EVENTS = {
+  STATE_CHANGED: 'stateChanged',
+  DOCUMENT_LOADED: 'documentLoaded',
+  TRANSCRIPTION_COMPLETE: 'transcriptionComplete',
+  VALIDATION_COMPLETE: 'validationComplete',
+  SELECTION_CHANGED: 'selectionChanged'
+};
+
+// CSS Class Names
+export const CSS_CLASSES = {
+  HIDDEN: 'hidden',
+  ACTIVE: 'active',
+  SELECTED: 'selected',
+  DISABLED: 'disabled',
+  LOADING: 'loading'
+};
+```
+
+### dom.js
+
+Null-safe DOM manipulation utilities.
+
+```typescript
+// Selection
+export function getById(id: string): HTMLElement | null;
+export function select(selector: string, parent?: Element): Element | null;
+export function selectAll(selector: string, parent?: Element): NodeList;
+
+// Visibility (uses hidden attribute)
+export function show(elementOrId: HTMLElement | string): void;
+export function hide(elementOrId: HTMLElement | string): void;
+export function toggleVisibility(elementOrId: HTMLElement | string, show?: boolean): void;
+
+// Classes
+export function addClass(elementOrId: HTMLElement | string, ...classNames: string[]): void;
+export function removeClass(elementOrId: HTMLElement | string, ...classNames: string[]): void;
+export function toggleClass(elementOrId: HTMLElement | string, className: string, force?: boolean): void;
+
+// Content
+export function setText(elementOrId: HTMLElement | string, text: string): void;
+export function setHTML(elementOrId: HTMLElement | string, html: string): void;
+export function clearChildren(elementOrId: HTMLElement | string): void;
+
+// State
+export function setDisabled(elementOrId: HTMLElement | string, disabled: boolean): void;
+
+// Utilities
+export function createSVGElement(tagName: string): SVGElement;
+export function focusDelayed(elementOrId: HTMLElement | string, delay?: number): void;
+```
+
+### textFormatting.js
+
+Text marker utilities for transcription confidence indicators.
+
+```typescript
+// Marker Detection
+export function hasUncertainMarker(text: string): boolean;   // [?]
+export function hasIllegibleMarker(text: string): boolean;   // [illegible]
+export function hasAnyMarker(text: string): boolean;
+export function countUncertainMarkers(text: string): number;
+export function countIllegibleMarkers(text: string): number;
+
+// Marker Rendering
+export function applyMarkers(text: string): string;          // Returns HTML with styled markers
+export function safeApplyMarkers(text: string): string;      // Escapes HTML first
+export function stripMarkers(text: string): string;          // Removes markers
+
+// Confidence Utilities
+export function getConfidenceClass(confidence: string): string;
+export function getStatusClass(confidence: string): string;
+export function getConfidenceLabel(confidence: string): string;
+export function determineConfidence(uncertainCount: number, illegibleCount: number): string;
+
+// HTML Safety
+export function escapeHtml(text: string): string;
+```
+
+### Usage Example
+
+```javascript
+import { getById, show, hide, setText } from './utils/dom.js';
+import { applyMarkers, getConfidenceClass } from './utils/textFormatting.js';
+import { TOAST_DURATION_DEFAULT, CSS_CLASSES } from './utils/constants.js';
+
+// Display transcription line with markers
+const lineEl = getById('line-5');
+const displayText = applyMarkers(segment.text);
+lineEl.innerHTML = displayText;
+lineEl.className = getConfidenceClass(segment.confidence);
+
+// Toggle visibility
+show('validationPanel');
+hide('loadingSpinner');
+
+// Set text content safely
+setText('statusMessage', 'Transcription complete');
+```
 
 ---
 

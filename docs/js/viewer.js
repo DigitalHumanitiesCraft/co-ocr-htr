@@ -3,6 +3,8 @@
  * IIIF-compatible image viewer with SVG overlay for regions
  */
 import { appState } from './state.js';
+import { getById, show, hide, setText, setDisabled, addClass, removeClass, createSVGElement, selectAll, select } from './utils/dom.js';
+import { IIIF_CONTEXT_V3, IIIF_VERSION } from './utils/constants.js';
 
 let viewer = null;
 let svgOverlay = null;
@@ -280,21 +282,17 @@ function setupPageNavigation() {
 }
 
 function updatePageNavigation() {
-    const pageNavigation = document.getElementById('pageNavigation');
-    const pageInfo = document.getElementById('pageInfo');
-    const btnPrevPage = document.getElementById('btnPrevPage');
-    const btnNextPage = document.getElementById('btnNextPage');
-
+    const pageNavigation = getById('pageNavigation');
     const pageCount = appState.getPageCount();
     const currentIndex = appState.data.currentPageIndex;
 
     if (pageCount > 1) {
-        if (pageNavigation) pageNavigation.style.display = 'flex';
-        if (pageInfo) pageInfo.textContent = `Page ${currentIndex + 1} / ${pageCount}`;
-        if (btnPrevPage) btnPrevPage.disabled = currentIndex === 0;
-        if (btnNextPage) btnNextPage.disabled = currentIndex >= pageCount - 1;
+        show(pageNavigation);
+        setText('pageInfo', `Page ${currentIndex + 1} / ${pageCount}`);
+        setDisabled('btnPrevPage', currentIndex === 0);
+        setDisabled('btnNextPage', currentIndex >= pageCount - 1);
     } else {
-        if (pageNavigation) pageNavigation.style.display = 'none';
+        hide(pageNavigation);
     }
 }
 
@@ -370,10 +368,10 @@ export async function loadIIIFManifest(manifestUrl) {
         const manifest = await response.json();
 
         // Detect manifest version
-        const version = manifest['@context']?.includes('presentation/3') ? 3 : 2;
+        const version = manifest['@context']?.includes(IIIF_CONTEXT_V3) ? IIIF_VERSION.V3 : IIIF_VERSION.V2;
 
         // Extract canvases
-        const canvases = version === 3
+        const canvases = version === IIIF_VERSION.V3
             ? manifest.items
             : manifest.sequences?.[0]?.canvases;
 
@@ -383,7 +381,7 @@ export async function loadIIIFManifest(manifestUrl) {
 
         // Build pages for multi-page support
         const pages = canvases.map((canvas, index) => {
-            const imageUrl = version === 3
+            const imageUrl = version === IIIF_VERSION.V3
                 ? canvas.items?.[0]?.items?.[0]?.body?.id
                 : canvas.images?.[0]?.resource?.['@id'];
 
@@ -474,18 +472,17 @@ function renderRegions(regions) {
 
 function highlightRegion(lineNumber) {
     // Remove old selection
-    document.querySelectorAll('.region-box.selected')
-        .forEach(el => el.classList.remove('selected'));
+    selectAll('.region-box.selected').forEach(el => el.classList.remove('selected'));
 
     // Mark new selection
-    const regionEl = document.querySelector(`.region-box[data-line="${lineNumber}"]`);
+    const regionEl = select(`.region-box[data-line="${lineNumber}"]`);
     if (regionEl) {
         regionEl.classList.add('selected');
     }
 }
 
 function panToRegion(lineNumber) {
-    const regionEl = document.querySelector(`.region-box[data-line="${lineNumber}"]`);
+    const regionEl = select(`.region-box[data-line="${lineNumber}"]`);
     if (!regionEl || !viewer) return;
 
     // Get region coordinates (already in viewport coordinates from renderRegions)
@@ -513,25 +510,16 @@ function panToRegion(lineNumber) {
 // ============================================
 
 function showViewer(filename) {
-    const emptyState = document.getElementById('viewerEmptyState');
-    const osdViewer = document.getElementById('osd-viewer');
-    const headerDocInfo = document.getElementById('headerDocInfo');
-    const headerFilename = document.getElementById('headerFilename');
-
-    if (emptyState) emptyState.classList.add('hidden');
-    if (osdViewer) osdViewer.style.display = 'block';
-    if (headerDocInfo) headerDocInfo.style.display = 'flex';
-    if (headerFilename && filename) headerFilename.textContent = filename;
+    addClass('viewerEmptyState', 'hidden');
+    show('osd-viewer');
+    show('headerDocInfo');
+    if (filename) setText('headerFilename', filename);
 }
 
 function showEmptyState() {
-    const emptyState = document.getElementById('viewerEmptyState');
-    const osdViewer = document.getElementById('osd-viewer');
-    const headerDocInfo = document.getElementById('headerDocInfo');
-
-    if (emptyState) emptyState.classList.remove('hidden');
-    if (osdViewer) osdViewer.style.display = 'none';
-    if (headerDocInfo) headerDocInfo.style.display = 'none';
+    removeClass('viewerEmptyState', 'hidden');
+    hide('osd-viewer');
+    hide('headerDocInfo');
 }
 
 function checkInitialState() {

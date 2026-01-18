@@ -1929,4 +1929,214 @@ The empty state only showed "Load Demo" button.
 
 ---
 
+## 2026-01-18 | Session 16: CSS & HTML Refactoring
+
+**Participants:** User, Claude Opus 4.5
+
+### Task
+
+**Request:** CSS and HTML refactoring for maintainability and consistency.
+
+### CSS Refactoring (High & Medium Priority)
+
+**High Priority - Accessibility:**
+
+| Fix | Files | Description |
+|-----|-------|-------------|
+| Focus-visible tokens | `variables.css`, `base.css` | Added `--focus-ring-color`, `--focus-ring-width`, `--focus-ring-offset` |
+| Mouse focus removal | `base.css` | `:focus:not(:focus-visible) { outline: none; }` |
+| Reduced motion | `base.css` | `@media (prefers-reduced-motion: reduce)` support |
+
+**High Priority - Design Tokens:**
+
+| Fix | Files | Description |
+|-----|-------|-------------|
+| Selection colors | `variables.css` | Added `--selection-bg`, `--selection-bg-hover`, `--selection-bg-active` |
+| Hardcoded RGBA | `editor.css`, `viewer.css`, `dialogs.css` | Replaced with token references |
+
+**Medium Priority - Architecture:**
+
+| Fix | Files | Description |
+|-----|-------|-------------|
+| z-index system | `variables.css` | Expanded: `--z-dropdown`, `--z-sticky`, `--z-overlay`, `--z-modal`, `--z-tooltip`, `--z-toast` |
+| Duplicate keyframes | `dialogs.css` | Removed duplicate `@keyframes spin` (already in `base.css`) |
+
+### HTML Refactoring
+
+**Semantic Improvements:**
+
+| Change | Description |
+|--------|-------------|
+| `<div class="app-container">` → `<main>` | Proper semantic landmark |
+| Inline styles → CSS classes | ~30 inline styles moved to `components.css` |
+| `style="display:none"` → `hidden` attribute | Consistent visibility control |
+
+**SVG Icon Sprite:**
+
+Added centralized SVG symbol definitions for reusable icons:
+
+```html
+<svg xmlns="http://www.w3.org/2000/svg" hidden>
+    <symbol id="icon-close">...</symbol>
+    <symbol id="icon-eye-show">...</symbol>
+    <symbol id="icon-eye-hide">...</symbol>
+    <symbol id="icon-upload">...</symbol>
+    <symbol id="icon-download">...</symbol>
+    <symbol id="icon-info">...</symbol>
+    <symbol id="icon-spinner">...</symbol>
+</svg>
+```
+
+Icons now referenced via `<use href="#icon-close">`.
+
+**New Utility Classes (components.css):**
+
+| Class | Purpose |
+|-------|---------|
+| `.flex`, `.flex-center`, `.flex-between` | Flexbox utilities |
+| `.gap-1`, `.gap-2`, `.gap-4` | Gap spacing |
+| `.ml-auto`, `.mr-1` | Margin utilities |
+| `.panel-col-1/2/3` | Panel grid columns |
+| `.viewer-panel-content` | Viewer background |
+| `.document-type-select` | Document type dropdown |
+| `.zoom-label` | Zoom display |
+| `.validation-badge` | Issue counter badge |
+| `.section-title` | Validation section headers |
+| `.status-bar-right` | Status bar alignment |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/css/variables.css` | Focus ring tokens, selection tokens, z-index system |
+| `docs/css/base.css` | Focus-visible, reduced motion |
+| `docs/css/components.css` | ~80 new utility classes |
+| `docs/css/editor.css` | Selection tokens |
+| `docs/css/viewer.css` | Selection tokens |
+| `docs/css/dialogs.css` | Confident/problematic tokens, removed duplicate keyframes |
+| `docs/index.html` | `<main>`, SVG sprite, utility classes, hidden attributes |
+| `docs/js/components/dialogs.js` | `hidden` property for icon toggle |
+| `docs/js/components/transcription.js` | `hidden` property for spinner |
+
+### Results
+
+- [x] Zero inline styles remaining in index.html
+- [x] Consistent `hidden` attribute usage
+- [x] SVG icons deduplicated via sprite
+- [x] Semantic `<main>` element
+- [x] Focus accessibility improved
+- [x] Reduced motion preference respected
+
+---
+
+## 2026-01-18 | Session 17: JavaScript Refactoring & Utilities
+
+**Participants:** User, Claude Opus 4.5
+
+### Task
+
+**Request:** JavaScript refactoring to reduce code duplication and improve maintainability.
+
+### New Utility Modules
+
+Created `docs/js/utils/` folder with centralized utilities:
+
+**1. constants.js - Centralized magic numbers and strings:**
+
+| Category | Constants |
+|----------|-----------|
+| Timing | `TOAST_DURATION_DEFAULT`, `AUTOSAVE_DELAY`, `DIALOG_FOCUS_DELAY`, `PAGE_RELOAD_DELAY`, `MENU_CLOSE_DELAY` |
+| File Limits | `MAX_FILE_SIZE`, `MAX_FILE_SIZE_MB` |
+| API Endpoints | `DEFAULT_OLLAMA_ENDPOINT`, `GEMINI_API_BASE`, `OPENAI_API_ENDPOINT`, `ANTHROPIC_API_ENDPOINT` |
+| IIIF | `IIIF_CONTEXT_V3`, `IIIF_VERSION` (V2/V3) |
+| Storage Keys | `STORAGE_KEYS` object |
+| Events | `EVENTS` object |
+| CSS Classes | `CSS_CLASSES` object |
+| PAGE-XML | `PAGE_XML_NAMESPACE` |
+| Confidence | `CONFIDENCE`, `CONFIDENCE_THRESHOLD_PERCENT` |
+| Toast Types | `TOAST_TYPES` |
+| Document Types | `DOCUMENT_TYPES` |
+| Image | `JPEG_QUALITY` |
+
+**2. dom.js - Safe DOM manipulation helpers:**
+
+| Function | Purpose |
+|----------|---------|
+| `getById(id)` | Safe `getElementById` |
+| `select(selector, parent)` | Safe `querySelector` |
+| `selectAll(selector, parent)` | Safe `querySelectorAll` |
+| `withElement(id, callback)` | Execute callback if element exists |
+| `onById(id, event, handler)` | Safe event listener by ID |
+| `on(selector, event, handler)` | Safe event listener by selector |
+| `onAll(selector, event, handler)` | Event listener on all matching |
+| `toggleVisibility(el, show)` | Toggle hidden attribute |
+| `show(el)`, `hide(el)` | Show/hide helpers |
+| `toggleClass(el, class, force)` | Class toggle helper |
+| `addClass`, `removeClass` | Class manipulation |
+| `setText`, `setHTML` | Content manipulation |
+| `setDisabled` | Disabled state helper |
+| `createSVGElement(tag)` | SVG namespace helper |
+| `clearChildren` | Remove all children |
+| `focusDelayed(el, delay)` | Delayed focus for dialogs |
+
+**3. textFormatting.js - Text marker utilities:**
+
+| Function | Purpose |
+|----------|---------|
+| `applyMarkers(text)` | Replace `[?]` and `[illegible]` with spans |
+| `hasUncertainMarker(text)` | Check for `[?]` |
+| `hasIllegibleMarker(text)` | Check for `[illegible]` |
+| `hasAnyMarker(text)` | Check for any marker |
+| `countUncertainMarkers(text)` | Count `[?]` occurrences |
+| `countIllegibleMarkers(text)` | Count `[illegible]` occurrences |
+| `getConfidenceClass(confidence)` | Get CSS class for confidence |
+| `getStatusClass(confidence)` | Get status indicator class |
+| `getConfidenceLabel(confidence)` | Human-readable label |
+| `determineConfidence(uncertain, illegible)` | Determine overall confidence |
+| `stripMarkers(text)` | Remove markers from text |
+| `escapeHtml(text)` | HTML escape |
+| `safeApplyMarkers(text)` | Escape then apply markers |
+
+### Files Updated
+
+| File | Changes |
+|------|---------|
+| `docs/js/viewer.js` | Import utilities, use `getById`, `show`, `hide`, `setText`, `setDisabled`, `select`, `selectAll`, IIIF constants |
+| `docs/js/editor.js` | Import utilities, use `applyMarkers`, `getConfidenceClass`, DOM helpers |
+| `docs/js/components/validation.js` | Import utilities, use DOM helpers, timing constants |
+| `docs/js/components/dialogs.js` | Import utilities, convert `onclick` to `addEventListener`, use DOM helpers |
+| `docs/js/components/upload.js` | Import utilities, use constants, DOM helpers |
+| `docs/css/base.css` | Added display utilities (`.d-none`, `.d-block`, `.d-flex`, etc.) |
+
+### Code Quality Improvements
+
+**Visibility Control:**
+- Unified `style.display = 'none'` → `hidden` attribute or utility functions
+- Added CSS `[hidden] { display: none !important; }` rule
+
+**Event Listeners:**
+- Converted `onclick = handler` → `addEventListener('click', handler)`
+- Affects: `dialogs.js`, `upload.js`
+
+**DOM Queries:**
+- `document.getElementById()` → `getById()`
+- `document.querySelector()` → `select()`
+- `document.querySelectorAll()` → `selectAll()`
+
+**Text Markers:**
+- Deduplicated 4 instances of marker regex replacement
+- Centralized in `applyMarkers()` utility
+
+### Results
+
+- [x] 3 new utility modules created
+- [x] Eliminated duplicated marker replacement code
+- [x] Unified visibility control patterns
+- [x] Converted onclick handlers to addEventListener
+- [x] DOM manipulation centralized through helpers
+- [x] Magic numbers extracted to constants
+- [x] IIIF version detection uses constants
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
