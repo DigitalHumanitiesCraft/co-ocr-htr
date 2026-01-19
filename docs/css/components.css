@@ -58,6 +58,16 @@ button {
   border-color: var(--border-emphasis);
 }
 
+/* Context button with indicator when context is set */
+.btn.has-context {
+  border-color: var(--confident);
+  background-color: rgba(90, 138, 90, 0.1);
+}
+
+.btn.has-context:hover {
+  background-color: rgba(90, 138, 90, 0.2);
+}
+
 .btn-sm {
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);

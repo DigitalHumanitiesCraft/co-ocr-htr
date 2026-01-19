@@ -10,68 +10,51 @@ import { storage } from './storage.js';
 // ============================================
 
 /**
- * Document types for prompt selection
+ * Base transcription prompt - will be enhanced with context if provided
  */
-const DOCUMENT_TYPES = {
-  table: 'table',
-  text: 'text',
-  auto: 'auto'
-};
+const TRANSCRIPTION_PROMPT_BASE = `Du bist ein Experte für historische Handschriften.
 
-/**
- * Prompt for tabular documents (account books, registers, lists)
- */
-const TRANSCRIPTION_PROMPT_TABLE = `Du bist ein Experte für historische Handschriften des 16.-19. Jahrhunderts.
-
-Aufgabe: Transkribiere das Bild in eine strukturierte Markdown-Tabelle.
+Aufgabe: Transkribiere das Dokument so genau wie möglich.
 
 Regeln:
-- Erkenne die tabellarische Struktur und gib sie als Markdown-Tabelle aus
-- Spalten durch | trennen
-- Datumsformate: "DD. Monat" (z.B. "28. Mai", "3. Juni")
-- Währungen: Taler, Groschen, Gulden, Kreuzer (z.B. "23 Taler 4 Gr")
-- Unsichere Lesungen mit [?] markieren (z.B. "[?] Schmidt", "10 [?] Taler")
-- Unleserliche Stellen mit [illegible] markieren
-- Eine Tabellenzeile pro Dokumentzeile
-- Leere Zellen als leer lassen
-
-Ausgabeformat: Nur die Markdown-Tabelle, keine Erklärungen oder Kommentare.
-Beginne direkt mit der Header-Zeile: | Spalte1 | Spalte2 | ...`;
-
-/**
- * Prompt for continuous text documents (letters, manuscripts, protocols)
- */
-const TRANSCRIPTION_PROMPT_TEXT = `Du bist ein Experte für historische Handschriften des 16.-19. Jahrhunderts.
-
-Aufgabe: Transkribiere das Bild zeilenweise als Fließtext.
-
-Regeln:
-- Eine Zeile pro Dokumentzeile (Zeilenumbrüche beibehalten)
+- Zeilenumbrüche des Originals beibehalten
 - Absätze durch Leerzeilen trennen
-- Unsichere Lesungen mit [?] markieren (z.B. "[?] Schmidt")
+- Unsichere Lesungen mit [?] markieren (z.B. "[?]Wort")
 - Unleserliche Stellen mit [illegible] markieren
-- Abkürzungen originalgetreu beibehalten oder mit {Auflösung} expandieren
-- Durchstreichungen mit ~~Text~~ markieren
-- Ergänzungen/Einfügungen mit ^Text^ markieren
+- Abkürzungen originalgetreu beibehalten
 
-Ausgabeformat: Nur der transkribierte Text, keine Erklärungen oder Kommentare.
+Ausgabeformat: Nur der transkribierte Text, keine Erklärungen.
 Beginne direkt mit der ersten Zeile des Dokuments.`;
 
 /**
- * Get the appropriate prompt for the document type
- * @param {string} documentType - 'table', 'text', or 'auto'
- * @returns {string} The transcription prompt
+ * Build the full transcription prompt, optionally enhanced with context
+ * @param {string} contextDescription - Additional context from the expert
+ * @returns {string} The complete prompt
  */
-function getTranscriptionPrompt(documentType = 'auto') {
-  if (documentType === 'text') {
-    return TRANSCRIPTION_PROMPT_TEXT;
-  }
-  // Default to table prompt (also for 'auto' - user can switch if needed)
-  return TRANSCRIPTION_PROMPT_TABLE;
-}
+function buildTranscriptionPrompt(contextDescription = '') {
+    let prompt = TRANSCRIPTION_PROMPT_BASE;
 
-// Legacy alias for backwards compatibility
-const TRANSCRIPTION_PROMPT = TRANSCRIPTION_PROMPT_TABLE;
+    if (contextDescription) {
+        prompt = `Du bist ein Experte für historische Handschriften.
+
+DOKUMENTKONTEXT (vom Experten bereitgestellt):
+${contextDescription}
+
+Aufgabe: Transkribiere das Dokument so genau wie möglich unter Berücksichtigung des Kontexts.
+
+Regeln:
+- Zeilenumbrüche des Originals beibehalten
+- Absätze durch Leerzeilen trennen
+- Unsichere Lesungen mit [?] markieren (z.B. "[?]Wort")
+- Unleserliche Stellen mit [illegible] markieren
+- Abkürzungen originalgetreu beibehalten
+
+Ausgabeformat: Nur der transkribierte Text, keine Erklärungen.
+Beginne direkt mit der ersten Zeile des Dokuments.`;
+    }
+
+    return prompt;
+}
 
 const VALIDATION_PROMPTS = {
   paleographic: `Analysiere den folgenden transkribierten Text aus paläographischer Sicht:
@@ -307,11 +290,11 @@ class LLMService {
       throw new Error(`No API key configured for ${config.name}`);
     }
 
-    // Select prompt based on document type (table vs text)
-    const documentType = options.documentType || 'auto';
-    const prompt = options.prompt || getTranscriptionPrompt(documentType);
+    // Build prompt with optional context from expert
+    const contextDescription = options.context || '';
+    const prompt = options.prompt || buildTranscriptionPrompt(contextDescription);
     const model = this.getCurrentModel();
-    console.log(`[LLM] model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
+    console.log(`[LLM] model=${model} image=${imageBase64 ? 'yes' : 'no'} context=${contextDescription ? 'yes' : 'no'}`);
 
     try {
       let response;
@@ -332,14 +315,11 @@ class LLMService {
           throw new Error(`Provider ${this.activeProvider} not implemented`);
       }
 
-      const segments = this._parseTranscriptionResponse(response);
-      console.log(`[LLM] transcribe() OK, segments=${segments.length}`);
+      console.log(`[LLM] transcribe() OK, length=${response.length} chars`);
       return {
         provider: this.activeProvider,
         model,
-        raw: response,
-        segments,
-        columns: this._extractColumns(response)
+        raw: response
       };
     } catch (error) {
       console.error(`[LLM] transcribe() FAILED:`, error.message);

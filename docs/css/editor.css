@@ -1,232 +1,49 @@
 /**
  * editor.css - Transcription Editor Styles
  * coOCR/HTR Design System v2.1
+ *
+ * Simple textarea-based editor for direct text editing.
  */
 
 /* ==========================================================================
    EDITOR CONTAINER
    ========================================================================== */
 
-.editor-container {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  padding: var(--space-2);
-}
-
-/* ==========================================================================
-   LINES MODE (Letters, Diaries, Manuscripts)
-   ========================================================================== */
-
-.editor-lines {
-  padding: var(--space-2);
-}
-
-.editor-line {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-2);
-  border-bottom: 1px solid var(--border-subtle);
-  transition: background-color var(--transition-fast);
-  cursor: default;
-}
-
-.editor-line:hover {
-  background-color: var(--surface-hover);
-}
-
-.editor-line.active {
-  background-color: var(--selection-bg);
-  border-left: 3px solid var(--selection);
-  margin-left: -3px;
-  animation: line-highlight 0.3s ease-out;
-}
-
-/* Highlight animation for newly selected line */
-@keyframes line-highlight {
-  0% {
-    background-color: var(--selection-bg-hover);
-  }
-  100% {
-    background-color: var(--selection-bg);
-  }
-}
-
-/* Line Number */
-.editor-line .line-num,
-.line-num {
-  flex-shrink: 0;
-  width: 2.5rem;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  opacity: 0.5;
-  padding-top: 2px;
-  user-select: none;
-}
-
-/* Line Text */
-.editor-line .line-text {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  color: var(--text-primary);
-  white-space: pre-wrap;
-  word-break: break-word;
-  cursor: text;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition-fast), outline var(--transition-fast);
-}
-
-.editor-line .line-text:hover {
-  background: var(--surface-hover);
-}
-
-.editor-line .line-text.editing {
-  background: var(--accent-hover);
-  outline: 1px solid var(--accent-primary);
-}
-
-.editor-line .line-text.editing:focus {
-  outline: 2px solid var(--accent-primary);
-}
-
-/* ==========================================================================
-   GRID MODE (Tables, Registers, Forms)
-   ========================================================================== */
-
-.editor-grid {
+#editorContent {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.editor-grid-row {
-  display: grid;
-  gap: var(--space-2);
-  padding: 4px 0;
-  border-bottom: 1px solid var(--border-subtle);
-  align-items: center;
-  transition: background-color var(--transition-fast);
-}
+/* ==========================================================================
+   TEXTAREA EDITOR
+   ========================================================================== */
 
-.editor-grid-row:hover {
-  background-color: var(--surface-hover);
-}
-
-.editor-grid-row.active {
-  background-color: var(--selection-bg);
-  animation: line-highlight 0.3s ease-out;
-}
-
-/* Grid Header Row */
-.editor-grid-row.editor-header {
-  background: var(--surface-hover);
-  border-bottom: 1px solid var(--border-muted);
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-/* Grid Cells */
-.editor-cell {
-  padding: 0 var(--space-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
+.editor-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 300px;
+  padding: var(--space-4);
+  border: none;
+  background: var(--bg-primary);
   color: var(--text-primary);
-  cursor: default;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition-fast), outline var(--transition-fast);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+  resize: none;
+  outline: none;
 }
 
-.editor-cell[data-line] {
-  cursor: text;
+.editor-textarea:focus {
+  background: var(--bg-secondary);
 }
 
-.editor-cell[data-line]:hover {
-  background: var(--surface-hover);
-}
-
-.editor-cell.editing {
-  background: var(--accent-hover);
-  outline: 1px solid var(--accent-primary);
-  white-space: normal;
-  overflow: visible;
-  min-width: 100px;
-}
-
-.editor-cell.editing:focus {
-  outline: 2px solid var(--accent-primary);
-}
-
-/* Header Cells */
-.editor-cell.header {
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: default;
-}
-
-.editor-cell.header:hover {
-  background: transparent;
+.editor-textarea::placeholder {
+  color: var(--text-tertiary);
 }
 
 /* ==========================================================================
-   UNCERTAINTY MARKERS
-   ========================================================================== */
-
-.marker-uncertain,
-[data-marker="uncertain"] {
-  background-color: var(--uncertain-bg);
-  border-bottom: 1px dashed var(--uncertain);
-  padding: 0 2px;
-  border-radius: 2px;
-}
-
-.marker-illegible,
-[data-marker="illegible"] {
-  background-color: var(--problematic-bg);
-  border-bottom: 1px dashed var(--problematic);
-  font-style: italic;
-  padding: 0 2px;
-  border-radius: 2px;
-}
-
-.marker-alternative,
-[data-marker="alternative"] {
-  background-color: var(--accent-muted);
-  border-bottom: 1px dotted var(--accent-primary);
-  padding: 0 2px;
-  border-radius: 2px;
-  cursor: help;
-}
-
-/* ==========================================================================
-   CONFIDENCE INDICATORS (Line-level)
-   ========================================================================== */
-
-.confidence-confident {
-  border-left: 2px solid var(--confident) !important;
-}
-
-.confidence-uncertain {
-  border-left: 2px solid var(--uncertain) !important;
-}
-
-.confidence-problematic {
-  border-left: 2px solid var(--problematic) !important;
-}
-
-/* ==========================================================================
-   EDITOR EMPTY STATE
+   EMPTY STATE
    ========================================================================== */
 
 .editor-empty-state {
@@ -234,84 +51,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8);
+  height: 100%;
+  min-height: 200px;
+  padding: var(--space-6);
   text-align: center;
   color: var(--text-secondary);
 }
 
-.editor-empty-state .empty-state-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: var(--space-3);
-  opacity: 0.5;
-}
-
-.editor-empty-state h4 {
-  color: var(--text-primary);
-  margin-bottom: var(--space-2);
-}
-
 .editor-empty-state p {
+  margin: var(--space-2) 0;
+}
+
+.editor-empty-state .text-secondary {
   font-size: var(--text-sm);
-  max-width: 280px;
-}
-
-/* ==========================================================================
-   ALTERNATIVE READINGS (from Mockup)
-   ========================================================================== */
-
-.alternative-readings {
-  margin-top: var(--space-3);
-  padding: var(--space-3);
-  background: var(--surface-hover);
-  border-radius: var(--radius-md);
-}
-
-.alternative-readings-title {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--space-2);
-}
-
-.alternative-reading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
-  font-size: var(--text-sm);
-}
-
-.alternative-reading::before {
-  content: '→';
-  color: var(--text-secondary);
-}
-
-.alternative-reading .reading-text {
-  color: var(--text-primary);
-}
-
-.alternative-reading .reading-likelihood {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  padding: 1px 6px;
-  background: var(--surface-active);
-  border-radius: var(--radius-sm);
-}
-
-.alternative-reading .reading-likelihood.likely {
-  color: var(--confident);
-  background: var(--confident-bg);
-}
-
-.alternative-reading .reading-likelihood.possible {
-  color: var(--uncertain);
-  background: var(--uncertain-bg);
-}
-
-.alternative-reading .reading-likelihood.unlikely {
-  color: var(--problematic);
-  background: var(--problematic-bg);
+  color: var(--text-tertiary);
 }

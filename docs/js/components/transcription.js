@@ -12,6 +12,7 @@
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
+import { contextManager } from './context.js';
 
 /**
  * Transcription Manager
@@ -83,24 +84,23 @@ class TranscriptionManager {
             const imageUrl = state.document.dataUrl || state.image.url;
             const base64 = await this.getImageBase64(imageUrl);
 
-            // Get document type from UI
-            const documentTypeSelect = document.getElementById('documentType');
-            const documentType = documentTypeSelect?.value || 'table';
+            // Get context from expert (if provided)
+            const contextDescription = contextManager.buildPromptContext();
 
-            // Call LLM service with document type
-            const result = await llmService.transcribe(base64, { documentType });
+            // Call LLM service with context
+            const result = await llmService.transcribe(base64, {
+                context: contextDescription
+            });
 
             // Update state with transcription
             appState.setTranscription({
                 provider: result.provider,
                 model: result.model,
-                raw: result.raw,
-                segments: result.segments,
-                columns: result.columns
+                raw: result.raw
             });
 
             dialogManager.showToast(
-                `Transcribed ${result.segments.length} lines with ${result.provider}`,
+                `Transcription complete (${result.provider})`,
                 'success'
             );
 

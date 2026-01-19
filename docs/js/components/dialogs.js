@@ -36,6 +36,7 @@ class DialogManager {
         this.dialogs.settings = getById('settingsDialog');
         this.dialogs.help = getById('helpDialog');
         this.dialogs.iiif = getById('iiifDialog');
+        this.dialogs.context = getById('contextDialog');
         this.toastContainer = getById('toastContainer');
 
         if (!this.dialogs.apiKey || !this.dialogs.export) {
@@ -759,14 +760,12 @@ class DialogManager {
         testBtn.disabled = true;
 
         try {
-            // Get current provider settings
             const provider = this.currentProvider;
 
             if (provider === 'ollama') {
                 const endpoint = document.getElementById('ollamaEndpoint')?.value;
                 if (!endpoint) throw new Error('Endpoint is required');
 
-                // Test Ollama connection
                 const response = await fetch(`${endpoint}/api/tags`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(5000)
@@ -781,12 +780,9 @@ class DialogManager {
                 const keyInput = document.getElementById(`${provider}ApiKey`);
                 if (!keyInput?.value) throw new Error('API key is required');
 
-                // Set temporary key for testing
                 llmService.setApiKey(provider, keyInput.value);
                 llmService.setProvider(provider);
 
-                // Simple test - most providers don't have a "ping" endpoint
-                // We'll show success if key format is valid
                 const keyFormats = {
                     gemini: /^AIza/,
                     openai: /^sk-/,
