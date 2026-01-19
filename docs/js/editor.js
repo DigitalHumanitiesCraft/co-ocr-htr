@@ -1,15 +1,12 @@
 /**
  * coOCR/HTR Editor
- * Flexible Transcription Editor with support for multiple source types
+ * Simple textarea-based transcription editor
  *
- * Editor Modes:
- * - 'lines': Simple line-based view (letters, diaries, manuscripts)
- * - 'grid': Column-based grid view (account books, inventories)
- * - 'auto': Automatically detect from data structure
+ * The expert sees the raw LLM output and can edit it directly.
+ * No complex parsing, no grid/lines modes - just text.
  */
 import { appState } from './state.js';
-import { getById, select, selectAll, addClass, removeClass, setDisabled } from './utils/dom.js';
-import { applyMarkers, getConfidenceClass } from './utils/textFormatting.js';
+import { getById } from './utils/dom.js';
 
 // History for undo/redo
 const history = {
@@ -18,25 +15,12 @@ const history = {
     maxSize: 50
 };
 
-// Currently editing cell
-let editingCell = null;
-
-// Current editor mode
-let editorMode = 'auto';
+// Reference to textarea
+let textarea = null;
 
 export function initEditor() {
     const container = getById('editorContent');
     if (!container) return;
-
-    // React to selection
-    appState.addEventListener('selectionChanged', (e) => {
-        selectAll('.editor-grid-row.active, .editor-line.active').forEach(el => el.classList.remove('active'));
-        const lineEl = select(`[data-line="${e.detail.line}"]`);
-        if (lineEl) {
-            lineEl.classList.add('active');
-            lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    });
 
     // React to transcription updates
     appState.addEventListener('transcriptionComplete', () => {
@@ -45,34 +29,25 @@ export function initEditor() {
         pushHistory();
     });
 
-    // React to document load (reset editor when new document is loaded)
+    // React to document load (reset editor)
     appState.addEventListener('documentLoaded', () => {
         const state = appState.getState();
         renderEditor(state.transcription);
-        // Clear history for new document
-        history.stack = [];
-        history.index = -1;
-        updateUndoRedoButtons();
+        clearHistory();
     });
 
-    // React to page changes (multi-page documents, IIIF)
+    // React to page changes (multi-page documents)
     appState.addEventListener('pageChanged', () => {
         const state = appState.getState();
         renderEditor(state.transcription);
-        // Clear history for new page
-        history.stack = [];
-        history.index = -1;
-        updateUndoRedoButtons();
+        clearHistory();
     });
 
-    // React to new pages loaded (IIIF manifest, folder upload)
+    // React to new pages loaded
     appState.addEventListener('pagesLoaded', () => {
         const state = appState.getState();
         renderEditor(state.transcription);
-        // Clear history for new document set
-        history.stack = [];
-        history.index = -1;
-        updateUndoRedoButtons();
+        clearHistory();
     });
 
     // Keyboard shortcuts
@@ -90,491 +65,131 @@ export function initEditor() {
 }
 
 /**
- * Main render function - determines mode and renders accordingly
+ * Render the editor - simple textarea with the transcription text
  */
 function renderEditor(transcription) {
     const container = getById('editorContent');
     if (!container) return;
 
-    // Determine editor mode
-    const mode = detectEditorMode(transcription);
-    editorMode = mode;
+    // Get the raw text from transcription
+    const text = transcription?.raw || '';
 
-    if (mode === 'grid') {
-        renderGridEditor(container, transcription);
-    } else {
-        renderLinesEditor(container, transcription);
-    }
-}
-
-/**
- * Detect which editor mode to use based on data structure
- */
-function detectEditorMode(transcription) {
-    // No data at all → lines mode (will show empty state)
-    const hasData = (transcription.segments?.length > 0) ||
-                    (transcription.lines?.length > 0);
-    if (!hasData) {
-        return 'lines';
-    }
-
-    // Explicit columns defined → grid
-    if (transcription.columns?.length > 0) {
-        return 'grid';
-    }
-
-    // Check segments for structured fields
-    if (transcription.segments?.length > 0) {
-        const hasFields = transcription.segments.some(s => s.fields && Object.keys(s.fields).length > 1);
-        if (hasFields) return 'grid';
-
-        // Check for pipe separators in text
-        const hasPipes = transcription.segments.some(s => s.text?.includes('|'));
-        if (hasPipes) return 'grid';
-    }
-
-    // Check lines for pipe separators
-    if (transcription.lines?.length > 0) {
-        const hasPipes = transcription.lines.some(line =>
-            typeof line === 'string' && line.includes('|') && line.split('|').length > 2
-        );
-        if (hasPipes) return 'grid';
-    }
-
-    // Default: lines mode for simple text
-    return 'lines';
-}
-
-/**
- * Render simple line-based editor (for letters, diaries, manuscripts)
- */
-function renderLinesEditor(container, transcription) {
-    let html = '<div class="editor-lines">';
-
-    // Get data source
-    const lines = transcription.segments?.map(s => ({
-        lineNumber: s.lineNumber,
-        text: s.text,
-        confidence: s.confidence
-    })) || transcription.lines?.map((text, i) => ({
-        lineNumber: i + 1,
-        text: typeof text === 'string' ? text : text.text,
-        confidence: text.confidence || 'certain'
-    })) || [];
-
-    if (lines.length === 0) {
-        html += `
-            <div class="editor-empty-state">
-                <p>Keine Transkription vorhanden.</p>
-                <p class="text-secondary">Lade ein Dokument und starte die Transkription.</p>
-            </div>
-        `;
-    } else {
-        lines.forEach((line) => {
-            const lineNum = line.lineNumber;
-            const text = line.text || '';
-            const confidence = line.confidence || 'certain';
-
-            // Apply markers using utility
-            const displayText = applyMarkers(text);
-            const confidenceClass = getConfidenceClass(confidence);
-
-            html += `
-                <div class="editor-line ${confidenceClass}" data-line="${lineNum}">
-                    <span class="line-num">${lineNum}</span>
-                    <span class="line-text" data-line="${lineNum}" title="${text}">${displayText || '&nbsp;'}</span>
-                </div>
-            `;
-        });
-    }
-
-    html += '</div>';
-    container.innerHTML = html;
-    bindLinesEditorEvents(container);
-}
-
-/**
- * Render grid-based editor (for account books, inventories)
- */
-function renderGridEditor(container, transcription) {
-    // If no data at all, show empty state instead of grid
-    const hasData = (transcription.segments?.length > 0) ||
-                    (transcription.lines?.length > 0);
-
-    if (!hasData) {
+    // Check if we have content
+    if (!text) {
         container.innerHTML = `
             <div class="editor-empty-state">
                 <p>Keine Transkription vorhanden.</p>
-                <p class="text-secondary">Lade ein Dokument und starte die Transkription.</p>
+                <p class="text-secondary">Lade ein Dokument und klicke auf "Transcribe".</p>
             </div>
         `;
+        textarea = null;
         return;
     }
 
-    let html = '';
-
-    // Determine columns
-    let columns = transcription.columns || [];
-
-    // Auto-detect columns from first segment or line
-    if (columns.length === 0) {
-        const firstSegment = transcription.segments?.[0];
-        const firstLine = transcription.lines?.[0];
-
-        if (firstSegment?.fields) {
-            columns = Object.keys(firstSegment.fields).map(key => ({
-                id: key,
-                label: key.charAt(0).toUpperCase() + key.slice(1)
-            }));
-        } else if (firstSegment?.text?.includes('|') || (typeof firstLine === 'string' && firstLine.includes('|'))) {
-            const parts = (firstSegment?.text || firstLine).split('|').filter(p => p.trim());
-            columns = parts.map((_, i) => ({
-                id: `col${i}`,
-                label: `Spalte ${i + 1}`
-            }));
-        }
-    }
-
-    // If no columns detected, use single TEXT column
-    if (columns.length === 0) {
-        columns = [
-            { id: 'text', label: 'TEXT' }
-        ];
-    }
-
-    // Set CSS grid template
-    const gridCols = `3rem repeat(${columns.length}, 1fr)`;
-
-    // Header row
-    html += `
-        <div class="editor-grid-row editor-header" style="grid-template-columns: ${gridCols};">
-            <div class="editor-cell header">#</div>
-            ${columns.map(c => `<div class="editor-cell header">${c.label}</div>`).join('')}
-        </div>
+    // Render textarea
+    container.innerHTML = `
+        <textarea
+            id="transcriptionText"
+            class="editor-textarea"
+            spellcheck="false"
+            placeholder="Transkription wird hier angezeigt..."
+        ></textarea>
     `;
 
-    // Data rows
-    const segments = transcription.segments || [];
-    const lines = transcription.lines || [];
+    textarea = getById('transcriptionText');
+    if (textarea) {
+        textarea.value = text;
 
-    // Use segments if available, otherwise parse lines
-    const dataRows = segments.length > 0
-        ? segments
-        : lines.map((line, i) => ({
-            lineNumber: i + 1,
-            text: typeof line === 'string' ? line : line.text,
-            confidence: line.confidence || 'certain'
-        }));
+        // Save changes on input
+        textarea.addEventListener('input', () => {
+            appState.setTranscriptionRaw(textarea.value);
+        });
 
-    if (dataRows.length === 0) {
-        html += `
-            <div class="editor-empty-state">
-                <p>Keine Transkription vorhanden.</p>
-                <p class="text-secondary">Lade ein Dokument und starte die Transkription.</p>
-            </div>
-        `;
-    } else {
-        dataRows.forEach((row) => {
-            const lineNum = row.lineNumber;
-            const confidence = row.confidence || 'certain';
-            const confidenceClass = getConfidenceClass(confidence);
-
-            // Get cell values
-            let cells;
-            if (row.fields && Object.keys(row.fields).length > 0) {
-                cells = columns.map(col => row.fields[col.id] || '');
-            } else if (row.text) {
-                const parts = row.text.replace(/^\||\|$/g, '').split('|').map(s => s.trim());
-                cells = columns.map((_, i) => parts[i] || '');
-            } else {
-                cells = columns.map(() => '');
-            }
-
-            // Skip header-like rows
-            if (row.text?.includes('---') || (cells[0]?.toLowerCase() === 'datum' && lineNum === 1)) {
-                return;
-            }
-
-            const cellsHtml = cells.map((cell, colIdx) => {
-                const displayCell = applyMarkers(cell || '');
-                return `<div class="editor-cell" data-line="${lineNum}" data-col="${colIdx}" title="${cell || ''}">${displayCell || '&nbsp;'}</div>`;
-            }).join('');
-
-            html += `
-                <div class="editor-grid-row ${confidenceClass}" data-line="${lineNum}" style="grid-template-columns: ${gridCols};">
-                    <div class="line-num">${lineNum}</div>
-                    ${cellsHtml}
-                </div>
-            `;
+        // Save to history on blur
+        textarea.addEventListener('blur', () => {
+            pushHistory();
         });
     }
-
-    container.innerHTML = html;
-    bindGridEditorEvents(container);
 }
 
 /**
- * Bind event listeners for lines editor
+ * Get current text from editor
  */
-function bindLinesEditorEvents(container) {
-    selectAll('.editor-line[data-line]', container).forEach(line => {
-        line.addEventListener('click', () => {
-            const lineNum = parseInt(line.getAttribute('data-line'));
-            appState.setSelection(lineNum);
-        });
-    });
-
-    selectAll('.line-text[data-line]', container).forEach(cell => {
-        cell.addEventListener('dblclick', () => startEditing(cell));
-    });
+export function getEditorText() {
+    return textarea?.value || '';
 }
 
-/**
- * Bind event listeners for grid editor
- */
-function bindGridEditorEvents(container) {
-    selectAll('.editor-grid-row[data-line]', container).forEach(row => {
-        row.addEventListener('click', (e) => {
-            if (e.target.classList.contains('editor-cell') && !e.target.classList.contains('header')) {
-                return;
-            }
-            const line = parseInt(row.getAttribute('data-line'));
-            appState.setSelection(line);
-        });
-    });
+// ============ History (Undo/Redo) ============
 
-    selectAll('.editor-cell[data-line]', container).forEach(cell => {
-        cell.addEventListener('dblclick', () => startEditing(cell));
-    });
+function clearHistory() {
+    history.stack = [];
+    history.index = -1;
+    updateUndoRedoButtons();
 }
-
-/**
- * Start inline editing on a cell
- */
-function startEditing(cell) {
-    if (editingCell) {
-        finishEditing(editingCell, false);
-    }
-
-    editingCell = cell;
-    const originalText = cell.textContent;
-
-    cell.dataset.originalValue = originalText;
-    cell.contentEditable = 'true';
-    cell.classList.add('editing');
-    cell.focus();
-
-    // Select all text
-    const range = document.createRange();
-    range.selectNodeContents(cell);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    cell.addEventListener('keydown', handleCellKeyDown);
-    cell.addEventListener('blur', handleCellBlur);
-}
-
-/**
- * Handle keydown in editing cell
- */
-function handleCellKeyDown(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        finishEditing(e.target, true);
-    } else if (e.key === 'Escape') {
-        e.preventDefault();
-        finishEditing(e.target, false);
-    } else if (e.key === 'Tab' && editorMode === 'grid') {
-        e.preventDefault();
-        finishEditing(e.target, true);
-        navigateToNextCell(e.target, e.shiftKey ? -1 : 1);
-    }
-}
-
-/**
- * Handle blur on editing cell
- */
-function handleCellBlur(e) {
-    setTimeout(() => {
-        if (editingCell === e.target) {
-            finishEditing(e.target, true);
-        }
-    }, 100);
-}
-
-/**
- * Finish editing a cell
- */
-function finishEditing(cell, save) {
-    if (!cell) return;
-
-    cell.removeEventListener('keydown', handleCellKeyDown);
-    cell.removeEventListener('blur', handleCellBlur);
-
-    const newValue = cell.textContent.trim();
-    const originalValue = cell.dataset.originalValue || '';
-
-    cell.contentEditable = 'false';
-    cell.classList.remove('editing');
-
-    if (save && newValue !== originalValue) {
-        const lineNum = parseInt(cell.dataset.line);
-        const colIdx = cell.dataset.col !== undefined ? parseInt(cell.dataset.col) : null;
-
-        const state = appState.getState();
-        const segment = state.transcription.segments?.find(s => s.lineNumber === lineNum);
-
-        if (segment) {
-            if (colIdx !== null && segment.fields) {
-                const keys = Object.keys(segment.fields);
-                if (keys[colIdx]) {
-                    segment.fields[keys[colIdx]] = newValue;
-                }
-                segment.text = Object.values(segment.fields).join(' | ');
-            } else {
-                segment.text = newValue;
-            }
-
-            appState.updateSegment(lineNum, {
-                text: segment.text,
-                fields: segment.fields
-            });
-        }
-
-        pushHistory();
-
-        // Re-render markers using utility
-        cell.innerHTML = applyMarkers(newValue) || '&nbsp;';
-    } else {
-        cell.innerHTML = applyMarkers(originalValue) || '&nbsp;';
-    }
-
-    delete cell.dataset.originalValue;
-    editingCell = null;
-}
-
-/**
- * Navigate to adjacent cell (grid mode only)
- */
-function navigateToNextCell(currentCell, direction) {
-    const line = parseInt(currentCell.dataset.line);
-    const col = parseInt(currentCell.dataset.col);
-    const maxCol = selectAll(`.editor-cell[data-line="${line}"]`).length - 1;
-
-    let nextCol = col + direction;
-    let nextLine = line;
-
-    if (nextCol > maxCol) {
-        nextCol = 0;
-        nextLine = line + 1;
-    } else if (nextCol < 0) {
-        nextCol = maxCol;
-        nextLine = line - 1;
-    }
-
-    const nextCell = select(`.editor-cell[data-line="${nextLine}"][data-col="${nextCol}"]`);
-
-    if (nextCell) {
-        startEditing(nextCell);
-    }
-}
-
-// ============================================
-// Undo/Redo
-// ============================================
 
 function pushHistory() {
-    const state = appState.getState();
-    const snapshot = JSON.stringify(state.transcription.segments || state.transcription.lines);
+    if (!textarea) return;
 
-    if (history.stack[history.index] === snapshot) return;
+    const currentText = textarea.value;
 
+    // Don't push if same as current state
+    if (history.stack[history.index] === currentText) return;
+
+    // Remove any redo states
     history.stack = history.stack.slice(0, history.index + 1);
-    history.stack.push(snapshot);
-    history.index = history.stack.length - 1;
 
+    // Add new state
+    history.stack.push(currentText);
+
+    // Limit size
     if (history.stack.length > history.maxSize) {
         history.stack.shift();
-        history.index--;
+    } else {
+        history.index++;
     }
 
     updateUndoRedoButtons();
 }
 
 function undo() {
-    if (history.index <= 0) return;
+    if (history.index <= 0 || !textarea) return;
+
     history.index--;
-    restoreFromHistory();
+    textarea.value = history.stack[history.index];
+    appState.setTranscriptionRaw(textarea.value);
+    updateUndoRedoButtons();
 }
 
 function redo() {
-    if (history.index >= history.stack.length - 1) return;
+    if (history.index >= history.stack.length - 1 || !textarea) return;
+
     history.index++;
-    restoreFromHistory();
-}
-
-function restoreFromHistory() {
-    const snapshot = history.stack[history.index];
-    if (!snapshot) return;
-
-    const data = JSON.parse(snapshot);
-    const state = appState.getState();
-
-    if (Array.isArray(data) && data[0]?.lineNumber !== undefined) {
-        state.transcription.segments = data;
-    } else {
-        state.transcription.lines = data;
-    }
-
-    renderEditor(state.transcription);
+    textarea.value = history.stack[history.index];
+    appState.setTranscriptionRaw(textarea.value);
     updateUndoRedoButtons();
 }
 
 function updateUndoRedoButtons() {
-    setDisabled('btnUndo', history.index <= 0);
-    setDisabled('btnRedo', history.index >= history.stack.length - 1);
-}
+    const btnUndo = getById('btnUndo');
+    const btnRedo = getById('btnRedo');
 
-// ============================================
-// Keyboard Shortcuts
-// ============================================
+    if (btnUndo) {
+        btnUndo.disabled = history.index <= 0;
+    }
+    if (btnRedo) {
+        btnRedo.disabled = history.index >= history.stack.length - 1;
+    }
+}
 
 function handleKeyDown(e) {
-    if (editingCell || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        return;
-    }
-
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    // Ctrl+Z = Undo
+    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         undo();
-    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'Z' || e.key === 'y')) {
+    }
+    // Ctrl+Shift+Z or Ctrl+Y = Redo
+    if ((e.ctrlKey && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
         e.preventDefault();
         redo();
-    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        const state = appState.getState();
-        const selectedLine = state.ui?.selectedLine;
-        if (selectedLine !== null && selectedLine !== undefined) {
-            e.preventDefault();
-            const newLine = selectedLine + (e.key === 'ArrowUp' ? -1 : 1);
-            const row = select(`[data-line="${newLine}"]`);
-            if (row) {
-                appState.setSelection(newLine);
-            }
-        }
-    } else if (e.key === 'Enter') {
-        const state = appState.getState();
-        const selectedLine = state.ui?.selectedLine;
-        if (selectedLine !== null && selectedLine !== undefined) {
-            const firstCell = editorMode === 'grid'
-                ? select(`.editor-cell[data-line="${selectedLine}"][data-col="0"]`)
-                : select(`.line-text[data-line="${selectedLine}"]`);
-            if (firstCell) {
-                e.preventDefault();
-                startEditing(firstCell);
-            }
-        }
     }
 }
-
-export { undo, redo, pushHistory };

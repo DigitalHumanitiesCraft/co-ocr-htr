@@ -395,31 +395,59 @@ class AppState extends EventTarget {
       id: generateId(),
       provider: data.provider || '',
       model: data.model || '',
-      raw: data.raw || '',
-      segments: data.segments || [],
-      columns: data.columns || [],
-      lines: data.lines || this._segmentsToLines(data.segments || [])
+      raw: data.raw || ''
     };
 
-    // Update regions from segments - only use real coordinates (from PAGE-XML)
-    // LLM transcriptions without coordinates will not have regions displayed
-    if (data.segments?.length > 0) {
-      this.data.regions = data.segments
-        .filter(s => s.bounds && s.bounds.width > 0 && s.bounds.height > 0)
-        .map(s => ({
-          line: s.lineNumber,
-          x: s.bounds.x,
-          y: s.bounds.y,
-          w: s.bounds.width,
-          h: s.bounds.height
-        }));
-    }
-
     this.data.meta.updatedAt = new Date().toISOString();
+
     this._emit('transcriptionComplete', {
-      provider: data.provider,
-      segmentCount: data.segments?.length || 0
+      provider: data.provider
     });
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Update raw transcription text (from editor changes)
+   * @param {string} text - The updated transcription text
+   */
+  setTranscriptionRaw(text) {
+    this.data.transcription.raw = text;
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Set document context for transcription
+   * The expert provides context to improve LLM transcription quality
+   * @param {object} context - Context information
+   */
+  setDocumentContext(context) {
+    this.data.context = {
+      documentType: context.documentType || '',
+      period: context.period || '',
+      language: context.language || '',
+      description: context.description || '',
+      timestamp: new Date().toISOString()
+    };
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('contextChanged', this.data.context);
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Get current document context
+   * @returns {object|null} Context or null if not set
+   */
+  getDocumentContext() {
+    return this.data.context || null;
+  }
+
+  /**
+   * Clear document context
+   */
+  clearDocumentContext() {
+    this.data.context = null;
+    this._emit('contextChanged', null);
     this._scheduleAutoSave();
   }
 
