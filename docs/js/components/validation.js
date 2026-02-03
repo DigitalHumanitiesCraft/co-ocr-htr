@@ -31,6 +31,8 @@ class ValidationPanel {
         this.aiSection = null;
         this.isValidating = false;
         this.currentPerspective = 'paleographic';
+        this.validateDialog = null;
+        this.startValidationBtn = null;
     }
 
     /**
@@ -47,6 +49,10 @@ class ValidationPanel {
             console.warn('Validation panel not found');
             return;
         }
+
+        // Get dialog elements
+        this.validateDialog = getById('validateDialog');
+        this.startValidationBtn = getById('startValidation');
 
         this.bindEvents();
         this.setupPerspectiveDropdown();
@@ -106,10 +112,24 @@ class ValidationPanel {
      * Bind event listeners
      */
     bindEvents() {
-        // Validate button in editor panel
+        // Validate button in editor panel - opens dialog
         this.validateBtn = getById('btnValidate');
         if (this.validateBtn) {
-            this.validateBtn.addEventListener('click', () => this.handleValidateClick());
+            this.validateBtn.addEventListener('click', () => this.openValidateDialog());
+        }
+
+        // Start validation button in dialog
+        if (this.startValidationBtn) {
+            this.startValidationBtn.addEventListener('click', () => this.handleValidateClick());
+        }
+
+        // Close dialog on backdrop click
+        if (this.validateDialog) {
+            this.validateDialog.addEventListener('click', (e) => {
+                if (e.target === this.validateDialog) {
+                    this.validateDialog.close();
+                }
+            });
         }
 
         // Listen for transcription completion - enable validate button, don't auto-run
@@ -127,11 +147,10 @@ class ValidationPanel {
             this.updateValidateButton(false);
         });
 
-        // Listen for page changes (multi-page support)
+        // Listen for page changes (multi-page support) - load saved validation or clear
         appState.addEventListener('pageChanged', () => {
             this.updateVisibility();
-            this.clearValidation();
-            this.updateValidateButton(false);
+            this.loadPageValidation();
         });
 
         // Listen for validation state changes
@@ -153,10 +172,137 @@ class ValidationPanel {
     }
 
     /**
-     * Handle validate button click
+     * Open the validation dialog
+     */
+    openValidateDialog() {
+        if (this.isValidating) return;
+
+        // Validate transcription exists
+        const state = appState.getState();
+        const hasTranscription = (state.transcription?.raw && state.transcription.raw.trim().length > 0) ||
+                                  state.transcription?.segments?.length > 0;
+
+        if (!hasTranscription) {
+            dialogManager.showToast('Bitte zuerst transkribieren', 'warning');
+            return;
+        }
+
+        // Update page selection UI
+        this.updatePageSelectionUI();
+
+        // Update LLM mode hint
+        this.updateLLMModeHint();
+
+        // Show dialog
+        if (this.validateDialog) {
+            this.validateDialog.showModal();
+        }
+    }
+
+    /**
+     * Update the page selection UI based on current document
+     */
+    updatePageSelectionUI() {
+        const pageSelectionEl = getById('validatePageSelection');
+        const pageCountEl = getById('validatePageCount');
+        const allPagesHintEl = getById('validateAllPagesHint');
+        const batchWarningEl = getById('validateBatchWarning');
+        const batchPageCountEl = getById('validateBatchPageCount');
+
+        if (!pageSelectionEl) return;
+
+        const state = appState.getState();
+        const pages = state.pages || [];
+        const isMultiPage = pages.length > 1;
+
+        // Show/hide page selection based on multi-page
+        pageSelectionEl.hidden = !isMultiPage;
+
+        if (isMultiPage) {
+            const currentPage = state.currentPageIndex + 1;
+            const totalPages = pages.length;
+
+            // Update counts
+            if (pageCountEl) {
+                pageCountEl.textContent = `Seite ${currentPage} von ${totalPages}`;
+            }
+
+            if (allPagesHintEl) {
+                allPagesHintEl.textContent = `${totalPages} Seiten, kann mehrere Minuten dauern`;
+            }
+
+            if (batchPageCountEl) {
+                batchPageCountEl.textContent = totalPages;
+            }
+
+            // Bind radio button change to show/hide warning
+            const radioButtons = document.querySelectorAll('input[name="validatePageSelection"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (batchWarningEl) {
+                        batchWarningEl.hidden = radio.value !== 'all';
+                    }
+                });
+            });
+
+            // Reset to "current" and hide warning
+            const currentRadio = document.querySelector('input[name="validatePageSelection"][value="current"]');
+            if (currentRadio) currentRadio.checked = true;
+            if (batchWarningEl) batchWarningEl.hidden = true;
+        }
+    }
+
+    /**
+     * Update LLM mode hint based on API key status
+     */
+    updateLLMModeHint() {
+        const llmModeItem = getById('llmModeItem');
+        const llmModeHint = getById('llmModeHint');
+
+        if (!llmModeHint) return;
+
+        const hasApiKey = llmService.hasApiKey();
+
+        if (hasApiKey) {
+            llmModeHint.textContent = 'API-Call pro Seite';
+            if (llmModeItem) llmModeItem.classList.remove('disabled');
+        } else {
+            llmModeHint.textContent = 'API-Key erforderlich';
+            if (llmModeItem) llmModeItem.classList.add('disabled');
+        }
+    }
+
+    /**
+     * Get selected page mode (current or all)
+     */
+    getSelectedPageMode() {
+        const selected = document.querySelector('input[name="validatePageSelection"]:checked');
+        return selected?.value || 'current';
+    }
+
+    /**
+     * Handle validate button click (from dialog)
      */
     handleValidateClick() {
         if (this.isValidating) return;
+
+        // Check page selection mode
+        const pageMode = this.getSelectedPageMode();
+        const state = appState.getState();
+        const isMultiPage = (state.pages || []).length > 1;
+
+        // Close dialog immediately
+        if (this.validateDialog) {
+            this.validateDialog.close();
+        }
+
+        // If multi-page and "all" selected, do batch validation
+        if (isMultiPage && pageMode === 'all') {
+            this.validateAllPages();
+            return;
+        }
+
+        // Single page validation
         this.runValidation();
     }
 
@@ -166,6 +312,31 @@ class ValidationPanel {
     updateValidateButton(enabled) {
         if (!this.validateBtn) return;
         this.validateBtn.disabled = !enabled;
+    }
+
+    /**
+     * Load validation results for current page (after page change)
+     */
+    loadPageValidation() {
+        const state = appState.getState();
+        const hasTranscription = (state.transcription?.raw && state.transcription.raw.trim().length > 0) ||
+                                  state.transcription?.segments?.length > 0;
+
+        // Check if validation results exist for this page
+        if (state.validation.status === 'complete' &&
+            (state.validation.rules?.length > 0 || state.validation.llmJudge)) {
+            // Render existing validation results
+            this.render({
+                rules: state.validation.rules,
+                llmJudge: state.validation.llmJudge,
+                summary: state.validation.summary
+            });
+            this.updateValidateButton(hasTranscription);
+        } else {
+            // No validation for this page - clear and show hint
+            this.clearValidation();
+            this.updateValidateButton(hasTranscription);
+        }
     }
 
     /**
@@ -311,6 +482,177 @@ class ValidationPanel {
         } finally {
             this.isValidating = false;
             this.setButtonLoading(false);
+        }
+    }
+
+    /**
+     * Validate all pages in batch
+     */
+    async validateAllPages() {
+        const state = appState.getState();
+        const pages = state.pages || [];
+        const batchTranscriptions = state.batchTranscriptions || [];
+
+        if (pages.length === 0) {
+            dialogManager.showToast('Keine Seiten zum Validieren', 'warning');
+            return;
+        }
+
+        // Check if all pages have transcriptions
+        const pagesWithTranscription = pages.filter((page, index) => {
+            const batchResult = batchTranscriptions.find(r => r.pageIndex === index);
+            return batchResult?.success && batchResult?.transcription?.raw;
+        });
+
+        if (pagesWithTranscription.length === 0) {
+            dialogManager.showToast('Keine Transkriptionen vorhanden. Bitte erst alle Seiten transkribieren.', 'warning');
+            return;
+        }
+
+        this.isValidating = true;
+        appState.setValidationStatus('running');
+        this.setButtonLoading(true);
+        this.showBatchProgress(0, pagesWithTranscription.length);
+
+        const results = [];
+        let successCount = 0;
+        let errorCount = 0;
+        const includeLLM = llmService.hasApiKey();
+
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            const batchResult = batchTranscriptions.find(r => r.pageIndex === i);
+
+            // Skip pages without transcription
+            if (!batchResult?.success || !batchResult?.transcription?.raw) {
+                results.push({
+                    pageId: page.id,
+                    pageIndex: i,
+                    success: false,
+                    error: 'Keine Transkription vorhanden'
+                });
+                continue;
+            }
+
+            try {
+                // Update progress
+                this.showBatchProgress(successCount + errorCount + 1, pagesWithTranscription.length, page.filename);
+
+                const text = batchResult.transcription.raw;
+                const segments = batchResult.transcription.segments || [];
+
+                // Run validation
+                const validationResult = await validationEngine.validate(
+                    text,
+                    segments,
+                    this.currentPerspective,
+                    includeLLM
+                );
+
+                results.push({
+                    pageId: page.id,
+                    pageIndex: i,
+                    success: true,
+                    validation: validationResult
+                });
+
+                successCount++;
+
+                // Small delay to avoid rate limiting (only if LLM validation)
+                if (includeLLM && i < pages.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+            } catch (error) {
+                console.error(`Error validating page ${i + 1}:`, error);
+                results.push({
+                    pageId: page.id,
+                    pageIndex: i,
+                    success: false,
+                    error: error.message
+                });
+                errorCount++;
+
+                // If auth error, stop the batch
+                if (error.type === 'auth') {
+                    dialogManager.showToast('API-Key ungültig. Batch abgebrochen.', 'error');
+                    break;
+                }
+
+                // If rate limit, wait longer and continue
+                if (error.type === 'rate_limit') {
+                    dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
+                    await new Promise(resolve => setTimeout(resolve, 30000));
+                }
+            }
+        }
+
+        // Store all validation results
+        appState.setBatchValidations(results);
+
+        // Set current page validation
+        const currentPageResult = results.find(r => r.pageIndex === state.currentPageIndex);
+        if (currentPageResult?.success) {
+            appState.setValidationResults(currentPageResult.validation);
+            this.render(currentPageResult.validation);
+        }
+
+        this.isValidating = false;
+        this.setButtonLoading(false);
+        this.hideBatchProgress();
+
+        // Trigger session save for persistence
+        appState.saveSessionNow();
+
+        // Show summary with save confirmation
+        if (errorCount === 0) {
+            dialogManager.showToast(`Alle ${successCount} Seiten validiert (automatisch gespeichert)`, 'success');
+        } else {
+            dialogManager.showToast(`${successCount} erfolgreich, ${errorCount} fehlgeschlagen`, 'warning');
+        }
+
+        appState.setValidationStatus('complete');
+    }
+
+    /**
+     * Show batch progress overlay
+     */
+    showBatchProgress(current, total, filename = '') {
+        if (!this.panel) return;
+
+        let overlay = getById('validationBatchOverlay');
+
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'validationBatchOverlay';
+            overlay.className = 'validation-loading-overlay';
+            this.panel.style.position = 'relative';
+            this.panel.appendChild(overlay);
+        }
+
+        const percent = Math.round((current / total) * 100);
+
+        overlay.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <span>Validierung läuft...</span>
+                <span class="loading-hint">Seite ${current} von ${total} (${percent}%)</span>
+                ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
+                <div class="batch-progress-bar">
+                    <div class="batch-progress-fill" style="width: ${percent}%"></div>
+                </div>
+            </div>
+        `;
+        overlay.hidden = false;
+    }
+
+    /**
+     * Hide batch progress overlay
+     */
+    hideBatchProgress() {
+        const overlay = getById('validationBatchOverlay');
+        if (overlay) {
+            overlay.hidden = true;
         }
     }
 

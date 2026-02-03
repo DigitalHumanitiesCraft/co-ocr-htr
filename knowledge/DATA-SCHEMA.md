@@ -27,339 +27,148 @@ coOCR/HTR supports various historical document types with flexible editor render
 
 ### Editor Modes
 
-```typescript
-type EditorMode = 'lines' | 'grid' | 'structured' | 'auto';
-
-interface EditorConfig {
-  mode: EditorMode;
-  columns?: ColumnDefinition[];  // Only for 'grid'
-  fields?: FieldDefinition[];    // Only for 'structured'
-}
-```
+| Mode | Configuration | Use Case |
+|------|---------------|----------|
+| lines | None | Prose text without columns |
+| grid | columns array | Tabular data with defined columns |
+| structured | fields array | Key-value pair forms |
+| auto | None | System detects based on content |
 
 ### Automatic Mode Detection
 
-The editor automatically selects the mode based on:
-
-1. **PAGE-XML Structure:** If `TextRegion` contains multiple `TextLine` without explicit columns → `lines`
-2. **Pipe Separator:** If text contains `|` → `grid` with automatic column count
-3. **Explicit Configuration:** `columns[]` in schema → `grid`
-4. **Fallback:** `lines` (simplest mode)
+The editor selects mode based on input characteristics:
+1. PAGE-XML with multiple TextLines without columns → lines mode
+2. Text containing pipe separators → grid mode with auto-detected columns
+3. Explicit columns configuration → grid mode
+4. Default fallback → lines mode
 
 ## Main Schema: Transcription
 
-```typescript
-interface Transcription {
-  id: string;                    // UUID
-  timestamp: string;             // ISO 8601
-  document: Document;
-  transcription: TranscriptionData;
-  validation: ValidationData;
-  corrections: Correction[];
-}
+The central data structure contains document metadata, transcription content, validation results, and correction history.
 
-interface Document {
-  filename: string;
-  mimeType: 'image/jpeg' | 'image/png' | 'image/tiff' | 'application/pdf';
-  pages: number;
-  currentPage: number;
-  dataUrl?: string;              // Base64 (optional)
-}
+### Top-Level Structure
 
-interface TranscriptionData {
-  provider: 'gemini' | 'claude' | 'openai' | 'ollama';
-  model: string;
-  raw: string;                   // Raw text
-  segments: Segment[];
-  columns?: ColumnDefinition[];  // For structured documents
-}
+| Field | Type | Description |
+|-------|------|-------------|
+| id | UUID | Unique identifier |
+| timestamp | ISO 8601 | Creation time |
+| document | Object | Source file metadata |
+| transcription | Object | OCR/HTR results |
+| validation | Object | Quality assessment |
+| corrections | Array | Edit history |
 
-interface Segment {
-  lineNumber: number;            // Line number (for synchronization)
-  text: string;
-  confidence: 'certain' | 'likely' | 'uncertain';
-  bounds?: BoundingBox;
-  fields?: Record<string, string>;  // Structured fields (DATE, NAME, etc.)
-}
+### Document Object
 
-interface ColumnDefinition {
-  id: string;                    // e.g., 'date', 'name', 'description', 'amount'
-  label: string;                 // e.g., 'DATE', 'NAME', etc.
-  width: 'auto' | 'flex' | number;
-}
+| Field | Type | Description |
+|-------|------|-------------|
+| filename | String | Original file name |
+| mimeType | String | image/jpeg, image/png, image/tiff, application/pdf |
+| pages | Number | Total page count |
+| currentPage | Number | Active page (1-based) |
+| dataUrl | String (optional) | Base64 encoded image |
 
-interface BoundingBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+### Transcription Segment
 
-interface ValidationData {
-  status: 'valid' | 'uncertain' | 'invalid';
-  rules: RuleResult[];
-  llmJudge?: LLMJudgeResult;
-}
+Each line of transcribed text is stored as a segment:
 
-interface RuleResult {
-  id: string;
-  name: string;
-  passed: boolean;
-  message: string;
-  lines?: number[];
-}
+| Field | Type | Description |
+|-------|------|-------------|
+| lineNumber | Number | Position in document (for synchronization) |
+| text | String | Transcribed content |
+| confidence | Enum | certain, likely, or uncertain |
+| bounds | Object (optional) | x, y, width, height for region highlighting |
+| fields | Object (optional) | Structured data (DATE, NAME, etc.) |
 
-interface LLMJudgeResult {
-  perspective: string;
-  confidence: 'certain' | 'likely' | 'uncertain';
-  reasoning: string;
-}
+### Validation Result
 
-interface Correction {
-  segmentIndex: number;
-  original: string;
-  corrected: string;
-  reason: string;
-  timestamp: string;
-}
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| status | Enum | valid, uncertain, or invalid |
+| rules | Array | Results from rule-based validation |
+| llmJudge | Object (optional) | AI perspective analysis |
 
-## Example: Account Book Entry (from UI Mockup)
+### Correction Entry
 
-```json
-{
-  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "timestamp": "2026-01-16T17:28:00Z",
-  "document": {
-    "filename": "Rechnungsbuch_1842_S15.jpg",
-    "mimeType": "image/jpeg",
-    "pages": 47,
-    "currentPage": 15
-  },
-  "transcription": {
-    "provider": "gemini",
-    "model": "gemini-2.0-flash",
-    "raw": "...",
-    "columns": [
-      { "id": "date", "label": "DATE", "width": "auto" },
-      { "id": "name", "label": "NAME", "width": "auto" },
-      { "id": "description", "label": "DESCRIPTION", "width": "flex" },
-      { "id": "amount", "label": "AMOUNT", "width": "auto" }
-    ],
-    "segments": [
-      {
-        "lineNumber": 3,
-        "text": "28. Mai | K. Schmidt | Eisenwaren | 23 Taler",
-        "confidence": "certain",
-        "bounds": { "x": 28, "y": 255, "width": 482, "height": 35 },
-        "fields": {
-          "date": "28. Mai",
-          "name": "K. Schmidt",
-          "description": "Eisenwaren",
-          "amount": "23 Taler"
-        }
-      },
-      {
-        "lineNumber": 4,
-        "text": "28. Mai | [?] Schmidt | Pinsel... | 10 Taler 4 Gr",
-        "confidence": "likely",
-        "bounds": { "x": 28, "y": 290, "width": 482, "height": 35 },
-        "fields": {
-          "date": "28. Mai",
-          "name": "[?] Schmidt",
-          "description": "Pinsel...",
-          "amount": "10 Taler 4 Gr"
-        }
-      },
-      {
-        "lineNumber": 5,
-        "text": "3. Juni | H. Müller | Tuchstoff | 15 Taler 4 Gr",
-        "confidence": "certain",
-        "bounds": { "x": 28, "y": 325, "width": 482, "height": 35 },
-        "fields": {
-          "date": "3. Juni",
-          "name": "H. Müller",
-          "description": "Tuchstoff",
-          "amount": "15 Taler 4 Gr"
-        }
-      },
-      {
-        "lineNumber": 6,
-        "text": "3. Juni | H. Müller | Tuchstoff | 15 Taler 4 Gr",
-        "confidence": "certain",
-        "bounds": { "x": 28, "y": 360, "width": 482, "height": 35 },
-        "fields": {
-          "date": "3. Juni",
-          "name": "H. Müller",
-          "description": "Tuchstoff",
-          "amount": "15 Taler 4 Gr"
-        }
-      },
-      {
-        "lineNumber": 7,
-        "text": "4. Juni | Stadtkasse | ... | 40 Taler",
-        "confidence": "likely",
-        "bounds": { "x": 28, "y": 395, "width": 482, "height": 35 },
-        "fields": {
-          "date": "4. Juni",
-          "name": "Stadtkasse",
-          "description": "...",
-          "amount": "40 Taler"
-        }
-      },
-      {
-        "lineNumber": 8,
-        "text": "5. Juni | Unbekannt | Lieferung | [?] Taler",
-        "confidence": "uncertain",
-        "bounds": { "x": 28, "y": 430, "width": 482, "height": 35 },
-        "fields": {
-          "date": "5. Juni",
-          "name": "Unknown",
-          "description": "Delivery",
-          "amount": "[?] Taler"
-        }
-      },
-      {
-        "lineNumber": 10,
-        "text": "Total | | | 103 Taler 1...",
-        "confidence": "likely",
-        "bounds": { "x": 28, "y": 500, "width": 482, "height": 35 },
-        "fields": {
-          "date": "Total",
-          "name": "",
-          "description": "",
-          "amount": "103 Taler 1..."
-        }
-      }
-    ]
-  },
-  "validation": {
-    "status": "uncertain",
-    "rules": [
-      {
-        "id": "date_format",
-        "name": "Date Format",
-        "passed": true,
-        "message": "Date format correct (DD. Month)",
-        "lines": [3, 4]
-      },
-      {
-        "id": "currency",
-        "name": "Currency Format",
-        "passed": true,
-        "message": "Currency recognized (Taler)",
-        "lines": [3, 4]
-      },
-      {
-        "id": "uncertain_marker",
-        "name": "Uncertain Reading",
-        "passed": false,
-        "message": "Uncertain reading [?] present",
-        "lines": [4]
-      }
-    ],
-    "llmJudge": {
-      "perspective": "paleographic",
-      "confidence": "likely",
-      "reasoning": "The name could be 'Müller' or 'Möller'. The handwriting shows a ligature that allows both readings."
-    }
-  },
-  "corrections": [
-    {
-      "segmentIndex": 2,
-      "original": "L. [?] Müller",
-      "corrected": "L. [?] Müller",
-      "reason": "Name remains uncertain, marker retained",
-      "timestamp": "2026-01-16T17:15:00Z"
-    }
-  ]
-}
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| segmentIndex | Number | Which line was corrected |
+| original | String | Text before edit |
+| corrected | String | Text after edit |
+| reason | String | Why the change was made |
+| timestamp | ISO 8601 | When the edit occurred |
+
+## Example: Account Book Entry
+
+A typical tabular document (Rechnungsbuch 1842, page 15) demonstrates the data structure:
+
+**Document:** 47-page account book, JPEG image, processed with Gemini
+
+**Columns:** DATE, NAME, DESCRIPTION, AMOUNT (typical for account books)
+
+**Sample Segments:**
+| Line | Text | Confidence | Notes |
+|------|------|------------|-------|
+| 3 | 28. Mai, K. Schmidt, Eisenwaren, 23 Taler | certain | All fields clear |
+| 4 | 28. Mai, [?] Schmidt, Pinsel..., 10 Taler 4 Gr | likely | Name unclear |
+| 8 | 5. Juni, Unbekannt, Lieferung, [?] Taler | uncertain | Name and amount unclear |
+| 10 | Total, 103 Taler 1... | likely | Sum line, amount truncated |
+
+**Validation Results:**
+- Date format check: passed (DD. Month pattern)
+- Currency format check: passed (Taler recognized)
+- Uncertain marker check: failed (line 4 has [?])
+- LLM-Judge (paleographic): "The name could be Mueller or Moeller. The handwriting shows a ligature that allows both readings."
+
+**Correction History:** Line 2 was reviewed but marker retained as reading remains uncertain.
 
 ## Storage Schemas
 
+**Implementation:** [storage.js](../docs/js/services/storage.js)
+
 ### LocalStorage
 
-```javascript
-// coocr:settings
-{
-  "theme": "dark",
-  "defaultModel": "gemini",
-  "defaultPerspective": "paleographic",
-  "autoSave": true,
-  "autoValidate": true
-}
+Two keys store user preferences:
 
-// coocr:apikeys
-{
-  "gemini": "base64-obfuscated-key",
-  "openai": null,
-  "anthropic": null,
-  "ollama": "http://localhost:11434"
-}
-```
+| Key | Content |
+|-----|---------|
+| coocr:settings | Theme, default model, default perspective, auto-save/validate flags |
+| coocr:apikeys | Base64-obfuscated API keys per provider, Ollama endpoint URL |
 
 ### IndexedDB
 
-```javascript
-const DB_SCHEMA = {
-  database: 'coocr-htr',
-  version: 1,
-  stores: {
-    documents: {
-      keyPath: 'id',
-      indexes: ['filename', 'createdAt', 'updatedAt']
-    },
-    transcriptions: {
-      keyPath: 'id',
-      indexes: ['documentId', 'pageNumber', 'version']
-    },
-    sessions: {
-      keyPath: 'id',
-      indexes: ['lastAccessed']
-    }
-  }
-};
-```
+Three object stores for persistent data:
+
+| Store | Key | Indexes | Content |
+|-------|-----|---------|---------|
+| documents | id | filename, createdAt, updatedAt | Source files |
+| transcriptions | id | documentId, pageNumber, version | OCR/HTR results |
+| sessions | id | lastAccessed | Work sessions |
 
 ## Export Formats
 
-### Markdown
+**Implementation:** [export.js](../docs/js/services/export.js)
 
-```markdown
-# Rechnungsbuch_1842_S15
-
-| Date | Description | Amount |
-|------|-------------|--------|
-| 28. Mai | K. Schmidt, Eisenwaren | 23 Taler |
-| 28. Mai | L. [?] Müller, Kornkauf | 12 Taler |
-
-## Validation Notes
-
-- WARNING: Line 4: Uncertain reading [?] - Name could be "Moeller"
-```
-
-### JSON (complete)
-
-Complete Transcription object (see above).
-
-### TSV (Tabular Data)
-
-```
-Date	Description	Amount
-28. Mai	K. Schmidt, Eisenwaren	23 Taler
-28. Mai	L. [?] Müller, Kornkauf	12 Taler
-```
+| Format | Extension | Content | Use Case |
+|--------|-----------|---------|----------|
+| Markdown | .md | Table with validation notes | Human-readable documentation |
+| JSON | .json | Complete transcription object | Data interchange, backup |
+| TSV | .tsv | Tab-separated values | Spreadsheet import |
+| PAGE-XML | .xml | 2019-07-15 schema | Transkribus compatibility |
+| Plain Text | .txt | Lines only | Simple export |
 
 ## Validation Rules Reference
 
-| Rule ID | Regex/Logic | Type |
-|---------|-------------|------|
-| `date_format` | `/\d{1,2}\.\s?(Januar\|...\|Dezember)/gi` | success |
-| `currency` | `/\d+\s?(Taler\|Groschen\|...)/gi` | success |
-| `uncertain_marker` | `/\[\?\]/g` | warning |
-| `illegible_marker` | `/\[illegible\]/gi` | error |
-| `table_consistency` | Pipe count per line equal | warning |
+Current generic rules (v2.0) - see [VALIDATION.md](VALIDATION.md) for details:
+
+| Rule ID | Pattern | Type |
+|---------|---------|------|
+| `uncertain_marker` | `[?]` | warning |
+| `illegible_marker` | `[illegible]`, `[...]` | warning |
+| `abbreviations` | `word[expansion]` | info |
+| `line_breaks` | Line count | info |
+| `special_chars` | Non-standard characters | info |
+
+**Note:** Document-type-specific rules (date_format, currency, table_consistency) were removed in v2.0 to avoid false positives on different document types.
 
 ---
 
@@ -367,113 +176,27 @@ Date	Description	Amount
 
 ### PAGE-XML (Transkribus/PyLaia)
 
-External format for importing existing transcriptions. See [data/README.md](../data/README.md).
+**Implementation:** [page-xml.js](../docs/js/services/parsers/page-xml.js)
 
 **Namespace:** `http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15`
 
-```typescript
-// PAGE-XML Structure (simplified)
-interface PageXML {
-  PcGts: {
-    Metadata: {
-      Creator: string;           // "prov=READ-COOP:name=PyLaia..."
-      Created: string;           // ISO 8601
-      TranskribusMetadata?: {
-        docId: string;
-        pageId: string;
-        status: 'NEW' | 'IN_PROGRESS' | 'FINAL';
-      };
-    };
-    Page: {
-      imageFilename: string;
-      imageWidth: number;
-      imageHeight: number;
-      TextRegion: TextRegion[];
-    };
-  };
-}
+PAGE-XML is the standard format from tools like Transkribus and PyLaia. The parser extracts:
+- Page metadata (image filename, dimensions)
+- Text regions and lines with polygon coordinates
+- Transkribus-specific metadata (docId, pageId, status)
 
-interface TextRegion {
-  id: string;
-  Coords: { points: string };    // "x1,y1 x2,y2 x3,y3 x4,y4"
-  TextLine: TextLine[];
-}
+### Mapping PAGE-XML to coOCR/HTR
 
-interface TextLine {
-  id: string;
-  Coords: { points: string };
-  Baseline?: { points: string };
-  Word?: Word[];
-  TextEquiv: { Unicode: string };
-}
-
-interface Word {
-  id: string;
-  Coords: { points: string };
-  TextEquiv: { Unicode: string };
-}
-```
-
-### Mapping PAGE-XML → coOCR/HTR
-
-| PAGE-XML | coOCR/HTR Segment | Conversion |
-|----------|-------------------|------------|
-| `TextLine/Coords@points` | `bounds` | Polygon → BoundingBox |
-| `TextLine/TextEquiv/Unicode` | `text` | Direct |
-| `TranskribusMetadata@status` | `confidence` | FINAL→certain, IN_PROGRESS→likely, NEW→uncertain |
-| `ReadingOrder/index` | `lineNumber` | Sequence number |
+| PAGE-XML Element | coOCR/HTR Field | Conversion |
+|------------------|-----------------|------------|
+| TextLine/Coords@points | bounds | Polygon to bounding box (min/max) |
+| TextLine/TextEquiv/Unicode | text | Direct copy |
+| TranskribusMetadata@status | confidence | FINAL→certain, IN_PROGRESS→likely, NEW→uncertain |
+| ReadingOrder/index | lineNumber | Sequence number |
 
 ### Coordinate Conversion
 
-```javascript
-/**
- * Converts PAGE-XML Polygon to coOCR/HTR BoundingBox
- * @param points "x1,y1 x2,y2 x3,y3 x4,y4"
- * @returns BoundingBox
- */
-function polygonToBounds(points) {
-  const coords = points.split(' ').map(p => {
-    const [x, y] = p.split(',').map(Number);
-    return { x, y };
-  });
-  const xs = coords.map(c => c.x);
-  const ys = coords.map(c => c.y);
-  return {
-    x: Math.min(...xs),
-    y: Math.min(...ys),
-    width: Math.max(...xs) - Math.min(...xs),
-    height: Math.max(...ys) - Math.min(...ys)
-  };
-}
-```
-
-### Example: PAGE-XML Import
-
-**Input (PAGE-XML):**
-```xml
-<TextLine id="line_1">
-  <Coords points="100,200 500,200 500,240 100,240"/>
-  <TextEquiv>
-    <Unicode>28. Mai | K. Schmidt | Eisenwaren | 23 Taler</Unicode>
-  </TextEquiv>
-</TextLine>
-```
-
-**Output (coOCR/HTR Segment):**
-```json
-{
-  "lineNumber": 1,
-  "text": "28. Mai | K. Schmidt | Eisenwaren | 23 Taler",
-  "confidence": "certain",
-  "bounds": { "x": 100, "y": 200, "width": 400, "height": 40 },
-  "fields": {
-    "date": "28. Mai",
-    "name": "K. Schmidt",
-    "description": "Eisenwaren",
-    "amount": "23 Taler"
-  }
-}
-```
+PAGE-XML uses polygon coordinates (four corner points). These are converted to bounding boxes by calculating min/max X and Y values. The conversion is implemented in the page-xml parser.
 
 ---
 
@@ -494,135 +217,36 @@ See [data/README.md](../data/README.md) for details.
 
 ## JavaScript Utility Modules
 
-Centralized utility modules in `docs/js/utils/` to reduce code duplication.
+Centralized utilities in [docs/js/utils/](../docs/js/utils/) to reduce code duplication.
 
 ### constants.js
 
-Centralized magic numbers, configuration values, and string constants.
-
-```typescript
-// Timing Constants
-export const TOAST_DURATION_DEFAULT = 3000;
-export const TOAST_DURATION_ERROR = 5000;
-export const AUTO_SAVE_DELAY = 2000;
-export const MENU_CLOSE_DELAY = 150;
-
-// File Limits
-export const MAX_FILE_SIZE = 50 * 1024 * 1024;  // 50MB
-export const SUPPORTED_IMAGE_TYPES: string[];
-export const SUPPORTED_DOCUMENT_TYPES: string[];
-
-// IIIF Constants
-export const IIIF_CONTEXT_V3 = 'presentation/3';
-export const IIIF_VERSION = { V2: 2, V3: 3 };
-
-// Storage Keys
-export const STORAGE_KEYS = {
-  SETTINGS: 'coocr_settings',
-  API_KEYS: 'coocr_apikeys',
-  RECENT_FILES: 'coocr_recent',
-  TRANSCRIPTION_DRAFT: 'coocr_draft'
-};
-
-// Event Names
-export const EVENTS = {
-  STATE_CHANGED: 'stateChanged',
-  DOCUMENT_LOADED: 'documentLoaded',
-  TRANSCRIPTION_COMPLETE: 'transcriptionComplete',
-  VALIDATION_COMPLETE: 'validationComplete',
-  SELECTION_CHANGED: 'selectionChanged'
-};
-
-// CSS Class Names
-export const CSS_CLASSES = {
-  HIDDEN: 'hidden',
-  ACTIVE: 'active',
-  SELECTED: 'selected',
-  DISABLED: 'disabled',
-  LOADING: 'loading'
-};
-```
+Configuration values organized by category:
+- **Timing:** Toast durations, auto-save delays, menu close delays
+- **File Limits:** Maximum file size (50MB), supported MIME types
+- **IIIF:** Context strings, version constants
+- **Storage Keys:** LocalStorage key names
+- **Events:** Standard event name strings
+- **CSS Classes:** Common class names (hidden, active, selected, etc.)
 
 ### dom.js
 
-Null-safe DOM manipulation utilities.
-
-```typescript
-// Selection
-export function getById(id: string): HTMLElement | null;
-export function select(selector: string, parent?: Element): Element | null;
-export function selectAll(selector: string, parent?: Element): NodeList;
-
-// Visibility (uses hidden attribute)
-export function show(elementOrId: HTMLElement | string): void;
-export function hide(elementOrId: HTMLElement | string): void;
-export function toggleVisibility(elementOrId: HTMLElement | string, show?: boolean): void;
-
-// Classes
-export function addClass(elementOrId: HTMLElement | string, ...classNames: string[]): void;
-export function removeClass(elementOrId: HTMLElement | string, ...classNames: string[]): void;
-export function toggleClass(elementOrId: HTMLElement | string, className: string, force?: boolean): void;
-
-// Content
-export function setText(elementOrId: HTMLElement | string, text: string): void;
-export function setHTML(elementOrId: HTMLElement | string, html: string): void;
-export function clearChildren(elementOrId: HTMLElement | string): void;
-
-// State
-export function setDisabled(elementOrId: HTMLElement | string, disabled: boolean): void;
-
-// Utilities
-export function createSVGElement(tagName: string): SVGElement;
-export function focusDelayed(elementOrId: HTMLElement | string, delay?: number): void;
-```
+Null-safe DOM manipulation functions:
+- **Selection:** getById, select, selectAll
+- **Visibility:** show, hide, toggleVisibility (using hidden attribute)
+- **Classes:** addClass, removeClass, toggleClass
+- **Content:** setText, setHTML, clearChildren
+- **State:** setDisabled
+- **Utilities:** createSVGElement, focusDelayed
 
 ### textFormatting.js
 
-Text marker utilities for transcription confidence indicators.
-
-```typescript
-// Marker Detection
-export function hasUncertainMarker(text: string): boolean;   // [?]
-export function hasIllegibleMarker(text: string): boolean;   // [illegible]
-export function hasAnyMarker(text: string): boolean;
-export function countUncertainMarkers(text: string): number;
-export function countIllegibleMarkers(text: string): number;
-
-// Marker Rendering
-export function applyMarkers(text: string): string;          // Returns HTML with styled markers
-export function safeApplyMarkers(text: string): string;      // Escapes HTML first
-export function stripMarkers(text: string): string;          // Removes markers
-
-// Confidence Utilities
-export function getConfidenceClass(confidence: string): string;
-export function getStatusClass(confidence: string): string;
-export function getConfidenceLabel(confidence: string): string;
-export function determineConfidence(uncertainCount: number, illegibleCount: number): string;
-
-// HTML Safety
-export function escapeHtml(text: string): string;
-```
-
-### Usage Example
-
-```javascript
-import { getById, show, hide, setText } from './utils/dom.js';
-import { applyMarkers, getConfidenceClass } from './utils/textFormatting.js';
-import { TOAST_DURATION_DEFAULT, CSS_CLASSES } from './utils/constants.js';
-
-// Display transcription line with markers
-const lineEl = getById('line-5');
-const displayText = applyMarkers(segment.text);
-lineEl.innerHTML = displayText;
-lineEl.className = getConfidenceClass(segment.confidence);
-
-// Toggle visibility
-show('validationPanel');
-hide('loadingSpinner');
-
-// Set text content safely
-setText('statusMessage', 'Transcription complete');
-```
+Text marker utilities for confidence indicators:
+- **Detection:** hasUncertainMarker ([?]), hasIllegibleMarker ([illegible])
+- **Counting:** countUncertainMarkers, countIllegibleMarkers
+- **Rendering:** applyMarkers (returns styled HTML), stripMarkers
+- **Confidence:** getConfidenceClass, determineConfidence
+- **Safety:** escapeHtml, safeApplyMarkers
 
 ---
 

@@ -2820,7 +2820,7 @@ Implementierung einer Batch-Transkription fuer Multi-Page-Dokumente mit:
 - [x] Batch-Logik in transcription.js
 - [x] State-Management fuer Batch-Ergebnisse
 - [x] CSS-Styling fuer alle Komponenten
-- [ ] Praktischer Test mit Arabic IIIF (82 Seiten)
+- [x] Praktischer Test mit Antidotarium (6 Seiten) - siehe Session 22e
 
 ---
 
@@ -2884,6 +2884,108 @@ Arabic OCR/HTR test with Gemini 3 Flash:
 - [x] Load Demo Button Fix
 - [x] RTL Support (Arabic)
 - [x] Arabic Test Successful
+
+---
+
+## 2026-02-03 | Session 22e: Batch Transcription Test - Antidotarium
+
+**Participants:** User, Claude Opus 4.5
+
+### Test Scenario
+
+**Document:** Antidotarium Nicolai (1574 medical text from Heidelberg University)
+**Source:** IIIF Sample (6 pages)
+**Model:** Gemini 3 Flash
+**Mode:** Batch transcription (all pages)
+
+### Test Results
+
+| Page | Content | Status |
+|------|---------|--------|
+| 1 | PRAEFATIO - Latin preface | Success |
+| 2 | PRAEFATIO continued | Success |
+| 3 | PRAEFATIO continued (M.D.LXXIV date) | Success |
+| 4 | AD LECTOREM - Verse by Nic. Taurellus M.D. | Success |
+| 5 | AVTHORES - Alphabetical author list | Success |
+| 6 | AVTHORES continued (two-column layout) | Success |
+
+**Key Observations:**
+- All 6 pages transcribed successfully in batch mode
+- Rate-limit handling worked (500ms delay between pages)
+- Progress bar showed correct page/total counts
+- Latin abbreviations and 16th-century typography handled well
+- Two-column layout on page 6 correctly recognized
+
+### User Feedback
+
+> "Fuer mich sieht das eigentlich sehr gut aus. Das hat gut funktioniert."
+> (For me this looks very good. It worked well.)
+
+### Status
+
+- [x] Batch Transcription Feature Complete
+- [x] Multi-page IIIF Processing Validated
+- [x] Rate Limiting Works Correctly
+- [x] Historical Latin Documents Supported
+
+---
+
+## 2026-02-03 | Session 22f: Batch Validation and Persistence
+
+**Participants:** User, Claude Opus 4.5
+
+### Features Implemented
+
+**1. Batch Validation Dialog**
+- New dialog with page selection (current page / all pages)
+- Shows validation mode info (rule-based + LLM-as-Judge)
+- Batch warning with page count for multi-page documents
+- Reuses UI patterns from transcription dialog
+
+**2. Batch Validation Logic**
+- Iterates all pages with progress bar
+- 500ms delay between pages (30s on rate limit)
+- Stores results per page in `batchValidations[]`
+- Summary toast with success/failure counts
+
+**3. Validation Persistence on Page Change**
+- Bug fix: Validation results disappeared when navigating pages
+- New `_saveCurrentPageValidation()` in state.js
+- `loadPageValidation()` in ValidationPanel restores results
+- `pageChanged` event now loads saved validation instead of clearing
+
+**4. LocalStorage Persistence for Multi-Page Data**
+- Extended `_saveSession()` to include:
+  - `pages`, `currentPageIndex`
+  - `pageTranscriptions`, `batchTranscriptions`
+  - `batchValidations`
+- Extended `_restoreSession()` to restore all multi-page data
+- Automatic save after batch operations with user notification
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/index.html` | Validate Dialog (page selection UI) |
+| `docs/js/components/validation.js` | Batch validation methods, loadPageValidation() |
+| `docs/js/state.js` | batchValidations[], persistence, _saveCurrentPageValidation() |
+| `docs/js/components/transcription.js` | saveSessionNow() after batch transcription |
+| `docs/css/dialogs.css` | Validation dialog styles |
+| `README.md` | Updated "Batch Processing" to include validation |
+
+### User Feedback
+
+> "wenn ich dann auf die nächste Seite gehe, nachdem ich 'Validate' gemacht habe, sind die Ergebnisse für Seite 2 verschwunden"
+
+This bug was fixed by implementing proper page-level validation state management.
+
+### Status
+
+- [x] Batch Validation Dialog
+- [x] Batch Validation Logic with Progress
+- [x] Validation Persistence on Page Change
+- [x] LocalStorage Persistence for Multi-Page Data
+- [x] Automatic Save after Batch Operations
 
 ---
 

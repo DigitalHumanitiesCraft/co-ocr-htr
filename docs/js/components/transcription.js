@@ -530,9 +530,12 @@ class TranscriptionManager {
         this.setLoading(false);
         this.hideBatchProgress();
 
-        // Show summary
+        // Trigger session save for persistence
+        appState.saveSessionNow();
+
+        // Show summary with save confirmation
         if (errorCount === 0) {
-            dialogManager.showToast(`Alle ${successCount} Seiten transkribiert`, 'success');
+            dialogManager.showToast(`Alle ${successCount} Seiten transkribiert (automatisch gespeichert)`, 'success');
         } else {
             dialogManager.showToast(`${successCount} erfolgreich, ${errorCount} fehlgeschlagen`, 'warning');
         }
