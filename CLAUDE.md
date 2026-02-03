@@ -1,6 +1,21 @@
 # CLAUDE.md
 
-Projektkontext für Claude Code.
+Projektkontext fuer Claude Code.
+
+## Projektziel
+
+**coOCR/HTR ist ein Editor-in-the-Loop Werkzeug zur OCR/HTR-Verifikation und -Korrektur.**
+
+- **Input**: Bild (OCR erzeugen) ODER PAGE-XML (vorhandene Transkription korrigieren)
+- **Output**: Korrektes OCR/HTR in exportierbarem Format (PAGE-XML, TXT, JSON)
+- **Zielgruppe**: Fachexpert*innen (Digital Humanists, Archivar*innen, Historiker*innen)
+
+**Erfolgskriterien:**
+1. Selbsterklaerend (ohne Anleitung nutzbar)
+2. Vollstaendiger Workflow (Upload → Bearbeiten → Export)
+3. Workflow-Integration (Output in anderen Prozessen nutzbar)
+
+Siehe [VISION.md](knowledge/VISION.md) fuer Details.
 
 ## Technologie-Stack
 
@@ -21,6 +36,7 @@ co-ocr-htr/
 ├── CLAUDE.md              # Dieses Dokument
 ├── knowledge/             # Konsolidierte Wissensbasis (Obsidian Vault)
 │   ├── INDEX.md           # Navigation, Dokumentenmatrix
+│   ├── VISION.md          # Projektziel, Erfolgskriterien
 │   ├── METHODOLOGY.md     # Wissenschaftliche Grundlagen
 │   ├── DESIGN-SYSTEM.md   # UI/UX-Spezifikation
 │   ├── ARCHITECTURE.md    # Technische Architektur
@@ -54,10 +70,11 @@ co-ocr-htr/
 
 ## Wissensbasis (knowledge/)
 
-Alle Designentscheidungen sind in `knowledge/` dokumentiert und begründet.
+Alle Designentscheidungen sind in `knowledge/` dokumentiert und begruendet.
 
 | Frage | Dokument |
 |-------|----------|
+| Was ist das Ziel? | [VISION](knowledge/VISION.md) |
 | Warum kategorielle Konfidenz? | [METHODOLOGY](knowledge/METHODOLOGY.md) |
 | Wie sieht das UI aus? | [DESIGN-SYSTEM](knowledge/DESIGN-SYSTEM.md) |
 | Wie ist es gebaut? | [ARCHITECTURE](knowledge/ARCHITECTURE.md) |
