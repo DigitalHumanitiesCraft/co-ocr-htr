@@ -145,7 +145,6 @@ Each validation result contains:
 ├─────────────────────────────────────────────────┤
 │ AI ASSISTANT                                    │
 │ ● Konfidenz              Mittlere Konfidenz     │
-│ ● Perspektive            Palaeographisch        │
 │ ● Zeile 5                Le prix lorem ipsum    │
 │ ● Zeile 16               admi[illegible]trateurs│
 │ > Analyse anzeigen                              │

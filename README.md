@@ -112,7 +112,7 @@ docs/
 |----------|--------|----------------|
 | Gemini | gemini-3-flash-preview, gemini-3-pro-preview | Yes |
 | OpenAI | gpt-4o, gpt-4o-mini | Yes |
-| Anthropic | claude-4.5-haiku, claude-4.5-sonnet, claude-4.5-opus | Yes |
+| Anthropic | claude-haiku-4, claude-sonnet-4-5, claude-opus-4-5 | Yes |
 | Ollama (local) | deepseek-ocr (recommended), llava, llama3.2-vision | Yes |
 
 ### Local OCR with DeepSeek-OCR

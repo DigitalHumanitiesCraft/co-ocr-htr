@@ -4,12 +4,12 @@ created: 2026-01-16
 updated: 2026-02-03
 tags: [coocr-htr, design-system, ui-ux]
 status: complete
-version: 2.2
+version: 2.3
 ---
 
 # coOCR/HTR Design System
 
-Version 2.2 — AI Content Identification
+Version 2.3 — Simplified Validation
 
 ---
 
@@ -333,7 +333,7 @@ The app container uses CSS Grid with three rows (header 56px, main content flexi
 | Section | Icon | Source | Characteristic |
 |---------|------|--------|----------------|
 | Rule-Based | (gear) | Deterministic rules | Always same result |
-| AI Analysis | (robot) + KI badge | LLM perspectives | May vary, context-dependent |
+| AI Analysis | (robot) + KI badge | LLM validation | May vary, context-dependent |
 
 **Section Header:**
 ```
@@ -356,7 +356,7 @@ RULE-BASED                    (11px, uppercase, tracking)
 │                                                   │
 │  ● Title of validation result                     │
 │    Description text explaining the finding        │
-│    Lines 3-7 · paleographic                       │
+│    Lines 3-7                                      │
 │    ▸ Show Details                                 │
 │                                                   │
 └───────────────────────────────────────────────────┘
@@ -379,15 +379,6 @@ Every validation result uses THREE redundant signals:
 | **1. Color** | `--confident` | `--uncertain` | `--problematic` |
 | **2. Icon** | Checkmark | Question | Exclamation |
 | **3. Position** | Success section | Warning section | Error section |
-
-**Perspective Icons:**
-
-| Perspective | Icon | Description |
-|-------------|------|-------------|
-| Paleographic | Feather | Letter forms, ligatures, abbreviations |
-| Linguistic | Speech bubble | Grammar, historical spelling |
-| Structural | Grid | Table logic, sums, cross-references |
-| Domain | Book | Period-appropriate terms, plausible values |
 
 ### 6.5 Workflow Stepper
 
@@ -616,6 +607,12 @@ docs/
 ---
 
 ## Changelog
+
+### v2.3 (2026-02-03)
+- Removed perspective icons (paleographic, linguistic, structural, domain)
+- Validation now uses generic prompt + optional custom prompt
+- Simplified validation card anatomy (no perspective label)
+- Updated AI section description
 
 ### v2.2 (2026-02-03)
 - Added AI-generated content color system (violet/purple)
