@@ -33,6 +33,57 @@ let lineNumbers = null;
 // Current view mode
 let isNormalizedView = false;
 
+// Current text direction
+let isRTL = false;
+
+/**
+ * Detect if text is predominantly RTL (Arabic, Hebrew, etc.)
+ * @param {string} text - Text to analyze
+ * @returns {boolean} True if text should be displayed RTL
+ */
+function detectRTL(text) {
+    if (!text) return false;
+
+    // Count RTL characters (Arabic, Hebrew, Persian, Urdu ranges)
+    const rtlChars = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0590-\u05FF]/g);
+    const ltrChars = text.match(/[a-zA-Z]/g);
+
+    const rtlCount = rtlChars ? rtlChars.length : 0;
+    const ltrCount = ltrChars ? ltrChars.length : 0;
+
+    // If more than 30% RTL characters, consider it RTL text
+    const total = rtlCount + ltrCount;
+    return total > 0 && (rtlCount / total) > 0.3;
+}
+
+/**
+ * Apply RTL direction to editor elements
+ * @param {boolean} rtl - Whether to apply RTL
+ */
+function applyRTLDirection(rtl) {
+    isRTL = rtl;
+
+    if (textarea) {
+        textarea.dir = rtl ? 'rtl' : 'ltr';
+        textarea.classList.toggle('rtl', rtl);
+    }
+
+    if (diffDisplay) {
+        diffDisplay.dir = rtl ? 'rtl' : 'ltr';
+        diffDisplay.classList.toggle('rtl', rtl);
+    }
+
+    if (lineNumbers) {
+        lineNumbers.classList.toggle('rtl', rtl);
+    }
+
+    // Also update the editor container
+    const editorWithLines = document.querySelector('.editor-with-lines');
+    if (editorWithLines) {
+        editorWithLines.classList.toggle('rtl', rtl);
+    }
+}
+
 export function initEditor() {
     const container = getById('editorContent');
     if (!container) return;
@@ -160,6 +211,10 @@ function renderEditor(transcription) {
 
     if (textarea) {
         textarea.value = text;
+
+        // Detect and apply RTL direction
+        const rtlDetected = detectRTL(text);
+        applyRTLDirection(rtlDetected);
 
         // Initialize line numbers
         updateLineNumbers();

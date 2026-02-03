@@ -376,7 +376,26 @@ function loadIIIFImage(url) {
 // ============================================
 
 export async function loadIIIFManifest(manifestUrl) {
+    // Show loading state
+    const loadingState = document.getElementById('viewerLoadingState');
+    const emptyState = document.getElementById('viewerEmptyState');
+    const loadingTitle = document.getElementById('loadingTitle');
+    const loadingText = document.getElementById('loadingText');
+    const loadingProgress = document.getElementById('loadingProgress');
+    const loadingProgressText = document.getElementById('loadingProgressText');
+
+    if (loadingState) {
+        if (emptyState) emptyState.hidden = true;
+        loadingState.hidden = false;
+        if (loadingTitle) loadingTitle.textContent = 'IIIF-Manifest wird geladen...';
+        if (loadingText) loadingText.textContent = 'Verbinde mit Repository';
+        if (loadingProgress) loadingProgress.hidden = true;
+    }
+
     try {
+        // Update loading text
+        if (loadingText) loadingText.textContent = 'Lade Manifest-Daten...';
+
         const response = await fetch(manifestUrl);
         const manifest = await response.json();
 
@@ -392,8 +411,18 @@ export async function loadIIIFManifest(manifestUrl) {
             throw new Error('No canvases found in manifest');
         }
 
+        // Update loading progress
+        if (loadingText) loadingText.textContent = `Verarbeite ${canvases.length} Seiten...`;
+        if (loadingProgress) loadingProgress.hidden = false;
+        if (loadingProgressText) loadingProgressText.textContent = `0 / ${canvases.length} Seiten`;
+
         // Build pages for multi-page support
         const pages = canvases.map((canvas, index) => {
+            // Update progress
+            if (loadingProgressText) {
+                loadingProgressText.textContent = `${index + 1} / ${canvases.length} Seiten`;
+            }
+
             const imageUrl = version === IIIF_VERSION.V3
                 ? canvas.items?.[0]?.items?.[0]?.body?.id
                 : canvas.images?.[0]?.resource?.['@id'];
@@ -408,6 +437,9 @@ export async function loadIIIFManifest(manifestUrl) {
             };
         });
 
+        // Hide loading state
+        if (loadingState) loadingState.hidden = true;
+
         // Update state
         appState.setPages(pages);
 
@@ -415,6 +447,10 @@ export async function loadIIIFManifest(manifestUrl) {
         return pages;
 
     } catch (error) {
+        // Hide loading state on error
+        if (loadingState) loadingState.hidden = true;
+        if (emptyState) emptyState.hidden = false;
+
         console.error('[Viewer] Failed to load IIIF manifest:', error);
         throw error;
     }

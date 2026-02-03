@@ -2568,4 +2568,323 @@ function injectStyles() { /* ... */ }
 
 ---
 
+## 2026-02-03 | Session 22: Model Landscape & Community Validation
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: Repository Analysis
+
+**Task:** Vollstaendige Analyse des Repositories.
+
+**Result:** Umfassende Dokumentation aller Komponenten:
+- Architektur-Schichten (UI, Application, Service, Persistence)
+- State-Management via EventTarget
+- LLM-Service mit 5 Providern
+- Hybride Validierung
+- CSS Design System
+
+### Phase 2: Community Feedback Integration
+
+**Task:** Erkenntnisse aus Digital Humanities Community-Diskussion integrieren.
+
+**Zentrale Erkenntnisse:**
+- Gemini 3 Pro fuehrt bei Closed Models deutlich
+- LightOnOCR-2 ist State-of-the-Art bei Open Source
+- DeepSeek OCR 2 "works okay for simple layouts"
+- Layout-Analyse als separater Schritt verbessert Genauigkeit
+- Agentic Vision Mode relevant fuer komplexe Layouts
+- HTR bleibt anspruchsvoller als OCR
+
+### Phase 3: Web Research
+
+**Task:** Technologien recherchieren und dokumentieren.
+
+**Recherchierte Themen:**
+
+| Thema | Ergebnis |
+|-------|----------|
+| LightOnOCR-2 | 1B Parameter, SotA auf OlmOCR-Bench (83.2), Apache 2.0 |
+| Gemini 3 Pro HTR | "Loest" englisches HTR (18.-19. Jh.), Fehlerrate wie beste Menschen |
+| Gemini 3 Flash Agentic Vision | Think-Act-Observe Loop, 5-10% Qualitaetsverbesserung |
+| dots.ocr | 1.7B, 100+ Sprachen, MIT Lizenz, beste Layout-Erkennung |
+| DeepSeek OCR 2 | 3B, gut fuer einfache Layouts, Handschrift-Limitationen |
+
+### Phase 4: Knowledge Base Update
+
+**Neues Dokument:** `knowledge/MODEL-LANDSCAPE.md`
+
+**Inhalt:**
+- External Validation (Community-Erkenntnisse)
+- Model Comparison Matrix (Closed vs Open Source)
+- Gemini 3 Details (Pro vs Flash, Agentic Vision, HTR-Durchbruch)
+- LightOnOCR-2 Details (Architektur, Performance)
+- dots.ocr Details (Multilingual, Layout)
+- DeepSeek OCR 2 Limitationen
+- Recommendations fuer coOCR/HTR
+- Model Selection Guide
+
+**Aktualisierte Dokumente:**
+
+| Datei | Aenderung |
+|-------|-----------|
+| `knowledge/INDEX.md` | MODEL-LANDSCAPE.md in Struktur und Matrix |
+| `knowledge/METHODOLOGY.md` | Verweis auf MODEL-LANDSCAPE, externe Validierung |
+
+### Phase 5: Implementation
+
+**Task:** Erkenntnisse in Code umsetzen.
+
+**Implementiert:**
+
+| Feature | Datei | Beschreibung |
+|---------|-------|--------------|
+| Gemini 3 Pro | `llm.js` | Als Modelloption mit Hint "beste Qualitaet fuer HTR" |
+| Model Selection Guide | `index.html` | Collapsible Info-Box im API-Key Dialog |
+| Model Guide CSS | `dialogs.css` | Styling fuer die Tabelle |
+| Ollama-Modelle | `llm.js` | DeepSeek OCR 2 + LightOnOCR-2 als Optionen |
+
+**Konzepte dokumentiert (nicht implementiert):**
+
+| Konzept | Beschreibung |
+|---------|--------------|
+| Agentic Vision | Think-Act-Observe Loop fuer komplexe Dokumente |
+| Ollama-Konvertierung | Anleitung fuer LightOnOCR-2 via llama.cpp |
+
+### Files Created/Modified
+
+| File | Changes |
+|------|---------|
+| `knowledge/MODEL-LANDSCAPE.md` | NEW - OCR/HTR model comparison, implementation concepts |
+| `knowledge/INDEX.md` | Added MODEL-LANDSCAPE to structure and matrix |
+| `knowledge/METHODOLOGY.md` | Added external validation section, link to MODEL-LANDSCAPE |
+| `docs/js/services/llm.js` | Gemini 3 Pro, DeepSeek OCR 2, LightOnOCR-2 options with hints |
+| `docs/index.html` | Model Selection Guide collapsible in API-Key Dialog |
+| `docs/css/dialogs.css` | Model Guide styling (+70 lines) |
+| `knowledge/JOURNAL.md` | This session documentation |
+
+### Key Sources
+
+- [LightOnOCR-2 Hugging Face](https://huggingface.co/lightonai/LightOnOCR-2-1B)
+- [Gemini 3 Pro Vision](https://blog.google/technology/developers/gemini-3-pro-vision/)
+- [Gemini 3 HTR Analysis](https://generativehistory.substack.com/p/gemini-3-solves-handwriting-recognition)
+- [Agentic Vision](https://blog.google/innovation-and-ai/technology/developers-tools/agentic-vision-gemini-3-flash/)
+- [dots.ocr GitHub](https://github.com/rednote-hilab/dots.ocr)
+
+### Next Steps (Identified)
+
+**Kurzfristig:**
+- [x] Gemini 3 Pro als Modelloption hinzufuegen
+- [x] Model Selection Guide im UI
+
+**Mittelfristig:**
+- [ ] Agentic Vision Mode testen
+- [ ] LightOnOCR-2 via Ollama integrieren
+
+---
+
+## 2026-02-03 | Session 22b: Arabic IIIF Sample Integration
+
+**Participants:** User, Claude Opus 4.5
+
+### Task
+
+Integration eines arabischen Test-Dokuments fuer nicht-lateinische Schriftsysteme.
+
+### Research
+
+**Gefundene Quelle:** Internet Archive IIIF
+- Historical Arabic Magazines (1937)
+- 82 Seiten, 1200x1322 px
+- Aegyptische Zeitschriften (Koenig Farouk Aera)
+- IIIF 3.0 Manifest
+
+### Implementation
+
+**1. Samples Service erweitert:**
+- IIIF-Support hinzugefuegt (`iiifManifest` Property)
+- Direkte Integration mit `loadIIIFManifest()` aus viewer.js
+
+**2. Arabisches Sample hinzugefuegt:**
+```json
+{
+  "id": "arabic-historical-magazines",
+  "name": "Arabic Historical Magazines (1937)",
+  "description": "Arabische Zeitschriften via IIIF - Internet Archive (RTL-Script Test)",
+  "language": "Arabic",
+  "script": "Arabic",
+  "type": "print",
+  "iiifManifest": "https://iiif.archive.org/iiif/Historical-magazines/manifest.json"
+}
+```
+
+**3. METHODOLOGY.md aktualisiert:**
+- Arabic von "Untested" zu "Testing" verschoben
+- Test-Corpus dokumentiert
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/js/services/samples.js` | IIIF sample support, import loadIIIFManifest |
+| `docs/samples/index.json` | Arabic IIIF sample added |
+| `knowledge/METHODOLOGY.md` | Arabic test corpus documented |
+
+### Test Instructions
+
+1. Oeffne https://dhcraft.org/co-ocr-htr
+2. Klicke auf "Demos" im Header
+3. Waehle "Arabic Historical Magazines (1937)"
+4. Warte bis IIIF-Manifest geladen
+5. Starte Transkription mit Gemini 3 Pro
+6. Evaluiere: RTL-Rendering, Ligatur-Erkennung, Textqualitaet
+
+### Status
+
+- [x] IIIF-Support in Samples Service
+- [x] Arabisches Sample hinzugefuegt
+- [x] Dokumentation aktualisiert
+- [ ] Praktischer Test mit Transkription (manuell)
+
+---
+
+*Format: YYYY-MM-DD | Session N: Title*
+
+## 2026-02-03 | Session 22c: Batch Transcription Feature
+
+**Participants:** User, Claude Opus 4.5
+
+### Task
+
+Implementierung einer Batch-Transkription fuer Multi-Page-Dokumente mit:
+1. Auswahl zwischen "Nur aktuelle Seite" und "Alle Seiten"
+2. Warnung ueber Dauer und Token-Kosten bei Batch-Operationen
+3. Fortschrittsanzeige waehrend der Batch-Verarbeitung
+
+### Implementation
+
+**1. Page Selection UI (index.html):**
+- Radio-Buttons fuer Seiten-Auswahl
+- Dynamische Anzeige der Seitenanzahl
+- Warnung mit Token-Schaetzung (~1000 Tokens/Seite)
+
+**2. Transcription Manager erweitert (transcription.js):**
+- `updatePageSelectionUI()` - Zeigt/versteckt UI basierend auf Multi-Page
+- `getSelectedPageMode()` - Liest ausgewaehlte Option
+- `transcribeAllPages()` - Iteriert durch alle Seiten mit:
+  - Rate-Limit-Handling (500ms Delay, 30s bei Rate-Limit)
+  - Fortschrittsanzeige mit Prozent und aktuellem Dateinamen
+  - Auth-Fehler bricht Batch ab
+  - Zusammenfassung am Ende
+
+**3. State Management erweitert (state.js):**
+- `setBatchTranscriptions(results)` - Speichert alle Transkriptionen
+- `batchTranscriptionComplete` Event
+
+**4. CSS Styling (dialogs.css):**
+- `.transcribe-page-selection` Container
+- `.page-selection-option` Radio-Buttons
+- `.batch-warning` Hinweis-Box
+- `.batch-progress-bar` Fortschrittsbalken
+
+### User Experience
+
+1. Bei Einzelseiten-Dokumenten: Keine aenderung
+2. Bei Multi-Page-Dokumenten:
+   - Standard: "Nur aktuelle Seite" (empfohlen zum Testen)
+   - Option: "Alle Seiten" mit sichtbarer Warnung
+   - Warnung zeigt Seitenanzahl und geschaetzte Token-Kosten
+   - Fortschrittsbalken mit Seite X von Y
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/index.html` | Page Selection UI (~30 lines) |
+| `docs/js/components/transcription.js` | Batch methods (~150 lines) |
+| `docs/js/state.js` | `setBatchTranscriptions()` method |
+| `docs/css/dialogs.css` | Page Selection + Batch Warning styles |
+
+### Design Decisions
+
+| Entscheidung | Begruendung |
+|--------------|-------------|
+| 500ms Delay zwischen Seiten | Rate-Limit-Praevention |
+| 30s Pause bei Rate-Limit | Automatische Erholung statt Abbruch |
+| Auth-Fehler bricht ab | Keine sinnlose Verarbeitung ohne API-Key |
+| ~1000 Tokens/Seite Schaetzung | Konservativer Durchschnitt fuer Warnung |
+| Standard: aktuelle Seite | Ermutigt zum Testen bevor Batch |
+
+### Status
+
+- [x] Page Selection UI implementiert
+- [x] Batch-Logik in transcription.js
+- [x] State-Management fuer Batch-Ergebnisse
+- [x] CSS-Styling fuer alle Komponenten
+- [ ] Praktischer Test mit Arabic IIIF (82 Seiten)
+
+---
+
+*Format: YYYY-MM-DD | Session N: Title*
+
+## 2026-02-03 | Session 22d: RTL Support and UI Improvements
+
+**Participants:** User, Claude Opus 4.5
+
+### Tasks Completed
+
+**1. IIIF Loading Screen**
+- Added visual loading state during IIIF manifest loading
+- Shows progress: "Verarbeite X Seiten..."
+- New elements in index.html, CSS in viewer.css
+
+**2. Load Demo Button Fix**
+- Fixed event propagation issue
+- `e.stopPropagation()` prevents immediate menu close
+
+**3. RTL Support for Arabic Text**
+- Automatic detection of RTL scripts (Arabic, Hebrew, Persian)
+- Line numbers move to right side
+- Text aligned right-to-left
+- Works in both structured and diff view
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/index.html` | Loading state container |
+| `docs/css/viewer.css` | Loading state styles (+55 lines) |
+| `docs/js/viewer.js` | Loading progress in loadIIIFManifest() |
+| `docs/js/main.js` | stopPropagation for Load Demo button |
+| `docs/js/editor.js` | detectRTL(), applyRTLDirection() functions |
+| `docs/css/editor.css` | RTL styles (+65 lines) |
+
+### RTL Detection Logic
+
+```javascript
+function detectRTL(text) {
+    // Count RTL characters (Arabic, Hebrew, Persian, Urdu ranges)
+    const rtlChars = text.match(/[\u0600-\u06FF\u0750-\u077F...]/g);
+    const ltrChars = text.match(/[a-zA-Z]/g);
+    // If more than 30% RTL characters, consider it RTL text
+    return (rtlCount / total) > 0.3;
+}
+```
+
+### Test Results
+
+Arabic OCR/HTR test with Gemini 3 Flash:
+- 82 pages loaded from Internet Archive IIIF
+- RTL rendering works correctly
+- Validation shows "Hohe Konfidenz"
+- Historical Arabic correctly recognized (1937 magazine)
+
+### Status
+
+- [x] IIIF Loading Screen
+- [x] Load Demo Button Fix
+- [x] RTL Support (Arabic)
+- [x] Arabic Test Successful
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*

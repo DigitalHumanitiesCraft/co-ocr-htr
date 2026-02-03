@@ -121,7 +121,8 @@ function initEmptyStateButtons() {
 
     // "Load Demo" button opens the samples menu
     if (btnLoadDemo && samplesBtn) {
-        btnLoadDemo.addEventListener('click', () => {
+        btnLoadDemo.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click from closing menu
             samplesBtn.click();
         });
     }

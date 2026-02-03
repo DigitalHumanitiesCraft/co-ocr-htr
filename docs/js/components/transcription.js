@@ -99,6 +99,9 @@ class TranscriptionManager {
         // Update model info display
         this.updateModelInfo();
 
+        // Update page selection UI
+        this.updatePageSelectionUI();
+
         // Show dialog
         if (this.transcribeDialog) {
             this.transcribeDialog.showModal();
@@ -178,19 +181,37 @@ class TranscriptionManager {
             }
         }
 
-        // Close dialog immediately and show loading in editor
+        // Check page selection mode
+        const pageMode = this.getSelectedPageMode();
+        const state = appState.getState();
+        const isMultiPage = (state.pages || []).length > 1;
+
+        // Close dialog immediately
         if (this.transcribeDialog) {
             this.transcribeDialog.close();
         }
 
-        // Start transcription
+        // If multi-page and "all" selected, do batch transcription
+        if (isMultiPage && pageMode === 'all') {
+            await this.transcribeAllPages();
+            return;
+        }
+
+        // Single page transcription (current page)
         this.setLoading(true);
         this.showEditorLoading(true);
 
         try {
             // Get image as base64 (without data URL prefix)
-            const state = appState.getState();
-            const imageUrl = state.document.dataUrl || state.image.url;
+            // For multi-page, use current page's dataUrl
+            let imageUrl;
+            if (isMultiPage && state.pages.length > 0) {
+                const currentPage = state.pages[state.currentPageIndex];
+                imageUrl = currentPage?.dataUrl || state.document.dataUrl;
+            } else {
+                imageUrl = state.document.dataUrl || state.image.url;
+            }
+
             const base64 = await this.getImageBase64(imageUrl);
 
             // Get context from expert (if provided)
@@ -348,6 +369,217 @@ class TranscriptionManager {
         // (API key check happens on click)
         this.transcribeBtn.disabled = !hasDocument || this.isTranscribing;
     }
+
+    /**
+     * Update the page selection UI based on current document
+     */
+    updatePageSelectionUI() {
+        const pageSelectionEl = document.getElementById('transcribePageSelection');
+        const pageCountEl = document.getElementById('pageSelectionCount');
+        const allPagesHintEl = document.getElementById('allPagesHint');
+        const batchWarningEl = document.getElementById('batchWarning');
+        const batchPageCountEl = document.getElementById('batchPageCount');
+        const batchTokenEstimateEl = document.getElementById('batchTokenEstimate');
+
+        if (!pageSelectionEl) return;
+
+        const state = appState.getState();
+        const pages = state.pages || [];
+        const isMultiPage = pages.length > 1;
+
+        // Show/hide page selection based on multi-page
+        pageSelectionEl.hidden = !isMultiPage;
+
+        if (isMultiPage) {
+            const currentPage = state.currentPageIndex + 1;
+            const totalPages = pages.length;
+
+            // Update counts
+            if (pageCountEl) {
+                pageCountEl.textContent = `Seite ${currentPage} von ${totalPages}`;
+            }
+
+            if (allPagesHintEl) {
+                allPagesHintEl.textContent = `${totalPages} Seiten, kann mehrere Minuten dauern`;
+            }
+
+            if (batchPageCountEl) {
+                batchPageCountEl.textContent = totalPages;
+            }
+
+            // Estimate tokens (~1000 tokens per page average)
+            if (batchTokenEstimateEl) {
+                const estimatedTokens = totalPages * 1000;
+                batchTokenEstimateEl.textContent = `${estimatedTokens.toLocaleString()} Tokens`;
+            }
+
+            // Bind radio button change to show/hide warning
+            const radioButtons = document.querySelectorAll('input[name="pageSelection"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (batchWarningEl) {
+                        batchWarningEl.hidden = radio.value !== 'all';
+                    }
+                });
+            });
+
+            // Reset to "current" and hide warning
+            const currentRadio = document.querySelector('input[name="pageSelection"][value="current"]');
+            if (currentRadio) currentRadio.checked = true;
+            if (batchWarningEl) batchWarningEl.hidden = true;
+        }
+    }
+
+    /**
+     * Get selected page mode (current or all)
+     */
+    getSelectedPageMode() {
+        const selected = document.querySelector('input[name="pageSelection"]:checked');
+        return selected?.value || 'current';
+    }
+
+    /**
+     * Transcribe all pages in batch
+     */
+    async transcribeAllPages() {
+        const state = appState.getState();
+        const pages = state.pages || [];
+
+        if (pages.length === 0) {
+            dialogManager.showToast('Keine Seiten zum Transkribieren', 'warning');
+            return;
+        }
+
+        this.setLoading(true);
+        this.showBatchProgress(0, pages.length);
+
+        const results = [];
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+
+            try {
+                // Update progress
+                this.showBatchProgress(i + 1, pages.length, page.filename);
+
+                // Get image as base64
+                const base64 = await this.getImageBase64(page.dataUrl);
+
+                // Get context
+                const contextDescription = contextManager.buildPromptContext();
+
+                // Call LLM service
+                const result = await llmService.transcribe(base64, {
+                    context: contextDescription
+                });
+
+                // Store result for this page
+                results.push({
+                    pageId: page.id,
+                    pageIndex: i,
+                    success: true,
+                    transcription: {
+                        provider: result.provider,
+                        model: result.model,
+                        raw: result.raw
+                    }
+                });
+
+                successCount++;
+
+                // Small delay to avoid rate limiting
+                if (i < pages.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+            } catch (error) {
+                console.error(`Error transcribing page ${i + 1}:`, error);
+                results.push({
+                    pageId: page.id,
+                    pageIndex: i,
+                    success: false,
+                    error: error.message
+                });
+                errorCount++;
+
+                // If auth error, stop the batch
+                if (error.type === 'auth') {
+                    dialogManager.showToast('API-Key ungültig. Batch abgebrochen.', 'error');
+                    break;
+                }
+
+                // If rate limit, wait longer and continue
+                if (error.type === 'rate_limit') {
+                    dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
+                    await new Promise(resolve => setTimeout(resolve, 30000));
+                }
+            }
+        }
+
+        // Store all transcriptions
+        appState.setBatchTranscriptions(results);
+
+        // Set current page transcription
+        const currentPageResult = results.find(r => r.pageIndex === state.currentPageIndex);
+        if (currentPageResult?.success) {
+            appState.setTranscription(currentPageResult.transcription);
+        }
+
+        this.setLoading(false);
+        this.hideBatchProgress();
+
+        // Show summary
+        if (errorCount === 0) {
+            dialogManager.showToast(`Alle ${successCount} Seiten transkribiert`, 'success');
+        } else {
+            dialogManager.showToast(`${successCount} erfolgreich, ${errorCount} fehlgeschlagen`, 'warning');
+        }
+    }
+
+    /**
+     * Show batch progress overlay
+     */
+    showBatchProgress(current, total, filename = '') {
+        const editorPanel = document.getElementById('editorContent');
+        if (!editorPanel) return;
+
+        let overlay = document.getElementById('editorLoadingOverlay');
+
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'editorLoadingOverlay';
+            overlay.className = 'editor-loading-overlay';
+            editorPanel.style.position = 'relative';
+            editorPanel.appendChild(overlay);
+        }
+
+        const percent = Math.round((current / total) * 100);
+
+        overlay.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner-large"></div>
+                <span>Transkription läuft...</span>
+                <span class="loading-hint">Seite ${current} von ${total} (${percent}%)</span>
+                ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
+                <div class="batch-progress-bar">
+                    <div class="batch-progress-fill" style="width: ${percent}%"></div>
+                </div>
+            </div>
+        `;
+        overlay.hidden = false;
+    }
+
+    /**
+     * Hide batch progress overlay
+     */
+    hideBatchProgress() {
+        const overlay = document.getElementById('editorLoadingOverlay');
+        if (overlay) {
+            overlay.hidden = true;
+        }
+    }
 }
 
 // Add spinner animation CSS
@@ -425,6 +657,23 @@ const spinnerStyles = `
     border-top-color: var(--accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+/* Batch Progress Bar */
+.batch-progress-bar {
+    width: 200px;
+    height: 6px;
+    background: var(--border-muted);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: var(--space-2);
+}
+
+.batch-progress-fill {
+    height: 100%;
+    background: var(--accent-primary);
+    border-radius: 3px;
+    transition: width 0.3s ease;
 }
 `;
 

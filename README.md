@@ -36,6 +36,9 @@ coOCR/HTR provides:
 - **Expert-in-the-Loop**: Critical expert validation workflow
 - **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
 - **Document Viewer**: Pan, zoom, fit controls with keyboard shortcuts
+- **IIIF Support**: Load documents from IIIF-compatible repositories (Internet Archive, Bodleian, etc.)
+- **RTL Script Support**: Automatic detection and display for Arabic, Hebrew, and other RTL scripts
+- **Batch Transcription**: Transcribe single pages or entire multi-page documents
 - **PAGE-XML Import**: Compatible with Transkribus exports
 - **METS-XML Support**: Parse multi-page documents from METS metadata
 - **Guided Workflow**: Step-by-step hints and progress tracking
@@ -128,6 +131,7 @@ See the [knowledge/](knowledge/) folder for detailed documentation:
 - [VISION.md](knowledge/VISION.md) - Project goals and success criteria
 - [INDEX.md](knowledge/INDEX.md) - Navigation and document matrix
 - [METHODOLOGY.md](knowledge/METHODOLOGY.md) - Scientific background
+- [MODEL-LANDSCAPE.md](knowledge/MODEL-LANDSCAPE.md) - OCR/HTR model comparison
 - [ARCHITECTURE.md](knowledge/ARCHITECTURE.md) - Technical architecture
 - [VALIDATION.md](knowledge/VALIDATION.md) - Validation system
 - [JOURNAL.md](knowledge/JOURNAL.md) - Development log

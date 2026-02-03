@@ -8,6 +8,7 @@
 import { appState } from '../state.js';
 import { pageXMLParser } from './parsers/page-xml.js';
 import { metsXMLParser } from './parsers/mets-xml.js';
+import { loadIIIFManifest } from '../viewer.js';
 
 const SAMPLES_BASE = 'samples/';
 
@@ -59,6 +60,11 @@ class SamplesService {
             throw new Error(`Sample not found: ${sampleId}`);
         }
 
+        // Check if IIIF sample
+        if (sample.iiifManifest) {
+            return this.loadIIIFSample(sample);
+        }
+
         // Check if multi-page sample
         if (sample.pages && sample.pages.length > 0) {
             return this.loadMultiPageSample(sample);
@@ -66,6 +72,18 @@ class SamplesService {
 
         // Single-page sample
         return this.loadSinglePageSample(sample);
+    }
+
+    /**
+     * Load a IIIF sample from external manifest
+     */
+    async loadIIIFSample(sample) {
+        console.log(`[Samples] Loading IIIF sample: ${sample.id} from ${sample.iiifManifest}`);
+
+        // Use the viewer's IIIF loading function directly
+        await loadIIIFManifest(sample.iiifManifest);
+
+        return sample;
     }
 
     /**

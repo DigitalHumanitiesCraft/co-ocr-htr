@@ -428,6 +428,29 @@ class AppState extends EventTarget {
   }
 
   /**
+   * Set batch transcriptions for all pages
+   * @param {Array} results - Array of transcription results per page
+   */
+  setBatchTranscriptions(results) {
+    for (const result of results) {
+      if (result.success && result.transcription) {
+        this.data.pageTranscriptions[result.pageId] = {
+          ...result.transcription,
+          id: generateId(),
+          timestamp: new Date().toISOString()
+        };
+      }
+    }
+
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('batchTranscriptionComplete', {
+      total: results.length,
+      successful: results.filter(r => r.success).length
+    });
+    this._scheduleAutoSave();
+  }
+
+  /**
    * Set document context for transcription
    * The expert provides context to improve LLM transcription quality
    * @param {object} context - Context information

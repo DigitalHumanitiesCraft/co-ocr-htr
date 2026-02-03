@@ -288,3 +288,71 @@
   text-indent: 0;
   padding-left: var(--space-2);
 }
+
+/* ==========================================================================
+   RTL SUPPORT (Arabic, Hebrew, etc.)
+   ========================================================================== */
+
+/* RTL container - reverse the order of line numbers and textarea */
+.editor-with-lines.rtl {
+  flex-direction: row-reverse;
+}
+
+/* RTL line numbers - move to right side */
+.line-numbers.rtl {
+  border-right: none;
+  border-left: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.line-numbers.rtl .line-number {
+  padding-right: 0;
+  padding-left: var(--space-2);
+}
+
+.line-numbers.rtl .line-number.selected {
+  border-right: none;
+  border-left: 2px solid var(--selection);
+  padding-left: calc(var(--space-2) - 2px);
+}
+
+/* RTL textarea */
+.editor-textarea.rtl {
+  text-align: right;
+  padding-left: var(--space-4);
+  padding-right: var(--space-3);
+}
+
+/* RTL diff display */
+.diff-display.rtl {
+  text-align: right;
+}
+
+.diff-display.rtl .diff-line {
+  flex-direction: row-reverse;
+}
+
+.diff-display.rtl .diff-line-number {
+  padding-right: 0;
+  padding-left: var(--space-2);
+  text-align: left;
+}
+
+.diff-display.rtl .diff-line.diff-added,
+.diff-display.rtl .diff-line.diff-deleted,
+.diff-display.rtl .diff-line.diff-modified {
+  border-left: none;
+  border-right: 3px solid;
+}
+
+.diff-display.rtl .diff-line.diff-added {
+  border-right-color: var(--confident);
+}
+
+.diff-display.rtl .diff-line.diff-deleted {
+  border-right-color: var(--problematic);
+}
+
+.diff-display.rtl .diff-line.diff-modified {
+  border-right-color: var(--uncertain);
+}
