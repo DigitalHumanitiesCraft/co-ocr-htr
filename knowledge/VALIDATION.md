@@ -1,8 +1,10 @@
 ---
 type: knowledge
 created: 2026-01-16
-tags: [coocr-htr, validation, llm-judge]
+updated: 2026-02-03
+tags: [coocr-htr, validation, llm-judge, navigation]
 status: complete
+version: 2.1
 ---
 
 # Hybrid Validation
@@ -35,62 +37,79 @@ Combination of deterministic rules and LLM assessments.
 
 ## Rule-Based Validation
 
-Deterministic checks using regex and logic.
+Generic rules applicable to all document types (letters, diaries, account books, etc.).
 
-### Implemented Rules
+### Implemented Rules (v2.0 - February 2026)
 
 ```javascript
 const VALIDATION_RULES = [
   {
-    id: 'date_format',
-    name: 'Date Format',
-    regex: /\d{1,2}\.\s?(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)/gi,
-    type: 'success',
-    message: 'Date format correctly recognized'
-  },
-  {
-    id: 'currency',
-    name: 'Currency Format',
-    regex: /\d+\s?(Taler|Groschen|Pfennig|Gulden|Kreuzer|fl\.?|kr\.?)/gi,
-    type: 'success',
-    message: 'Currency notation recognized'
-  },
-  {
     id: 'uncertain_marker',
-    name: 'Uncertain Reading',
+    name: 'Unsichere Lesungen',
+    description: 'Stellen, die mit [?] markiert wurden',
     regex: /\[\?\]/g,
     type: 'warning',
-    message: 'Uncertain reading marked'
+    messagePass: (count) => `${count} unsichere Stelle(n) markiert`,
+    messageFail: 'Keine unsicheren Markierungen'
   },
   {
     id: 'illegible_marker',
-    name: 'Illegible Passage',
-    regex: /\[illegible\]/gi,
-    type: 'error',
-    message: 'Illegible passage'
+    name: 'Unleserliche Stellen',
+    description: 'Stellen, die als [illegible] oder [...] markiert wurden',
+    regex: /\[(illegible|\.\.\.)\]/gi,
+    type: 'warning',
+    messagePass: (count) => `${count} unleserliche Stelle(n)`,
+    messageFail: 'Keine unleserlichen Stellen'
   },
   {
-    id: 'table_consistency',
-    name: 'Table Structure',
-    validate: (text) => {
-      const lines = text.split('\n').filter(l => l.includes('|'));
-      const pipeCounts = lines.map(l => (l.match(/\|/g) || []).length);
-      return pipeCounts.every(c => c === pipeCounts[0]);
-    },
-    type: 'warning',
-    message: 'Inconsistent column count'
+    id: 'abbreviations',
+    name: 'Abkuerzungen',
+    description: 'Erkannte Abkuerzungsmarkierungen wie admi[nistrateurs]',
+    regex: /\w+\[[\w]+\]/g,
+    type: 'info',
+    messagePass: (count) => `${count} aufgeloeste Abkuerzung(en)`,
+    messageFail: 'Keine Abkuerzungen erkannt'
+  },
+  {
+    id: 'line_breaks',
+    name: 'Zeilenanzahl',
+    description: 'Anzahl der transkribierten Zeilen',
+    validate: validateLineCount,
+    type: 'info',
+    messagePass: (count) => `${count} Zeilen transkribiert`,
+    messageFail: 'Keine Zeilen gefunden'
+  },
+  {
+    id: 'special_chars',
+    name: 'Sonderzeichen',
+    description: 'Ungewoehnliche Zeichen (moegl. OCR-Artefakte)',
+    regex: /[^\w\s\.,;:!?\-\'\"\(\)\[\]...]/g,
+    type: 'info',
+    messagePass: (count) => `${count} Sonderzeichen gefunden`,
+    messageFail: 'Keine ungewoehnlichen Zeichen'
   }
 ];
 ```
 
+### Design Rationale (v2.0)
+
+**Removed document-type-specific rules:**
+- Currency formats (Taler, Groschen, Gulden) - only relevant for account books
+- Date formats (DD. Month) - only relevant for dated documents
+- Table consistency checks - only relevant for tabular data
+
+**Why generic rules?**
+- Work for all document types: letters, diaries, account books, manuscripts
+- Avoid false positives ("No currency found" on a letter)
+- Future: Document-type selection could enable specific rule sets
+
 ### Rule Categories
 
-| Category | Examples | Type |
-|----------|----------|------|
-| Format | Date, Currency, Numbers | Regex |
-| Structure | Table logic, Column count | Logic |
-| Markers | [?], [illegible], [gap] | Regex |
-| Sums | Addition verification | Logic |
+| Category | Rules | Type |
+|----------|-------|------|
+| Markers | Uncertain [?], Illegible [...] | Warning |
+| Structure | Abbreviations [expanded] | Info |
+| Statistics | Line count, Special characters | Info |
 
 ## LLM Perspectives
 
@@ -99,199 +118,167 @@ Configurable validation angles for Expert-in-the-Loop.
 ### Perspective Definitions
 
 ```javascript
-const PERSPECTIVES = {
-  paleographic: {
+const PERSPECTIVES = [
+  {
     id: 'paleographic',
-    name: 'Paleographic',
-    prompt: `Analyze the text from a paleographic perspective:
-      - Letter forms: Consistent with the period?
-      - Ligatures: Correctly resolved?
-      - Abbreviations: Correctly expanded?
-      - Error types: Confusion of similar letters (n/u, c/e)?`
+    name: 'Palaeographisch',
+    description: 'Buchstabenformen, Ligaturen, Abkuerzungen'
   },
-  linguistic: {
+  {
     id: 'linguistic',
-    name: 'Linguistic',
-    prompt: `Analyze the text linguistically:
-      - Grammar: Plausible sentences?
-      - Orthography: Historical spelling?
-      - Lexicon: Period-typical words?`
+    name: 'Sprachlich',
+    description: 'Grammatik, historische Orthographie'
   },
-  structural: {
+  {
     id: 'structural',
-    name: 'Structural',
-    prompt: `Analyze the text structure:
-      - Table logic: Do sums match?
-      - References: Consistent cross-references?
-      - Numbering: Logical sequence?`
+    name: 'Strukturell',
+    description: 'Tabellen, Summen, Verweise'
   },
-  domain: {
+  {
     id: 'domain',
-    name: 'Domain Knowledge',
-    prompt: `Analyze with domain knowledge:
-      - Technical terms: Correctly used?
-      - Plausibility: Realistic quantities/prices/data?
-      - Context: Fits the document type?`
+    name: 'Domaenenwissen',
+    description: 'Fachtermini, Plausibilitaet'
   }
-};
+];
 ```
 
 ### Perspective Matrix
 
 | Perspective | Checks | Typical Errors |
 |-------------|--------|----------------|
-| Paleographic | Letter forms | n↔u, c↔e, Ligatures |
+| Paleographic | Letter forms | n/u confusion, c/e, Ligatures |
 | Linguistic | Grammar, Lexicon | Anachronisms, Syntax |
 | Structural | Tables, Sums | Calculation errors, Breaks |
 | Domain Knowledge | Technical terms, Plausibility | Unrealistic prices |
 
 ## Confidence Categories
 
-No numeric values (→ [METHODOLOGY](METHODOLOGY.md): LLM Bias).
+No numeric values (see [METHODOLOGY](METHODOLOGY.md): LLM Bias).
 
-| Category | Internal | UI | Meaning |
-|----------|----------|-----|---------|
-| `certain` | `success` | Green | High agreement |
-| `likely` | `warning` | Orange | Expert should review |
-| `uncertain` | `error` | Red | Likely incorrect |
+| Category | German | UI Color | Meaning |
+|----------|--------|----------|---------|
+| `certain` | Hohe Konfidenz | Green | High agreement |
+| `likely` | Mittlere Konfidenz | Orange | Expert should review |
+| `uncertain` | Niedrige Konfidenz | Red | Likely incorrect |
 
 ## ValidationResult Format
 
 ```typescript
 interface ValidationResult {
   id: string;
-  source: 'rule' | 'llm';
-  type: 'success' | 'warning' | 'error';
-  category: string;           // date_format, paleographic, ...
+  name: string;
+  description: string;
+  type: 'success' | 'warning' | 'error' | 'info';
+  passed: boolean;
   message: string;
   lines: number[];            // Affected lines
+  matches: any[];             // Matched patterns
+  matchCount: number;         // Count for display
   details?: string;           // Extended explanation
-  suggestions?: string[];     // Alternative readings
-  confidence?: 'certain' | 'likely' | 'uncertain';
 }
 ```
 
-## UI Representation
+## UI Representation (v2.0 - Compact Layout)
 
-### Panel Structure (from UI Mockup)
-
-```
-┌─────────────────────────────────────────┐
-│ Validation                    5 Issues  │
-├─────────────────────────────────────────┤
-│                                         │
-│ RULE-BASED                               │
-│ ┌─────────────────────────────────────┐ │
-│ │ [OK] Date Format Correct            │ │
-│ │    Lines 3-7 (DD. Month)            │ │
-│ └─────────────────────────────────────┘ │
-│ ┌─────────────────────────────────────┐ │
-│ │ [!] Sum Check Mismatch              │ │
-│ │    Line 12 - Diff: 3 Taler          │ │
-│ │    > Show Details                   │ │
-│ └─────────────────────────────────────┘ │
-│                                         │
-│ AI ASSISTANT                            │
-│ ┌─────────────────────────────────────┐ │
-│ │ [OK] High Confidence                │ │
-│ │    Overall Document Match           │ │
-│ └─────────────────────────────────────┘ │
-│ ┌─────────────────────────────────────┐ │
-│ │ [!] Ambiguous Reading               │ │
-│ │    Line 4 - Confidence: Low         │ │
-│ │    > Show Details                   │ │
-│ └─────────────────────────────────────┘ │
-│ ┌─────────────────────────────────────┐ │
-│ │ [X] Missing Column                  │ │
-│ │    Line 9                           │ │
-│ │    > Show Details                   │ │
-│ └─────────────────────────────────────┘ │
-│                                         │
-└─────────────────────────────────────────┘
-```
-
-### Panel Header
-
-| Element | Position | Description |
-|---------|----------|-------------|
-| Title | Left | "Validation" |
-| Badge | Right | "5 Issues" (count of all Warnings + Errors) |
-
-### Section Headers
-
-| Section | Icon | Color |
-|---------|------|-------|
-| RULE-BASED | (gear) | `--text-secondary` |
-| AI ASSISTANT | (sparkle) | `--text-secondary` |
-
-### Card Anatomy
+### Panel Layout
 
 ```
-┌─ Border-Left (3px, Status color) ────────────────────┐
-│                                                      │
-│  [OK] Title                                          │
-│     Meta-Info (Line X - Additional Info)             │
-│     > Show Details (clickable, blue)                 │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ VALIDATION            [Validate]    1 Issue     │
+├─────────────────────────────────────────────────┤
+│ RULE-BASED                                      │
+│ ● Unsichere Lesungen     Keine Markierungen     │
+│ ● Unleserliche Stellen   1 unleserliche Stelle  │
+│ ● Abkuerzungen           1 aufgeloest           │
+│ ● Zeilenanzahl           36 Zeilen transkribiert│
+│ ● Sonderzeichen          Keine ungewoehnlichen  │
+├─────────────────────────────────────────────────┤
+│ AI ASSISTANT                                    │
+│ ● Konfidenz              Mittlere Konfidenz     │
+│ ● Perspektive            Palaeographisch        │
+│ ● Zeile 5                Le prix lorem ipsum    │
+│ ● Zeile 16               admi[illegible]trateurs│
+│ > Analyse anzeigen                              │
+└─────────────────────────────────────────────────┘
 ```
-
-### Card Interaction
-
-| Action | Reaction |
-|--------|----------|
-| Hover on Card | Background becomes `--bg-hover` |
-| Click on Card | Card expands with details |
-| Click on "Show Details" | Details section appears |
-| Click on Line Reference | Jump to line in all panels |
-
-### Expanded State
-
-```
-┌─────────────────────────────────────┐
-│ [!] Sum Check Mismatch              │
-│    Line 12 - Diff: 3 Taler          │
-│    v Hide Details                   │
-│ ┌─────────────────────────────────┐ │
-│ │ Expected sum: 106 Taler         │ │
-│ │ Found sum: 103 Taler            │ │
-│ │ Difference: 3 Taler             │ │
-│ │                                 │ │
-│ │ Affected lines: 3, 4, 5, 12     │ │
-│ └─────────────────────────────────┘ │
-└─────────────────────────────────────┘
-```
-
-### Visual Distinction
-
-| Section | Characteristic | Description |
-|---------|----------------|-------------|
-| RULE-BASED | Deterministic | Always same result, Regex/Logic |
-| AI ASSISTANT | Probabilistic | May vary, context-dependent |
 
 ### Status Indicators
 
-| Status | Color | Dot | Description |
-|--------|-------|-----|-------------|
-| Success | `--success` (#3fb950) | (green) | Check passed |
-| Warning | `--warning` (#d29922) | (yellow) | Expert should review |
-| Error | `--error` (#f85149) | (red) | Error detected |
+| Status | Color Variable | Dot | Description |
+|--------|----------------|-----|-------------|
+| Success | `--confident` | Green | Check passed |
+| Warning | `--uncertain` | Orange | Expert should review |
+| Error | `--problematic` | Red | Error detected |
+| Info | `--accent-primary` | Blue | Informational |
 
-**Note:** In the UI, filled circles (●) are used instead of emojis.
+## Issue Navigation (v2.1)
+
+Clicking on a validation issue navigates to the affected location.
+
+### Graceful Degradation
+
+| Document Type | Coordinates | Behavior |
+|---------------|-------------|----------|
+| PAGE-XML | Yes | Image region highlighted + pan to region |
+| Plain Image | No | Editor line highlighted + info toast |
+| IIIF | Variable | Depends on available annotation data |
+
+### Implementation
+
+```javascript
+// state.js - Check for coordinates
+hasRegionCoordinates() {
+    return this.data.regions?.length > 0 &&
+           this.data.regions.some(r => r.x !== undefined);
+}
+
+// viewer.js - Selection handler with fallback
+appState.addEventListener('selectionChanged', (e) => {
+    if (appState.hasRegionCoordinates()) {
+        highlightRegion(lineNumber);
+        panToRegion(lineNumber);
+    } else {
+        // Show info toast for documents without coordinates
+        dialogManager.showToast(
+            `Zeile ${lineNumber} - Keine Bildkoordinaten verfügbar`,
+            'info', 2000
+        );
+    }
+});
+
+// editor.js - Always highlight in editor
+appState.addEventListener('selectionChanged', (e) => {
+    highlightEditorLine(e.detail.line);
+});
+```
+
+### Click Handlers
+
+Both legacy `.validation-card` and compact `.validation-item` elements with `data-line` attribute trigger navigation:
+
+```javascript
+const selector = '.validation-card[data-line], .validation-item[data-line]';
+```
 
 ## Validation Flow
 
 ```
-Transcription loaded
+User clicks "Validate" button
+       │
+       ▼
+┌──────────────────┐
+│ Show Loading     │ (Overlay on validation panel)
+│ "Validierung..." │
+└──────┬───────────┘
        │
        ▼
 ┌──────────────┐
-│ RuleValidator│ (immediate, synchronous)
+│ RuleValidator│ (synchronous)
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
-│ LLMValidator │ (async, optional)
+│ LLMValidator │ (async, if API key configured)
 └──────┬───────┘
        │
        ▼
@@ -300,8 +287,15 @@ Transcription loaded
 └──────┬───────┘
        │
        ▼
-  UI-Update via EventBus
+  Hide Loading
+  Update UI
+  Toast: "Validierung abgeschlossen"
 ```
+
+**Key changes in v2.0:**
+- Validation is **user-triggered** (not automatic after transcription)
+- Validate button is in the **Validation panel header** (not Transcription panel)
+- Loading overlay **preserves panel structure** (not innerHTML replacement)
 
 ## Extensibility
 
@@ -311,20 +305,35 @@ Transcription loaded
 VALIDATION_RULES.push({
   id: 'custom_rule',
   name: 'My Rule',
+  description: 'What this rule checks',
   regex: /pattern/gi,
-  type: 'warning',
-  message: 'Description'
+  type: 'warning',  // or 'info', 'error'
+  messagePass: (count) => `${count} matches found`,
+  messageFail: 'No matches found'
 });
 ```
 
-### Adding a New Perspective
+### Adding a Custom Validator
 
 ```javascript
-PERSPECTIVES.custom = {
-  id: 'custom',
-  name: 'My Perspective',
-  prompt: 'Analyze...'
-};
+VALIDATION_RULES.push({
+  id: 'custom_validator',
+  name: 'My Custom Check',
+  description: 'Complex validation logic',
+  validate: (text, segments) => {
+    // Your logic here
+    const count = /* calculate something */;
+    return {
+      passed: count > 0,
+      lines: [],           // Affected line numbers
+      matches: [count],    // For custom validators, first element is the count
+      details: null
+    };
+  },
+  type: 'info',
+  messagePass: (count) => `Result: ${count}`,
+  messageFail: 'No results'
+});
 ```
 
 ---

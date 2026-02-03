@@ -120,6 +120,17 @@ class AppState extends EventTarget {
     return this.data.ui.selectedLine;
   }
 
+  /**
+   * Check if regions have bounding box coordinates
+   * Used for graceful degradation: full highlighting with coordinates,
+   * editor-only highlighting without
+   * @returns {boolean} True if at least one region has x coordinate
+   */
+  hasRegionCoordinates() {
+    return this.data.regions?.length > 0 &&
+           this.data.regions.some(r => r.x !== undefined);
+  }
+
   // ============================================
   // Document Management
   // ============================================

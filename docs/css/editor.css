@@ -174,6 +174,16 @@
 .line-number {
   padding-right: var(--space-2);
   height: 1.8em;
+  transition: all var(--transition-fast);
+}
+
+/* Selected line number - highlighted when clicking validation issues */
+.line-number.selected {
+  background: var(--selection-bg);
+  color: var(--accent-primary);
+  font-weight: 600;
+  border-right: 2px solid var(--selection);
+  padding-right: calc(var(--space-2) - 2px);
 }
 
 /* Adjust textarea when used with line numbers */

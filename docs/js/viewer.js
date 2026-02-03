@@ -249,8 +249,23 @@ function setupStateListeners() {
 
     // Selection changed
     appState.addEventListener('selectionChanged', (e) => {
-        highlightRegion(e.detail.line);
-        panToRegion(e.detail.line);
+        const lineNumber = e.detail.line;
+
+        // Check if we have region coordinates for highlighting
+        if (appState.hasRegionCoordinates()) {
+            highlightRegion(lineNumber);
+            panToRegion(lineNumber);
+        } else {
+            // No coordinates available - show info toast
+            // Import dialogManager dynamically to avoid circular dependency
+            import('./components/dialogs.js').then(({ dialogManager }) => {
+                dialogManager.showToast(
+                    `Zeile ${lineNumber} - Keine Bildkoordinaten verfügbar`,
+                    'info',
+                    2000
+                );
+            });
+        }
     });
 
     // Zoom changed from outside

@@ -612,15 +612,18 @@ class ValidationPanel {
 
     /**
      * Bind click handlers for line navigation
+     * Handles both legacy .validation-card and new compact .validation-item elements
      */
     bindLineClicks() {
-        selectAll('.validation-card[data-line]', this.panel).forEach(card => {
-            card.style.cursor = 'pointer';
-            card.addEventListener('click', (e) => {
+        // Select both card and item elements with data-line attribute
+        const selector = '.validation-card[data-line], .validation-item[data-line]';
+        selectAll(selector, this.panel).forEach(element => {
+            element.style.cursor = 'pointer';
+            element.addEventListener('click', (e) => {
                 // Don't navigate if clicking on details toggle
                 if (e.target.classList.contains('details-toggle')) return;
 
-                const line = parseInt(card.dataset.line, 10);
+                const line = parseInt(element.dataset.line, 10);
                 if (!isNaN(line)) {
                     appState.setSelection(line);
                 }
@@ -631,18 +634,20 @@ class ValidationPanel {
 
 // Add component-specific styles
 const validationStyles = `
+/* Loading Overlay - Shared light, blurred style */
 .validation-loading-overlay {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(var(--bg-primary-rgb, 26, 27, 30), 0.7);
+    background: rgba(250, 248, 245, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     transition: opacity 0.2s ease-out;
 }
 
@@ -656,11 +661,31 @@ const validationStyles = `
     flex-direction: column;
     align-items: center;
     gap: var(--space-3);
-    color: var(--text-primary);
+    padding: var(--space-4);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
 }
 
 .validation-loading-overlay .loading-content span {
     font-size: var(--text-sm);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-muted);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .validation-loading {
