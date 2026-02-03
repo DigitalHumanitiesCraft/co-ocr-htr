@@ -579,6 +579,17 @@ class AppState extends EventTarget {
     this._emit('errorCleared');
   }
 
+  /**
+   * Request a toast notification
+   * Decouples UI notification from components that shouldn't import dialogManager
+   * @param {string} message - Toast message
+   * @param {string} type - Toast type: 'info' | 'success' | 'warning' | 'error'
+   * @param {number} duration - Duration in ms (default 3000)
+   */
+  showToast(message, type = 'info', duration = 3000) {
+    this._emit('toastRequested', { message, type, duration });
+  }
+
   // ============================================
   // Session Management
   // ============================================

@@ -256,15 +256,13 @@ function setupStateListeners() {
             highlightRegion(lineNumber);
             panToRegion(lineNumber);
         } else {
-            // No coordinates available - show info toast
-            // Import dialogManager dynamically to avoid circular dependency
-            import('./components/dialogs.js').then(({ dialogManager }) => {
-                dialogManager.showToast(
-                    `Zeile ${lineNumber} - Keine Bildkoordinaten verfügbar`,
-                    'info',
-                    2000
-                );
-            });
+            // No coordinates available - show info toast via state event
+            // (avoids circular dependency with dialogManager)
+            appState.showToast(
+                `Zeile ${lineNumber} - Keine Bildkoordinaten verfügbar`,
+                'info',
+                2000
+            );
         }
     });
 
