@@ -17,6 +17,8 @@ This project is developed using **[Promptotyping](https://lisa.gerda-henkel-stif
 
 The [knowledge/](knowledge/) folder contains a complete knowledge base (Obsidian-compatible) documenting the project's methodology, architecture, and development history. See also [METHODOLOGY.md](knowledge/METHODOLOGY.md) for the scientific background.
 
+**Built with:** [Claude Code](https://claude.ai/code) powered by Claude Opus 4.5 (Anthropic)
+
 ## Why coOCR/HTR?
 
 Standard OCR/HTR pipelines often fail on historical documents due to unusual scripts, complex layouts, and domain-specific vocabulary. These errors require **human expertise** to correct - but existing tools are often complex and not optimized for the correction workflow.
