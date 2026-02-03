@@ -1,8 +1,21 @@
 # coOCR/HTR
 
+> **Work in Progress** - This tool is under active development using the [Promptotyping methodology](knowledge/METHODOLOGY.md). Core features are functional, but expect rough edges. Feedback welcome via [GitHub Issues](https://github.com/DigitalHumanitiesCraft/co-ocr-htr/issues).
+
 **Editor-in-the-Loop tool for OCR/HTR verification, validation, and correction.**
 
 A browser-based application that helps domain experts verify and correct OCR/HTR results for historical documents. Upload an image to generate transcriptions via LLM, or import existing PAGE-XML from tools like Transkribus for correction. The goal: quality-assured transcriptions ready for downstream workflows.
+
+## Development Approach
+
+This project is developed using **Promptotyping** - an iterative methodology combining AI-assisted development with structured documentation:
+
+1. **Documentation before code** - All design decisions documented in [knowledge/](knowledge/)
+2. **Iteration through dialogue** - Requirements refined through conversation
+3. **Early validation** - Continuous user feedback integration
+4. **Minimal, readable code** - Vanilla JavaScript, no build process
+
+The [knowledge/](knowledge/) folder contains a complete knowledge base (Obsidian-compatible) documenting the project's methodology, architecture, and development history.
 
 ## Why coOCR/HTR?
 
