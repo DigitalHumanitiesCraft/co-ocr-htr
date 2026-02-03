@@ -227,6 +227,16 @@
                     </div>
                 </div>
 
+                <!-- Loading State (shown during IIIF loading) -->
+                <div class="viewer-loading-state" id="viewerLoadingState" hidden>
+                    <div class="loading-spinner-large"></div>
+                    <h3 class="loading-title" id="loadingTitle">IIIF-Manifest wird geladen...</h3>
+                    <p class="loading-text" id="loadingText">Verbinde mit Repository</p>
+                    <div class="loading-progress" id="loadingProgress" hidden>
+                        <span class="loading-progress-text" id="loadingProgressText">0 / 0 Seiten</span>
+                    </div>
+                </div>
+
                 <!-- OpenSeadragon Viewer Container -->
                 <div id="osd-viewer" class="osd-viewer" hidden>
                     <!-- OpenSeadragon renders here -->
@@ -483,6 +493,41 @@
         <div class="dialog-body">
             <p class="context-explanation">Wähle einen Anbieter und ein Modell für die KI-gestützte Transkription. Die Konfiguration wird lokal gespeichert.</p>
 
+            <!-- Model Selection Guide -->
+            <details class="model-guide-details">
+                <summary class="model-guide-summary">
+                    <span class="model-guide-title">Welches Modell für welches Dokument?</span>
+                </summary>
+                <div class="model-guide-content">
+                    <table class="model-guide-table">
+                        <thead>
+                            <tr>
+                                <th>Dokumenttyp</th>
+                                <th>Empfohlenes Modell</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Handschriften (HTR)</td>
+                                <td><strong>Gemini 3 Pro</strong> - beste Qualität für historische Handschriften</td>
+                            </tr>
+                            <tr>
+                                <td>Komplexe Layouts</td>
+                                <td><strong>Gemini 3 Pro</strong> - mehrspaltiges, Tabellen, verschachtelte Strukturen</td>
+                            </tr>
+                            <tr>
+                                <td>Einfache gedruckte Dokumente</td>
+                                <td><strong>Gemini 3 Flash</strong> - schnell und kosteneffizient</td>
+                            </tr>
+                            <tr>
+                                <td>Lokale Verarbeitung / Datenschutz</td>
+                                <td><strong>Ollama + DeepSeek-OCR</strong> - keine Cloud, alle Daten lokal</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+
             <div class="llm-config-fields">
                 <!-- Provider Selection -->
                 <div class="input-wrapper">
@@ -610,6 +655,38 @@
             <!-- Model Info -->
             <div class="transcribe-model-info" id="transcribeModelInfo">
                 <!-- Filled by JS -->
+            </div>
+
+            <!-- Page Selection (for multi-page documents) -->
+            <div class="transcribe-page-selection" id="transcribePageSelection" hidden>
+                <div class="page-selection-header">
+                    <span class="page-selection-title">Seiten transkribieren</span>
+                    <span class="page-selection-count" id="pageSelectionCount"></span>
+                </div>
+                <div class="page-selection-options">
+                    <label class="page-selection-option">
+                        <input type="radio" name="pageSelection" value="current" checked>
+                        <span class="option-label">Nur aktuelle Seite</span>
+                        <span class="option-hint">Schnell, empfohlen zum Testen</span>
+                    </label>
+                    <label class="page-selection-option">
+                        <input type="radio" name="pageSelection" value="all">
+                        <span class="option-label">Alle Seiten</span>
+                        <span class="option-hint" id="allPagesHint"><!-- Filled by JS --></span>
+                    </label>
+                </div>
+                <!-- Warning for batch transcription -->
+                <div class="batch-warning" id="batchWarning" hidden>
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <div class="batch-warning-text">
+                        <strong>Hinweis:</strong> Die Transkription aller Seiten kann mehrere Minuten dauern und verbraucht API-Tokens.
+                        Bei <span id="batchPageCount">0</span> Seiten entstehen ca. <span id="batchTokenEstimate">~</span> Token-Kosten.
+                    </div>
+                </div>
             </div>
         </div>
 

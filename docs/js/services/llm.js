@@ -131,8 +131,8 @@ const PROVIDERS = {
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
     defaultModel: 'gemini-3-flash-preview',
     models: [
-      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Empfohlen)', recommended: true },
-      { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
+      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (schnell, kosteneffizient)', recommended: true, hint: 'Gut für einfache Dokumente und schnelle Iteration' },
+      { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (beste Qualität)', hint: 'Beste Wahl für Handschriften (HTR) und komplexe Layouts' },
       { id: 'custom', name: 'Eigenes Modell...' }
     ],
     authType: 'query',
@@ -174,7 +174,9 @@ const PROVIDERS = {
     endpoint: 'http://localhost:11434/api/generate',
     defaultModel: 'deepseek-ocr',
     models: [
-      { id: 'deepseek-ocr', name: 'DeepSeek-OCR (Empfohlen für OCR)', recommended: true },
+      { id: 'deepseek-ocr', name: 'DeepSeek-OCR (Empfohlen für OCR)', recommended: true, hint: 'Gut für gedruckte Dokumente mit einfachen Layouts' },
+      { id: 'deepseek-ocr2', name: 'DeepSeek-OCR 2', hint: 'Verbesserte Version, besser für strukturierte Dokumente' },
+      { id: 'lightonocr', name: 'LightOnOCR-2', hint: 'State-of-the-Art Open Source OCR (erfordert Konvertierung)' },
       { id: 'llava', name: 'LLaVA' },
       { id: 'llama3.2-vision', name: 'Llama 3.2 Vision' },
       { id: 'custom', name: 'Eigenes Modell...' }

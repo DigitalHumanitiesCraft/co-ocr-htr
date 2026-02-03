@@ -1,6 +1,15 @@
 {
   "samples": [
     {
+      "id": "arabic-historical-magazines",
+      "name": "Arabic Historical Magazines (1937)",
+      "description": "Arabische Zeitschriften via IIIF - Internet Archive (RTL-Script Test)",
+      "language": "Arabic",
+      "script": "Arabic",
+      "type": "print",
+      "iiifManifest": "https://iiif.archive.org/iiif/Historical-magazines/manifest.json"
+    },
+    {
       "id": "wecker-multipage",
       "name": "Antidotarium (1617) - 6 Seiten",
       "description": "Medizinisches Fachbuch mit PAGE-XML Transkription (Multi-Page Demo)",

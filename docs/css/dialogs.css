@@ -402,6 +402,185 @@ dialog[open] {
   line-height: 1.5;
 }
 
+/* ==========================================================================
+   MODEL SELECTION GUIDE
+   ========================================================================== */
+
+.model-guide-details {
+  margin-bottom: var(--space-4);
+}
+
+.model-guide-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--ai-muted);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+}
+
+.model-guide-summary::-webkit-details-marker {
+  display: none;
+}
+
+.model-guide-summary::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 5px solid var(--ai-primary);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--transition-fast);
+}
+
+.model-guide-details[open] .model-guide-summary::before {
+  transform: rotate(90deg);
+}
+
+.model-guide-title {
+  font-weight: 500;
+  color: var(--ai-primary);
+  font-size: var(--text-sm);
+}
+
+.model-guide-content {
+  padding: var(--space-4);
+  padding-top: var(--space-3);
+}
+
+.model-guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.model-guide-table th,
+.model-guide-table td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.model-guide-table th {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.model-guide-table td {
+  color: var(--text-primary);
+}
+
+.model-guide-table td strong {
+  color: var(--ai-primary);
+}
+
+/* ==========================================================================
+   PAGE SELECTION (Multi-page Transcription)
+   ========================================================================== */
+
+.transcribe-page-selection {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.page-selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.page-selection-title {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.page-selection-count {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.page-selection-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.page-selection-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.page-selection-option:hover {
+  border-color: var(--border-default);
+}
+
+.page-selection-option:has(input:checked) {
+  border-color: var(--accent-primary);
+  background: var(--accent-muted);
+}
+
+.page-selection-option input[type="radio"] {
+  margin-top: 2px;
+}
+
+.page-selection-option .option-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.page-selection-option .option-hint {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+/* Batch Warning */
+.batch-warning {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: rgba(200, 150, 50, 0.1);
+  border: 1px solid rgba(200, 150, 50, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+}
+
+.batch-warning svg {
+  flex-shrink: 0;
+  color: var(--uncertain);
+}
+
+.batch-warning-text {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.batch-warning-text strong {
+  color: var(--uncertain);
+}
+
+/* ==========================================================================
+   CONTEXT DIALOG FIELDS
+   ========================================================================== */
+
 /* Enhanced input styling for context dialog */
 .context-fields .input-wrapper {
   margin-bottom: 0;

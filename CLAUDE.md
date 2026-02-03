@@ -38,6 +38,7 @@ co-ocr-htr/
 │   ├── INDEX.md           # Navigation, Dokumentenmatrix
 │   ├── VISION.md          # Projektziel, Erfolgskriterien
 │   ├── METHODOLOGY.md     # Wissenschaftliche Grundlagen
+│   ├── MODEL-LANDSCAPE.md # OCR/HTR-Modellvergleich
 │   ├── DESIGN-SYSTEM.md   # UI/UX-Spezifikation
 │   ├── ARCHITECTURE.md    # Technische Architektur
 │   ├── VALIDATION.md      # Hybride Validierung
@@ -76,6 +77,7 @@ Alle Designentscheidungen sind in `knowledge/` dokumentiert und begruendet.
 |-------|----------|
 | Was ist das Ziel? | [VISION](knowledge/VISION.md) |
 | Warum kategorielle Konfidenz? | [METHODOLOGY](knowledge/METHODOLOGY.md) |
+| Welche Modelle? | [MODEL-LANDSCAPE](knowledge/MODEL-LANDSCAPE.md) |
 | Wie sieht das UI aus? | [DESIGN-SYSTEM](knowledge/DESIGN-SYSTEM.md) |
 | Wie ist es gebaut? | [ARCHITECTURE](knowledge/ARCHITECTURE.md) |
 | Wie funktioniert Validierung? | [VALIDATION](knowledge/VALIDATION.md) |

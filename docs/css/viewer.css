@@ -258,6 +258,65 @@
 }
 
 /* ==========================================================================
+   VIEWER LOADING STATE (IIIF Loading)
+   ========================================================================== */
+
+.viewer-loading-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-6);
+  background: var(--bg-primary);
+  z-index: 15; /* Above empty state */
+}
+
+.viewer-loading-state .loading-spinner-large {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border-muted);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--space-4);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.viewer-loading-state .loading-title {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.viewer-loading-state .loading-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.viewer-loading-state .loading-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.viewer-loading-state .loading-progress-text {
+  font-size: var(--text-sm);
+  color: var(--accent-primary);
+  font-weight: 500;
+}
+
+/* ==========================================================================
    PAGE NAVIGATION (Multi-page support)
    ========================================================================== */
 

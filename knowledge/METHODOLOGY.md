@@ -1,7 +1,8 @@
 ---
 type: knowledge
 created: 2026-01-16
-tags: [coocr-htr, methodology, llm-bias]
+updated: 2026-02-03
+tags: [coocr-htr, methodology, llm-bias, script-coverage]
 status: complete
 ---
 
@@ -59,6 +60,8 @@ Empirical evidence against numerical confidence values:
 
 ## Vision-Language Models
 
+For detailed model comparison and current recommendations, see [MODEL-LANDSCAPE](MODEL-LANDSCAPE.md).
+
 ### Architecture
 
 ```
@@ -85,6 +88,38 @@ OCR/HTR was not an explicit training objective. The capability emerges from visu
 | Tables without Lines | Implicit structure | Medium |
 
 **Source dependency:** Modern handwriting (19th c.) works well. Medieval scripts require specialized HTR models.
+
+**External validation (2026-02):** Community feedback from Digital Humanities practitioners confirms:
+- Gemini 3 Pro leads closed models significantly for HTR
+- DeepSeek OCR 2 "works okay for simple layouts" but struggles with complex documents
+- Layout analysis as a separate step improves accuracy substantially
+- LightOnOCR-2 currently state-of-the-art for open source OCR
+
+See [MODEL-LANDSCAPE](MODEL-LANDSCAPE.md) for detailed comparison.
+
+### Language and Script Coverage
+
+| Status | Scripts | Notes |
+|--------|---------|-------|
+| Tested | Latin (German, English) | 16th-20th century historical documents |
+| Tested | Arabic (RTL) | Historical magazines via IIIF, RTL support implemented |
+| Untested | Hebrew, CJK, Cyrillic, Greek | Community testing welcome |
+
+**Arabic Test Corpus (2026-02):**
+- Source: Internet Archive IIIF
+- Document: Historical Arabic Magazines (1937)
+- Manifest: `https://iiif.archive.org/iiif/Historical-magazines/manifest.json`
+- Available as demo in coOCR/HTR sample menu
+- **Test Result:** RTL rendering works, Gemini 3 Flash achieves high confidence on printed Arabic
+
+**Training bias:** Current VLMs are trained primarily on Western/Latin texts. Recognition quality for non-Latin scripts is expected to vary significantly. This reflects broader biases in AI training data ("linguistic imperialism").
+
+**Mitigation options:**
+- Ollama integration allows connecting specialized models trained on specific scripts
+- Multi-model comparison can reveal script-specific weaknesses
+- Community contributions of test material for diverse scripts are encouraged
+
+**Testing approach:** Arabic documents serve as first non-Latin test case. Results will inform expectations for other RTL and non-Latin scripts.
 
 ## Interface Design Theory
 

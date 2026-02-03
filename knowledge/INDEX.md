@@ -16,6 +16,7 @@ knowledge/
 ├── INDEX.md               ← Navigation (this document)
 ├── VISION.md              ← Project goals & success criteria
 ├── METHODOLOGY.md         ← Scientific foundations
+├── MODEL-LANDSCAPE.md     ← OCR/HTR model comparison (NEW)
 ├── DESIGN-SYSTEM.md       ← UI/UX specification
 ├── ARCHITECTURE.md        ← Technical architecture
 ├── VALIDATION.md          ← Hybrid validation
@@ -32,6 +33,7 @@ knowledge/
 |----------|---------|----------|--------------|
 | [VISION](VISION.md) | What is the goal? | Everyone | - |
 | [METHODOLOGY](METHODOLOGY.md) | Why this approach? | Everyone | - |
+| [MODEL-LANDSCAPE](MODEL-LANDSCAPE.md) | Which models? | Development | METHODOLOGY |
 | [DESIGN-SYSTEM](DESIGN-SYSTEM.md) | How does it look? | UI/Frontend | METHODOLOGY |
 | [ARCHITECTURE](ARCHITECTURE.md) | How is it built? | Development | METHODOLOGY |
 | [VALIDATION](VALIDATION.md) | How is it verified? | Development | METHODOLOGY, ARCHITECTURE |
@@ -53,6 +55,8 @@ knowledge/
 | Triple Synchronization | Viewer ↔ Transcription ↔ Validation | ARCHITECTURE |
 | Tabular Transcription | Structured fields instead of free text | DATA-SCHEMA |
 | IIIF Integration | Load images from external repositories | ARCHITECTURE |
+| Model Selection | Choose model based on document type | MODEL-LANDSCAPE |
+| Agentic Vision | AI investigates images step-by-step | MODEL-LANDSCAPE |
 
 ## UI Components (Quick Reference)
 
@@ -94,3 +98,4 @@ METHODOLOGY ──────────────────────�
 | 1.4 | 2026-01-16 | Added REQUIREMENTS.md with feature status, bugs, and requirements |
 | 1.5 | 2026-01-18 | Added IIIF Integration, OpenSeadragon viewer, IIIF Dialog |
 | 1.6 | 2026-02-03 | Added VISION.md with project goals and success criteria |
+| 1.7 | 2026-02-03 | Added MODEL-LANDSCAPE.md with OCR/HTR model comparison and external validation |
