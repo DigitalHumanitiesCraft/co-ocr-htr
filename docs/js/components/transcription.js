@@ -379,19 +379,20 @@ const spinnerStyles = `
     font-size: var(--text-sm);
 }
 
-/* Editor Loading Overlay */
+/* Editor Loading Overlay - Light, blurred overlay */
 .editor-loading-overlay {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(var(--bg-primary-rgb, 26, 27, 30), 0.9);
+    background: rgba(250, 248, 245, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .editor-loading-overlay .loading-content {
@@ -399,22 +400,28 @@ const spinnerStyles = `
     flex-direction: column;
     align-items: center;
     gap: var(--space-3);
-    color: var(--text-primary);
+    padding: var(--space-6);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
 }
 
 .editor-loading-overlay .loading-content span {
     font-size: var(--text-sm);
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
 .editor-loading-overlay .loading-hint {
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     font-size: var(--text-xs);
 }
 
+/* Loading Spinner - Same as validation */
 .loading-spinner-large {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-muted);
     border-top-color: var(--accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;

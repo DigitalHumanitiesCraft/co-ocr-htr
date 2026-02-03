@@ -68,6 +68,11 @@ export function initEditor() {
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown);
 
+    // React to selection changes (from validation clicks or viewer clicks)
+    appState.addEventListener('selectionChanged', (e) => {
+        highlightEditorLine(e.detail.line);
+    });
+
     // Bind undo/redo buttons
     const btnUndo = getById('btnUndo');
     const btnRedo = getById('btnRedo');
@@ -521,6 +526,65 @@ function updateLineNumbers() {
     }
 
     lineNumbers.innerHTML = html;
+}
+
+// ============ Selection Highlighting ============
+
+/**
+ * Highlight a specific line in the editor
+ * Called when user clicks on a validation issue or viewer region
+ * @param {number} lineNumber - 1-based line number
+ */
+function highlightEditorLine(lineNumber) {
+    if (!lineNumbers || !textarea) return;
+
+    // Remove previous selection
+    const prevSelected = lineNumbers.querySelector('.line-number.selected');
+    if (prevSelected) {
+        prevSelected.classList.remove('selected');
+    }
+
+    // Find and highlight the new line number
+    const lineNumberElements = lineNumbers.querySelectorAll('.line-number');
+    const targetIndex = lineNumber - 1; // Convert to 0-based
+
+    if (targetIndex >= 0 && targetIndex < lineNumberElements.length) {
+        const targetElement = lineNumberElements[targetIndex];
+        targetElement.classList.add('selected');
+
+        // Scroll textarea to show the line
+        scrollToLine(lineNumber);
+
+        // Also scroll line numbers panel if needed
+        targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+}
+
+/**
+ * Scroll textarea to a specific line
+ * @param {number} lineNumber - 1-based line number
+ */
+function scrollToLine(lineNumber) {
+    if (!textarea) return;
+
+    const lines = textarea.value.split('\n');
+    if (lineNumber < 1 || lineNumber > lines.length) return;
+
+    // Calculate character position of line start
+    let charPos = 0;
+    for (let i = 0; i < lineNumber - 1; i++) {
+        charPos += lines[i].length + 1; // +1 for newline
+    }
+
+    // Set selection to line start (this also scrolls to it)
+    textarea.focus();
+    textarea.setSelectionRange(charPos, charPos);
+
+    // Calculate approximate scroll position
+    // Use line height estimation (each line is about 1.6em = ~24px at 15px font)
+    const lineHeight = 24;
+    const targetScroll = (lineNumber - 1) * lineHeight - textarea.clientHeight / 2 + lineHeight;
+    textarea.scrollTop = Math.max(0, targetScroll);
 }
 
 // ============ Text Normalization ============

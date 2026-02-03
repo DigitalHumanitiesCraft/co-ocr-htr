@@ -25,14 +25,6 @@
       "pageXml": "wecker/0015_p015.xml"
     },
     {
-      "id": "raitbuch-0v1r",
-      "name": "Raitbuch 2, fol. 0v-1r",
-      "description": "Oberösterreichisches Rechnungsbuch - Nur Bild",
-      "language": "Frühneuhochdeutsch",
-      "type": "table",
-      "image": "raitbuch/fol-0v-1r.jpg"
-    },
-    {
       "id": "hsa-letter-2261",
       "name": "HSA Brief 2261",
       "description": "Handschriftlicher Brief - Nur Bild",

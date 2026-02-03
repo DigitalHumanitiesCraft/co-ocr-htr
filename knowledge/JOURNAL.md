@@ -2339,4 +2339,99 @@ ollama pull deepseek-ocr
 
 ---
 
+## 2026-02-03 | Session 20: AI Styling & Validation-to-Image Highlighting
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: AI Content Identification
+
+**Task:** Clearly distinguish AI-generated content from deterministic results.
+
+**Solution:** Introduced violet/purple color family for AI elements:
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--ai-primary` | `#7c5cbf` | AI badges, labels, borders |
+| `--ai-bg` | `rgba(124, 92, 191, 0.08)` | AI section backgrounds |
+| `--ai-border` | `rgba(124, 92, 191, 0.25)` | AI section borders |
+
+**UI Changes:**
+- AI section header with "KI" badge and violet left border
+- AI reasoning container with violet-tinted background
+- Clear visual separation from rule-based (deterministic) results
+
+### Phase 2: Loading Overlay Improvements
+
+**Task:** Fix dark overlay that made text unreadable.
+
+**Changes:**
+- Changed from dark overlay to light blur effect
+- Background: `rgba(250, 248, 245, 0.7)` with `blur(8px)`
+- White content box with shadow for better readability
+- Consistent styling between transcription and validation panels
+
+### Phase 3: Validation-to-Image Highlighting
+
+**Task:** Clicking on validation issues should highlight the corresponding region in the document.
+
+**Solution:** Graceful degradation based on coordinate availability:
+
+| Document Type | Coordinates | Behavior |
+|---------------|-------------|----------|
+| PAGE-XML | Yes | Image region highlighted + pan to region |
+| Plain Image | No | Editor line highlighted + info toast |
+
+**Implementation:**
+
+| File | Changes |
+|------|---------|
+| `state.js` | Added `hasRegionCoordinates()` method |
+| `viewer.js` | Selection handler with fallback toast |
+| `editor.js` | `highlightEditorLine()` + `scrollToLine()` |
+| `validation.js` | Fixed click handler selector |
+| `editor.css` | `.line-number.selected` styling |
+
+**Click Handler Fix:**
+```javascript
+// Before: only .validation-card
+// After: both legacy and compact elements
+const selector = '.validation-card[data-line], .validation-item[data-line]';
+```
+
+### Phase 4: Sample Cleanup
+
+**Task:** Remove Raitbuch sample (blank pages not useful for demo).
+
+**Changes:**
+- Removed Raitbuch entry from `samples/index.json`
+- Deleted `docs/samples/raitbuch/` folder
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/css/variables.css` | AI color tokens |
+| `docs/css/editor.css` | Selected line number styling |
+| `docs/js/state.js` | `hasRegionCoordinates()` |
+| `docs/js/viewer.js` | Fallback toast for documents without coordinates |
+| `docs/js/editor.js` | Line highlighting and scrolling |
+| `docs/js/components/validation.js` | AI styling, click handler fix, loading overlay |
+| `docs/js/components/transcription.js` | Loading overlay consistency |
+| `docs/index.html` | AI badge in section header |
+| `docs/samples/index.json` | Removed Raitbuch |
+| `knowledge/DESIGN-SYSTEM.md` | v2.2 with AI colors |
+| `knowledge/VALIDATION.md` | v2.1 with Issue Navigation |
+
+### Project Status
+
+**Completed:**
+- [x] AI content identification (violet color system)
+- [x] Loading overlay improvements
+- [x] Validation-to-image highlighting with graceful degradation
+- [x] Editor line highlighting
+- [x] Sample cleanup
+- [x] Documentation updates
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
