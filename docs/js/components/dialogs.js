@@ -47,7 +47,6 @@ class DialogManager {
         this.bindEvents();
         this.loadSavedApiKeys();
         this.loadSavedSettings();
-        this.updateProviderStatuses();
     }
 
     /**
@@ -160,12 +159,28 @@ class DialogManager {
         const dialog = this.dialogs.apiKey;
         if (!dialog) return;
 
-        // Tab switching
-        selectAll('.dialog-tab', dialog).forEach(tab => {
-            tab.addEventListener('click', () => {
-                this.switchProviderTab(tab.dataset.provider);
+        // Provider selection change
+        const providerSelect = getById('llmProvider');
+        if (providerSelect) {
+            providerSelect.addEventListener('change', () => {
+                this.updateLLMDialogForProvider(providerSelect.value);
             });
-        });
+        }
+
+        // Model selection change (for custom option)
+        const modelSelect = getById('llmModel');
+        const customModelInput = getById('llmModelCustom');
+        if (modelSelect && customModelInput) {
+            modelSelect.addEventListener('change', () => {
+                if (modelSelect.value === 'custom') {
+                    customModelInput.style.display = 'block';
+                    customModelInput.focus();
+                } else {
+                    customModelInput.style.display = 'none';
+                    customModelInput.value = '';
+                }
+            });
+        }
 
         // Save button
         const saveBtn = select('#saveApiKeys', dialog);
@@ -174,7 +189,7 @@ class DialogManager {
         }
 
         // Test connection button
-        const testBtn = select('#testApiConnection', dialog);
+        const testBtn = getById('testApiConnection');
         if (testBtn) {
             testBtn.addEventListener('click', () => this.testConnection());
         }
@@ -184,6 +199,102 @@ class DialogManager {
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.refreshOllamaModels());
         }
+
+        // Password visibility toggle for new dialog
+        const toggleBtn = select('.toggle-visibility', dialog);
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                const wrapper = e.target.closest('.input-with-toggle');
+                const input = select('input', wrapper);
+                const showIcon = select('.icon-show', wrapper);
+                const hideIcon = select('.icon-hide', wrapper);
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    if (showIcon) showIcon.hidden = true;
+                    if (hideIcon) hideIcon.hidden = false;
+                } else {
+                    input.type = 'password';
+                    if (showIcon) showIcon.hidden = false;
+                    if (hideIcon) hideIcon.hidden = true;
+                }
+            });
+        }
+    }
+
+    /**
+     * Update LLM dialog fields based on selected provider
+     */
+    updateLLMDialogForProvider(provider) {
+        const providerConfig = llmService.providers[provider];
+        if (!providerConfig) return;
+
+        const modelSelect = getById('llmModel');
+        const customModelInput = getById('llmModelCustom');
+        const apiKeyWrapper = getById('apiKeyWrapper');
+        const apiKeyInput = getById('llmApiKey');
+        const apiKeyHint = getById('apiKeyHint');
+        const apiKeyLink = getById('apiKeyLink');
+        const ollamaWrapper = getById('ollamaEndpointWrapper');
+        const modelHint = getById('llmModelHint');
+
+        // Update model dropdown
+        if (modelSelect) {
+            modelSelect.innerHTML = '';
+            providerConfig.models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = model.name;
+                if (model.id === providerConfig.defaultModel || model.recommended) {
+                    option.selected = true;
+                }
+                modelSelect.appendChild(option);
+            });
+
+            // Reset custom input
+            if (customModelInput) {
+                customModelInput.style.display = 'none';
+                customModelInput.value = '';
+            }
+        }
+
+        // Show/hide API key field
+        if (apiKeyWrapper) {
+            apiKeyWrapper.style.display = provider === 'ollama' ? 'none' : 'block';
+        }
+
+        // Update API key placeholder and link
+        if (apiKeyInput) {
+            apiKeyInput.placeholder = providerConfig.apiKeyPlaceholder || '';
+            // Load saved key for this provider
+            const savedKey = storage.loadApiKey(provider);
+            apiKeyInput.value = savedKey || '';
+        }
+
+        if (apiKeyLink && providerConfig.apiKeyUrl) {
+            apiKeyLink.href = providerConfig.apiKeyUrl;
+            apiKeyLink.textContent = providerConfig.name;
+        }
+
+        if (apiKeyHint) {
+            apiKeyHint.style.display = provider === 'ollama' ? 'none' : 'block';
+        }
+
+        // Show/hide Ollama-specific fields
+        if (ollamaWrapper) {
+            ollamaWrapper.style.display = provider === 'ollama' ? 'block' : 'none';
+        }
+
+        // Update model hint
+        if (modelHint) {
+            if (provider === 'ollama') {
+                modelHint.innerHTML = 'Vision-Modelle: <code>deepseek-ocr</code>, <code>llava</code>, <code>llama3.2-vision</code>';
+            } else {
+                modelHint.textContent = 'Empfohlenes Modell für OCR/HTR-Aufgaben.';
+            }
+        }
+
+        this.currentProvider = provider;
     }
 
     /**
@@ -603,6 +714,11 @@ class DialogManager {
         const dialog = this.dialogs[name];
         if (!dialog) return;
 
+        // Initialize API Key dialog before opening
+        if (name === 'apiKey') {
+            this.initApiKeyDialog();
+        }
+
         dialog.showModal();
         appState.openDialog(name);
 
@@ -610,6 +726,45 @@ class DialogManager {
         const firstInput = dialog.querySelector('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"])');
         if (firstInput) {
             setTimeout(() => firstInput.focus(), 50);
+        }
+    }
+
+    /**
+     * Initialize API Key dialog with current settings
+     */
+    initApiKeyDialog() {
+        const settings = storage.loadSettings() || {};
+        const activeProvider = settings.activeProvider || llmService.activeProvider || 'gemini';
+
+        const providerSelect = getById('llmProvider');
+        if (providerSelect) {
+            providerSelect.value = activeProvider;
+            this.updateLLMDialogForProvider(activeProvider);
+        }
+
+        // Load saved model for active provider
+        const savedModel = settings[`${activeProvider}Model`];
+        const modelSelect = getById('llmModel');
+        const customModelInput = getById('llmModelCustom');
+
+        if (modelSelect && savedModel) {
+            const options = Array.from(modelSelect.options);
+            const found = options.find(opt => opt.value === savedModel);
+
+            if (found) {
+                modelSelect.value = savedModel;
+                if (customModelInput) {
+                    customModelInput.style.display = 'none';
+                    customModelInput.value = '';
+                }
+            } else {
+                // Custom model
+                modelSelect.value = 'custom';
+                if (customModelInput) {
+                    customModelInput.style.display = 'block';
+                    customModelInput.value = savedModel;
+                }
+            }
         }
     }
 
@@ -626,63 +781,49 @@ class DialogManager {
         appState.closeDialog();
     }
 
-    /**
-     * Switch provider tab in API Key dialog
-     */
-    switchProviderTab(provider) {
-        const dialog = this.dialogs.apiKey;
-        if (!dialog) return;
-
-        this.currentProvider = provider;
-
-        // Update tabs
-        dialog.querySelectorAll('.dialog-tab').forEach(tab => {
-            const isActive = tab.dataset.provider === provider;
-            tab.classList.toggle('active', isActive);
-            tab.setAttribute('aria-selected', isActive);
-        });
-
-        // Update panels
-        dialog.querySelectorAll('.dialog-tab-panel').forEach(panel => {
-            const isActive = panel.dataset.panel === provider;
-            panel.classList.toggle('active', isActive);
-            panel.hidden = !isActive;
-        });
-    }
 
     /**
      * Load saved API keys into form fields
      */
     loadSavedApiKeys() {
-        PROVIDERS.forEach(provider => {
-            if (provider === 'ollama') {
-                // Load Ollama endpoint
-                const settings = storage.loadSettings();
-                const endpoint = settings?.ollamaEndpoint || 'http://localhost:11434';
-                const model = settings?.ollamaModel || 'llava';
+        const settings = storage.loadSettings() || {};
 
-                const endpointInput = document.getElementById('ollamaEndpoint');
-                const modelInput = document.getElementById('ollamaModel');
+        // Load active provider
+        const activeProvider = settings.activeProvider || llmService.activeProvider || 'gemini';
+        const providerSelect = getById('llmProvider');
 
-                if (endpointInput) endpointInput.value = endpoint;
-                if (modelInput) modelInput.value = model;
+        if (providerSelect) {
+            providerSelect.value = activeProvider;
+            this.updateLLMDialogForProvider(activeProvider);
+        }
+
+        // Load Ollama endpoint
+        const endpointInput = getById('ollamaEndpoint');
+        if (endpointInput) {
+            endpointInput.value = settings.ollamaEndpoint || DEFAULT_OLLAMA_ENDPOINT;
+        }
+
+        // Load saved model for active provider
+        const savedModel = settings[`${activeProvider}Model`];
+        const modelSelect = getById('llmModel');
+        const customModelInput = getById('llmModelCustom');
+
+        if (modelSelect && savedModel) {
+            // Check if it's a predefined model
+            const options = Array.from(modelSelect.options);
+            const found = options.find(opt => opt.value === savedModel);
+
+            if (found) {
+                modelSelect.value = savedModel;
             } else {
-                // Load API key
-                const key = storage.loadApiKey(provider);
-                const input = document.getElementById(`${provider}ApiKey`);
-                if (input && key) {
-                    input.value = key;
-                }
-
-                // Load model preference
-                const settings = storage.loadSettings();
-                const modelKey = `${provider}Model`;
-                const modelSelect = document.getElementById(modelKey);
-                if (modelSelect && settings?.[modelKey]) {
-                    modelSelect.value = settings[modelKey];
+                // Custom model
+                modelSelect.value = 'custom';
+                if (customModelInput) {
+                    customModelInput.style.display = 'block';
+                    customModelInput.value = savedModel;
                 }
             }
-        });
+        }
     }
 
     /**
@@ -691,62 +832,45 @@ class DialogManager {
     saveApiKeys() {
         const settings = storage.loadSettings() || {};
 
-        PROVIDERS.forEach(provider => {
-            if (provider === 'ollama') {
-                const endpoint = document.getElementById('ollamaEndpoint')?.value;
-                const model = document.getElementById('ollamaModel')?.value;
+        const provider = getById('llmProvider')?.value || 'gemini';
+        const modelSelect = getById('llmModel');
+        const customModelInput = getById('llmModelCustom');
+        const apiKeyInput = getById('llmApiKey');
+        const endpointInput = getById('ollamaEndpoint');
 
-                if (endpoint) settings.ollamaEndpoint = endpoint;
-                if (model) settings.ollamaModel = model;
+        // Get model (custom or from select)
+        let model = modelSelect?.value;
+        if (model === 'custom' && customModelInput?.value) {
+            model = customModelInput.value.trim();
+        }
 
-                // Update LLM service
-                llmService.setEndpoint(provider, endpoint);
-                llmService.setModel(provider, model);
-            } else {
-                const keyInput = document.getElementById(`${provider}ApiKey`);
-                const modelSelect = document.getElementById(`${provider}Model`);
+        // Save provider as active
+        settings.activeProvider = provider;
+        llmService.setProvider(provider);
 
-                if (keyInput?.value) {
-                    storage.saveApiKey(provider, keyInput.value);
-                    llmService.setApiKey(provider, keyInput.value);
-                }
+        // Save model for this provider
+        if (model && model !== 'custom') {
+            settings[`${provider}Model`] = model;
+            llmService.setModel(provider, model);
+        }
 
-                if (modelSelect?.value) {
-                    settings[`${provider}Model`] = modelSelect.value;
-                    llmService.setModel(provider, modelSelect.value);
-                }
-            }
-        });
+        // Save API key (for non-Ollama providers)
+        if (provider !== 'ollama' && apiKeyInput?.value) {
+            storage.saveApiKey(provider, apiKeyInput.value);
+            llmService.setApiKey(provider, apiKeyInput.value);
+        }
+
+        // Save Ollama endpoint
+        if (provider === 'ollama' && endpointInput?.value) {
+            settings.ollamaEndpoint = endpointInput.value;
+            llmService.setEndpoint(provider, endpointInput.value);
+        }
 
         storage.saveSettings(settings);
-        this.updateProviderStatuses();
-        this.showToast('API keys saved', 'success');
+        this.showToast('Konfiguration gespeichert', 'success');
         this.closeDialog('apiKey');
     }
 
-    /**
-     * Update provider status indicators
-     */
-    updateProviderStatuses() {
-        PROVIDERS.forEach(provider => {
-            const statusEl = document.querySelector(
-                `.dialog-tab[data-provider="${provider}"] .provider-status`
-            );
-            if (!statusEl) return;
-
-            let status = 'unconfigured';
-
-            if (provider === 'ollama') {
-                const endpoint = document.getElementById('ollamaEndpoint')?.value;
-                if (endpoint) status = 'configured';
-            } else {
-                const key = storage.loadApiKey(provider);
-                if (key) status = 'configured';
-            }
-
-            statusEl.dataset.status = status;
-        });
-    }
 
     /**
      * Test API connection for current provider
@@ -756,32 +880,32 @@ class DialogManager {
         if (!testBtn) return;
 
         const originalText = testBtn.textContent;
-        testBtn.textContent = 'Testing...';
+        testBtn.textContent = 'Teste...';
         testBtn.disabled = true;
 
         try {
-            const provider = this.currentProvider;
+            const provider = getById('llmProvider')?.value || this.currentProvider;
 
             if (provider === 'ollama') {
-                const endpoint = document.getElementById('ollamaEndpoint')?.value;
-                if (!endpoint) throw new Error('Endpoint is required');
+                const endpoint = getById('ollamaEndpoint')?.value;
+                if (!endpoint) throw new Error('Server-URL erforderlich');
 
                 const response = await fetch(`${endpoint}/api/tags`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(5000)
                 });
 
-                if (!response.ok) throw new Error('Connection failed');
+                if (!response.ok) throw new Error('Verbindung fehlgeschlagen');
 
                 const data = await response.json();
                 const models = data.models?.map(m => m.name) || [];
-                this.showToast(`Connected. Found ${models.length} models.`, 'success');
-            } else {
-                const keyInput = document.getElementById(`${provider}ApiKey`);
-                if (!keyInput?.value) throw new Error('API key is required');
+                this.showToast(`Verbunden! ${models.length} Modelle gefunden.`, 'success');
 
-                llmService.setApiKey(provider, keyInput.value);
-                llmService.setProvider(provider);
+                // Auto-populate model dropdown with available models
+                this.populateOllamaModels(models);
+            } else {
+                const keyInput = getById('llmApiKey');
+                if (!keyInput?.value) throw new Error('API-Key erforderlich');
 
                 const keyFormats = {
                     gemini: /^AIza/,
@@ -791,13 +915,13 @@ class DialogManager {
 
                 const pattern = keyFormats[provider];
                 if (pattern && !pattern.test(keyInput.value)) {
-                    this.showToast('Key format looks incorrect', 'warning');
+                    this.showToast('Key-Format sieht falsch aus', 'warning');
                 } else {
-                    this.showToast('Key format valid. Save to test with actual requests.', 'success');
+                    this.showToast('Key-Format gültig. Speichern zum Testen.', 'success');
                 }
             }
         } catch (error) {
-            this.showToast(`Connection failed: ${error.message}`, 'error');
+            this.showToast(`Fehler: ${error.message}`, 'error');
         } finally {
             testBtn.textContent = originalText;
             testBtn.disabled = false;
@@ -805,16 +929,62 @@ class DialogManager {
     }
 
     /**
+     * Populate model dropdown with Ollama models
+     */
+    populateOllamaModels(models) {
+        const modelSelect = getById('llmModel');
+        if (!modelSelect) return;
+
+        // Filter to vision models
+        const visionModels = models.filter(m =>
+            m.includes('llava') || m.includes('vision') || m.includes('vl') || m.includes('deepseek')
+        );
+
+        modelSelect.innerHTML = '';
+
+        // Add found vision models first
+        if (visionModels.length > 0) {
+            visionModels.forEach((model, i) => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model + (i === 0 ? ' (Empfohlen)' : '');
+                if (i === 0) option.selected = true;
+                modelSelect.appendChild(option);
+            });
+        }
+
+        // Add other models
+        const otherModels = models.filter(m => !visionModels.includes(m));
+        if (otherModels.length > 0) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = 'Andere Modelle';
+            otherModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                optgroup.appendChild(option);
+            });
+            modelSelect.appendChild(optgroup);
+        }
+
+        // Add custom option
+        const customOption = document.createElement('option');
+        customOption.value = 'custom';
+        customOption.textContent = 'Eigenes Modell...';
+        modelSelect.appendChild(customOption);
+    }
+
+    /**
      * Refresh available Ollama models
      */
     async refreshOllamaModels() {
-        const endpoint = document.getElementById('ollamaEndpoint')?.value;
-        const modelInput = document.getElementById('ollamaModel');
-        const refreshBtn = document.getElementById('ollamaRefreshModels');
+        const endpoint = getById('ollamaEndpoint')?.value;
+        const refreshBtn = getById('ollamaRefreshModels');
 
-        if (!endpoint || !modelInput || !refreshBtn) return;
+        if (!endpoint || !refreshBtn) return;
 
-        refreshBtn.textContent = 'Loading...';
+        const originalText = refreshBtn.textContent;
+        refreshBtn.textContent = 'Lade...';
         refreshBtn.disabled = true;
 
         try {
@@ -822,29 +992,21 @@ class DialogManager {
                 signal: AbortSignal.timeout(5000)
             });
 
-            if (!response.ok) throw new Error('Failed to fetch models');
+            if (!response.ok) throw new Error('Verbindung fehlgeschlagen');
 
             const data = await response.json();
             const models = data.models?.map(m => m.name) || [];
 
             if (models.length === 0) {
-                this.showToast('No models found. Run "ollama pull llava"', 'warning');
+                this.showToast('Keine Modelle gefunden. Installiere mit: ollama pull llava', 'warning');
             } else {
-                // Show available models
-                this.showToast(`Available: ${models.slice(0, 5).join(', ')}${models.length > 5 ? '...' : ''}`, 'success');
-
-                // Auto-select first vision model if available
-                const visionModels = models.filter(m =>
-                    m.includes('llava') || m.includes('bakllava') || m.includes('vision')
-                );
-                if (visionModels.length > 0) {
-                    modelInput.value = visionModels[0];
-                }
+                this.populateOllamaModels(models);
+                this.showToast(`${models.length} Modelle gefunden`, 'success');
             }
         } catch (error) {
-            this.showToast(`Failed to fetch models: ${error.message}`, 'error');
+            this.showToast(`Fehler: ${error.message}`, 'error');
         } finally {
-            refreshBtn.textContent = 'Refresh';
+            refreshBtn.textContent = originalText;
             refreshBtn.disabled = false;
         }
     }

@@ -4,7 +4,7 @@ Browser-based experimentation environment for integrating domain experts into OC
 
 ## Features
 
-- **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, DeepSeek, Ollama (local)
+- **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, Ollama (local with DeepSeek-OCR)
 - **Hybrid Validation**: Deterministic rules + LLM-as-judge with multiple perspectives
 - **Expert-in-the-Loop**: Critical expert validation workflow
 - **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
@@ -81,9 +81,19 @@ docs/
 | Provider | Models | Vision Support |
 |----------|--------|----------------|
 | Gemini | gemini-3-flash-preview, gemini-3-pro-preview | Yes |
-| OpenAI | gpt-5.2, gpt-5.2-pro | Yes |
-| Anthropic | claude-haiku-4.5, claude-sonnet-4.5, claude-opus-4.5 | Yes |
-| Ollama | deepseek-ocr, llava, llama3.2-vision | Yes |
+| OpenAI | gpt-4o, gpt-4o-mini | Yes |
+| Anthropic | claude-4.5-haiku, claude-4.5-sonnet, claude-4.5-opus | Yes |
+| Ollama (local) | deepseek-ocr (recommended), llava, llama3.2-vision | Yes |
+
+### Local OCR with DeepSeek-OCR
+
+For best local OCR results, install [DeepSeek-OCR](https://ollama.com/library/deepseek-ocr) via Ollama:
+
+```bash
+ollama pull deepseek-ocr
+```
+
+Requires Ollama v0.13.0+. Model size: ~6.7GB.
 
 ## Documentation
 
@@ -106,14 +116,16 @@ npm test
 ### Project Status
 
 **Phase 1-2: Core Application** - Complete
-- LLM Integration (5 providers), Gemini 3 optimization
-- Document Viewer, Transcription Editor, Hybrid Validation
+- LLM Integration (4 cloud + 1 local provider), Gemini 3 optimization
+- Document Viewer (OpenSeadragon), Transcription Editor, Hybrid Validation
 - PAGE-XML/METS-XML Import & Export
-- Multi-page navigation, Help & About pages
+- Multi-page navigation, IIIF support, Help & About pages
 
-**Phase 4: Polish & Release** - In Progress
+**Phase 4: Polish & Release** - Complete
 - 118 unit tests passing (export, validation, llm, page-xml)
-- E2E tests, performance audit planned
+- Simplified API configuration dialog
+- Document context for enhanced transcription
+- Undo/Redo, Diff view, Line numbers
 
 See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
 

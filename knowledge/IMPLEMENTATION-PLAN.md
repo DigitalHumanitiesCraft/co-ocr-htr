@@ -1,14 +1,14 @@
 ---
 type: knowledge
 created: 2026-01-16
-updated: 2026-01-16
+updated: 2026-02-03
 tags: [coocr-htr, roadmap, milestones]
-status: active
+status: complete
 ---
 
 # Implementation Plan
 
-**Status:** Phase 4 - Polish & Release (Bug Fixes [x] Complete)
+**Status:** Phase 4 - Polish & Release [x] COMPLETE
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
 ---
@@ -114,15 +114,19 @@ status: active
 
 ---
 
-## Phase 4: Polish & Release [~] IN PROGRESS
+## Phase 4: Polish & Release [x] COMPLETE
 
 | Task | Status | Beschreibung |
 |------|--------|--------------|
 | PAGE-XML Export | [x] | PAGE 2019-07-15 Schema |
 | Vitest Unit Tests | [x] | 118 Tests (export, validation, llm, page-xml) |
-| E2E Test | [ ] | Vollständiger Workflow-Test |
-| Performance Audit | [ ] | Lighthouse, große Dokumente |
-| README vervollständigen | [ ] | Screenshots, GIF-Demo |
+| Editor Simplification | [x] | Textarea mit Line Numbers, Diff View |
+| Undo/Redo Buttons | [x] | Sichtbare Buttons mit Feedback |
+| API Dialog Redesign | [x] | Unified Form statt Tabs |
+| Document Context | [x] | In Transcription Dialog integriert |
+| DeepSeek-OCR Integration | [x] | Als lokales Ollama-Modell |
+| E2E Test | [ ] | Vollständiger Workflow-Test (optional) |
+| Performance Audit | [ ] | Lighthouse, große Dokumente (optional) |
 
 ---
 

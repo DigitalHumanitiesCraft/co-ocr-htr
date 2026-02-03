@@ -52,6 +52,14 @@ dialog[open] {
   overflow: hidden;
 }
 
+.dialog.dialog-lg {
+  width: 600px;
+}
+
+.dialog.dialog-xl {
+  width: 800px;
+}
+
 /* ==========================================================================
    DIALOG STRUCTURE
    ========================================================================== */
@@ -326,6 +334,324 @@ dialog[open] {
 
 .file-preview-remove:hover {
   color: var(--problematic);
+}
+
+/* ==========================================================================
+   TRANSCRIPTION DIALOG
+   ========================================================================== */
+
+.context-details {
+  margin-bottom: var(--space-4);
+}
+
+.context-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+}
+
+.context-summary::-webkit-details-marker {
+  display: none;
+}
+
+.context-summary::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 5px solid var(--text-secondary);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--transition-fast);
+}
+
+.context-details[open] .context-summary::before {
+  transform: rotate(90deg);
+}
+
+.context-summary-title {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.context-summary-hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.context-fields {
+  padding: var(--space-5);
+  padding-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.context-explanation {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--accent-muted);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Enhanced input styling for context dialog */
+.context-fields .input-wrapper {
+  margin-bottom: 0;
+}
+
+.context-fields .input-wrapper label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.context-fields input[type="text"],
+.context-fields select,
+.context-fields textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.context-fields input[type="text"]:hover,
+.context-fields select:hover,
+.context-fields textarea:hover {
+  border-color: var(--border-hover);
+}
+
+.context-fields input[type="text"]:focus,
+.context-fields select:focus,
+.context-fields textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.context-fields input::placeholder,
+.context-fields textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.context-fields select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+
+.context-fields textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+/* Custom input for "other" option */
+.input-with-custom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.input-with-custom select {
+  width: 100%;
+}
+
+.input-with-custom .custom-input {
+  width: 100%;
+}
+
+/* Input hint text */
+.input-hint {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   LLM CONFIGURATION DIALOG
+   ========================================================================== */
+
+.llm-config-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.llm-config-fields .input-wrapper {
+  margin-bottom: 0;
+}
+
+.llm-config-fields .input-wrapper label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.llm-config-fields input[type="text"],
+.llm-config-fields input[type="password"],
+.llm-config-fields select {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.llm-config-fields input:hover,
+.llm-config-fields select:hover {
+  border-color: var(--border-hover);
+}
+
+.llm-config-fields input:focus,
+.llm-config-fields select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.llm-config-fields input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.llm-config-fields select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+
+.llm-config-fields .input-hint {
+  margin-top: var(--space-2);
+}
+
+.llm-config-fields .input-hint a {
+  color: var(--accent-primary);
+}
+
+.llm-config-fields .input-hint code {
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
+/* Input with toggle for password visibility */
+.llm-config-fields .input-with-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.llm-config-fields .input-with-toggle input {
+  padding-right: 48px;
+}
+
+.llm-config-fields .input-with-toggle .toggle-visibility {
+  position: absolute;
+  right: var(--space-3);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+  display: flex;
+  align-items: center;
+}
+
+.llm-config-fields .input-with-toggle .toggle-visibility:hover {
+  color: var(--text-primary);
+}
+
+.llm-config-fields .input-with-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Input with button (for Ollama refresh) */
+.llm-config-fields .input-with-button {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.llm-config-fields .input-with-button input {
+  flex: 1;
+}
+
+.transcribe-model-info {
+  margin-top: var(--space-4);
+}
+
+.model-info-ready,
+.model-info-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.model-info-ready {
+  background: rgba(90, 138, 90, 0.1);
+  color: var(--confident);
+}
+
+.model-info-ready svg {
+  color: var(--confident);
+}
+
+.model-info-warning {
+  background: rgba(200, 160, 90, 0.1);
+  color: var(--uncertain);
+}
+
+.model-info-warning svg {
+  color: var(--uncertain);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  padding: 0;
+  margin-left: auto;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
 }
 
 /* ==========================================================================

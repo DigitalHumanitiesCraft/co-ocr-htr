@@ -130,33 +130,59 @@ const PROVIDERS = {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
     defaultModel: 'gemini-3-flash-preview',
-    models: ['gemini-3-flash-preview', 'gemini-3-pro-preview'],
-    authType: 'query', // API key in URL query param
-    supportsVision: true
+    models: [
+      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Empfohlen)', recommended: true },
+      { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
+      { id: 'custom', name: 'Eigenes Modell...' }
+    ],
+    authType: 'query',
+    supportsVision: true,
+    apiKeyUrl: 'https://aistudio.google.com/apikey',
+    apiKeyPlaceholder: 'AIza...'
   },
   openai: {
     name: 'OpenAI',
     endpoint: 'https://api.openai.com/v1/chat/completions',
-    defaultModel: 'gpt-5.2',
-    models: ['gpt-5.2', 'gpt-5.2-pro'],
+    defaultModel: 'gpt-4o',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o (Empfohlen)', recommended: true },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (schneller)' },
+      { id: 'custom', name: 'Eigenes Modell...' }
+    ],
     authType: 'bearer',
-    supportsVision: true
+    supportsVision: true,
+    apiKeyUrl: 'https://platform.openai.com/api-keys',
+    apiKeyPlaceholder: 'sk-...'
   },
   anthropic: {
-    name: 'Anthropic',
+    name: 'Anthropic Claude',
     endpoint: 'https://api.anthropic.com/v1/messages',
     defaultModel: 'claude-sonnet-4-5-20250514',
-    models: ['claude-haiku-4-5-20250514', 'claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514'],
-    authType: 'header', // x-api-key header
-    supportsVision: true
+    models: [
+      { id: 'claude-sonnet-4-5-20250514', name: 'Claude 4.5 Sonnet (Empfohlen)', recommended: true },
+      { id: 'claude-haiku-4-5-20250514', name: 'Claude 4.5 Haiku (schneller)' },
+      { id: 'claude-opus-4-5-20250514', name: 'Claude 4.5 Opus (beste Qualität)' },
+      { id: 'custom', name: 'Eigenes Modell...' }
+    ],
+    authType: 'header',
+    supportsVision: true,
+    apiKeyUrl: 'https://console.anthropic.com/settings/keys',
+    apiKeyPlaceholder: 'sk-ant-...'
   },
   ollama: {
-    name: 'Ollama (Local)',
+    name: 'Ollama (lokal)',
     endpoint: 'http://localhost:11434/api/generate',
     defaultModel: 'deepseek-ocr',
-    models: ['deepseek-ocr', 'deepseek-ocr:3b', 'llava', 'llama3.2-vision'],
+    models: [
+      { id: 'deepseek-ocr', name: 'DeepSeek-OCR (Empfohlen für OCR)', recommended: true },
+      { id: 'llava', name: 'LLaVA' },
+      { id: 'llama3.2-vision', name: 'Llama 3.2 Vision' },
+      { id: 'custom', name: 'Eigenes Modell...' }
+    ],
     authType: 'none',
-    supportsVision: true
+    supportsVision: true,
+    apiKeyUrl: null,
+    apiKeyPlaceholder: null
   }
 };
 
@@ -705,4 +731,4 @@ class LLMError extends Error {
 
 // Export singleton instance and classes
 export const llmService = new LLMService();
-export { LLMService, LLMError, PROVIDERS, TRANSCRIPTION_PROMPT, VALIDATION_PROMPTS };
+export { LLMService, LLMError, PROVIDERS, TRANSCRIPTION_PROMPT_BASE, VALIDATION_PROMPTS };
