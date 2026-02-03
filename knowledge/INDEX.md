@@ -14,6 +14,7 @@ Central knowledge repository for the coOCR/HTR project. Each document has a defi
 ```
 knowledge/
 ├── INDEX.md               ← Navigation (this document)
+├── VISION.md              ← Project goals & success criteria
 ├── METHODOLOGY.md         ← Scientific foundations
 ├── DESIGN-SYSTEM.md       ← UI/UX specification
 ├── ARCHITECTURE.md        ← Technical architecture
@@ -29,6 +30,7 @@ knowledge/
 
 | Document | Answers | Audience | Dependencies |
 |----------|---------|----------|--------------|
+| [VISION](VISION.md) | What is the goal? | Everyone | - |
 | [METHODOLOGY](METHODOLOGY.md) | Why this approach? | Everyone | - |
 | [DESIGN-SYSTEM](DESIGN-SYSTEM.md) | How does it look? | UI/Frontend | METHODOLOGY |
 | [ARCHITECTURE](ARCHITECTURE.md) | How is it built? | Development | METHODOLOGY |
