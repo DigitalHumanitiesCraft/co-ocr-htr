@@ -578,6 +578,90 @@ dialog[open] {
 }
 
 /* ==========================================================================
+   VALIDATION DIALOG
+   ========================================================================== */
+
+.validate-page-selection {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+/* Validation Mode Info */
+.validation-mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.validation-mode-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+}
+
+.validation-mode-item.disabled {
+  opacity: 0.5;
+}
+
+.mode-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+}
+
+.mode-icon.mode-rules {
+  background: rgba(90, 138, 90, 0.15);
+  color: var(--confident);
+}
+
+.mode-icon.mode-ai {
+  background: rgba(108, 92, 231, 0.15);
+  color: var(--accent-primary);
+}
+
+.mode-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mode-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.mode-hint {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Batch Validation Progress */
+.validation-loading-overlay .batch-progress-bar {
+  width: 180px;
+  height: 4px;
+  background: var(--border-muted);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.validation-loading-overlay .batch-progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ==========================================================================
    CONTEXT DIALOG FIELDS
    ========================================================================== */
 

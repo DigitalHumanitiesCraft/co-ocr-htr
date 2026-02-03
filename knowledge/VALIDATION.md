@@ -39,57 +39,17 @@ Combination of deterministic rules and LLM assessments.
 
 Generic rules applicable to all document types (letters, diaries, account books, etc.).
 
-### Implemented Rules (v2.0 - February 2026)
+### Implemented Rules (v2.0)
 
-```javascript
-const VALIDATION_RULES = [
-  {
-    id: 'uncertain_marker',
-    name: 'Unsichere Lesungen',
-    description: 'Stellen, die mit [?] markiert wurden',
-    regex: /\[\?\]/g,
-    type: 'warning',
-    messagePass: (count) => `${count} unsichere Stelle(n) markiert`,
-    messageFail: 'Keine unsicheren Markierungen'
-  },
-  {
-    id: 'illegible_marker',
-    name: 'Unleserliche Stellen',
-    description: 'Stellen, die als [illegible] oder [...] markiert wurden',
-    regex: /\[(illegible|\.\.\.)\]/gi,
-    type: 'warning',
-    messagePass: (count) => `${count} unleserliche Stelle(n)`,
-    messageFail: 'Keine unleserlichen Stellen'
-  },
-  {
-    id: 'abbreviations',
-    name: 'Abkuerzungen',
-    description: 'Erkannte Abkuerzungsmarkierungen wie admi[nistrateurs]',
-    regex: /\w+\[[\w]+\]/g,
-    type: 'info',
-    messagePass: (count) => `${count} aufgeloeste Abkuerzung(en)`,
-    messageFail: 'Keine Abkuerzungen erkannt'
-  },
-  {
-    id: 'line_breaks',
-    name: 'Zeilenanzahl',
-    description: 'Anzahl der transkribierten Zeilen',
-    validate: validateLineCount,
-    type: 'info',
-    messagePass: (count) => `${count} Zeilen transkribiert`,
-    messageFail: 'Keine Zeilen gefunden'
-  },
-  {
-    id: 'special_chars',
-    name: 'Sonderzeichen',
-    description: 'Ungewoehnliche Zeichen (moegl. OCR-Artefakte)',
-    regex: /[^\w\s\.,;:!?\-\'\"\(\)\[\]...]/g,
-    type: 'info',
-    messagePass: (count) => `${count} Sonderzeichen gefunden`,
-    messageFail: 'Keine ungewoehnlichen Zeichen'
-  }
-];
-```
+**Implementation:** [validation.js](../docs/js/services/validation.js)
+
+| Rule ID | Name | Pattern | Type | Description |
+|---------|------|---------|------|-------------|
+| uncertain_marker | Unsichere Lesungen | [?] | warning | Marks passages with uncertain readings |
+| illegible_marker | Unleserliche Stellen | [illegible], [...] | warning | Marks unreadable passages |
+| abbreviations | Abkuerzungen | word[expansion] | info | Expanded abbreviations like admi[nistrateurs] |
+| line_breaks | Zeilenanzahl | (custom logic) | info | Counts transcribed lines |
+| special_chars | Sonderzeichen | Non-standard chars | info | Potential OCR artifacts |
 
 ### Design Rationale (v2.0)
 
@@ -117,30 +77,12 @@ Configurable validation angles for Expert-in-the-Loop.
 
 ### Perspective Definitions
 
-```javascript
-const PERSPECTIVES = [
-  {
-    id: 'paleographic',
-    name: 'Palaeographisch',
-    description: 'Buchstabenformen, Ligaturen, Abkuerzungen'
-  },
-  {
-    id: 'linguistic',
-    name: 'Sprachlich',
-    description: 'Grammatik, historische Orthographie'
-  },
-  {
-    id: 'structural',
-    name: 'Strukturell',
-    description: 'Tabellen, Summen, Verweise'
-  },
-  {
-    id: 'domain',
-    name: 'Domaenenwissen',
-    description: 'Fachtermini, Plausibilitaet'
-  }
-];
-```
+| ID | Name | Focus |
+|----|------|-------|
+| paleographic | Palaeographisch | Letter forms, ligatures, abbreviations |
+| linguistic | Sprachlich | Grammar, historical orthography |
+| structural | Strukturell | Tables, sums, cross-references |
+| domain | Domaenenwissen | Technical terms, plausibility |
 
 ### Perspective Matrix
 
@@ -163,20 +105,20 @@ No numeric values (see [METHODOLOGY](METHODOLOGY.md): LLM Bias).
 
 ## ValidationResult Format
 
-```typescript
-interface ValidationResult {
-  id: string;
-  name: string;
-  description: string;
-  type: 'success' | 'warning' | 'error' | 'info';
-  passed: boolean;
-  message: string;
-  lines: number[];            // Affected lines
-  matches: any[];             // Matched patterns
-  matchCount: number;         // Count for display
-  details?: string;           // Extended explanation
-}
-```
+Each validation result contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | String | Unique rule identifier |
+| name | String | Display name |
+| description | String | What this rule checks |
+| type | Enum | success, warning, error, or info |
+| passed | Boolean | Whether the check passed |
+| message | String | Human-readable result |
+| lines | Array | Affected line numbers |
+| matches | Array | Matched patterns for highlighting |
+| matchCount | Number | Count for display |
+| details | String (optional) | Extended explanation |
 
 ## UI Representation (v2.0 - Compact Layout)
 
@@ -225,40 +167,15 @@ Clicking on a validation issue navigates to the affected location.
 
 ### Implementation
 
-```javascript
-// state.js - Check for coordinates
-hasRegionCoordinates() {
-    return this.data.regions?.length > 0 &&
-           this.data.regions.some(r => r.x !== undefined);
-}
+**Coordinate Check:** `state.js` provides `hasRegionCoordinates()` to detect if bounding boxes are available.
 
-// viewer.js - Selection handler with fallback
-appState.addEventListener('selectionChanged', (e) => {
-    if (appState.hasRegionCoordinates()) {
-        highlightRegion(lineNumber);
-        panToRegion(lineNumber);
-    } else {
-        // Show info toast for documents without coordinates
-        dialogManager.showToast(
-            `Zeile ${lineNumber} - Keine Bildkoordinaten verfügbar`,
-            'info', 2000
-        );
-    }
-});
+**Viewer Behavior:** On selection, viewer.js either highlights the image region (if coordinates exist) or shows an info toast explaining that no coordinates are available.
 
-// editor.js - Always highlight in editor
-appState.addEventListener('selectionChanged', (e) => {
-    highlightEditorLine(e.detail.line);
-});
-```
+**Editor Behavior:** editor.js always highlights the selected line via `highlightEditorLine()`, regardless of coordinate availability.
 
 ### Click Handlers
 
-Both legacy `.validation-card` and compact `.validation-item` elements with `data-line` attribute trigger navigation:
-
-```javascript
-const selector = '.validation-card[data-line], .validation-item[data-line]';
-```
+Both validation card layouts (`.validation-card` and `.validation-item`) with `data-line` attribute trigger navigation when clicked.
 
 ## Validation Flow
 
@@ -299,42 +216,15 @@ User clicks "Validate" button
 
 ## Extensibility
 
-### Adding a New Rule
+Rules can be added to the VALIDATION_RULES array in [validation.js](../docs/js/services/validation.js).
 
-```javascript
-VALIDATION_RULES.push({
-  id: 'custom_rule',
-  name: 'My Rule',
-  description: 'What this rule checks',
-  regex: /pattern/gi,
-  type: 'warning',  // or 'info', 'error'
-  messagePass: (count) => `${count} matches found`,
-  messageFail: 'No matches found'
-});
-```
+### Adding a Regex Rule
+
+Provide id, name, description, regex pattern, type (warning/info/error), and message functions for pass/fail states.
 
 ### Adding a Custom Validator
 
-```javascript
-VALIDATION_RULES.push({
-  id: 'custom_validator',
-  name: 'My Custom Check',
-  description: 'Complex validation logic',
-  validate: (text, segments) => {
-    // Your logic here
-    const count = /* calculate something */;
-    return {
-      passed: count > 0,
-      lines: [],           // Affected line numbers
-      matches: [count],    // For custom validators, first element is the count
-      details: null
-    };
-  },
-  type: 'info',
-  messagePass: (count) => `Result: ${count}`,
-  messageFail: 'No results'
-});
-```
+For complex logic, provide a `validate` function instead of regex. The function receives the full text and segments array, returns an object with passed (boolean), lines (affected line numbers), matches (for counting), and optional details.
 
 ---
 

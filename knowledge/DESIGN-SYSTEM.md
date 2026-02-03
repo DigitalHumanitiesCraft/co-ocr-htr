@@ -92,12 +92,7 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 | `--uncertain` | `#c4973a` | Review needed | Expert should check (warm amber) |
 | `--problematic` | `#b85c4a` | Likely error | Requires correction (muted terracotta) |
 
-**Legacy aliases (for compatibility):**
-```css
---success: var(--confident);
---warning: var(--uncertain);
---error: var(--problematic);
-```
+**Legacy aliases:** `--success`, `--warning`, `--error` map to the confidence colors for backward compatibility.
 
 #### AI-Generated Content Colors
 
@@ -149,10 +144,10 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 
 ### Font Stack
 
-```css
---font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
---font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-```
+| Token | Primary | Fallbacks | Usage |
+|-------|---------|-----------|-------|
+| `--font-sans` | Inter | System fonts (Apple, Windows, generic) | Interface elements |
+| `--font-mono` | JetBrains Mono | Fira Code, Consolas | Transcription text |
 
 **Rationale:** Monospace for transcription enables precise character comparison. Sans-serif for interface ensures readability at small sizes.
 
@@ -227,15 +222,7 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 
 ### Grid Configuration
 
-```css
-.app-container {
-  display: grid;
-  grid-template-rows: 56px 1fr 32px;
-  grid-template-columns: 40fr 35fr 25fr;
-  gap: 8px;
-  padding: 8px;
-}
-```
+The app container uses CSS Grid with three rows (header 56px, main content flexible, workflow bar 32px) and three columns (viewer 40%, transcription 35%, validation 25%). Gap and padding are 8px.
 
 ### Z-Index Layers
 

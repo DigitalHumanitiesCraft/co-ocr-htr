@@ -102,44 +102,26 @@ docs/
 
 ## Core Modules
 
-### AppState (Implemented)
+### AppState
 
-Central state using native EventTarget API. Replaces custom EventBus with browser standard.
+Central state management using native EventTarget API. Replaces custom EventBus with browser standard.
 
-```javascript
-// state.js - Actual Implementation
-class AppState extends EventTarget {
-  constructor() {
-    super();
-    this.data = {
-      image: { url: string, width: number, height: number },
-      regions: [{ line: number, x: number, y: number, w: number, h: number }],
-      transcription: string[],  // Markdown table lines
-      zoom: number,
-      selectedLine: number | null
-    };
-  }
+**Implementation:** [state.js](../docs/js/state.js)
 
-  getState() { return this.data; }
+**State Properties:**
+| Property | Type | Description |
+|----------|------|-------------|
+| image | Object | URL, width, height of current document |
+| regions | Array | Bounding boxes with line number and coordinates |
+| transcription | Array | Transcribed text lines |
+| zoom | Number | Current zoom level |
+| selectedLine | Number/null | Currently selected line |
 
-  setImage(url) {
-    this.data.image.url = url;
-    this.dispatchEvent(new CustomEvent('imageChanged', { detail: { url } }));
-  }
-
-  setSelection(lineNum) {
-    this.data.selectedLine = lineNum;
-    this.dispatchEvent(new CustomEvent('selectionChanged', { detail: { line: lineNum } }));
-  }
-
-  setZoom(level) {
-    this.data.zoom = level;
-    this.dispatchEvent(new CustomEvent('zoomChanged', { detail: { zoom: level } }));
-  }
-}
-
-export const appState = new AppState();
-```
+**Key Methods:**
+- `getState()` returns current state
+- `setImage(url)` loads document and fires `imageChanged`
+- `setSelection(line)` selects line and fires `selectionChanged`
+- `setZoom(level)` updates zoom and fires `zoomChanged`
 
 **Advantages over Custom EventBus:**
 - Native Browser API (no dependencies)
@@ -157,132 +139,84 @@ export const appState = new AppState();
 | `validationComplete` | `{ results }` | Validation finished |
 | `segmentUpdated` | `{ index, text }` | Inline edit |
 
-### LLMService (Implemented)
+### LLMService
 
-Abstraction for different providers.
+Abstraction layer for multiple LLM providers with unified API.
 
-```javascript
-class LLMService {
-  setProvider(provider: 'gemini' | 'openai' | 'anthropic' | 'deepseek' | 'ollama');
-  setApiKey(key: string);
-  async transcribe(image: Blob, options): Promise<TranscriptionResult>;
-  async validate(text: string, perspective: Perspective): Promise<ValidationResult>;
-}
-```
+**Implementation:** [llm.js](../docs/js/services/llm.js)
 
-| Provider | Endpoint | Model | Vision |
-|----------|----------|-------|--------|
-| Gemini | `generativelanguage.googleapis.com` | gemini-3-flash-preview | Yes |
-| OpenAI | `api.openai.com` | gpt-5.2 | Yes |
-| Anthropic | `api.anthropic.com` | claude-sonnet-4.5 | Yes |
-| Ollama | `localhost:11434` | deepseek-ocr | Yes |
+**Key Methods:**
+- `setProvider(name)` switches between Gemini, OpenAI, Anthropic, DeepSeek, Ollama
+- `setApiKey(key)` configures authentication
+- `transcribe(image, options)` sends image to VLM for OCR/HTR
+- `validate(text, perspective)` requests LLM-Judge analysis
+
+**Supported Providers:**
+| Provider | Endpoint | Default Model | Vision |
+|----------|----------|---------------|--------|
+| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes |
+| OpenAI | api.openai.com | gpt-4o | Yes |
+| Anthropic | api.anthropic.com | claude-4.5-haiku | Yes |
+| Ollama | localhost:11434 | deepseek-ocr | Yes |
 
 ### Document Viewer (OpenSeadragon)
 
 IIIF-compatible image viewer with SVG overlay for region synchronization.
 
-**Dependencies (CDN):**
-```html
-<script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/openseadragon.min.js"></script>
-<script src="https://openseadragon.github.io/svg-overlay/openseadragon-svg-overlay.js"></script>
-```
+**Implementation:** [viewer.js](../docs/js/viewer.js)
+
+**Dependencies:** OpenSeadragon 4.1 + SVG Overlay Plugin (loaded via CDN)
 
 **Key Features:**
-| Feature | Implementation |
-|---------|----------------|
-| Pan/Zoom | Built-in (wheel, drag, double-click) |
-| Rotation | `viewer.viewport.setRotation(degrees)` |
-| Flip | `viewer.viewport.setFlip(boolean)` |
-| Local Images | `viewer.open({ type: 'image', url })` |
-| IIIF Images | `viewer.open(infoJsonUrl)` |
-| SVG Overlay | `viewer.svgOverlay()` for regions |
+| Feature | Description |
+|---------|-------------|
+| Pan/Zoom | Built-in mouse and touch support |
+| Rotation | 90-degree increments |
+| Flip | Horizontal mirroring |
+| Local Images | Direct file upload |
+| IIIF Images | Manifest URL loading |
+| SVG Overlay | Region highlighting with bounding boxes |
 
 **Coordinate System:**
-OpenSeadragon SVG Overlay uses viewport coordinates:
-- X: 0-1 (normalized to image width)
-- Y: 0-aspectRatio (normalized to image width, NOT height)
+OpenSeadragon uses viewport-normalized coordinates where X ranges 0-1 and Y is scaled by aspect ratio.
 
-```javascript
-const aspectRatio = imgHeight / imgWidth;
-const x = reg.x / 100;                    // PAGE-XML percent to 0-1
-const y = (reg.y / 100) * aspectRatio;    // Must multiply by aspect ratio
-```
+**Important:** Y coordinates must be multiplied by aspect ratio (height/width) when converting from PAGE-XML percentages. The formula is: `x = percent/100`, `y = (percent/100) * aspectRatio`. This is a common source of bugs - see viewer.js for the implementation.
 
 **Keyboard Shortcuts:**
 | Key | Action |
 |-----|--------|
 | `+` / `=` | Zoom in |
 | `-` | Zoom out |
-| `0` | Reset view (incl. rotation) |
+| `0` | Reset view |
 | `f` | Fit to view |
-| `r` | Rotate left |
-| `R` | Rotate right |
+| `r` / `R` | Rotate left/right |
 | `h` | Flip horizontal |
 
-### Event Listener Registration (Implemented)
+### Event System
 
-```javascript
-// In viewer.js (OpenSeadragon)
-appState.addEventListener('selectionChanged', (e) => {
-  highlightRegion(e.detail.line);
-  panToRegion(e.detail.line);
-});
+Components communicate through AppState events. Each component listens for relevant events and updates its UI accordingly.
 
-viewer.addHandler('zoom', (e) => {
-  const zoomPercent = Math.round(e.zoom * 100);
-  zoomLabel.textContent = `${zoomPercent}%`;
-  appState.setZoom(zoomPercent);
-});
+**Event Flow:**
+- **viewer.js** listens for `selectionChanged` to highlight regions and pan
+- **editor.js** listens for `selectionChanged` to highlight rows and scroll
+- **ui.js** listens for `selectionChanged` to scroll validation cards into view
+- **editor.js** listens for `pageChanged` and `pagesLoaded` to re-render content
 
-// In editor.js
-appState.addEventListener('selectionChanged', (e) => {
-  document.querySelectorAll('.editor-grid-row.active').forEach(el => el.classList.remove('active'));
-  const lineEl = document.querySelector(`.editor-grid-row[data-line="${e.detail.line}"]`);
-  if (lineEl) {
-    lineEl.classList.add('active');
-    lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-});
-
-// Editor reacts to page changes (IIIF, multi-page)
-appState.addEventListener('pageChanged', () => {
-  renderEditor(appState.getState().transcription);
-});
-
-appState.addEventListener('pagesLoaded', () => {
-  renderEditor(appState.getState().transcription);
-});
-
-// In ui.js
-appState.addEventListener('selectionChanged', (e) => {
-  const valCard = document.querySelector(`.validation-card[data-line="${e.detail.line}"]`);
-  if (valCard) {
-    valCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    // Flash effect
-  }
-});
-```
+This creates bidirectional synchronization between all three panels.
 
 ### IIIF Integration
 
-**Dialog Features:**
-| Feature | Implementation |
-|---------|----------------|
-| Manifest URL Input | Text input with URL validation |
-| Example Links | Pre-filled URLs (Bodleian, Gallica, BSB) |
-| Preview | Optional - fetch and display metadata |
-| Direct Load | Enter key or Load button loads immediately |
-| Version Detection | Auto-detect IIIF Presentation API v2/v3 |
+**Implementation:** IIIF Dialog in [dialogs.js](../docs/js/components/dialogs.js)
 
-**Workflow:**
-```
-1. Open IIIF Dialog (header button or empty state)
-2. Enter manifest URL or click example
-3. Click Load (or press Enter)
-4. Manifest parsed, pages extracted
-5. First page displayed in viewer
-6. Navigation buttons enable page switching
-```
+**Features:**
+| Feature | Description |
+|---------|-------------|
+| Manifest URL Input | Text field with validation |
+| Example Links | Pre-filled Bodleian, Gallica, BSB URLs |
+| Version Detection | Auto-detect IIIF Presentation API v2/v3 |
+| Page Navigation | Multi-page documents with prev/next buttons |
+
+**Workflow:** User opens IIIF Dialog, enters manifest URL, system parses manifest, extracts pages, displays first page in viewer, enables navigation for multi-page documents.
 
 ### StorageService
 
@@ -377,49 +311,19 @@ DocumentViewer    Transcription             State
 .scrollToRegion() .highlightRow(4)
 ```
 
-## API Calls
+## API Integration
 
-### Gemini
+All provider-specific API calls are implemented in [llm.js](../docs/js/services/llm.js).
 
-```javascript
-fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    contents: [{
-      parts: [
-        { text: prompt },
-        { inline_data: { mime_type: 'image/jpeg', data: base64 } }
-      ]
-    }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
-  })
-});
-```
+**Common Pattern:** Each provider receives the prompt and base64-encoded image, returns structured transcription. Temperature is set low (0.1) for consistent OCR results.
 
-### OpenAI
-
-```javascript
-fetch('https://api.openai.com/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${API_KEY}`
-  },
-  body: JSON.stringify({
-    model: 'gpt-5.2',
-    messages: [{
-      role: 'user',
-      content: [
-        { type: 'text', text: prompt },
-        { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
-      ]
-    }],
-    max_tokens: 4096,
-    temperature: 0.1
-  })
-});
-```
+**Provider Specifics:**
+| Provider | Auth Method | Image Format | Max Tokens |
+|----------|-------------|--------------|------------|
+| Gemini | URL parameter | inline_data | 8192 |
+| OpenAI | Bearer token | image_url (data URI) | 4096 |
+| Anthropic | x-api-key header | base64 in content | 4096 |
+| Ollama | None (local) | base64 | Varies |
 
 ## Error Handling
 
@@ -431,18 +335,7 @@ fetch('https://api.openai.com/v1/chat/completions', {
 | QuotaError | Quota exhausted | Alternative provider |
 | StorageError | LocalStorage full | Delete old sessions |
 
-```javascript
-async function withRetry(fn, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (error.retryAfter) await sleep(error.retryAfter * 1000);
-      else await sleep(1000 * Math.pow(2, attempt));
-    }
-  }
-}
-```
+**Retry Strategy:** Exponential backoff (1s, 2s, 4s) with max 3 attempts. Respects `retryAfter` header from rate-limited responses.
 
 ## Security
 
@@ -454,18 +347,7 @@ Keys are stored in LocalStorage (Base64 obfuscation, not real encryption).
 
 ### Content Security Policy
 
-```html
-<meta http-equiv="Content-Security-Policy" content="
-  default-src 'self';
-  script-src 'self';
-  connect-src 'self'
-    https://generativelanguage.googleapis.com
-    https://api.openai.com
-    https://api.anthropic.com
-    https://api.deepseek.com
-    http://localhost:11434;
-">
-```
+CSP restricts connections to known LLM API endpoints (Gemini, OpenAI, Anthropic, DeepSeek) plus localhost for Ollama. Scripts and styles limited to same-origin.
 
 ## Technology Decisions
 

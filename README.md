@@ -38,7 +38,7 @@ coOCR/HTR provides:
 - **Document Viewer**: Pan, zoom, fit controls with keyboard shortcuts
 - **IIIF Support**: Load documents from IIIF-compatible repositories (Internet Archive, Bodleian, etc.)
 - **RTL Script Support**: Automatic detection and display for Arabic, Hebrew, and other RTL scripts
-- **Batch Transcription**: Transcribe single pages or entire multi-page documents
+- **Batch Processing**: Transcribe and validate single pages or entire multi-page documents
 - **PAGE-XML Import**: Compatible with Transkribus exports
 - **METS-XML Support**: Parse multi-page documents from METS metadata
 - **Guided Workflow**: Step-by-step hints and progress tracking

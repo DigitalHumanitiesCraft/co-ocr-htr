@@ -74,6 +74,10 @@ class AppState extends EventTarget {
       // Corrections made by user
       corrections: [],
 
+      // Batch results (all pages)
+      batchTranscriptions: [],  // Array of transcription results per page
+      batchValidations: [],     // Array of validation results per page
+
       // UI state
       ui: {
         zoom: 100,
@@ -245,8 +249,9 @@ class AppState extends EventTarget {
     if (index < 0 || index >= this.data.pages.length) return;
     if (index === this.data.currentPageIndex) return;
 
-    // Save current page transcription
+    // Save current page transcription and validation
     this._saveCurrentPageTranscription();
+    this._saveCurrentPageValidation();
 
     // Load new page
     this._loadPage(index);
@@ -334,13 +339,25 @@ class AppState extends EventTarget {
       this.data.regions = [];
     }
 
-    // Reset validation
-    this.data.validation = {
-      status: 'idle',
-      rules: [],
-      llmJudge: null,
-      perspective: this.data.validation.perspective
-    };
+    // Load validation for this page if exists
+    const savedValidation = this.data.batchValidations.find(v => v.pageIndex === index);
+    if (savedValidation?.success && savedValidation?.validation) {
+      this.data.validation = {
+        status: 'complete',
+        rules: savedValidation.validation.rules || [],
+        llmJudge: savedValidation.validation.llmJudge || null,
+        perspective: this.data.validation.perspective,
+        summary: savedValidation.validation.summary || null
+      };
+    } else {
+      // Reset validation for page without results
+      this.data.validation = {
+        status: 'idle',
+        rules: [],
+        llmJudge: null,
+        perspective: this.data.validation.perspective
+      };
+    }
 
     this._emit('pageChanged', {
       index,
@@ -366,6 +383,38 @@ class AppState extends EventTarget {
         model: this.data.transcription.model,
         regions: this.data.regions
       };
+    }
+  }
+
+  /**
+   * Internal: Save current page validation
+   */
+  _saveCurrentPageValidation() {
+    const currentIndex = this.data.currentPageIndex;
+    const page = this.data.pages[currentIndex];
+    if (!page) return;
+
+    // Only save if validation has results
+    if (this.data.validation.status !== 'complete') return;
+    if (!this.data.validation.rules?.length && !this.data.validation.llmJudge) return;
+
+    // Find existing entry or create new
+    const existingIndex = this.data.batchValidations.findIndex(v => v.pageIndex === currentIndex);
+    const validationEntry = {
+      pageId: page.id,
+      pageIndex: currentIndex,
+      success: true,
+      validation: {
+        rules: this.data.validation.rules,
+        llmJudge: this.data.validation.llmJudge,
+        summary: this.data.validation.summary
+      }
+    };
+
+    if (existingIndex >= 0) {
+      this.data.batchValidations[existingIndex] = validationEntry;
+    } else {
+      this.data.batchValidations.push(validationEntry);
     }
   }
 
@@ -432,6 +481,10 @@ class AppState extends EventTarget {
    * @param {Array} results - Array of transcription results per page
    */
   setBatchTranscriptions(results) {
+    // Store in simple array for easy access
+    this.data.batchTranscriptions = results;
+
+    // Also store in per-page lookup
     for (const result of results) {
       if (result.success && result.transcription) {
         this.data.pageTranscriptions[result.pageId] = {
@@ -444,6 +497,21 @@ class AppState extends EventTarget {
 
     this.data.meta.updatedAt = new Date().toISOString();
     this._emit('batchTranscriptionComplete', {
+      total: results.length,
+      successful: results.filter(r => r.success).length
+    });
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Set batch validations for all pages
+   * @param {Array} results - Array of validation results per page
+   */
+  setBatchValidations(results) {
+    this.data.batchValidations = results;
+
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('batchValidationComplete', {
       total: results.length,
       successful: results.filter(r => r.success).length
     });
@@ -631,13 +699,23 @@ class AppState extends EventTarget {
   }
 
   _saveSession() {
+    // Save current page data before session save
+    this._saveCurrentPageTranscription();
+    this._saveCurrentPageValidation();
+
     storage.saveSession({
       document: this.data.document,
       transcription: this.data.transcription,
       validation: this.data.validation,
       corrections: this.data.corrections,
       regions: this.data.regions,
-      meta: this.data.meta
+      meta: this.data.meta,
+      // Multi-page data
+      pages: this.data.pages,
+      currentPageIndex: this.data.currentPageIndex,
+      pageTranscriptions: this.data.pageTranscriptions,
+      batchTranscriptions: this.data.batchTranscriptions,
+      batchValidations: this.data.batchValidations
     });
     this._emit('sessionSaved');
   }
@@ -652,6 +730,13 @@ class AppState extends EventTarget {
       if (session.data.corrections) this.data.corrections = session.data.corrections;
       if (session.data.regions) this.data.regions = session.data.regions;
       if (session.data.meta) this.data.meta = session.data.meta;
+
+      // Restore multi-page data
+      if (session.data.pages) this.data.pages = session.data.pages;
+      if (session.data.currentPageIndex !== undefined) this.data.currentPageIndex = session.data.currentPageIndex;
+      if (session.data.pageTranscriptions) this.data.pageTranscriptions = session.data.pageTranscriptions;
+      if (session.data.batchTranscriptions) this.data.batchTranscriptions = session.data.batchTranscriptions;
+      if (session.data.batchValidations) this.data.batchValidations = session.data.batchValidations;
 
       // Update legacy image
       if (session.data.document?.dataUrl) {
