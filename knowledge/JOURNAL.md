@@ -3090,4 +3090,50 @@ User requested simplification of the validation system and comprehensive code re
 
 ---
 
+## 2026-02-03 | Part 5: Documentation Cleanup
+
+**Participants:** User, Claude Opus 4.5
+
+### Knowledge Base Cleanup
+
+Removed obsolete planning documents and updated all references:
+
+**Deleted Files:**
+- `knowledge/REQUIREMENTS.md` - Outdated bug/feature tracker (bugs fixed, features implemented)
+- `knowledge/VIEWER-REWRITE-PLAN.md` - Plan completed, OpenSeadragon implemented
+- `knowledge/ACTIONPLAN.md` - Sprint tracking no longer needed
+
+**Updated Documentation:**
+
+| File | Changes |
+|------|---------|
+| `CLAUDE.md` | Replaced "Perspektiven" with "Custom Validation Prompt" |
+| `INDEX.md` | Removed REQUIREMENTS/ACTIONPLAN references, updated concepts |
+| `IMPLEMENTATION-PLAN.md` | Updated test count (125), provider count (4) |
+| `help.html` | Removed DeepSeek references |
+| `about.html` | Fixed perspectives → custom prompt, MIT → CC BY 4.0 |
+| `README.md` | Updated test count (125) |
+
+**Export Fix:**
+- Added raw text support to export service
+- Export now works with transcriptions that only have `raw` text (no segments/lines)
+
+### Final Knowledge Structure
+
+```
+knowledge/
+├── INDEX.md          # Navigation
+├── VISION.md         # Project goals
+├── METHODOLOGY.md    # Scientific foundations
+├── MODEL-LANDSCAPE.md # OCR/HTR model comparison
+├── DESIGN-SYSTEM.md  # UI/UX specification
+├── ARCHITECTURE.md   # Technical architecture
+├── VALIDATION.md     # Hybrid validation
+├── DATA-SCHEMA.md    # Data structures
+├── IMPLEMENTATION-PLAN.md # Roadmap (complete)
+└── JOURNAL.md        # Development log
+```
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
