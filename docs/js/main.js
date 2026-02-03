@@ -79,6 +79,12 @@ async function initApp() {
         dialogManager.showToast('An error occurred. Check console for details.', 'error');
     });
 
+    // Toast event handler - allows modules to show toasts without importing dialogManager
+    appState.addEventListener('toastRequested', (event) => {
+        const { message, type, duration } = event.detail;
+        dialogManager.showToast(message, type, duration);
+    });
+
     // Export event handler
     document.addEventListener('exportRequested', (event) => {
         const { format, includeValidation, includeMetadata } = event.detail;
@@ -102,10 +108,6 @@ async function initApp() {
 
     // Initialize guided workflow features
     initGuidedWorkflow();
-
-    // Don't auto-load demo - show empty state with drag & drop
-    // Users can load demos via the "Load Demo" button or header "Demo" button
-    // await autoLoadDemo();
 
     console.log('coOCR/HTR: Initialized');
 }
@@ -300,65 +302,6 @@ function updateWorkflowStep(stepNum, state) {
 }
 
 /**
- * Auto-load demo dataset on startup
- * Shows a visible demo indicator so users know it's sample data
- */
-async function autoLoadDemo() {
-    const demoIndicator = document.getElementById('demoIndicator');
-
-    // Check if there's already a session with user data (non-demo)
-    const session = storage.loadSession();
-    const hasUserDocument = session?.data?.document?.filename && !session?.data?.isDemo;
-    if (hasUserDocument) {
-        // User has their own document loaded, don't override
-        console.log('coOCR/HTR: User session found, skipping demo');
-        return;
-    }
-
-    // Clear any old session to ensure fresh demo load
-    storage.clearSession();
-
-    // Get available samples
-    const samples = await samplesService.getSamples();
-    if (samples.length === 0) {
-        console.log('coOCR/HTR: No samples available');
-        return;
-    }
-
-    try {
-        // Load the first sample as demo
-        const sample = await samplesService.loadSample(samples[0].id);
-
-        // Mark session as demo
-        appState.isDemo = true;
-
-        // Show demo indicator
-        if (demoIndicator) {
-            demoIndicator.style.display = 'flex';
-        }
-
-        console.log(`coOCR/HTR: Demo loaded - ${sample.name}`);
-
-        // Show welcome toast for first-time visitors
-        const settings = storage.loadSettings() || {};
-        if (!settings.onboardingShown) {
-            setTimeout(() => {
-                dialogManager.showToast(
-                    'Demo document loaded. Upload your own image or try the transcription!',
-                    'info',
-                    6000
-                );
-                storage.saveSettings({ onboardingShown: true });
-            }, 800);
-        }
-    } catch (error) {
-        console.error('Failed to auto-load demo:', error);
-        // Fall back to showing onboarding without demo
-        showOnboardingToast();
-    }
-}
-
-/**
  * Show demo indicator when demo data is active
  */
 function showDemoIndicator(show = true) {
@@ -366,37 +309,6 @@ function showDemoIndicator(show = true) {
     if (demoIndicator) {
         demoIndicator.style.display = show ? 'flex' : 'none';
     }
-}
-
-/**
- * Hide demo indicator (called when user uploads their own document)
- */
-function hideDemoIndicator() {
-    showDemoIndicator(false);
-    appState.isDemo = false;
-}
-
-/**
- * Show onboarding toast for first-time visitors
- * (Only used as fallback if demo fails to load)
- */
-function showOnboardingToast() {
-    const settings = storage.loadSettings() || {};
-
-    // Only show once
-    if (settings.onboardingShown) return;
-
-    // Delay to let app load
-    setTimeout(() => {
-        dialogManager.showToast(
-            'Welcome to coOCR/HTR! Load a demo document or upload an image to get started.',
-            'info',
-            8000 // Show longer
-        );
-
-        // Mark as shown
-        storage.saveSettings({ onboardingShown: true });
-    }, 1500);
 }
 
 // Start application when DOM is ready
