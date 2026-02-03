@@ -1,6 +1,18 @@
 # coOCR/HTR
 
-Browser-based experimentation environment for integrating domain experts into OCR/HTR pipelines for historical documents.
+**Editor-in-the-Loop tool for OCR/HTR verification, validation, and correction.**
+
+A browser-based application that helps domain experts verify and correct OCR/HTR results for historical documents. Upload an image to generate transcriptions via LLM, or import existing PAGE-XML from tools like Transkribus for correction. The goal: quality-assured transcriptions ready for downstream workflows.
+
+## Why coOCR/HTR?
+
+Standard OCR/HTR pipelines often fail on historical documents due to unusual scripts, complex layouts, and domain-specific vocabulary. These errors require **human expertise** to correct - but existing tools are often complex and not optimized for the correction workflow.
+
+coOCR/HTR provides:
+- **Two input modes**: Generate OCR from images OR correct existing PAGE-XML
+- **AI assistance**: LLM-powered transcription and validation for difficult passages
+- **Expert-focused UI**: Synchronized view of document, transcription, and validation
+- **Workflow integration**: Export corrected results in standard formats
 
 ## Features
 
@@ -98,7 +110,8 @@ Requires Ollama v0.13.0+. Model size: ~6.7GB.
 ## Documentation
 
 See the [knowledge/](knowledge/) folder for detailed documentation:
-- [INDEX.md](knowledge/INDEX.md) - Navigation
+- [VISION.md](knowledge/VISION.md) - Project goals and success criteria
+- [INDEX.md](knowledge/INDEX.md) - Navigation and document matrix
 - [METHODOLOGY.md](knowledge/METHODOLOGY.md) - Scientific background
 - [ARCHITECTURE.md](knowledge/ARCHITECTURE.md) - Technical architecture
 - [VALIDATION.md](knowledge/VALIDATION.md) - Validation system

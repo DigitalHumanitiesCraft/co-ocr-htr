@@ -93,3 +93,4 @@ METHODOLOGY ──────────────────────�
 | 1.3 | 2026-01-16 | Translated to English |
 | 1.4 | 2026-01-16 | Added REQUIREMENTS.md with feature status, bugs, and requirements |
 | 1.5 | 2026-01-18 | Added IIIF Integration, OpenSeadragon viewer, IIIF Dialog |
+| 1.6 | 2026-02-03 | Added VISION.md with project goals and success criteria |

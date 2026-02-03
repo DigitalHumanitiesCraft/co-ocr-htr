@@ -2514,12 +2514,57 @@ function injectStyles() { /* ... */ }
 | `f0f33e3` | refactor: remove dead code and resolve circular dependency |
 | `d18eb02` | refactor: extract inline CSS from validation.js to validation.css |
 
+### Phase 4: Vision Documentation
+
+**Task:** Klares Projektziel dokumentieren und im Repository abbilden.
+
+**Neues Dokument:** `knowledge/VISION.md`
+
+**Kernaussagen:**
+- **Mission:** Editor-in-the-Loop Werkzeug zur OCR/HTR-Verifikation und -Korrektur
+- **Zwei Input-Modi:** Bild (OCR erzeugen) ODER PAGE-XML (korrigieren)
+- **Erfolgskriterien:**
+  1. Selbsterklaerend (ohne Anleitung nutzbar)
+  2. Vollstaendiger Workflow (Upload → Bearbeiten → Export)
+  3. Workflow-Integration (Output in anderen Prozessen nutzbar)
+  4. Qualitaetssicherung ("korrektes OCR/HTR kommt raus")
+
+**Aktualisierte Dokumente:**
+- `README.md` - Vision im Header, "Why coOCR/HTR?" Sektion
+- `CLAUDE.md` - Projektziel-Sektion am Anfang
+- `knowledge/INDEX.md` - VISION.md in Document Matrix
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/js/main.js` | Dead code removal, toast event listener |
+| `docs/js/state.js` | `showToast()` method |
+| `docs/js/viewer.js` | Event-based toast instead of dynamic import |
+| `docs/js/components/validation.js` | Removed inline CSS (-350 lines) |
+| `docs/css/validation.css` | Added extracted styles (+273 lines) |
+| `knowledge/VISION.md` | NEW - Project goals and success criteria |
+| `README.md` | Vision statement, "Why coOCR/HTR?" section |
+| `CLAUDE.md` | Projektziel section |
+| `knowledge/INDEX.md` | VISION.md in document matrix |
+
+### Commits
+
+| Hash | Message |
+|------|---------|
+| `f0f33e3` | refactor: remove dead code and resolve circular dependency |
+| `d18eb02` | refactor: extract inline CSS from validation.js to validation.css |
+| `2c53196` | docs: add Session 21 refactoring documentation |
+| `4425770` | docs: add VISION.md with project goals and success criteria |
+
 ### Project Status
 
 **Completed:**
 - [x] Dead code removal (-79 lines)
 - [x] Circular dependency resolution (toast event system)
 - [x] CSS extraction from validation.js (-350 lines JS, +273 lines CSS)
+- [x] VISION.md created with project goals
+- [x] Vision integrated into README.md, CLAUDE.md, INDEX.md
 
 ---
 
