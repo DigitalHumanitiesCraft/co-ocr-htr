@@ -711,31 +711,46 @@
         </div>
 
         <div class="dialog-body">
-            <!-- Validation Mode Info -->
-            <div class="validation-mode-info" id="validateModeInfo">
-                <div class="validation-mode-item">
-                    <span class="mode-icon mode-rules">
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                        </svg>
-                    </span>
-                    <div class="mode-text">
-                        <span class="mode-label">Regelbasiert</span>
-                        <span class="mode-hint">Deterministische Prüfungen (lokal, schnell)</span>
-                    </div>
+            <!-- Regelbasierte Checks -->
+            <div class="validate-options-section">
+                <h4 class="validate-section-title">Regelbasiert</h4>
+                <p class="validate-section-hint">Lokale, schnelle Pruefungen ohne API-Calls</p>
+                <div class="validate-checkbox-group">
+                    <label class="validate-checkbox-option">
+                        <input type="checkbox" id="checkMarkers" checked>
+                        <span class="checkbox-label">Transkriptions-Marker</span>
+                        <span class="checkbox-hint">[?], [illegible], Abkuerzungen</span>
+                    </label>
+                    <label class="validate-checkbox-option">
+                        <input type="checkbox" id="checkStats" checked>
+                        <span class="checkbox-label">Text-Statistik</span>
+                        <span class="checkbox-hint">Zeilen- und Zeichenanzahl</span>
+                    </label>
+                    <label class="validate-checkbox-option">
+                        <input type="checkbox" id="checkArtifacts" checked>
+                        <span class="checkbox-label">OCR-Artefakte</span>
+                        <span class="checkbox-hint">Ungewoehnliche Zeichen, Kontrolzeichen</span>
+                    </label>
                 </div>
-                <div class="validation-mode-item" id="llmModeItem">
-                    <span class="mode-icon mode-ai">
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
-                        </svg>
-                    </span>
-                    <div class="mode-text">
-                        <span class="mode-label">KI-Analyse</span>
-                        <span class="mode-hint" id="llmModeHint">API-Call pro Seite</span>
-                    </div>
+            </div>
+
+            <!-- KI-Analyse -->
+            <div class="validate-options-section" id="llmModeItem">
+                <div class="validate-section-header">
+                    <h4 class="validate-section-title">KI-Analyse</h4>
+                    <label class="validate-toggle">
+                        <input type="checkbox" id="enableLLM" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
+                <p class="validate-section-hint" id="llmModeHint">API-Call pro Seite</p>
+                <details class="custom-prompt-details">
+                    <summary class="custom-prompt-toggle">Eigenen Prompt verwenden (optional)</summary>
+                    <div class="custom-prompt-content">
+                        <p class="custom-prompt-hint">Ueberschreibt den Standard-Validierungsprompt. Nutze {text} als Platzhalter fuer die Transkription.</p>
+                        <textarea id="customValidationPrompt" class="custom-prompt-textarea" rows="6" placeholder="Analysiere den folgenden Text auf Transkriptionsfehler...&#10;&#10;{text}&#10;&#10;Antworte im JSON-Format mit confidence, issues und summary."></textarea>
+                    </div>
+                </details>
             </div>
 
             <!-- Page Selection for Multi-Page -->

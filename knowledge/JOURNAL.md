@@ -2989,4 +2989,105 @@ This bug was fixed by implementing proper page-level validation state management
 
 ---
 
+## 2026-02-03 | Session 23: Validation Simplification and Refactoring
+
+**Participants:** User, Claude Opus 4.5
+
+### Context
+
+User requested simplification of the validation system and comprehensive code refactoring.
+
+### Part 1: English Prompts
+
+**Changes:**
+- Converted all LLM prompts from German to English for better model performance
+- Includes: `TRANSCRIPTION_PROMPT_BASE`, `ISSUE_TYPE_INSTRUCTION`, validation prompts
+
+### Part 2: Generic Validation Prompt
+
+**User Request:** Remove the 4 specialized perspectives (paleographic, linguistic, structural, domain) and replace with one generic default prompt.
+
+**Implemented:**
+- New `DEFAULT_VALIDATION_PROMPT` covers all validation aspects
+- New `buildValidationPrompt(text, customPrompt)` function
+- Optional custom prompt field for advanced users (collapsed by default)
+- Removed perspective dropdown from UI
+
+**Files Changed:**
+| File | Changes |
+|------|---------|
+| `docs/js/services/llm.js` | DEFAULT_VALIDATION_PROMPT, buildValidationPrompt(), removed VALIDATION_PROMPTS |
+| `docs/index.html` | Replaced perspective dropdown with custom prompt details element |
+| `docs/css/dialogs.css` | Removed perspective CSS, added custom-prompt-details styles |
+| `docs/js/services/validation.js` | Updated validateWithLLM() to use customPrompt |
+| `docs/js/components/validation.js` | Updated getValidationOptions(), removed perspective logic |
+
+### Part 3: Dead Code Removal (Refactoring)
+
+**Analysis:** Comprehensive codebase scan for unused code after perspective removal.
+
+**Removed (~280 lines):**
+
+| File | Removed | Lines |
+|------|---------|-------|
+| `validation.js` (component) | `renderRuleSection()`, `renderLLMSection()` | ~95 |
+| `validation.js` (service) | `getPerspectives()` | ~10 |
+| `llm.js` | `VALIDATION_PROMPTS` constant + export | ~12 |
+| `validation.css` | `.perspective-dropdown`, `.perspective-menu`, `.perspective-item`, `.perspective-badge`, `.dropdown-menu`, `.dropdown-item` | ~110 |
+| `dialogs.css` | `.validation-mode-info`, `.validation-mode-item`, `.mode-icon`, `.mode-text`, `.mode-label`, `.mode-hint` | ~55 |
+
+### What Remains Active
+
+- `renderRuleCards()` - Active rule rendering (compact)
+- `renderLLMCards()` - Active AI analysis rendering
+- `renderIssueItem()` - Issue type badge rendering
+- `renderValidationCard()` - Individual validation items
+- `getCategories()` - Rule categories for UI
+- `DEFAULT_VALIDATION_PROMPT` - Generic validation prompt
+- `buildValidationPrompt()` - Custom prompt builder
+- `ISSUE_TYPES` - Issue type definitions
+
+### Part 4: Unit Tests Update
+
+**Problem:** Existing tests were outdated after refactoring:
+- `deepseek` provider (removed)
+- `perspective` parameter (now `customPrompt`)
+- `date_format`, `currency_*`, `table_*` rules (removed)
+
+**Solution:** Updated both test files to match new architecture.
+
+**validation.test.js Changes:**
+- Removed tests for `date_format`, `currency_*`, `table_consistency`, `empty_cells`
+- Added tests for category filtering (`markers`, `stats`, `artifacts`)
+- Added tests for `customPrompt` parameter
+- Added tests for `abbreviations`, `special_chars`, `control_chars`
+- Updated mock for `ISSUE_TYPES`
+- New test count: 40 (was 27)
+
+**llm.test.js Changes:**
+- Removed `deepseek` provider tests
+- Removed `perspective` parameter in `_parseValidationResponse()`
+- Updated provider count from 5 to 4
+- Added test for issue parsing in validation response
+- New test count: 27 (was 27)
+
+**Final Test Results:**
+| File | Tests | Status |
+|------|-------|--------|
+| llm.test.js | 27 | passed |
+| export.test.js | 32 | passed |
+| validation.test.js | 40 | passed |
+| page-xml.test.js | 26 | passed |
+| **Total** | **125** | **all passed** |
+
+### Status
+
+- [x] English prompts throughout
+- [x] Generic validation prompt (no more perspectives)
+- [x] Optional custom prompt field
+- [x] Dead code removed (~280 lines)
+- [x] Unit tests updated and passing (125 tests)
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*

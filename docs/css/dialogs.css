@@ -588,60 +588,173 @@ dialog[open] {
   border-radius: var(--radius-md);
 }
 
-/* Validation Mode Info */
-.validation-mode-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+/* Validate Options Section */
+.validate-options-section {
   padding: var(--space-3);
   background: var(--bg-tertiary);
   border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
 }
 
-.validation-mode-item {
+.validate-section-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2);
 }
 
-.validation-mode-item.disabled {
-  opacity: 0.5;
-}
-
-.mode-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-}
-
-.mode-icon.mode-rules {
-  background: rgba(90, 138, 90, 0.15);
-  color: var(--confident);
-}
-
-.mode-icon.mode-ai {
-  background: rgba(108, 92, 231, 0.15);
-  color: var(--accent-primary);
-}
-
-.mode-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.mode-label {
-  font-weight: 500;
+.validate-section-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.mode-hint {
+.validate-section-hint {
+  margin: var(--space-1) 0 var(--space-2) 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* Checkbox Group */
+.validate-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.validate-checkbox-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 0 var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.validate-checkbox-option:hover {
+  background: var(--surface-hover);
+}
+
+.validate-checkbox-option input[type="checkbox"] {
+  grid-row: span 2;
+  align-self: center;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-primary);
+}
+
+.validate-checkbox-option .checkbox-label {
   font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.validate-checkbox-option .checkbox-hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* Toggle Switch for LLM */
+.validate-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.validate-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-default);
+  transition: var(--transition-fast);
+  border-radius: 10px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: var(--transition-fast);
+  border-radius: 50%;
+}
+
+.validate-toggle input:checked + .toggle-slider {
+  background-color: var(--accent-primary);
+}
+
+.validate-toggle input:checked + .toggle-slider:before {
+  transform: translateX(16px);
+}
+
+/* Custom Prompt (Collapsed by default) */
+.custom-prompt-details {
+  margin-top: var(--space-2);
+}
+
+.custom-prompt-toggle {
+  font-size: var(--text-xs);
   color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1) 0;
+  user-select: none;
+}
+
+.custom-prompt-toggle:hover {
+  color: var(--text-primary);
+}
+
+.custom-prompt-content {
+  margin-top: var(--space-2);
+}
+
+.custom-prompt-hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-2);
+}
+
+.custom-prompt-textarea {
+  width: 100%;
+  padding: var(--space-2);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  resize: vertical;
+  min-height: 100px;
+}
+
+.custom-prompt-textarea:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+}
+
+.custom-prompt-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Disabled state for LLM section */
+.validate-options-section.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* Batch Validation Progress */

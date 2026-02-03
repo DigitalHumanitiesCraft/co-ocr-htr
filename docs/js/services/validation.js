@@ -10,6 +10,31 @@ import { llmService } from './llm.js';
 import { appState } from '../state.js';
 
 // ============================================
+// Rule Categories
+// ============================================
+
+/**
+ * Rule categories for configurable validation
+ */
+const RULE_CATEGORIES = {
+    markers: {
+        name: 'Transkriptions-Marker',
+        description: '[?], [illegible], Abkuerzungen',
+        rules: ['uncertain_marker', 'illegible_marker', 'abbreviations']
+    },
+    stats: {
+        name: 'Text-Statistik',
+        description: 'Zeilen- und Zeichenanzahl',
+        rules: ['line_count', 'char_count']
+    },
+    artifacts: {
+        name: 'OCR-Artefakte',
+        description: 'Ungewoehnliche Zeichen, Kontrolzeichen',
+        rules: ['special_chars', 'double_spaces', 'control_chars']
+    }
+};
+
+// ============================================
 // Rule-based Validation
 // ============================================
 
@@ -18,19 +43,19 @@ import { appState } from '../state.js';
  * Each rule has:
  * - id: unique identifier
  * - name: human-readable name
+ * - category: which category this rule belongs to
  * - regex: pattern to match (null for custom validation)
  * - validate: custom validation function (optional)
- * - type: success | warning | error
- * - messagePass: message when rule passes
+ * - type: success | warning | error | info
+ * - messagePass: message when rule passes (can be function)
  * - messageFail: message when rule fails
  */
-/**
- * Generic validation rules (applicable to all document types)
- */
 const VALIDATION_RULES = [
+    // === MARKERS CATEGORY ===
     {
         id: 'uncertain_marker',
         name: 'Unsichere Lesungen',
+        category: 'markers',
         description: 'Stellen, die mit [?] markiert wurden',
         regex: /\[\?\]/g,
         type: 'warning',
@@ -40,6 +65,7 @@ const VALIDATION_RULES = [
     {
         id: 'illegible_marker',
         name: 'Unleserliche Stellen',
+        category: 'markers',
         description: 'Stellen, die als [illegible] oder [...] markiert wurden',
         regex: /\[(illegible|\.\.\.)\]/gi,
         type: 'warning',
@@ -49,15 +75,19 @@ const VALIDATION_RULES = [
     {
         id: 'abbreviations',
         name: 'Abkuerzungen',
-        description: 'Erkannte Abkuerzungsmarkierungen',
-        regex: /\w+\[[\w]+\]/g,  // e.g., "admi[nistrateurs]"
+        category: 'markers',
+        description: 'Erkannte Abkuerzungsmarkierungen wie wort[ergaenzung]',
+        regex: /\w+\[[\w]+\]/g,
         type: 'info',
         messagePass: (count) => `${count} aufgeloeste Abkuerzung(en)`,
         messageFail: 'Keine Abkuerzungen erkannt'
     },
+
+    // === STATS CATEGORY ===
     {
-        id: 'line_breaks',
+        id: 'line_count',
         name: 'Zeilenanzahl',
+        category: 'stats',
         description: 'Anzahl der transkribierten Zeilen',
         validate: validateLineCount,
         type: 'info',
@@ -65,13 +95,50 @@ const VALIDATION_RULES = [
         messageFail: 'Keine Zeilen gefunden'
     },
     {
+        id: 'char_count',
+        name: 'Zeichenanzahl',
+        category: 'stats',
+        description: 'Gesamtzahl der Zeichen im Text',
+        validate: validateCharCount,
+        type: 'info',
+        messagePass: (count) => `${count} Zeichen`,
+        messageFail: 'Kein Text vorhanden'
+    },
+
+    // === ARTIFACTS CATEGORY ===
+    {
         id: 'special_chars',
         name: 'Sonderzeichen',
+        category: 'artifacts',
         description: 'Ungewoehnliche Zeichen (moegl. OCR-Artefakte)',
-        regex: /[^\w\s\.,;:!?\-\'\"\(\)\[\]äöüÄÖÜßàâéèêëïîôùûçœæÀÂÉÈÊËÏÎÔÙÛÇŒÆ]/g,
-        type: 'info',
-        messagePass: (count) => `${count} Sonderzeichen gefunden`,
+        // Exclude common chars: word chars, whitespace, punctuation, common accented chars
+        regex: /[^\w\s\.,;:!?\-\'\"\(\)\[\]\/\\\n\r\t°§†‡©®™€£¥¢äöüÄÖÜßàáâãåæçèéêëìíîïðñòóôõøùúûýÿœŒÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕØÙÚÛÝŸ]/g,
+        type: 'warning',
+        messagePass: (count, matches) => {
+            const uniqueChars = [...new Set(matches)].slice(0, 5).join(' ');
+            return `${count} Sonderzeichen: ${uniqueChars}${matches.length > 5 ? '...' : ''}`;
+        },
         messageFail: 'Keine ungewoehnlichen Zeichen'
+    },
+    {
+        id: 'double_spaces',
+        name: 'Doppelte Leerzeichen',
+        category: 'artifacts',
+        description: 'Mehrfache aufeinanderfolgende Leerzeichen',
+        regex: /  +/g,
+        type: 'info',
+        messagePass: (count) => `${count} Stelle(n) mit mehrfachen Leerzeichen`,
+        messageFail: 'Keine doppelten Leerzeichen'
+    },
+    {
+        id: 'control_chars',
+        name: 'Steuerzeichen',
+        category: 'artifacts',
+        description: 'Nicht-druckbare Zeichen (ausser Zeilenumbruch)',
+        regex: /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,
+        type: 'error',
+        messagePass: (count) => `${count} nicht-druckbare(s) Zeichen gefunden`,
+        messageFail: 'Keine Steuerzeichen'
     }
 ];
 
@@ -90,6 +157,20 @@ function validateLineCount(text, segments) {
     };
 }
 
+/**
+ * Custom validator: Count characters
+ */
+function validateCharCount(text, segments) {
+    const count = text ? text.length : 0;
+
+    return {
+        passed: count > 0,
+        lines: [],
+        matches: [count],
+        details: null
+    };
+}
+
 // ============================================
 // Validation Engine
 // ============================================
@@ -97,18 +178,48 @@ function validateLineCount(text, segments) {
 class ValidationEngine {
     constructor() {
         this.rules = VALIDATION_RULES;
+        this.categories = RULE_CATEGORIES;
     }
 
     /**
-     * Run all rule-based validations
+     * Get rules for a specific category
+     * @param {string} categoryId - Category identifier
+     * @returns {Array} Rules in that category
+     */
+    getRulesByCategory(categoryId) {
+        const category = this.categories[categoryId];
+        if (!category) return [];
+        return this.rules.filter(r => category.rules.includes(r.id));
+    }
+
+    /**
+     * Run rule-based validations with category filtering
      * @param {string} text - Full transcription text
      * @param {Array} segments - Parsed segments
+     * @param {object} categoryOptions - Which categories to include
      * @returns {Array} Validation results
      */
-    validateRules(text, segments) {
+    validateRules(text, segments, categoryOptions = {}) {
+        const {
+            markers = true,
+            stats = true,
+            artifacts = true
+        } = categoryOptions;
+
+        // Determine which rules to run based on enabled categories
+        const enabledCategories = [];
+        if (markers) enabledCategories.push('markers');
+        if (stats) enabledCategories.push('stats');
+        if (artifacts) enabledCategories.push('artifacts');
+
         const results = [];
 
         for (const rule of this.rules) {
+            // Skip rules not in enabled categories
+            if (!enabledCategories.includes(rule.category)) {
+                continue;
+            }
+
             let result;
 
             if (rule.validate) {
@@ -122,8 +233,6 @@ class ValidationEngine {
             }
 
             // Generate message (support function or string)
-            // For custom validators, use first match value if it's a number (e.g., line count)
-            // For regex validators, use matches array length
             let matchCount;
             if (rule.validate && result.matches?.length === 1 && typeof result.matches[0] === 'number') {
                 matchCount = result.matches[0];
@@ -133,7 +242,7 @@ class ValidationEngine {
 
             let message;
             if (result.passed && typeof rule.messagePass === 'function') {
-                message = rule.messagePass(matchCount);
+                message = rule.messagePass(matchCount, result.matches);
             } else if (result.passed) {
                 message = rule.messagePass;
             } else {
@@ -143,6 +252,7 @@ class ValidationEngine {
             results.push({
                 id: rule.id,
                 name: rule.name,
+                category: rule.category,
                 description: rule.description || '',
                 type: result.passed ? rule.type : 'info',
                 passed: result.passed,
@@ -175,10 +285,11 @@ class ValidationEngine {
 
         // Find which lines contain matches
         const lines = [];
-        if (segments) {
-            segments.forEach((seg, idx) => {
-                const lineRegex = new RegExp(regex.source, regex.flags.replace('g', ''));
-                if (lineRegex.test(seg.text || '')) {
+        if (text) {
+            const textLines = text.split('\n');
+            const lineRegex = new RegExp(regex.source, regex.flags.replace('g', ''));
+            textLines.forEach((line, idx) => {
+                if (lineRegex.test(line)) {
                     lines.push(idx + 1);
                 }
             });
@@ -194,23 +305,22 @@ class ValidationEngine {
     /**
      * Run LLM-Judge validation
      * @param {string} text - Transcription text
-     * @param {string} perspective - Validation perspective
+     * @param {string} customPrompt - Optional custom validation prompt
      * @returns {Promise<object>} LLM validation result
      */
-    async validateWithLLM(text, perspective = 'paleographic') {
+    async validateWithLLM(text, customPrompt = '') {
         try {
-            const result = await llmService.validate(text, perspective);
+            const result = await llmService.validate(text, { customPrompt });
             return {
-                perspective,
                 confidence: result.confidence,
                 reasoning: result.reasoning,
                 issues: result.issues || [],
+                summary: result.summary || result.reasoning,
                 raw: result.raw
             };
         } catch (error) {
             console.error('LLM validation error:', error);
             return {
-                perspective,
                 confidence: 'uncertain',
                 reasoning: `Validation failed: ${error.message}`,
                 issues: [],
@@ -220,21 +330,39 @@ class ValidationEngine {
     }
 
     /**
-     * Run complete validation (rules + LLM)
+     * Run complete validation (rules + LLM) with options
      * @param {string} text - Transcription text
      * @param {Array} segments - Parsed segments
-     * @param {string} perspective - LLM perspective
-     * @param {boolean} includeLLM - Whether to include LLM validation
+     * @param {object} options - Validation options
      * @returns {Promise<object>} Complete validation results
      */
-    async validate(text, segments, perspective = 'paleographic', includeLLM = true) {
-        // Run rule-based validation (always)
-        const ruleResults = this.validateRules(text, segments);
+    async validate(text, segments, options = {}) {
+        // Support old signature: validate(text, segments, perspective, includeLLM)
+        if (typeof options === 'string') {
+            options = {
+                includeLLM: arguments[3] !== false
+            };
+        }
+
+        const {
+            checkMarkers = true,
+            checkStats = true,
+            checkArtifacts = true,
+            includeLLM = true,
+            customPrompt = ''
+        } = options;
+
+        // Run rule-based validation with category filtering
+        const ruleResults = this.validateRules(text, segments, {
+            markers: checkMarkers,
+            stats: checkStats,
+            artifacts: checkArtifacts
+        });
 
         // Run LLM validation (if requested and API key available)
         let llmResult = null;
         if (includeLLM && llmService.hasApiKey()) {
-            llmResult = await this.validateWithLLM(text, perspective);
+            llmResult = await this.validateWithLLM(text, customPrompt);
         }
 
         // Calculate summary
@@ -260,7 +388,9 @@ class ValidationEngine {
         };
 
         ruleResults.forEach(r => {
-            counts[r.type] = (counts[r.type] || 0) + 1;
+            if (r.passed) {
+                counts[r.type] = (counts[r.type] || 0) + 1;
+            }
         });
 
         // Overall status based on results
@@ -280,18 +410,18 @@ class ValidationEngine {
     }
 
     /**
-     * Get available perspectives for LLM validation
+     * Get rule categories for UI
      */
-    getPerspectives() {
-        return [
-            { id: 'paleographic', name: 'Palaeographisch', description: 'Buchstabenformen, Ligaturen, Abkuerzungen' },
-            { id: 'linguistic', name: 'Sprachlich', description: 'Grammatik, historische Orthographie' },
-            { id: 'structural', name: 'Strukturell', description: 'Tabellen, Summen, Verweise' },
-            { id: 'domain', name: 'Domaenenwissen', description: 'Fachtermini, Plausibilitaet' }
-        ];
+    getCategories() {
+        return Object.entries(this.categories).map(([id, cat]) => ({
+            id,
+            name: cat.name,
+            description: cat.description,
+            ruleCount: cat.rules.length
+        }));
     }
 }
 
 // Export singleton instance
 export const validationEngine = new ValidationEngine();
-export { VALIDATION_RULES, ValidationEngine };
+export { VALIDATION_RULES, RULE_CATEGORIES, ValidationEngine };

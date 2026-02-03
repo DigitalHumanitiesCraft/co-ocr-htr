@@ -146,17 +146,17 @@ Abstraction layer for multiple LLM providers with unified API.
 **Implementation:** [llm.js](../docs/js/services/llm.js)
 
 **Key Methods:**
-- `setProvider(name)` switches between Gemini, OpenAI, Anthropic, DeepSeek, Ollama
+- `setProvider(name)` switches between Gemini, OpenAI, Anthropic, Ollama
 - `setApiKey(key)` configures authentication
 - `transcribe(image, options)` sends image to VLM for OCR/HTR
-- `validate(text, perspective)` requests LLM-Judge analysis
+- `validate(text, options)` requests LLM-Judge analysis (options: `{ customPrompt }`)
 
 **Supported Providers:**
 | Provider | Endpoint | Default Model | Vision |
 |----------|----------|---------------|--------|
 | Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes |
 | OpenAI | api.openai.com | gpt-4o | Yes |
-| Anthropic | api.anthropic.com | claude-4.5-haiku | Yes |
+| Anthropic | api.anthropic.com | claude-sonnet-4-5 | Yes |
 | Ollama | localhost:11434 | deepseek-ocr | Yes |
 
 ### Document Viewer (OpenSeadragon)
@@ -347,7 +347,7 @@ Keys are stored in LocalStorage (Base64 obfuscation, not real encryption).
 
 ### Content Security Policy
 
-CSP restricts connections to known LLM API endpoints (Gemini, OpenAI, Anthropic, DeepSeek) plus localhost for Ollama. Scripts and styles limited to same-origin.
+CSP restricts connections to known LLM API endpoints (Gemini, OpenAI, Anthropic) plus localhost for Ollama. Scripts and styles limited to same-origin.
 
 ## Technology Decisions
 

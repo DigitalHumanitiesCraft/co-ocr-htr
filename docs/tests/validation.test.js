@@ -1,15 +1,22 @@
 /**
  * Tests for Validation Service
+ *
+ * Updated for v2.1: Generic validation prompt, no perspectives
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ValidationEngine, VALIDATION_RULES } from '../js/services/validation.js';
+import { ValidationEngine, VALIDATION_RULES, RULE_CATEGORIES } from '../js/services/validation.js';
 
 // Mock LLM service
 vi.mock('../js/services/llm.js', () => ({
   llmService: {
     hasApiKey: vi.fn(() => false),
     validate: vi.fn()
+  },
+  ISSUE_TYPES: {
+    spelling: { name: 'Spelling', color: 'warning' },
+    accent: { name: 'Accent', color: 'warning' },
+    historical: { name: 'Historical', color: 'info' }
   }
 }));
 
@@ -34,108 +41,83 @@ describe('ValidationEngine', () => {
     it('should have all expected validation rules', () => {
       const ruleIds = engine.rules.map(r => r.id);
 
-      expect(ruleIds).toContain('date_format');
-      expect(ruleIds).toContain('currency_taler');
-      expect(ruleIds).toContain('currency_groschen');
-      expect(ruleIds).toContain('currency_gulden');
+      // Current rules: markers, stats, artifacts
       expect(ruleIds).toContain('uncertain_marker');
       expect(ruleIds).toContain('illegible_marker');
-      expect(ruleIds).toContain('table_consistency');
-      expect(ruleIds).toContain('empty_cells');
+      expect(ruleIds).toContain('abbreviations');
+      expect(ruleIds).toContain('line_count');
+      expect(ruleIds).toContain('char_count');
+      expect(ruleIds).toContain('special_chars');
+      expect(ruleIds).toContain('double_spaces');
+      expect(ruleIds).toContain('control_chars');
     });
 
     it('should have valid rule structure', () => {
       engine.rules.forEach(rule => {
         expect(rule.id).toBeDefined();
         expect(rule.name).toBeDefined();
-        expect(rule.type).toMatch(/^(success|warning|error)$/);
+        expect(rule.category).toBeDefined();
+        expect(rule.type).toMatch(/^(success|warning|error|info)$/);
         expect(rule.messagePass).toBeDefined();
         expect(rule.messageFail).toBeDefined();
         expect(rule.regex || rule.validate).toBeDefined();
       });
     });
-  });
 
-  describe('Date Format Validation', () => {
-    it('should detect German date formats', () => {
-      const text = '28. Mai wurde die Rechnung erstellt. Am 3. Januar erfolgte die Zahlung.';
-      const segments = [
-        { text: '28. Mai wurde die Rechnung erstellt.' },
-        { text: 'Am 3. Januar erfolgte die Zahlung.' }
-      ];
-
-      const results = engine.validateRules(text, segments);
-      const dateRule = results.find(r => r.id === 'date_format');
-
-      expect(dateRule.passed).toBe(true);
-      expect(dateRule.matches).toContain('28. Mai');
-      expect(dateRule.matches).toContain('3. Januar');
-      expect(dateRule.lines).toContain(1);
-      expect(dateRule.lines).toContain(2);
-    });
-
-    it('should not match invalid date formats', () => {
-      const text = 'No dates here, just text.';
-      const segments = [{ text: 'No dates here, just text.' }];
-
-      const results = engine.validateRules(text, segments);
-      const dateRule = results.find(r => r.id === 'date_format');
-
-      expect(dateRule.passed).toBe(false);
-      expect(dateRule.matches).toHaveLength(0);
-    });
-
-    it('should handle all German months', () => {
-      const months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-                      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-
-      months.forEach(month => {
-        const text = `1. ${month}`;
-        const results = engine.validateRules(text, [{ text }]);
-        const dateRule = results.find(r => r.id === 'date_format');
-        expect(dateRule.passed).toBe(true);
-      });
+    it('should have valid rule categories', () => {
+      expect(RULE_CATEGORIES).toHaveProperty('markers');
+      expect(RULE_CATEGORIES).toHaveProperty('stats');
+      expect(RULE_CATEGORIES).toHaveProperty('artifacts');
     });
   });
 
-  describe('Currency Validation', () => {
-    it('should detect Taler currency', () => {
-      const text = '5 Taler und 10 Tlr. sowie 3 Rtl.';
-      const segments = [{ text }];
+  describe('Category-based Validation', () => {
+    it('should filter by markers category', () => {
+      const text = '[?] unsicher [illegible] unleserlich';
+      const results = engine.validateRules(text, [], { markers: true, stats: false, artifacts: false });
 
-      const results = engine.validateRules(text, segments);
-      const talerRule = results.find(r => r.id === 'currency_taler');
-
-      expect(talerRule.passed).toBe(true);
-      expect(talerRule.matches.length).toBeGreaterThanOrEqual(3);
+      const ruleIds = results.map(r => r.id);
+      expect(ruleIds).toContain('uncertain_marker');
+      expect(ruleIds).toContain('illegible_marker');
+      expect(ruleIds).not.toContain('line_count');
+      expect(ruleIds).not.toContain('special_chars');
     });
 
-    it('should detect Groschen currency', () => {
-      const text = '12 Groschen, 6 Gr. und 4 Sgr.';
-      const segments = [{ text }];
+    it('should filter by stats category', () => {
+      const text = 'Test text\nLine two';
+      const results = engine.validateRules(text, [], { markers: false, stats: true, artifacts: false });
 
-      const results = engine.validateRules(text, segments);
-      const groschenRule = results.find(r => r.id === 'currency_groschen');
-
-      expect(groschenRule.passed).toBe(true);
-      expect(groschenRule.matches.length).toBeGreaterThanOrEqual(3);
+      const ruleIds = results.map(r => r.id);
+      expect(ruleIds).toContain('line_count');
+      expect(ruleIds).toContain('char_count');
+      expect(ruleIds).not.toContain('uncertain_marker');
     });
 
-    it('should detect Gulden/Kreuzer currency', () => {
-      const text = '10 Gulden, 5 fl. und 30 Kreuzer';
-      const segments = [{ text }];
+    it('should filter by artifacts category', () => {
+      const text = 'Text  with  double spaces';
+      const results = engine.validateRules(text, [], { markers: false, stats: false, artifacts: true });
 
-      const results = engine.validateRules(text, segments);
-      const guldenRule = results.find(r => r.id === 'currency_gulden');
+      const ruleIds = results.map(r => r.id);
+      expect(ruleIds).toContain('double_spaces');
+      expect(ruleIds).toContain('special_chars');
+      expect(ruleIds).toContain('control_chars');
+      expect(ruleIds).not.toContain('line_count');
+    });
 
-      expect(guldenRule.passed).toBe(true);
-      expect(guldenRule.matches.length).toBeGreaterThanOrEqual(3);
+    it('should include all categories by default', () => {
+      const text = '[?] Test';
+      const results = engine.validateRules(text, []);
+
+      const categories = [...new Set(results.map(r => r.category))];
+      expect(categories).toContain('markers');
+      expect(categories).toContain('stats');
+      expect(categories).toContain('artifacts');
     });
   });
 
   describe('Uncertainty Markers', () => {
     it('should detect [?] markers', () => {
-      const text = 'Name ist [?] Müller';
+      const text = 'Name ist [?] Mueller';
       const segments = [{ text }];
 
       const results = engine.validateRules(text, segments);
@@ -154,7 +136,15 @@ describe('ValidationEngine', () => {
       const illegibleRule = results.find(r => r.id === 'illegible_marker');
 
       expect(illegibleRule.passed).toBe(true);
-      expect(illegibleRule.type).toBe('error');
+      expect(illegibleRule.type).toBe('warning');
+    });
+
+    it('should detect [...] as illegible marker', () => {
+      const text = 'Der Name war [...]';
+      const results = engine.validateRules(text, []);
+      const illegibleRule = results.find(r => r.id === 'illegible_marker');
+
+      expect(illegibleRule.passed).toBe(true);
     });
 
     it('should handle multiple markers', () => {
@@ -170,91 +160,103 @@ describe('ValidationEngine', () => {
     });
   });
 
-  describe('Table Consistency Validation', () => {
-    it('should pass for consistent column count', () => {
-      const segments = [
-        { text: '| A | B | C |' },
-        { text: '| D | E | F |' },
-        { text: '| G | H | I |' }
-      ];
+  describe('Abbreviation Detection', () => {
+    it('should detect expanded abbreviations', () => {
+      const text = 'Herr[n] Mueller kam am Dienstag[e]';
+      const results = engine.validateRules(text, []);
+      const abbrevRule = results.find(r => r.id === 'abbreviations');
 
-      const results = engine.validateRules('', segments);
-      const tableRule = results.find(r => r.id === 'table_consistency');
-
-      expect(tableRule.passed).toBe(true);
+      expect(abbrevRule.passed).toBe(true);
+      expect(abbrevRule.matchCount).toBe(2);
     });
 
-    it('should detect inconsistent column count', () => {
-      const segments = [
-        { text: '| A | B | C |' },
-        { text: '| D | E |' },      // Different column count
-        { text: '| G | H | I |' }
-      ];
+    it('should not match standalone brackets', () => {
+      const text = '[?] and [illegible] are not abbreviations';
+      const results = engine.validateRules(text, []);
+      const abbrevRule = results.find(r => r.id === 'abbreviations');
 
-      const results = engine.validateRules('', segments);
-      const tableRule = results.find(r => r.id === 'table_consistency');
-
-      expect(tableRule.passed).toBe(false);
-      expect(tableRule.lines).toContain(2);
-    });
-
-    it('should handle segments without pipes', () => {
-      const segments = [
-        { text: 'Just plain text' },
-        { text: 'No pipes here' }
-      ];
-
-      const results = engine.validateRules('', segments);
-      const tableRule = results.find(r => r.id === 'table_consistency');
-
-      expect(tableRule.passed).toBe(true);
-    });
-
-    it('should handle single segment', () => {
-      const segments = [{ text: '| A | B |' }];
-
-      const results = engine.validateRules('', segments);
-      const tableRule = results.find(r => r.id === 'table_consistency');
-
-      expect(tableRule.passed).toBe(true);
+      expect(abbrevRule.passed).toBe(false);
     });
   });
 
-  describe('Empty Cells Validation', () => {
-    it('should detect empty cells', () => {
-      const segments = [
-        { text: '| A |  | C |' },   // Empty middle cell
-        { text: '| D | E | F |' }
-      ];
+  describe('Text Statistics', () => {
+    it('should count lines correctly', () => {
+      const text = 'Line 1\nLine 2\nLine 3';
+      const results = engine.validateRules(text, []);
+      const lineRule = results.find(r => r.id === 'line_count');
 
-      const results = engine.validateRules('', segments);
-      const emptyRule = results.find(r => r.id === 'empty_cells');
-
-      expect(emptyRule.passed).toBe(false);
-      expect(emptyRule.lines).toContain(1);
+      expect(lineRule.passed).toBe(true);
+      expect(lineRule.matchCount).toBe(3);
     });
 
-    it('should pass for filled cells', () => {
-      const segments = [
-        { text: '| A | B | C |' },
-        { text: '| D | E | F |' }
-      ];
+    it('should ignore empty lines in count', () => {
+      const text = 'Line 1\n\nLine 2\n\n';
+      const results = engine.validateRules(text, []);
+      const lineRule = results.find(r => r.id === 'line_count');
 
-      const results = engine.validateRules('', segments);
-      const emptyRule = results.find(r => r.id === 'empty_cells');
-
-      expect(emptyRule.passed).toBe(true);
+      expect(lineRule.matchCount).toBe(2);
     });
 
-    it('should handle consecutive pipes as empty cells', () => {
-      const segments = [
-        { text: '| A || C |' }  // Missing middle value
-      ];
+    it('should count characters', () => {
+      const text = 'Test';
+      const results = engine.validateRules(text, []);
+      const charRule = results.find(r => r.id === 'char_count');
 
-      const results = engine.validateRules('', segments);
-      const emptyRule = results.find(r => r.id === 'empty_cells');
+      expect(charRule.passed).toBe(true);
+      expect(charRule.matchCount).toBe(4);
+    });
 
-      expect(emptyRule.passed).toBe(false);
+    it('should handle empty text', () => {
+      const results = engine.validateRules('', []);
+      const lineRule = results.find(r => r.id === 'line_count');
+      const charRule = results.find(r => r.id === 'char_count');
+
+      expect(lineRule.passed).toBe(false);
+      expect(charRule.passed).toBe(false);
+    });
+  });
+
+  describe('OCR Artifacts Detection', () => {
+    it('should detect double spaces', () => {
+      const text = 'Text  with  double  spaces';
+      const results = engine.validateRules(text, []);
+      const doubleRule = results.find(r => r.id === 'double_spaces');
+
+      expect(doubleRule.passed).toBe(true);
+      expect(doubleRule.matchCount).toBe(3);
+    });
+
+    it('should detect control characters', () => {
+      const text = 'Text with\x00control\x1Fchars';
+      const results = engine.validateRules(text, []);
+      const controlRule = results.find(r => r.id === 'control_chars');
+
+      expect(controlRule.passed).toBe(true);
+      expect(controlRule.type).toBe('error');
+    });
+
+    it('should allow normal whitespace', () => {
+      const text = 'Normal text\nwith tabs\tand newlines';
+      const results = engine.validateRules(text, []);
+      const controlRule = results.find(r => r.id === 'control_chars');
+
+      expect(controlRule.passed).toBe(false);
+    });
+
+    it('should detect unusual special characters', () => {
+      const text = 'Text with unusual chars: \u2603 \u2764';
+      const results = engine.validateRules(text, []);
+      const specialRule = results.find(r => r.id === 'special_chars');
+
+      expect(specialRule.passed).toBe(true);
+    });
+
+    it('should allow common characters', () => {
+      const text = 'Normal text with umlauts: äöüÄÖÜß and punctuation: .,;:!?';
+      const results = engine.validateRules(text, []);
+      const specialRule = results.find(r => r.id === 'special_chars');
+
+      expect(specialRule.passed).toBe(false);
     });
   });
 
@@ -277,13 +279,9 @@ describe('ValidationEngine', () => {
 
     it('should identify matching lines', () => {
       const regex = /Taler/gi;
-      const segments = [
-        { text: '10 Taler' },
-        { text: 'keine Waehrung' },
-        { text: '5 Taler' }
-      ];
+      const text = '10 Taler\nkeine Waehrung\n5 Taler';
 
-      const result = engine.validateRegex('10 Taler keine Waehrung 5 Taler', segments, regex);
+      const result = engine.validateRegex(text, [], regex);
 
       expect(result.lines).toContain(1);
       expect(result.lines).not.toContain(2);
@@ -302,7 +300,7 @@ describe('ValidationEngine', () => {
   });
 
   describe('LLM Validation', () => {
-    it('should call LLM service with correct perspective', async () => {
+    it('should call LLM service with custom prompt', async () => {
       llmService.hasApiKey.mockReturnValue(true);
       llmService.validate.mockResolvedValue({
         confidence: 'likely',
@@ -310,17 +308,31 @@ describe('ValidationEngine', () => {
         issues: []
       });
 
-      const result = await engine.validateWithLLM('Test text', 'paleographic');
+      const customPrompt = 'Custom validation prompt: {text}';
+      const result = await engine.validateWithLLM('Test text', customPrompt);
 
-      expect(llmService.validate).toHaveBeenCalledWith('Test text', 'paleographic');
-      expect(result.perspective).toBe('paleographic');
+      expect(llmService.validate).toHaveBeenCalledWith('Test text', { customPrompt });
       expect(result.confidence).toBe('likely');
+    });
+
+    it('should call LLM service without custom prompt', async () => {
+      llmService.hasApiKey.mockReturnValue(true);
+      llmService.validate.mockResolvedValue({
+        confidence: 'confident',
+        reasoning: 'All good',
+        issues: []
+      });
+
+      const result = await engine.validateWithLLM('Test text', '');
+
+      expect(llmService.validate).toHaveBeenCalledWith('Test text', { customPrompt: '' });
+      expect(result.confidence).toBe('confident');
     });
 
     it('should handle LLM errors gracefully', async () => {
       llmService.validate.mockRejectedValue(new Error('API Error'));
 
-      const result = await engine.validateWithLLM('Test text', 'paleographic');
+      const result = await engine.validateWithLLM('Test text', '');
 
       expect(result.confidence).toBe('uncertain');
       expect(result.error).toBe('API Error');
@@ -328,20 +340,31 @@ describe('ValidationEngine', () => {
   });
 
   describe('Complete Validation', () => {
-    it('should run rule-based validation', async () => {
-      const text = '28. Mai - 10 Taler';
+    it('should run rule-based validation with options', async () => {
+      const text = '[?] unsicher - 10 Zeichen';
       const segments = [{ text }];
 
-      const result = await engine.validate(text, segments, 'paleographic', false);
+      const result = await engine.validate(text, segments, {
+        checkMarkers: true,
+        checkStats: true,
+        checkArtifacts: false,
+        includeLLM: false
+      });
 
       expect(result.rules).toBeDefined();
       expect(result.rules.length).toBeGreaterThan(0);
       expect(result.summary).toBeDefined();
       expect(result.timestamp).toBeDefined();
+
+      // Should have markers and stats, but not artifacts
+      const categories = result.rules.map(r => r.category);
+      expect(categories).toContain('markers');
+      expect(categories).toContain('stats');
+      expect(categories).not.toContain('artifacts');
     });
 
     it('should skip LLM when includeLLM is false', async () => {
-      const result = await engine.validate('Test', [], 'paleographic', false);
+      const result = await engine.validate('Test', [], { includeLLM: false });
 
       expect(result.llmJudge).toBeNull();
       expect(llmService.validate).not.toHaveBeenCalled();
@@ -350,7 +373,7 @@ describe('ValidationEngine', () => {
     it('should skip LLM when no API key', async () => {
       llmService.hasApiKey.mockReturnValue(false);
 
-      const result = await engine.validate('Test', [], 'paleographic', true);
+      const result = await engine.validate('Test', [], { includeLLM: true });
 
       expect(result.llmJudge).toBeNull();
     });
@@ -358,15 +381,37 @@ describe('ValidationEngine', () => {
     it('should include LLM when available and requested', async () => {
       llmService.hasApiKey.mockReturnValue(true);
       llmService.validate.mockResolvedValue({
-        confidence: 'certain',
+        confidence: 'confident',
         reasoning: 'Looks good',
         issues: []
       });
 
-      const result = await engine.validate('Test', [], 'paleographic', true);
+      const result = await engine.validate('Test', [], { includeLLM: true });
 
       expect(result.llmJudge).toBeDefined();
-      expect(result.llmJudge.confidence).toBe('certain');
+      expect(result.llmJudge.confidence).toBe('confident');
+    });
+
+    it('should pass custom prompt to LLM', async () => {
+      llmService.hasApiKey.mockReturnValue(true);
+      llmService.validate.mockResolvedValue({
+        confidence: 'likely',
+        reasoning: 'Custom check done',
+        issues: []
+      });
+
+      const customPrompt = 'Check for specific issue: {text}';
+      await engine.validate('Test', [], { includeLLM: true, customPrompt });
+
+      expect(llmService.validate).toHaveBeenCalledWith('Test', { customPrompt });
+    });
+
+    it('should support legacy signature for backwards compatibility', async () => {
+      // Old signature: validate(text, segments, perspective, includeLLM)
+      const result = await engine.validate('Test', [], 'paleographic', false);
+
+      expect(result.rules).toBeDefined();
+      expect(result.llmJudge).toBeNull();
     });
   });
 
@@ -385,16 +430,15 @@ describe('ValidationEngine', () => {
       expect(summary.counts.success).toBe(2);
       expect(summary.counts.warning).toBe(1);
       expect(summary.counts.error).toBe(1);
-      expect(summary.counts.info).toBe(1);
     });
 
     it('should determine overall status from LLM result', () => {
       const ruleResults = [];
-      const llmResult = { confidence: 'certain' };
+      const llmResult = { confidence: 'confident' };
 
       const summary = engine.calculateSummary(ruleResults, llmResult);
 
-      expect(summary.llmConfidence).toBe('certain');
+      expect(summary.llmConfidence).toBe('confident');
       expect(summary.status).toBe('success');
     });
 
@@ -427,6 +471,19 @@ describe('ValidationEngine', () => {
       const summary = engine.calculateSummary(ruleResults, llmResult);
 
       expect(summary.status).toBe('error');
+    });
+  });
+
+  describe('getCategories', () => {
+    it('should return formatted category list', () => {
+      const categories = engine.getCategories();
+
+      expect(categories).toHaveLength(3);
+
+      const markers = categories.find(c => c.id === 'markers');
+      expect(markers).toBeDefined();
+      expect(markers.name).toBe('Transkriptions-Marker');
+      expect(markers.ruleCount).toBeGreaterThan(0);
     });
   });
 });
