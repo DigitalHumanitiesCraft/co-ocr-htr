@@ -2434,4 +2434,93 @@ const selector = '.validation-card[data-line], .validation-item[data-line]';
 
 ---
 
+## 2026-02-03 | Session 21: Refactoring Iteration
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: Dead Code Removal
+
+**Task:** Remove unused code from main.js.
+
+**Removed:**
+- `autoLoadDemo()` function (~30 lines) - Never called
+- `showOnboardingToast()` function (~15 lines) - Commented out
+- Various commented-out code blocks
+
+**Result:** -79 lines from main.js
+
+### Phase 2: Circular Dependency Resolution
+
+**Task:** viewer.js used dynamic `import()` to avoid circular dependency with dialogs.js.
+
+**Solution:** Event-based decoupling via state.js:
+
+```javascript
+// state.js - New method
+showToast(message, type = 'info', duration = 3000) {
+    this._emit('toastRequested', { message, type, duration });
+}
+
+// main.js - Event listener
+appState.addEventListener('toastRequested', (event) => {
+    const { message, type, duration } = event.detail;
+    dialogManager.showToast(message, type, duration);
+});
+
+// viewer.js - No more dynamic import
+appState.showToast('Message', 'info', 2000);
+```
+
+**Benefits:**
+- Cleaner architecture (unidirectional data flow)
+- No dynamic imports
+- Reusable pattern for other modules
+
+### Phase 3: CSS Extraction
+
+**Task:** Extract ~340 lines of inline CSS from validation.js.
+
+**Before:**
+```javascript
+const validationStyles = `/* 340 lines of CSS */`;
+function injectStyles() { /* ... */ }
+```
+
+**After:**
+- All styles moved to `docs/css/validation.css`
+- `injectStyles()` function removed
+- validation.js reduced from ~995 to ~645 lines
+
+**Benefits:**
+- Better IDE support (syntax highlighting, autocomplete)
+- Browser caching for CSS
+- No duplicate style definitions
+- Cleaner separation of concerns
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/js/main.js` | Dead code removal, toast event listener |
+| `docs/js/state.js` | `showToast()` method |
+| `docs/js/viewer.js` | Event-based toast instead of dynamic import |
+| `docs/js/components/validation.js` | Removed inline CSS (-350 lines) |
+| `docs/css/validation.css` | Added extracted styles (+273 lines) |
+
+### Commits
+
+| Hash | Message |
+|------|---------|
+| `f0f33e3` | refactor: remove dead code and resolve circular dependency |
+| `d18eb02` | refactor: extract inline CSS from validation.js to validation.css |
+
+### Project Status
+
+**Completed:**
+- [x] Dead code removal (-79 lines)
+- [x] Circular dependency resolution (toast event system)
+- [x] CSS extraction from validation.js (-350 lines JS, +273 lines CSS)
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
