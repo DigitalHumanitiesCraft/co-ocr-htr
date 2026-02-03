@@ -26,7 +26,12 @@ class ExportService {
     export(format, options = {}) {
         const state = appState.getState();
 
-        if (!state.transcription.segments?.length && !state.transcription.lines?.length) {
+        // Check for any transcription data: segments, lines, or raw text
+        const hasSegments = state.transcription.segments?.length > 0;
+        const hasLines = state.transcription.lines?.length > 0;
+        const hasRaw = state.transcription.raw?.trim().length > 0;
+
+        if (!hasSegments && !hasLines && !hasRaw) {
             throw new Error('No transcription data to export');
         }
 
@@ -81,7 +86,7 @@ class ExportService {
     exportTxt(state) {
         const lines = [];
 
-        // Use segments if available, otherwise fall back to lines
+        // Use segments if available, otherwise fall back to lines or raw
         if (state.transcription.segments?.length > 0) {
             state.transcription.segments.forEach(seg => {
                 if (seg.fields) {
@@ -105,6 +110,9 @@ class ExportService {
                     lines.push(line);
                 }
             });
+        } else if (state.transcription.raw?.trim()) {
+            // Use raw text directly
+            return state.transcription.raw.trim();
         }
 
         return lines.join('\n');
@@ -116,6 +124,7 @@ class ExportService {
     exportJson(state, includeValidation, includeMetadata) {
         const data = {
             transcription: {
+                raw: state.transcription.raw || '',
                 segments: state.transcription.segments || [],
                 columns: state.transcription.columns || []
             }
@@ -164,12 +173,19 @@ class ExportService {
             lines.push('');
         }
 
-        // Table
+        // Transcription content
         if (state.transcription.segments?.length > 0) {
             lines.push(this.segmentsToMarkdownTable(state.transcription.segments, state.transcription.columns));
         } else if (state.transcription.lines?.length > 0) {
             // Use raw lines (already markdown table)
             lines.push(...state.transcription.lines);
+        } else if (state.transcription.raw?.trim()) {
+            // Use raw text in a code block for readability
+            lines.push('## Transcription');
+            lines.push('');
+            lines.push('```');
+            lines.push(state.transcription.raw.trim());
+            lines.push('```');
         }
 
         lines.push('');
