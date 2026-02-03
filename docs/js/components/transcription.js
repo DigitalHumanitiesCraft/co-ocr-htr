@@ -70,9 +70,7 @@ class TranscriptionManager {
 
         appState.addEventListener('transcriptionComplete', () => {
             this.setLoading(false);
-            if (this.transcribeDialog) {
-                this.transcribeDialog.close();
-            }
+            this.showEditorLoading(false);
         });
     }
 
@@ -180,8 +178,14 @@ class TranscriptionManager {
             }
         }
 
+        // Close dialog immediately and show loading in editor
+        if (this.transcribeDialog) {
+            this.transcribeDialog.close();
+        }
+
         // Start transcription
         this.setLoading(true);
+        this.showEditorLoading(true);
 
         try {
             // Get image as base64 (without data URL prefix)
@@ -204,6 +208,7 @@ class TranscriptionManager {
                 raw: result.raw
             });
 
+            this.showEditorLoading(false);
             dialogManager.showToast(
                 `Transkription abgeschlossen (${result.provider})`,
                 'success'
@@ -226,6 +231,40 @@ class TranscriptionManager {
             }
 
             this.setLoading(false);
+            this.showEditorLoading(false);
+        }
+    }
+
+    /**
+     * Show/hide loading overlay in editor panel
+     * @param {boolean} show - Whether to show loading
+     */
+    showEditorLoading(show) {
+        const editorPanel = document.getElementById('editorContent');
+        if (!editorPanel) return;
+
+        let overlay = document.getElementById('editorLoadingOverlay');
+
+        if (show) {
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'editorLoadingOverlay';
+                overlay.className = 'editor-loading-overlay';
+                overlay.innerHTML = `
+                    <div class="loading-content">
+                        <div class="loading-spinner-large"></div>
+                        <span>Transkription läuft...</span>
+                        <span class="loading-hint">Das kann einige Sekunden dauern</span>
+                    </div>
+                `;
+                editorPanel.style.position = 'relative';
+                editorPanel.appendChild(overlay);
+            }
+            overlay.hidden = false;
+        } else {
+            if (overlay) {
+                overlay.hidden = true;
+            }
         }
     }
 
@@ -338,6 +377,47 @@ const spinnerStyles = `
 .btn-sm {
     padding: 6px 12px;
     font-size: var(--text-sm);
+}
+
+/* Editor Loading Overlay */
+.editor-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--bg-primary-rgb, 26, 27, 30), 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+}
+
+.editor-loading-overlay .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-primary);
+}
+
+.editor-loading-overlay .loading-content span {
+    font-size: var(--text-sm);
+}
+
+.editor-loading-overlay .loading-hint {
+    color: var(--text-tertiary);
+    font-size: var(--text-xs);
+}
+
+.loading-spinner-large {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 `;
 

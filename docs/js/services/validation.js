@@ -24,127 +24,69 @@ import { appState } from '../state.js';
  * - messagePass: message when rule passes
  * - messageFail: message when rule fails
  */
+/**
+ * Generic validation rules (applicable to all document types)
+ */
 const VALIDATION_RULES = [
-    {
-        id: 'date_format',
-        name: 'Datumsformat',
-        regex: /\d{1,2}\.\s*(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)/gi,
-        type: 'success',
-        messagePass: 'Datumsformat korrekt erkannt',
-        messageFail: 'Keine Datumsangaben gefunden'
-    },
-    {
-        id: 'currency_taler',
-        name: 'Waehrung (Taler)',
-        regex: /\d+\s*(Taler|Tlr\.?|Rtl\.?)/gi,
-        type: 'success',
-        messagePass: 'Taler-Betraege erkannt',
-        messageFail: 'Keine Taler-Betraege gefunden'
-    },
-    {
-        id: 'currency_groschen',
-        name: 'Waehrung (Groschen)',
-        regex: /\d+\s*(Groschen|Gr\.?|Sgr\.?)/gi,
-        type: 'success',
-        messagePass: 'Groschen-Betraege erkannt',
-        messageFail: 'Keine Groschen-Betraege gefunden'
-    },
-    {
-        id: 'currency_gulden',
-        name: 'Waehrung (Gulden)',
-        regex: /\d+\s*(Gulden|fl\.?|Kreuzer|kr\.?)/gi,
-        type: 'success',
-        messagePass: 'Gulden/Kreuzer erkannt',
-        messageFail: 'Keine Gulden/Kreuzer gefunden'
-    },
     {
         id: 'uncertain_marker',
         name: 'Unsichere Lesungen',
+        description: 'Stellen, die mit [?] markiert wurden',
         regex: /\[\?\]/g,
         type: 'warning',
-        messagePass: 'Unsichere Stellen markiert',
+        messagePass: (count) => `${count} unsichere Stelle(n) markiert`,
         messageFail: 'Keine unsicheren Markierungen'
     },
     {
         id: 'illegible_marker',
         name: 'Unleserliche Stellen',
-        regex: /\[illegible\]/gi,
-        type: 'error',
-        messagePass: 'Unleserliche Stellen markiert',
+        description: 'Stellen, die als [illegible] oder [...] markiert wurden',
+        regex: /\[(illegible|\.\.\.)\]/gi,
+        type: 'warning',
+        messagePass: (count) => `${count} unleserliche Stelle(n)`,
         messageFail: 'Keine unleserlichen Stellen'
     },
     {
-        id: 'table_consistency',
-        name: 'Spaltenanzahl',
-        validate: validateTableConsistency,
-        type: 'warning',
-        messagePass: 'Spaltenanzahl konsistent',
-        messageFail: 'Inkonsistente Spaltenanzahl'
+        id: 'abbreviations',
+        name: 'Abkuerzungen',
+        description: 'Erkannte Abkuerzungsmarkierungen',
+        regex: /\w+\[[\w]+\]/g,  // e.g., "admi[nistrateurs]"
+        type: 'info',
+        messagePass: (count) => `${count} aufgeloeste Abkuerzung(en)`,
+        messageFail: 'Keine Abkuerzungen erkannt'
     },
     {
-        id: 'empty_cells',
-        name: 'Leere Zellen',
-        validate: validateEmptyCells,
-        type: 'warning',
-        messagePass: 'Keine unerwartet leeren Zellen',
-        messageFail: 'Potenziell fehlende Daten'
+        id: 'line_breaks',
+        name: 'Zeilenanzahl',
+        description: 'Anzahl der transkribierten Zeilen',
+        validate: validateLineCount,
+        type: 'info',
+        messagePass: (count) => `${count} Zeilen transkribiert`,
+        messageFail: 'Keine Zeilen gefunden'
+    },
+    {
+        id: 'special_chars',
+        name: 'Sonderzeichen',
+        description: 'Ungewoehnliche Zeichen (moegl. OCR-Artefakte)',
+        regex: /[^\w\s\.,;:!?\-\'\"\(\)\[\]äöüÄÖÜßàâéèêëïîôùûçœæÀÂÉÈÊËÏÎÔÙÛÇŒÆ]/g,
+        type: 'info',
+        messagePass: (count) => `${count} Sonderzeichen gefunden`,
+        messageFail: 'Keine ungewoehnlichen Zeichen'
     }
 ];
 
 /**
- * Custom validator: Check table column consistency
+ * Custom validator: Count transcribed lines
  */
-function validateTableConsistency(text, segments) {
-    if (!segments || segments.length < 2) {
-        return { passed: true, lines: [], details: 'Nicht genug Zeilen fuer Pruefung' };
-    }
-
-    const columnCounts = segments.map((seg, idx) => {
-        const pipeCount = (seg.text?.match(/\|/g) || []).length;
-        return { line: idx + 1, count: pipeCount };
-    });
-
-    // Find most common column count
-    const counts = columnCounts.map(c => c.count);
-    const modeCount = counts.sort((a, b) =>
-        counts.filter(v => v === a).length - counts.filter(v => v === b).length
-    ).pop();
-
-    // Find inconsistent lines
-    const inconsistent = columnCounts.filter(c => c.count !== modeCount && c.count > 0);
+function validateLineCount(text, segments) {
+    const lines = text ? text.split('\n').filter(l => l.trim().length > 0) : [];
+    const count = lines.length;
 
     return {
-        passed: inconsistent.length === 0,
-        lines: inconsistent.map(c => c.line),
-        details: inconsistent.length > 0
-            ? `Zeilen ${inconsistent.map(c => c.line).join(', ')} haben abweichende Spaltenanzahl`
-            : null
-    };
-}
-
-/**
- * Custom validator: Check for potentially missing data
- */
-function validateEmptyCells(text, segments) {
-    if (!segments || segments.length === 0) {
-        return { passed: true, lines: [], details: null };
-    }
-
-    const emptyLines = [];
-
-    segments.forEach((seg, idx) => {
-        // Check if line has multiple empty cells (consecutive pipes)
-        if (seg.text?.match(/\|\s*\|/)) {
-            emptyLines.push(idx + 1);
-        }
-    });
-
-    return {
-        passed: emptyLines.length === 0,
-        lines: emptyLines,
-        details: emptyLines.length > 0
-            ? `Zeilen ${emptyLines.join(', ')} haben leere Zellen`
-            : null
+        passed: count > 0,
+        lines: [],
+        matches: [count],
+        details: null
     };
 }
 
@@ -179,15 +121,36 @@ class ValidationEngine {
                 continue;
             }
 
+            // Generate message (support function or string)
+            // For custom validators, use first match value if it's a number (e.g., line count)
+            // For regex validators, use matches array length
+            let matchCount;
+            if (rule.validate && result.matches?.length === 1 && typeof result.matches[0] === 'number') {
+                matchCount = result.matches[0];
+            } else {
+                matchCount = result.matches?.length || 0;
+            }
+
+            let message;
+            if (result.passed && typeof rule.messagePass === 'function') {
+                message = rule.messagePass(matchCount);
+            } else if (result.passed) {
+                message = rule.messagePass;
+            } else {
+                message = rule.messageFail;
+            }
+
             results.push({
                 id: rule.id,
                 name: rule.name,
-                type: result.passed ? rule.type : (rule.type === 'success' ? 'info' : rule.type),
+                description: rule.description || '',
+                type: result.passed ? rule.type : 'info',
                 passed: result.passed,
-                message: result.passed ? rule.messagePass : rule.messageFail,
+                message,
                 lines: result.lines || [],
                 details: result.details || null,
-                matches: result.matches || []
+                matches: result.matches || [],
+                matchCount
             });
         }
 

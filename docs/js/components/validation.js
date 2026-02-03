@@ -65,9 +65,13 @@ class ValidationPanel {
      */
     updateVisibility() {
         const state = appState.getState();
-        const hasDocument = state.pages?.length > 0 || state.imageData;
-        const hasTranscription = state.transcription?.segments?.length > 0 ||
-                                  state.transcription?.lines?.length > 0;
+        // Check for document: multi-page (pages array) OR single page (document.dataUrl or non-mock image)
+        const hasDocument = state.pages?.length > 0 ||
+                            state.document?.dataUrl ||
+                            (state.image?.url && state.image.url !== 'assets/mock-document.jpg');
+        // Check for transcription: raw text OR segments
+        const hasTranscription = (state.transcription?.raw && state.transcription.raw.trim().length > 0) ||
+                                  state.transcription?.segments?.length > 0;
 
         // Get the main panel container
         const panelContent = this.panel;
@@ -102,22 +106,32 @@ class ValidationPanel {
      * Bind event listeners
      */
     bindEvents() {
-        // Listen for transcription completion to trigger validation
+        // Validate button in editor panel
+        this.validateBtn = getById('btnValidate');
+        if (this.validateBtn) {
+            this.validateBtn.addEventListener('click', () => this.handleValidateClick());
+        }
+
+        // Listen for transcription completion - enable validate button, don't auto-run
         appState.addEventListener('transcriptionComplete', () => {
             this.updateVisibility();
-            this.runValidation();
+            this.updateValidateButton(true);
+            // Show hint that validation is available
+            this.showValidationHint();
         });
 
         // Listen for document load (reset validation)
         appState.addEventListener('documentLoaded', () => {
             this.updateVisibility();
             this.clearValidation();
+            this.updateValidateButton(false);
         });
 
         // Listen for page changes (multi-page support)
         appState.addEventListener('pageChanged', () => {
             this.updateVisibility();
             this.clearValidation();
+            this.updateValidateButton(false);
         });
 
         // Listen for validation state changes
@@ -131,6 +145,35 @@ class ValidationPanel {
             perspectiveLabel.style.cursor = 'pointer';
             perspectiveLabel.addEventListener('click', () => this.showPerspectiveMenu());
         }
+
+        // Check initial state for validate button
+        const state = appState.getState();
+        const hasTranscription = (state.transcription?.raw && state.transcription.raw.trim().length > 0);
+        this.updateValidateButton(hasTranscription);
+    }
+
+    /**
+     * Handle validate button click
+     */
+    handleValidateClick() {
+        if (this.isValidating) return;
+        this.runValidation();
+    }
+
+    /**
+     * Update validate button state
+     */
+    updateValidateButton(enabled) {
+        if (!this.validateBtn) return;
+        this.validateBtn.disabled = !enabled;
+    }
+
+    /**
+     * Show validation available hint in panel
+     */
+    showValidationHint() {
+        setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" to run rule-based checks.</p>');
+        setHTML('aiAssistantContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" for AI-powered analysis.</p>');
     }
 
     /**
@@ -239,7 +282,8 @@ class ValidationPanel {
         this.isValidating = true;
         appState.setValidationStatus('running');
 
-        // Show loading state
+        // Show loading state in button and panel
+        this.setButtonLoading(true);
         this.renderLoading();
 
         try {
@@ -253,29 +297,77 @@ class ValidationPanel {
 
             // Update state
             appState.setValidationResults(results);
+            this.hideLoading();
             this.render(results);
+
+            dialogManager.showToast('Validierung abgeschlossen', 'success');
 
         } catch (error) {
             console.error('Validation error:', error);
-            dialogManager.showToast(`Validation failed: ${error.message}`, 'error');
+            dialogManager.showToast(`Validierung fehlgeschlagen: ${error.message}`, 'error');
             appState.setValidationStatus('error');
+            this.hideLoading();
+            this.showValidationHint();
         } finally {
             this.isValidating = false;
+            this.setButtonLoading(false);
         }
     }
 
     /**
-     * Render loading state
+     * Set validate button loading state
+     */
+    setButtonLoading(loading) {
+        if (!this.validateBtn) return;
+
+        const btnText = this.validateBtn.querySelector('.btn-text');
+        const btnSpinner = this.validateBtn.querySelector('.btn-spinner');
+
+        if (loading) {
+            this.validateBtn.disabled = true;
+            this.validateBtn.classList.add('loading');
+            if (btnText) btnText.hidden = true;
+            if (btnSpinner) btnSpinner.hidden = false;
+        } else {
+            this.validateBtn.disabled = false;
+            this.validateBtn.classList.remove('loading');
+            if (btnText) btnText.hidden = false;
+            if (btnSpinner) btnSpinner.hidden = true;
+        }
+    }
+
+    /**
+     * Render loading state as overlay (preserves panel structure)
      */
     renderLoading() {
         if (!this.panel) return;
 
-        this.panel.innerHTML = `
-            <div class="validation-loading">
-                <div class="loading-spinner"></div>
-                <span>Validating transcription...</span>
-            </div>
-        `;
+        // Create overlay instead of replacing content
+        let overlay = getById('validationLoadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'validationLoadingOverlay';
+            overlay.className = 'validation-loading-overlay';
+            overlay.innerHTML = `
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <span>Validierung läuft...</span>
+                </div>
+            `;
+            this.panel.style.position = 'relative';
+            this.panel.appendChild(overlay);
+        }
+        overlay.hidden = false;
+    }
+
+    /**
+     * Hide loading overlay
+     */
+    hideLoading() {
+        const overlay = getById('validationLoadingOverlay');
+        if (overlay) {
+            overlay.hidden = true;
+        }
     }
 
     /**
@@ -343,23 +435,15 @@ class ValidationPanel {
     }
 
     /**
-     * Render LLM-Judge validation cards (content only)
+     * Render LLM-Judge validation cards - compact style
      */
     renderLLMCards(llmResult) {
         if (!llmResult) {
             const hasApiKey = llmService.hasApiKey();
             if (!hasApiKey) {
-                return `
-                    <div class="validation-card" style="opacity: 0.6;">
-                        <div class="card-header">
-                            <div class="status-indicator" style="background: var(--text-muted);"></div>
-                            <span class="card-title">Not configured</span>
-                        </div>
-                        <div class="card-lines">Configure API key to enable AI validation</div>
-                    </div>
-                `;
+                return `<p class="text-muted text-xs">API-Key fuer KI-Analyse konfigurieren</p>`;
             }
-            return '<p class="text-secondary text-xs" style="padding: var(--space-2);">AI analysis will run after transcription.</p>';
+            return `<p class="text-muted text-xs">Validierung starten fuer KI-Analyse</p>`;
         }
 
         const statusClass = {
@@ -369,49 +453,47 @@ class ValidationPanel {
         }[llmResult.confidence] || 'status-warning';
 
         const confidenceLabel = {
-            certain: 'High Confidence',
-            likely: 'Medium Confidence',
-            uncertain: 'Low Confidence'
-        }[llmResult.confidence] || 'Unknown';
+            certain: 'Hohe Konfidenz',
+            likely: 'Mittlere Konfidenz',
+            uncertain: 'Niedrige Konfidenz'
+        }[llmResult.confidence] || 'Unbekannt';
 
         const perspective = validationEngine.getPerspectives()
             .find(p => p.id === llmResult.perspective);
 
+        // Compact summary line
         let html = `
-            <div class="validation-card">
-                <div class="card-header">
-                    <div class="status-indicator ${statusClass}"></div>
-                    <span class="card-title">${confidenceLabel}</span>
-                    <span class="perspective-badge" style="margin-left: auto; padding: 2px 8px; background: rgba(var(--accent-rgb), 0.2); border-radius: var(--radius-sm); font-size: var(--text-xs); color: var(--accent-primary);">${perspective?.name || llmResult.perspective}</span>
-                </div>
-                <div class="card-lines">${perspective?.description || 'Overall assessment'}</div>
-                ${llmResult.reasoning ? `
-                    <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">
-                        Show Analysis
-                    </div>
-                    <div class="card-details">
-                        ${llmResult.reasoning}
-                    </div>
-                ` : ''}
+            <div class="validation-item">
+                <span class="status-dot ${statusClass}"></span>
+                <span class="item-label">Konfidenz</span>
+                <span class="item-value">${confidenceLabel}</span>
+            </div>
+            <div class="validation-item">
+                <span class="status-dot status-info"></span>
+                <span class="item-label">Perspektive</span>
+                <span class="item-value">${perspective?.name || llmResult.perspective}</span>
             </div>
         `;
 
-        // Add issue cards
+        // Add issues as compact items
         if (llmResult.issues && llmResult.issues.length > 0) {
             html += llmResult.issues.map(issue => `
-                <div class="validation-card" data-line="${issue.line || ''}">
-                    <div class="card-header">
-                        <div class="status-indicator status-warning"></div>
-                        <span class="card-title">${issue.text || 'Issue'}</span>
-                    </div>
-                    ${issue.line ? `<div class="card-lines">Line ${issue.line}</div>` : ''}
-                    ${issue.suggestion ? `
-                        <div class="card-details expanded">
-                            Suggestion: ${issue.suggestion}
-                        </div>
-                    ` : ''}
+                <div class="validation-item" ${issue.line ? `data-line="${issue.line}"` : ''}>
+                    <span class="status-dot status-warning"></span>
+                    <span class="item-label">${issue.line ? `Zeile ${issue.line}` : 'Hinweis'}</span>
+                    <span class="item-value" title="${issue.suggestion || ''}">${issue.text || 'Issue'}</span>
                 </div>
             `).join('');
+        }
+
+        // Show analysis toggle if reasoning exists
+        if (llmResult.reasoning) {
+            html += `
+                <details class="ai-details">
+                    <summary>Analyse anzeigen</summary>
+                    <p class="ai-reasoning">${llmResult.reasoning}</p>
+                </details>
+            `;
         }
 
         return html;
@@ -504,40 +586,21 @@ class ValidationPanel {
     }
 
     /**
-     * Render a single validation card
+     * Render a single validation card - compact inline style
      */
     renderValidationCard(rule) {
         const statusClass = {
             success: 'status-success',
             warning: 'status-warning',
             error: 'status-error',
-            info: 'status-success'
-        }[rule.type] || 'status-warning';
-
-        // Only show passed rules with matches, or failed important rules
-        if (rule.type === 'success' && !rule.passed && rule.lines.length === 0) {
-            return ''; // Skip success rules that didn't match
-        }
-
-        const lineInfo = rule.lines.length > 0
-            ? `Lines ${rule.lines.slice(0, 5).join(', ')}${rule.lines.length > 5 ? '...' : ''}`
-            : '';
+            info: 'status-info'
+        }[rule.type] || 'status-info';
 
         return `
-            <div class="validation-card" ${rule.lines.length > 0 ? `data-line="${rule.lines[0]}"` : ''}>
-                <div class="card-header">
-                    <div class="status-indicator ${statusClass}"></div>
-                    <span class="card-title">${rule.name}</span>
-                </div>
-                <div class="card-lines">${lineInfo || rule.message}</div>
-                ${rule.details ? `
-                    <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">
-                        Show Details
-                    </div>
-                    <div class="card-details">
-                        ${rule.details}
-                    </div>
-                ` : ''}
+            <div class="validation-item" ${rule.lines.length > 0 ? `data-line="${rule.lines[0]}"` : ''}>
+                <span class="status-dot ${statusClass}"></span>
+                <span class="item-label">${rule.name}</span>
+                <span class="item-value">${rule.message}</span>
             </div>
         `;
     }
@@ -563,6 +626,38 @@ class ValidationPanel {
 
 // Add component-specific styles
 const validationStyles = `
+.validation-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--bg-primary-rgb, 26, 27, 30), 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+    transition: opacity 0.2s ease-out;
+}
+
+.validation-loading-overlay[hidden] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.validation-loading-overlay .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-primary);
+}
+
+.validation-loading-overlay .loading-content span {
+    font-size: var(--text-sm);
+}
+
 .validation-loading {
     display: flex;
     flex-direction: column;
@@ -598,20 +693,69 @@ const validationStyles = `
     color: var(--accent-primary);
 }
 
+/* Compact validation items */
+.validation-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+    font-size: var(--text-xs);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.validation-item:last-child {
+    border-bottom: none;
+}
+
+.validation-item[data-line] {
+    cursor: pointer;
+}
+
+.validation-item[data-line]:hover {
+    background: rgba(255,255,255,0.03);
+    margin: 0 calc(-1 * var(--space-2));
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot.status-success { background: var(--confident); }
+.status-dot.status-warning { background: var(--uncertain); }
+.status-dot.status-error { background: var(--problematic); }
+.status-dot.status-info { background: var(--accent-primary); }
+
+.item-label {
+    color: var(--text-secondary);
+    min-width: 90px;
+    flex-shrink: 0;
+}
+
+.item-value {
+    color: var(--text-primary);
+    margin-left: auto;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+}
+
+/* Legacy card styles for AI section */
 .validation-card {
     background: rgba(255,255,255,0.03);
-    border-radius: var(--radius-md);
-    padding: var(--space-3);
-    margin-bottom: var(--space-2);
-    transition: background 0.15s;
+    border-radius: var(--radius-sm);
+    padding: var(--space-2);
+    margin-bottom: var(--space-1);
 }
 
 .validation-card:hover {
     background: rgba(255,255,255,0.05);
-}
-
-.validation-card[data-line]:hover {
-    outline: 1px solid rgba(var(--accent-rgb), 0.3);
 }
 
 .card-header {
@@ -629,7 +773,7 @@ const validationStyles = `
     font-size: var(--text-xs);
     color: var(--text-secondary);
     margin-top: var(--space-1);
-    padding-left: calc(8px + var(--space-2));
+    padding-left: calc(6px + var(--space-2));
 }
 
 .details-toggle {
@@ -701,6 +845,38 @@ const validationStyles = `
 .dropdown-item .item-desc {
     font-size: var(--text-xs);
     color: var(--text-secondary);
+}
+
+/* AI Analysis details */
+.ai-details {
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+}
+
+.ai-details summary {
+    color: var(--accent-primary);
+    cursor: pointer;
+    padding: var(--space-1) 0;
+}
+
+.ai-details summary:hover {
+    text-decoration: underline;
+}
+
+.ai-reasoning {
+    margin-top: var(--space-1);
+    padding: var(--space-2);
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.text-muted {
+    color: var(--text-muted);
+    padding: var(--space-1) 0;
 }
 `;
 
