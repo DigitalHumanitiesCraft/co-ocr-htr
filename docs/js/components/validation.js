@@ -2,8 +2,8 @@
  * Validation Panel Component
  *
  * Renders validation results in the right panel:
- * - Rule-based validation results
- * - LLM-Judge results with perspective switching
+ * - Rule-based validation results (configurable categories)
+ * - LLM-Judge results with optional custom prompt
  * - Clickable line references for navigation
  *
  * Display Logic:
@@ -13,7 +13,7 @@
  */
 
 import { validationEngine } from '../services/validation.js';
-import { llmService } from '../services/llm.js';
+import { llmService, ISSUE_TYPES } from '../services/llm.js';
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
@@ -30,7 +30,6 @@ class ValidationPanel {
         this.ruleSection = null;
         this.aiSection = null;
         this.isValidating = false;
-        this.currentPerspective = 'paleographic';
         this.validateDialog = null;
         this.startValidationBtn = null;
     }
@@ -55,7 +54,6 @@ class ValidationPanel {
         this.startValidationBtn = getById('startValidation');
 
         this.bindEvents();
-        this.setupPerspectiveDropdown();
 
         // Check initial state
         this.updateVisibility();
@@ -158,13 +156,6 @@ class ValidationPanel {
             this.render(e.detail);
         });
 
-        // Perspective dropdown in status bar
-        const perspectiveLabel = document.querySelector('.status-bar span:nth-child(2)');
-        if (perspectiveLabel) {
-            perspectiveLabel.style.cursor = 'pointer';
-            perspectiveLabel.addEventListener('click', () => this.showPerspectiveMenu());
-        }
-
         // Check initial state for validate button
         const state = appState.getState();
         const hasTranscription = (state.transcription?.raw && state.transcription.raw.trim().length > 0);
@@ -258,6 +249,8 @@ class ValidationPanel {
     updateLLMModeHint() {
         const llmModeItem = getById('llmModeItem');
         const llmModeHint = getById('llmModeHint');
+        const enableLLMCheckbox = getById('enableLLM');
+        const customPromptDetails = document.querySelector('.custom-prompt-details');
 
         if (!llmModeHint) return;
 
@@ -266,10 +259,31 @@ class ValidationPanel {
         if (hasApiKey) {
             llmModeHint.textContent = 'API-Call pro Seite';
             if (llmModeItem) llmModeItem.classList.remove('disabled');
+            if (enableLLMCheckbox) enableLLMCheckbox.disabled = false;
+            if (customPromptDetails) customPromptDetails.style.display = '';
         } else {
             llmModeHint.textContent = 'API-Key erforderlich';
             if (llmModeItem) llmModeItem.classList.add('disabled');
+            if (enableLLMCheckbox) {
+                enableLLMCheckbox.checked = false;
+                enableLLMCheckbox.disabled = true;
+            }
+            if (customPromptDetails) customPromptDetails.style.display = 'none';
         }
+    }
+
+    /**
+     * Get validation options from dialog checkboxes
+     * @returns {object} Validation options
+     */
+    getValidationOptions() {
+        return {
+            checkMarkers: getById('checkMarkers')?.checked ?? true,
+            checkStats: getById('checkStats')?.checked ?? true,
+            checkArtifacts: getById('checkArtifacts')?.checked ?? true,
+            includeLLM: getById('enableLLM')?.checked ?? true,
+            customPrompt: getById('customValidationPrompt')?.value?.trim() || ''
+        };
     }
 
     /**
@@ -363,79 +377,6 @@ class ValidationPanel {
     }
 
     /**
-     * Setup perspective dropdown in status bar
-     */
-    setupPerspectiveDropdown() {
-        const perspectives = validationEngine.getPerspectives();
-        const current = perspectives.find(p => p.id === this.currentPerspective);
-
-        // Update status bar display
-        const perspectiveEl = select('.status-bar span:nth-child(2) span');
-        if (perspectiveEl && current) {
-            perspectiveEl.textContent = current.name;
-        }
-    }
-
-    /**
-     * Show perspective selection menu
-     */
-    showPerspectiveMenu() {
-        const perspectives = validationEngine.getPerspectives();
-
-        // Create dropdown menu
-        let menu = getById('perspectiveMenu');
-        if (menu) {
-            menu.remove();
-            return; // Toggle off
-        }
-
-        menu = document.createElement('div');
-        menu.id = 'perspectiveMenu';
-        menu.className = 'dropdown-menu';
-        menu.innerHTML = perspectives.map(p => `
-            <button class="dropdown-item ${p.id === this.currentPerspective ? 'active' : ''}"
-                    data-perspective="${p.id}">
-                <span class="item-name">${p.name}</span>
-                <span class="item-desc">${p.description}</span>
-            </button>
-        `).join('');
-
-        // Position menu
-        const trigger = select('.status-bar span:nth-child(2)');
-        if (trigger) {
-            const rect = trigger.getBoundingClientRect();
-            menu.style.position = 'fixed';
-            menu.style.bottom = `${window.innerHeight - rect.top + 8}px`;
-            menu.style.left = `${rect.left}px`;
-        }
-
-        document.body.appendChild(menu);
-
-        // Handle selection
-        menu.addEventListener('click', (e) => {
-            const item = e.target.closest('.dropdown-item');
-            if (item) {
-                this.currentPerspective = item.dataset.perspective;
-                this.setupPerspectiveDropdown();
-                menu.remove();
-
-                // Re-run LLM validation with new perspective
-                this.runValidation(true);
-            }
-        });
-
-        // Close on outside click
-        setTimeout(() => {
-            document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target)) {
-                    menu.remove();
-                    document.removeEventListener('click', closeMenu);
-                }
-            });
-        }, MENU_CLOSE_DELAY);
-    }
-
-    /**
      * Run validation on current transcription
      * @param {boolean} llmOnly - Only run LLM validation (skip rules)
      */
@@ -458,13 +399,15 @@ class ValidationPanel {
         this.renderLoading();
 
         try {
-            const includeLLM = llmService.hasApiKey();
-            const results = await validationEngine.validate(
-                text,
-                segments,
-                this.currentPerspective,
-                includeLLM
-            );
+            // Get options from dialog checkboxes
+            const options = this.getValidationOptions();
+
+            // Override LLM option if no API key
+            if (!llmService.hasApiKey()) {
+                options.includeLLM = false;
+            }
+
+            const results = await validationEngine.validate(text, segments, options);
 
             // Update state
             appState.setValidationResults(results);
@@ -514,10 +457,17 @@ class ValidationPanel {
         this.setButtonLoading(true);
         this.showBatchProgress(0, pagesWithTranscription.length);
 
+        // Get options from dialog checkboxes
+        const options = this.getValidationOptions();
+
+        // Override LLM option if no API key
+        if (!llmService.hasApiKey()) {
+            options.includeLLM = false;
+        }
+
         const results = [];
         let successCount = 0;
         let errorCount = 0;
-        const includeLLM = llmService.hasApiKey();
 
         for (let i = 0; i < pages.length; i++) {
             const page = pages[i];
@@ -541,13 +491,8 @@ class ValidationPanel {
                 const text = batchResult.transcription.raw;
                 const segments = batchResult.transcription.segments || [];
 
-                // Run validation
-                const validationResult = await validationEngine.validate(
-                    text,
-                    segments,
-                    this.currentPerspective,
-                    includeLLM
-                );
+                // Run validation with options
+                const validationResult = await validationEngine.validate(text, segments, options);
 
                 results.push({
                     pageId: page.id,
@@ -559,7 +504,7 @@ class ValidationPanel {
                 successCount++;
 
                 // Small delay to avoid rate limiting (only if LLM validation)
-                if (includeLLM && i < pages.length - 1) {
+                if (options.includeLLM && i < pages.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
 
@@ -753,31 +698,7 @@ class ValidationPanel {
     }
 
     /**
-     * Render rule-based validation section (legacy, kept for compatibility)
-     */
-    renderRuleSection(rules) {
-        if (!rules || rules.length === 0) {
-            return '';
-        }
-
-        const cards = rules.map(rule => this.renderValidationCard(rule)).join('');
-
-        return `
-            <div class="validation-section">
-                <div class="section-title">
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    Rule-Based
-                </div>
-                ${cards}
-            </div>
-        `;
-    }
-
-    /**
-     * Render LLM-Judge validation cards - compact style
+     * Render LLM-Judge validation cards - compact style with issue types
      */
     renderLLMCards(llmResult) {
         if (!llmResult) {
@@ -795,13 +716,10 @@ class ValidationPanel {
         }[llmResult.confidence] || 'status-warning';
 
         const confidenceLabel = {
-            certain: 'Hohe Konfidenz',
+            confident: 'Hohe Konfidenz',
             likely: 'Mittlere Konfidenz',
             uncertain: 'Niedrige Konfidenz'
         }[llmResult.confidence] || 'Unbekannt';
-
-        const perspective = validationEngine.getPerspectives()
-            .find(p => p.id === llmResult.perspective);
 
         // Compact summary line
         let html = `
@@ -810,22 +728,11 @@ class ValidationPanel {
                 <span class="item-label">Konfidenz</span>
                 <span class="item-value">${confidenceLabel}</span>
             </div>
-            <div class="validation-item">
-                <span class="status-dot status-info"></span>
-                <span class="item-label">Perspektive</span>
-                <span class="item-value">${perspective?.name || llmResult.perspective}</span>
-            </div>
         `;
 
-        // Add issues as compact items
+        // Add issues with type badges
         if (llmResult.issues && llmResult.issues.length > 0) {
-            html += llmResult.issues.map(issue => `
-                <div class="validation-item" ${issue.line ? `data-line="${issue.line}"` : ''}>
-                    <span class="status-dot status-warning"></span>
-                    <span class="item-label">${issue.line ? `Zeile ${issue.line}` : 'Hinweis'}</span>
-                    <span class="item-value" title="${issue.suggestion || ''}">${issue.text || 'Issue'}</span>
-                </div>
-            `).join('');
+            html += llmResult.issues.map(issue => this.renderIssueItem(issue)).join('');
         }
 
         // Show analysis toggle if reasoning exists
@@ -847,87 +754,36 @@ class ValidationPanel {
     }
 
     /**
-     * Render LLM-Judge validation section (legacy, kept for compatibility)
+     * Render a single issue item with type badge
+     * @param {object} issue - Issue from LLM validation
      */
-    renderLLMSection(llmResult) {
-        if (!llmResult) {
-            return `
-                <div class="validation-section">
-                    <div class="section-title">
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
-                        </svg>
-                        AI Assistant
-                    </div>
-                    <div class="validation-card" style="opacity: 0.6;">
-                        <div class="card-header">
-                            <div class="status-indicator" style="background: var(--text-muted);"></div>
-                            <span class="card-title">Not configured</span>
-                        </div>
-                        <div class="card-lines">Configure API key to enable AI validation</div>
-                    </div>
-                </div>
-            `;
-        }
+    renderIssueItem(issue) {
+        // Get issue type info from ISSUE_TYPES
+        const typeInfo = ISSUE_TYPES[issue.type] || {
+            name: issue.type || 'Hinweis',
+            color: 'warning',
+            description: ''
+        };
 
+        // Map color to status class
         const statusClass = {
-            certain: 'status-success',
-            likely: 'status-warning',
-            uncertain: 'status-error'
-        }[llmResult.confidence] || 'status-warning';
+            warning: 'status-warning',
+            error: 'status-error',
+            info: 'status-info'
+        }[typeInfo.color] || 'status-warning';
 
-        const confidenceLabel = {
-            certain: 'High Confidence',
-            likely: 'Medium Confidence',
-            uncertain: 'Low Confidence'
-        }[llmResult.confidence] || 'Unknown';
-
-        const perspective = validationEngine.getPerspectives()
-            .find(p => p.id === llmResult.perspective);
-
-        let issueCards = '';
-        if (llmResult.issues && llmResult.issues.length > 0) {
-            issueCards = llmResult.issues.map(issue => `
-                <div class="validation-card" data-line="${issue.line || ''}">
-                    <div class="card-header">
-                        <div class="status-indicator status-warning"></div>
-                        <span class="card-title">${issue.text || 'Issue'}</span>
-                    </div>
-                    ${issue.line ? `<div class="card-lines">Line ${issue.line}</div>` : ''}
-                    ${issue.suggestion ? `
-                        <div class="card-details expanded">
-                            Suggestion: ${issue.suggestion}
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
-        }
-
+        // Build issue HTML
         return `
-            <div class="validation-section">
-                <div class="section-title">
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
-                    </svg>
-                    AI Assistant
-                    <span class="perspective-badge">${perspective?.name || llmResult.perspective}</span>
+            <div class="validation-issue issue-${typeInfo.color}" ${issue.line ? `data-line="${issue.line}"` : ''}>
+                <div class="issue-header">
+                    <span class="issue-type-badge badge-${typeInfo.color}" title="${typeInfo.description || ''}">${typeInfo.name}</span>
+                    ${issue.line ? `<span class="issue-line">Zeile ${issue.line}</span>` : ''}
                 </div>
-                <div class="validation-card">
-                    <div class="card-header">
-                        <div class="status-indicator ${statusClass}"></div>
-                        <span class="card-title">${confidenceLabel}</span>
-                    </div>
-                    <div class="card-lines">${perspective?.description || 'Overall assessment'}</div>
-                    ${llmResult.reasoning ? `
-                        <div class="details-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">
-                            Show Analysis
-                        </div>
-                        <div class="card-details">
-                            ${llmResult.reasoning}
-                        </div>
-                    ` : ''}
+                <div class="issue-content">
+                    <span class="issue-text">${issue.text || ''}</span>
+                    ${issue.suggestion ? `<span class="issue-suggestion">→ ${issue.suggestion}</span>` : ''}
                 </div>
-                ${issueCards}
+                ${issue.explanation ? `<p class="issue-explanation">${issue.explanation}</p>` : ''}
             </div>
         `;
     }
@@ -954,11 +810,11 @@ class ValidationPanel {
 
     /**
      * Bind click handlers for line navigation
-     * Handles both legacy .validation-card and new compact .validation-item elements
+     * Handles legacy .validation-card, compact .validation-item, and new .validation-issue elements
      */
     bindLineClicks() {
-        // Select both card and item elements with data-line attribute
-        const selector = '.validation-card[data-line], .validation-item[data-line]';
+        // Select card, item, and issue elements with data-line attribute
+        const selector = '.validation-card[data-line], .validation-item[data-line], .validation-issue[data-line]';
         selectAll(selector, this.panel).forEach(element => {
             element.style.cursor = 'pointer';
             element.addEventListener('click', (e) => {

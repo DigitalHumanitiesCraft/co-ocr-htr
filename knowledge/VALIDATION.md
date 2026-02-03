@@ -71,27 +71,35 @@ Generic rules applicable to all document types (letters, diaries, account books,
 | Structure | Abbreviations [expanded] | Info |
 | Statistics | Line count, Special characters | Info |
 
-## LLM Perspectives
+## LLM Validation (v2.1)
 
-Configurable validation angles for Expert-in-the-Loop.
+Generic validation prompt covering all relevant aspects:
 
-### Perspective Definitions
+### Default Prompt Covers
 
-| ID | Name | Focus |
-|----|------|-------|
-| paleographic | Palaeographisch | Letter forms, ligatures, abbreviations |
-| linguistic | Sprachlich | Grammar, historical orthography |
-| structural | Strukturell | Tables, sums, cross-references |
-| domain | Domaenenwissen | Technical terms, plausibility |
-
-### Perspective Matrix
-
-| Perspective | Checks | Typical Errors |
-|-------------|--------|----------------|
+| Aspect | Checks | Typical Errors |
+|--------|--------|----------------|
 | Paleographic | Letter forms | n/u confusion, c/e, Ligatures |
-| Linguistic | Grammar, Lexicon | Anachronisms, Syntax |
-| Structural | Tables, Sums | Calculation errors, Breaks |
-| Domain Knowledge | Technical terms, Plausibility | Unrealistic prices |
+| Spelling/Accents | Orthography, Diacritics | Missing accents, typos |
+| Structural | Tables, Layout | Broken lines, column errors |
+| Plausibility | Context, Values | Unrealistic prices, anachronisms |
+
+### Custom Prompt Option
+
+Advanced users can provide their own validation prompt via the "Eigenen Prompt verwenden" option in the validate dialog. Use `{text}` as placeholder for the transcription text.
+
+### Issue Types (v2.0)
+
+| Type | Name | Color | Description |
+|------|------|-------|-------------|
+| spelling | Rechtschreibung | warning | Spelling errors |
+| accent | Akzentfehler | warning | Missing/wrong diacritics |
+| abbreviation | Abkuerzung | info | Abbreviation expansion needed |
+| illegible | Unleserlich | error | Unreadable passage |
+| ocr_artifact | OCR-Artefakt | error | OCR recognition error |
+| historical | Historisch | info | Historical spelling variant |
+| structural | Strukturell | warning | Layout/structure issue |
+| plausibility | Plausibilitaet | warning | Implausible content |
 
 ## Confidence Categories
 

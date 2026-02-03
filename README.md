@@ -32,7 +32,7 @@ coOCR/HTR provides:
 ## Features
 
 - **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, Ollama (local with DeepSeek-OCR)
-- **Hybrid Validation**: Deterministic rules + LLM-as-judge with multiple perspectives
+- **Hybrid Validation**: Deterministic rules + LLM-as-judge (with optional custom prompt)
 - **Expert-in-the-Loop**: Critical expert validation workflow
 - **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
 - **Document Viewer**: Pan, zoom, fit controls with keyboard shortcuts
@@ -154,7 +154,7 @@ npm test
 - Multi-page navigation, IIIF support, Help & About pages
 
 **Phase 4: Polish & Release** - Complete
-- 118 unit tests passing (export, validation, llm, page-xml)
+- 125 unit tests passing (export, validation, llm, page-xml)
 - Simplified API configuration dialog
 - Document context for enhanced transcription
 - Undo/Redo, Diff view, Line numbers

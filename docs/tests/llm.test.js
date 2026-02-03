@@ -1,5 +1,7 @@
 /**
  * Tests for LLM Service
+ *
+ * Updated for v2.1: Removed deepseek provider, no perspective parameter
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -29,7 +31,6 @@ describe('LLMService', () => {
       expect(service.providers).toHaveProperty('gemini');
       expect(service.providers).toHaveProperty('openai');
       expect(service.providers).toHaveProperty('anthropic');
-      expect(service.providers).toHaveProperty('deepseek');
       expect(service.providers).toHaveProperty('ollama');
     });
 
@@ -80,7 +81,7 @@ describe('LLMService', () => {
 
       const providers = service.getAvailableProviders();
 
-      expect(providers).toHaveLength(5);
+      expect(providers).toHaveLength(4);
 
       const gemini = providers.find(p => p.id === 'gemini');
       expect(gemini.hasKey).toBe(true);
@@ -107,10 +108,6 @@ describe('LLMService', () => {
       expect(PROVIDERS.anthropic.supportsVision).toBe(true);
     });
 
-    it('should mark deepseek as NOT supporting vision', () => {
-      expect(PROVIDERS.deepseek.supportsVision).toBe(false);
-    });
-
     it('should mark ollama as supporting vision', () => {
       expect(PROVIDERS.ollama.supportsVision).toBe(true);
     });
@@ -121,7 +118,7 @@ describe('LLMService', () => {
       const mockResponse = `| Datum | Name | Beschreibung | Betrag |
 |-------|------|--------------|--------|
 | 28. Mai | K. Schmidt | Eisenwaren | 23 Taler |
-| 3. Juni | H. Müller | Tuchstoff | 15 Taler |`;
+| 3. Juni | H. Mueller | Tuchstoff | 15 Taler |`;
 
       const segments = service._parseTranscriptionResponse(mockResponse);
 
@@ -166,20 +163,34 @@ describe('LLMService', () => {
     it('should parse validation response JSON', () => {
       const mockResponse = `{"confidence": "likely", "reasoning": "Some issues found", "issues": []}`;
 
-      const result = service._parseValidationResponse(mockResponse, 'paleographic');
+      const result = service._parseValidationResponse(mockResponse);
 
       expect(result.confidence).toBe('likely');
       expect(result.reasoning).toBe('Some issues found');
-      expect(result.perspective).toBe('paleographic');
     });
 
     it('should handle malformed validation response', () => {
       const mockResponse = `The text looks plausible but needs review.`;
 
-      const result = service._parseValidationResponse(mockResponse, 'linguistic');
+      const result = service._parseValidationResponse(mockResponse);
 
       expect(result.confidence).toBe('likely'); // "plausible" in text
-      expect(result.perspective).toBe('linguistic');
+    });
+
+    it('should parse issues from validation response', () => {
+      const mockResponse = `{
+        "confidence": "likely",
+        "reasoning": "Found some issues",
+        "issues": [
+          {"line": 1, "text": "typo", "type": "spelling", "suggestion": "fixed"}
+        ]
+      }`;
+
+      const result = service._parseValidationResponse(mockResponse);
+
+      expect(result.issues).toHaveLength(1);
+      expect(result.issues[0].type).toBe('spelling');
+      expect(result.issues[0].line).toBe(1);
     });
   });
 
@@ -214,14 +225,6 @@ describe('LLMService', () => {
   });
 
   describe('Transcription Validation', () => {
-    it('should throw error if provider does not support vision', async () => {
-      service.setProvider('deepseek');
-      storage.loadApiKey.mockReturnValue('test-key');
-
-      await expect(service.transcribe('base64image'))
-        .rejects.toThrow('does not support vision');
-    });
-
     it('should throw error if no API key configured', async () => {
       storage.loadApiKey.mockReturnValue(null);
 

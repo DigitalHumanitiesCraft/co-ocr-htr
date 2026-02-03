@@ -12,19 +12,19 @@ import { storage } from './storage.js';
 /**
  * Base transcription prompt - will be enhanced with context if provided
  */
-const TRANSCRIPTION_PROMPT_BASE = `Du bist ein Experte für historische Handschriften.
+const TRANSCRIPTION_PROMPT_BASE = `You are an expert in historical manuscripts and paleography.
 
-Aufgabe: Transkribiere das Dokument so genau wie möglich.
+Task: Transcribe the document as accurately as possible.
 
-Regeln:
-- Zeilenumbrüche des Originals beibehalten
-- Absätze durch Leerzeilen trennen
-- Unsichere Lesungen mit [?] markieren (z.B. "[?]Wort")
-- Unleserliche Stellen mit [illegible] markieren
-- Abkürzungen originalgetreu beibehalten
+Rules:
+- Preserve original line breaks exactly as they appear
+- Separate paragraphs with blank lines
+- Mark uncertain readings with [?] (e.g., "[?]word") - you MUST use this when confidence is below 90%
+- Mark illegible passages with [illegible]
+- Keep abbreviations as written in the original (do not expand)
 
-Ausgabeformat: Nur der transkribierte Text, keine Erklärungen.
-Beginne direkt mit der ersten Zeile des Dokuments.`;
+Output format: Only the transcribed text, no explanations or commentary.
+Begin directly with the first line of the document.`;
 
 /**
  * Build the full transcription prompt, optionally enhanced with context
@@ -35,91 +35,97 @@ function buildTranscriptionPrompt(contextDescription = '') {
     let prompt = TRANSCRIPTION_PROMPT_BASE;
 
     if (contextDescription) {
-        prompt = `Du bist ein Experte für historische Handschriften.
+        prompt = `You are an expert in historical manuscripts and paleography.
 
-DOKUMENTKONTEXT (vom Experten bereitgestellt):
+DOCUMENT CONTEXT (provided by the expert):
 ${contextDescription}
 
-Aufgabe: Transkribiere das Dokument so genau wie möglich unter Berücksichtigung des Kontexts.
+Task: Transcribe the document as accurately as possible, taking the context into account.
 
-Regeln:
-- Zeilenumbrüche des Originals beibehalten
-- Absätze durch Leerzeilen trennen
-- Unsichere Lesungen mit [?] markieren (z.B. "[?]Wort")
-- Unleserliche Stellen mit [illegible] markieren
-- Abkürzungen originalgetreu beibehalten
+Rules:
+- Preserve original line breaks exactly as they appear
+- Separate paragraphs with blank lines
+- Mark uncertain readings with [?] (e.g., "[?]word") - you MUST use this when confidence is below 90%
+- Mark illegible passages with [illegible]
+- Keep abbreviations as written in the original (do not expand)
 
-Ausgabeformat: Nur der transkribierte Text, keine Erklärungen.
-Beginne direkt mit der ersten Zeile des Dokuments.`;
+Output format: Only the transcribed text, no explanations or commentary.
+Begin directly with the first line of the document.`;
     }
 
     return prompt;
 }
 
-const VALIDATION_PROMPTS = {
-  paleographic: `Analysiere den folgenden transkribierten Text aus paläographischer Sicht:
-
-{text}
-
-Prüfe:
-- Buchstabenformen: Sind sie konsistent mit der angegebenen Epoche?
-- Ligaturen: Wurden sie korrekt aufgelöst?
-- Ähnliche Buchstaben: Könnten n/u, c/e, i/j verwechselt worden sein?
-- Abkürzungen: Wurden sie korrekt expandiert?
-
-Bewerte die Transkription mit einer der folgenden Kategorien:
-- "certain": Hohe Übereinstimmung, keine erkennbaren Fehler
-- "likely": Plausibel, aber Experte sollte kritische Stellen prüfen
-- "uncertain": Wahrscheinlich fehlerhaft, mehrere problematische Lesungen
-
-Antworte im JSON-Format:
-{"confidence": "certain|likely|uncertain", "reasoning": "Deine Begründung", "issues": [{"line": 1, "text": "Problem", "suggestion": "Vorschlag"}]}`,
-
-  linguistic: `Analysiere den folgenden transkribierten Text aus sprachlicher Sicht:
-
-{text}
-
-Prüfe:
-- Grammatik: Sind die Sätze grammatikalisch plausibel?
-- Historische Orthographie: Entspricht die Schreibweise der Epoche?
-- Lexik: Sind die verwendeten Wörter epochentypisch?
-- Abkürzungen: Wurden Standardabkürzungen korrekt aufgelöst?
-
-Bewerte mit: "certain", "likely", oder "uncertain"
-
-Antworte im JSON-Format:
-{"confidence": "certain|likely|uncertain", "reasoning": "Deine Begründung", "issues": [{"line": 1, "text": "Problem", "suggestion": "Vorschlag"}]}`,
-
-  structural: `Analysiere den folgenden transkribierten Text aus struktureller Sicht:
-
-{text}
-
-Prüfe:
-- Tabellenlogik: Stimmen die Summen (falls vorhanden)?
-- Spaltenstruktur: Ist die Anzahl der Spalten konsistent?
-- Verweise: Sind Referenzen auf andere Einträge korrekt?
-- Nummerierung: Ist eine logische Reihenfolge erkennbar?
-
-Bewerte mit: "certain", "likely", oder "uncertain"
-
-Antworte im JSON-Format:
-{"confidence": "certain|likely|uncertain", "reasoning": "Deine Begründung", "issues": [{"line": 1, "text": "Problem", "suggestion": "Vorschlag"}]}`,
-
-  domain: `Analysiere den folgenden transkribierten Text mit Domänenwissen:
-
-{text}
-
-Prüfe (für Rechnungsbücher/Geschäftsdokumente):
-- Fachtermini: Sind Warenbezeichnungen, Berufe korrekt?
-- Plausibilität: Sind Mengen, Preise, Daten realistisch?
-- Kontext: Passt der Inhalt zum Dokumenttyp?
-- Personennamen: Sind sie für die Region/Epoche typisch?
-
-Bewerte mit: "certain", "likely", oder "uncertain"
-
-Antworte im JSON-Format:
-{"confidence": "certain|likely|uncertain", "reasoning": "Deine Begründung", "issues": [{"line": 1, "text": "Problem", "suggestion": "Vorschlag"}]}`
+/**
+ * Issue types for structured validation results
+ * Labels kept in German for UI display consistency
+ */
+const ISSUE_TYPES = {
+  spelling: { name: 'Spelling', color: 'warning', description: 'Orthographic error' },
+  accent: { name: 'Accent', color: 'warning', description: 'Incorrect accent/diacritics' },
+  abbreviation: { name: 'Abbreviation', color: 'info', description: 'Check abbreviation expansion' },
+  illegible: { name: 'Illegible', color: 'error', description: 'Cannot be deciphered' },
+  ocr_artifact: { name: 'OCR Artifact', color: 'error', description: 'Technical OCR error' },
+  historical: { name: 'Historical', color: 'info', description: 'Historical spelling (correct)' },
+  structural: { name: 'Structural', color: 'warning', description: 'Layout or structure error' },
+  plausibility: { name: 'Plausibility', color: 'warning', description: 'Content questionable' }
 };
+
+/**
+ * Common issue type instruction for all prompts
+ */
+const ISSUE_TYPE_INSTRUCTION = `
+For each issue found, classify it with one of the following types:
+- "spelling": Spelling error (e.g., transposed letters)
+- "accent": Accent/diacritics error (e.g., é instead of è)
+- "abbreviation": Abbreviation unclear or incorrectly expanded
+- "illegible": Passage not readable or unclearly transcribed
+- "ocr_artifact": Technical OCR error (e.g., special character instead of letter)
+- "historical": Historical spelling (not an error, but unusual for modern readers)
+- "structural": Structural error (column break, table error)
+- "plausibility": Content questionable (unrealistic values, anachronisms)
+`;
+
+/**
+ * Default validation prompt - comprehensive check covering all aspects
+ */
+const DEFAULT_VALIDATION_PROMPT = `Analyze the following transcription from a historical document:
+
+{text}
+
+Check for potential issues in these areas:
+
+1. PALEOGRAPHIC: Letter confusion (n/u, c/e, i/j, f/s), ligatures, abbreviation marks
+2. SPELLING & ACCENTS: Orthographic errors, missing or wrong diacritics
+3. STRUCTURAL: Table/column errors, broken lines, layout issues (if applicable)
+4. PLAUSIBILITY: Unrealistic values, anachronisms, implausible names/dates
+
+Rate the overall transcription quality:
+- "confident": No significant issues found
+- "likely": Minor issues that expert should verify
+- "uncertain": Multiple problems requiring correction
+${ISSUE_TYPE_INSTRUCTION}
+Respond ONLY with valid JSON in this exact format:
+{
+  "confidence": "confident|likely|uncertain",
+  "summary": "Brief assessment in 1-2 sentences",
+  "issues": [
+    {"line": 1, "text": "problematic text", "type": "spelling|accent|abbreviation|illegible|ocr_artifact|historical|structural|plausibility", "suggestion": "correction", "explanation": "why this is an issue"}
+  ]
+}
+
+If no issues found, return empty issues array. Be specific about line numbers.`;
+
+/**
+ * Build validation prompt - uses default or custom prompt
+ * @param {string} text - The transcription text to validate
+ * @param {string} customPrompt - Optional custom prompt from user
+ * @returns {string} The complete validation prompt
+ */
+function buildValidationPrompt(text, customPrompt = '') {
+    const basePrompt = customPrompt.trim() || DEFAULT_VALIDATION_PROMPT;
+    return basePrompt.replace('{text}', text);
+}
 
 // ============================================
 // Provider Configurations
@@ -365,21 +371,22 @@ class LLMService {
    * @param {string} perspective - Validation perspective
    * @returns {Promise<object>} Validation result
    */
-  async validate(text, perspective = 'paleographic') {
+  async validate(text, options = {}) {
+    // Support legacy signature: validate(text, perspective)
+    if (typeof options === 'string') {
+      options = { perspective: options };
+    }
+
+    const { customPrompt = '' } = options;
     const config = this.getProviderConfig();
-    console.log(`[LLM] validate() perspective=${perspective} provider=${this.activeProvider}`);
+    console.log(`[LLM] validate() provider=${this.activeProvider} customPrompt=${!!customPrompt}`);
     const apiKey = storage.loadApiKey(this.activeProvider);
 
     if (!apiKey && config.authType !== 'none') {
       throw new Error(`No API key configured for ${config.name}`);
     }
 
-    const promptTemplate = VALIDATION_PROMPTS[perspective];
-    if (!promptTemplate) {
-      throw new Error(`Unknown perspective: ${perspective}`);
-    }
-
-    const prompt = promptTemplate.replace('{text}', text);
+    const prompt = buildValidationPrompt(text, customPrompt);
     const model = this.getCurrentModel();
 
     try {
@@ -405,7 +412,7 @@ class LLMService {
           throw new Error(`Provider ${this.activeProvider} not implemented`);
       }
 
-      const result = this._parseValidationResponse(response, perspective);
+      const result = this._parseValidationResponse(response);
       console.log(`[LLM] validate() OK, confidence=${result.confidence}`);
       return result;
     } catch (error) {
@@ -660,17 +667,31 @@ class LLMService {
     return [];
   }
 
-  _parseValidationResponse(raw, perspective) {
+  _parseValidationResponse(raw) {
     try {
       // Try to parse JSON from response
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
+
+        // Map old confidence values to new ones
+        let confidence = parsed.confidence || 'uncertain';
+        if (confidence === 'certain') confidence = 'confident';
+
+        // Validate and normalize issues with types
+        const issues = (parsed.issues || []).map(issue => ({
+          line: issue.line || 0,
+          text: issue.text || '',
+          type: this._normalizeIssueType(issue.type),
+          suggestion: issue.suggestion || null,
+          explanation: issue.explanation || issue.suggestion || ''
+        }));
+
         return {
-          perspective,
-          confidence: parsed.confidence || 'uncertain',
-          reasoning: parsed.reasoning || '',
-          issues: parsed.issues || [],
+          confidence,
+          reasoning: parsed.reasoning || parsed.summary || '',
+          summary: parsed.summary || parsed.reasoning || '',
+          issues,
           raw
         };
       }
@@ -680,19 +701,42 @@ class LLMService {
 
     // Fallback: extract confidence from text
     let confidence = 'uncertain';
-    if (raw.toLowerCase().includes('"certain"') || raw.toLowerCase().includes('confident')) {
-      confidence = 'certain';
+    if (raw.toLowerCase().includes('"confident"') || raw.toLowerCase().includes('"certain"')) {
+      confidence = 'confident';
     } else if (raw.toLowerCase().includes('"likely"') || raw.toLowerCase().includes('plausible')) {
       confidence = 'likely';
     }
 
     return {
-      perspective,
       confidence,
       reasoning: raw,
+      summary: '',
       issues: [],
       raw
     };
+  }
+
+  /**
+   * Normalize issue type to valid type
+   */
+  _normalizeIssueType(type) {
+    const validTypes = ['spelling', 'accent', 'abbreviation', 'illegible', 'ocr_artifact', 'historical', 'structural', 'plausibility'];
+    if (type && validTypes.includes(type)) {
+      return type;
+    }
+    // Try to infer from common variations
+    if (type) {
+      const lower = type.toLowerCase();
+      if (lower.includes('spell') || lower.includes('ortho')) return 'spelling';
+      if (lower.includes('accent') || lower.includes('diacritic')) return 'accent';
+      if (lower.includes('abbrev') || lower.includes('abkuerz')) return 'abbreviation';
+      if (lower.includes('illegib') || lower.includes('unles')) return 'illegible';
+      if (lower.includes('ocr') || lower.includes('artifact')) return 'ocr_artifact';
+      if (lower.includes('histor')) return 'historical';
+      if (lower.includes('struct') || lower.includes('layout')) return 'structural';
+      if (lower.includes('plausib')) return 'plausibility';
+    }
+    return 'spelling'; // Default fallback
   }
 
   // ============================================
@@ -733,4 +777,4 @@ class LLMError extends Error {
 
 // Export singleton instance and classes
 export const llmService = new LLMService();
-export { LLMService, LLMError, PROVIDERS, TRANSCRIPTION_PROMPT_BASE, VALIDATION_PROMPTS };
+export { LLMService, LLMError, PROVIDERS, TRANSCRIPTION_PROMPT_BASE, ISSUE_TYPES };
