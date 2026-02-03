@@ -349,7 +349,21 @@
                         Combines deterministic rules with LLM-Judge. Categories: confident / uncertain / problematic (no percentages).
                     </div>
                 </span>
-                <span class="validation-badge ml-auto" id="validationBadge" hidden>0 Issues</span>
+                <div class="flex-center gap-2 ml-auto">
+                    <button class="btn btn-primary btn-sm" id="btnValidate" title="Validate transcription" disabled>
+                        <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 11l3 3L22 4"></path>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        <span class="btn-text">Validate</span>
+                        <span class="btn-spinner" hidden>
+                            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
+                            </svg>
+                        </span>
+                    </button>
+                    <span class="validation-badge" id="validationBadge" hidden>0 Issues</span>
+                </div>
             </div>
             <!-- Panel Hint -->
             <div class="panel-hint" id="validationHint">
