@@ -119,6 +119,21 @@ Traceability of all steps: model, corrections, timestamp.
 | Model Diversity | Source-dependent recognition quality | → [ARCHITECTURE](ARCHITECTURE.md) |
 | Local Control | Privacy, cost management | → [ARCHITECTURE](ARCHITECTURE.md) |
 
+## Terminology: Human-AI Collaboration
+
+**Central principle:** The expert leads, the AI assists.
+
+| Term | Meaning | Usage |
+|------|---------|-------|
+| Expert-in-the-Loop | The human expert is at the center of the workflow | Preferred term for coOCR/HTR |
+| Editor-in-the-Loop | Synonym emphasizing the editing/correction task | README tagline |
+| Human-in-the-Loop | System-centered framing (human validates system output) | Avoid - implies AI leads |
+| AI-assisted | Broad term, can be ambiguous about who leads | Use with care |
+
+**Why this matters:** The framing of human-AI collaboration affects how users perceive their role. "Integrating experts into AI pipelines" positions the human as a component of the system. "Expert-led workflow with AI assistance" positions the human as the decision-maker using AI as a tool.
+
+**Open research question:** The terminology around human-AI collaboration in HCI (Human-Computer Interaction) literature varies. Further exploration of frameworks like "human-centered AI", "mixed-initiative systems", and "collaborative intelligence" could inform better framing.
+
 ---
 
 **Sources:** Promptotyping methodology, Critical Expert in the Loop, LLM-Judge bias research, Vision-Language Models, Document AI, Shneiderman (Visual Information Seeking).
