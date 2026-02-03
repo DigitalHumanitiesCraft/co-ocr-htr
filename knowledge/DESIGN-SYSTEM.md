@@ -1,15 +1,15 @@
 ---
 type: knowledge
 created: 2026-01-16
-updated: 2026-01-16
+updated: 2026-02-03
 tags: [coocr-htr, design-system, ui-ux]
 status: complete
-version: 2.1
+version: 2.2
 ---
 
 # coOCR/HTR Design System
 
-Version 2.1 — Consolidated and Optimized
+Version 2.2 — AI Content Identification
 
 ---
 
@@ -99,6 +99,23 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 --error: var(--problematic);
 ```
 
+#### AI-Generated Content Colors
+
+**Rationale:** A distinct purple/violet color family marks all AI-generated content, clearly separating machine output from deterministic results or user input.
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--ai-primary` | `#7c5cbf` | AI badges, labels, borders (muted violet) |
+| `--ai-secondary` | `#6a4fa8` | Hover states on AI elements |
+| `--ai-bg` | `rgba(124, 92, 191, 0.08)` | AI section backgrounds |
+| `--ai-border` | `rgba(124, 92, 191, 0.25)` | AI section borders |
+
+**Usage Pattern:**
+- AI section headers get a violet left-border accent
+- AI badges (small "KI" labels) use solid violet background with white text
+- AI reasoning blocks use violet-tinted backgrounds for clear identification
+- This color is NOT used for any other purpose (distinct from brand, accent, status)
+
 #### Region Colors (Bounding Boxes)
 
 | Token | Value | Usage |
@@ -113,6 +130,7 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 | **Brand** | Identity, logo | Gold, Brown |
 | **Accent** | Interactive elements | Steel Blue |
 | **Status** | Confidence feedback | Green, Amber, Terracotta |
+| **AI** | AI-generated content | Violet/Purple |
 | **Neutral** | Backgrounds, text | Cream, White, Brown |
 | **Region** | Document annotations | Sienna |
 
@@ -328,12 +346,20 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 | Section | Icon | Source | Characteristic |
 |---------|------|--------|----------------|
 | Rule-Based | (gear) | Deterministic rules | Always same result |
-| AI Analysis | (diamond) | LLM perspectives | May vary, context-dependent |
+| AI Analysis | (robot) + KI badge | LLM perspectives | May vary, context-dependent |
 
 **Section Header:**
 ```
 RULE-BASED                    (11px, uppercase, tracking)
+
+[KI] AI ASSISTANT             (with violet badge and left border)
 ```
+
+**AI Section Distinction:**
+- Purple/violet "KI" badge before section title
+- 3px violet left border on section header
+- AI reasoning uses violet-tinted expandable container
+- Clear visual separation from rule-based (deterministic) results
 
 ### 6.4 Validation Card
 
@@ -603,6 +629,14 @@ docs/
 ---
 
 ## Changelog
+
+### v2.2 (2026-02-03)
+- Added AI-generated content color system (violet/purple)
+- Introduced `--ai-primary`, `--ai-bg`, `--ai-border` tokens
+- AI section headers with "KI" badge and violet left border
+- AI reasoning container with distinct violet-tinted styling
+- Updated Color Function Matrix with AI category
+- Clear visual distinction between rule-based and AI-generated content
 
 ### v2.1 (2026-01-16)
 - Consolidated best elements from v2.0 editorial design
