@@ -16,14 +16,12 @@ knowledge/
 ├── INDEX.md               ← Navigation (this document)
 ├── VISION.md              ← Project goals & success criteria
 ├── METHODOLOGY.md         ← Scientific foundations
-├── MODEL-LANDSCAPE.md     ← OCR/HTR model comparison (NEW)
+├── MODEL-LANDSCAPE.md     ← OCR/HTR model comparison
 ├── DESIGN-SYSTEM.md       ← UI/UX specification
 ├── ARCHITECTURE.md        ← Technical architecture
 ├── VALIDATION.md          ← Hybrid validation
 ├── DATA-SCHEMA.md         ← Data structures
-├── REQUIREMENTS.md        ← Feature status, bugs
-├── IMPLEMENTATION-PLAN.md ← Roadmap to completion
-├── ACTIONPLAN.md          ← Sprint-Tracking (compact)
+├── IMPLEMENTATION-PLAN.md ← Roadmap (complete)
 └── JOURNAL.md             ← Development log
 ```
 
@@ -38,9 +36,7 @@ knowledge/
 | [ARCHITECTURE](ARCHITECTURE.md) | How is it built? | Development | METHODOLOGY |
 | [VALIDATION](VALIDATION.md) | How is it verified? | Development | METHODOLOGY, ARCHITECTURE |
 | [DATA-SCHEMA](DATA-SCHEMA.md) | What data? | Development | ARCHITECTURE |
-| [REQUIREMENTS](REQUIREMENTS.md) | What is done/open? | Development | ARCHITECTURE |
-| [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | What comes next? | Development | ARCHITECTURE |
-| [ACTIONPLAN](ACTIONPLAN.md) | Sprint status? | Development | IMPLEMENTATION-PLAN |
+| [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | Project roadmap | Development | ARCHITECTURE |
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
 
 ## Core Concepts (Quick Reference)
@@ -50,7 +46,7 @@ knowledge/
 | Critical Expert in the Loop | Human validates, machine assists | METHODOLOGY |
 | Categorical Confidence | confident/uncertain/problematic instead of 0-100% | METHODOLOGY |
 | Hybrid Validation | Deterministic + LLM-Judge combined | VALIDATION |
-| Perspectives | Paleographic, Linguistic, Structural, Domain | VALIDATION |
+| Custom Validation Prompt | Optional user-defined validation prompt | VALIDATION |
 | Promptotyping | Iterative development through AI dialogue | METHODOLOGY |
 | Triple Synchronization | Viewer ↔ Transcription ↔ Validation | ARCHITECTURE |
 | Tabular Transcription | Structured fields instead of free text | DATA-SCHEMA |
@@ -65,7 +61,7 @@ knowledge/
 | Document Viewer | OpenSeadragon + SVG Overlay + Zoom | DESIGN-SYSTEM |
 | Transcription Table | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT | DESIGN-SYSTEM |
 | Validation Panel | Rule-Based + AI Assistant sections | VALIDATION |
-| Status Bar | Model, Perspective, Status, Timestamp | DESIGN-SYSTEM |
+| Status Bar | Model, Status, Timestamp | DESIGN-SYSTEM |
 | Inline Markers | [?], [illegible], ... | DESIGN-SYSTEM |
 | IIIF Dialog | Load manifests from external repositories | ARCHITECTURE |
 
@@ -99,3 +95,4 @@ METHODOLOGY ──────────────────────�
 | 1.5 | 2026-01-18 | Added IIIF Integration, OpenSeadragon viewer, IIIF Dialog |
 | 1.6 | 2026-02-03 | Added VISION.md with project goals and success criteria |
 | 1.7 | 2026-02-03 | Added MODEL-LANDSCAPE.md with OCR/HTR model comparison and external validation |
+| 1.8 | 2026-02-03 | Simplified validation: removed perspectives, added custom prompt option |

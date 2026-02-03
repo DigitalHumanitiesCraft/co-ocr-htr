@@ -24,7 +24,7 @@ status: complete
 | Pan/Zoom/Fit Controls | [x] | `js/viewer.js` |
 | Transcription Editor (lines/grid) | [x] | `js/editor.js` |
 | Triple Synchronization | [x] | `js/*.js` |
-| LLM Integration (5 providers) | [x] | `js/services/llm.js` |
+| LLM Integration (4 providers) | [x] | `js/services/llm.js` |
 | Gemini 3 Optimization | [x] | `js/services/llm.js` |
 | Rule-Based Validation | [x] | `js/services/validation.js` |
 | LLM-Judge Validation | [x] | `js/services/llm.js` |
@@ -119,7 +119,7 @@ status: complete
 | Task | Status | Beschreibung |
 |------|--------|--------------|
 | PAGE-XML Export | [x] | PAGE 2019-07-15 Schema |
-| Vitest Unit Tests | [x] | 118 Tests (export, validation, llm, page-xml) |
+| Vitest Unit Tests | [x] | 125 Tests (export, validation, llm, page-xml) |
 | Editor Simplification | [x] | Textarea mit Line Numbers, Diff View |
 | Undo/Redo Buttons | [x] | Sichtbare Buttons mit Feedback |
 | API Dialog Redesign | [x] | Unified Form statt Tabs |
@@ -160,7 +160,7 @@ docs/
 │   │   ├── transcription.js
 │   │   └── validation.js
 │   └── services/
-│       ├── llm.js          # 5 Provider + Gemini 3
+│       ├── llm.js          # 4 Provider (Gemini, OpenAI, Anthropic, Ollama)
 │       ├── storage.js
 │       ├── validation.js
 │       ├── export.js

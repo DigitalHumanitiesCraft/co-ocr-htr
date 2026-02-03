@@ -97,7 +97,7 @@ Alle Designentscheidungen sind in `knowledge/` dokumentiert und begruendet.
 | Critical Expert in the Loop | Mensch validiert, Maschine unterstützt |
 | Kategorielle Konfidenz | sicher/prüfenswert/problematisch (keine %) |
 | Hybride Validierung | Deterministische Regeln + LLM-Judge |
-| Perspektiven | Paläographisch, Sprachlich, Strukturell, Domäne |
+| Custom Validation Prompt | Optionaler benutzerdefinierter Validierungsprompt |
 
 ## Konventionen
 
