@@ -85,7 +85,7 @@ Each line of transcribed text is stored as a segment:
 |-------|------|-------------|
 | status | Enum | valid, uncertain, or invalid |
 | rules | Array | Results from rule-based validation |
-| llmJudge | Object (optional) | AI perspective analysis |
+| llmJudge | Object (optional) | AI validation analysis |
 
 ### Correction Entry
 
@@ -117,7 +117,7 @@ A typical tabular document (Rechnungsbuch 1842, page 15) demonstrates the data s
 - Date format check: passed (DD. Month pattern)
 - Currency format check: passed (Taler recognized)
 - Uncertain marker check: failed (line 4 has [?])
-- LLM-Judge (paleographic): "The name could be Mueller or Moeller. The handwriting shows a ligature that allows both readings."
+- LLM-Judge: "The name could be Mueller or Moeller. The handwriting shows a ligature that allows both readings."
 
 **Correction History:** Line 2 was reviewed but marker retained as reading remains uncertain.
 
@@ -131,7 +131,7 @@ Two keys store user preferences:
 
 | Key | Content |
 |-----|---------|
-| coocr:settings | Theme, default model, default perspective, auto-save/validate flags |
+| coocr:settings | Theme, default model, auto-save/validate flags |
 | coocr:apikeys | Base64-obfuscated API keys per provider, Ollama endpoint URL |
 
 ### IndexedDB
