@@ -4,6 +4,76 @@
  */
 
 /* ==========================================================================
+   WORK IN PROGRESS BANNER
+   ========================================================================== */
+
+.wip-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: linear-gradient(90deg, var(--uncertain) 0%, #e67e22 100%);
+  color: white;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.wip-banner[hidden] {
+  display: none;
+}
+
+.wip-badge {
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.wip-text {
+  flex: 1;
+  text-align: center;
+}
+
+.wip-link {
+  color: white;
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+.wip-link:hover {
+  opacity: 1;
+}
+
+.wip-close {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: var(--space-1);
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wip-close:hover {
+  opacity: 1;
+}
+
+/* Offset app container when banner is visible */
+body:has(.wip-banner:not([hidden])) .app-container {
+  padding-top: calc(var(--space-2) + 40px);
+}
+
+/* ==========================================================================
    APP CONTAINER (Main Grid)
    ========================================================================== */
 
