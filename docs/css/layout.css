@@ -52,6 +52,16 @@
   opacity: 1;
 }
 
+.wip-method-link {
+  color: white;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.wip-method-link:hover {
+  opacity: 0.9;
+}
+
 .wip-close {
   background: transparent;
   border: none;
