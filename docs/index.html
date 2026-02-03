@@ -291,21 +291,11 @@
                 <span>Transcription</span>
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
-                        <div class="info-tooltip-title">Co-Intelligence</div>
-                        LLM provides fast recognition, expert brings judgment. Double-click to edit, Enter to save.
+                        <div class="info-tooltip-title">Wie funktioniert es?</div>
+                        Das LLM erstellt einen ersten Entwurf, den du als Experte korrigierst und validierst.
                     </div>
                 </span>
                 <div class="flex-center gap-1 ml-auto">
-                    <button class="btn btn-secondary btn-sm" id="btnContext" title="Set document context for better transcription">
-                        <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                        <span class="btn-text" id="contextBtnText">Context</span>
-                    </button>
                     <button class="btn btn-primary btn-sm" id="btnTranscribe" title="Transcribe document with LLM">
                         <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
@@ -318,16 +308,20 @@
                         </span>
                     </button>
                     <div class="divider-vertical"></div>
-                    <button class="icon-btn icon-sm" id="btnUndo" title="Undo" disabled><svg viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor">
+                    <button class="icon-btn undo-redo" id="btnUndo" title="Undo (Ctrl+Z)" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 14 4 9 9 4" />
                             <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
-                        </svg></button>
-                    <button class="icon-btn icon-sm" id="btnRedo" title="Redo" disabled><svg viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor">
+                        </svg>
+                        <span class="btn-label">Undo</span>
+                    </button>
+                    <button class="icon-btn undo-redo" id="btnRedo" title="Redo (Ctrl+Shift+Z)" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
                             <path d="M15 4 20 9 15 14" />
-                        </svg></button>
+                        </svg>
+                        <span class="btn-label">Redo</span>
+                    </button>
                 </div>
             </div>
             <!-- Panel Hint -->
@@ -449,195 +443,156 @@
 
     <!-- DIALOGS -->
 
-    <!-- API Key Dialog -->
-    <dialog id="apiKeyDialog" class="dialog">
+    <!-- LLM Configuration Dialog -->
+    <dialog id="apiKeyDialog" class="dialog dialog-xl">
         <div class="dialog-header">
-            <h2 class="dialog-title">API Configuration</h2>
+            <h2 class="dialog-title">LLM-Konfiguration</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
-        <div class="dialog-tabs" role="tablist">
-            <button class="dialog-tab active" role="tab" data-provider="gemini" aria-selected="true">
-                Gemini
-                <span class="provider-status" data-status="unconfigured"></span>
-            </button>
-            <button class="dialog-tab" role="tab" data-provider="openai" aria-selected="false">
-                OpenAI
-                <span class="provider-status" data-status="unconfigured"></span>
-            </button>
-            <button class="dialog-tab" role="tab" data-provider="anthropic" aria-selected="false">
-                Anthropic
-                <span class="provider-status" data-status="unconfigured"></span>
-            </button>
-            <button class="dialog-tab" role="tab" data-provider="ollama" aria-selected="false">
-                Ollama
-                <span class="provider-status" data-status="unconfigured"></span>
-            </button>
-        </div>
-
         <div class="dialog-body">
-            <!-- Gemini Panel -->
-            <div class="dialog-tab-panel active" data-panel="gemini" role="tabpanel">
-                <p class="provider-description">
-                    Google Gemini API. Get your API key from
-                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
-                </p>
+            <p class="context-explanation">Wähle einen Anbieter und ein Modell für die KI-gestützte Transkription. Die Konfiguration wird lokal gespeichert.</p>
+
+            <div class="llm-config-fields">
+                <!-- Provider Selection -->
                 <div class="input-wrapper">
-                    <label for="geminiApiKey">API Key</label>
+                    <label for="llmProvider">Anbieter</label>
+                    <select id="llmProvider">
+                        <optgroup label="Cloud-Anbieter (API-Key erforderlich)">
+                            <option value="gemini">Google Gemini</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic Claude</option>
+                        </optgroup>
+                        <optgroup label="Lokal (kein API-Key)">
+                            <option value="ollama">Ollama (lokal)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Model Selection -->
+                <div class="input-wrapper">
+                    <label for="llmModel">Modell</label>
+                    <div class="input-with-custom">
+                        <select id="llmModel">
+                            <!-- Populated dynamically based on provider -->
+                        </select>
+                        <input type="text" id="llmModelCustom" class="custom-input" placeholder="Eigenes Modell eingeben..." style="display: none;">
+                    </div>
+                    <span class="input-hint" id="llmModelHint">Empfohlenes Modell für OCR/HTR-Aufgaben.</span>
+                </div>
+
+                <!-- API Key (hidden for Ollama) -->
+                <div class="input-wrapper" id="apiKeyWrapper">
+                    <label for="llmApiKey">API-Key</label>
                     <div class="input-with-toggle">
-                        <input type="password" id="geminiApiKey" placeholder="AIza..." autocomplete="off">
+                        <input type="password" id="llmApiKey" placeholder="" autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
                             <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
                             <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
                         </button>
                     </div>
+                    <span class="input-hint" id="apiKeyHint">
+                        API-Key von <a href="#" id="apiKeyLink" target="_blank" rel="noopener">Provider</a> holen.
+                    </span>
                 </div>
-                <div class="input-wrapper">
-                    <label for="geminiModel">Model</label>
-                    <select id="geminiModel">
-                        <option value="gemini-3-flash-preview" selected>Gemini 3 Flash (Recommended)</option>
-                        <option value="gemini-3-pro-preview">Gemini 3 Pro</option>
-                    </select>
-                </div>
-            </div>
 
-            <!-- OpenAI Panel -->
-            <div class="dialog-tab-panel" data-panel="openai" role="tabpanel" hidden>
-                <p class="provider-description">
-                    OpenAI API. Get your API key from
-                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI Platform</a>.
-                </p>
-                <div class="input-wrapper">
-                    <label for="openaiApiKey">API Key</label>
-                    <div class="input-with-toggle">
-                        <input type="password" id="openaiApiKey" placeholder="sk-..." autocomplete="off">
-                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
-                            <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
-                            <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="input-wrapper">
-                    <label for="openaiModel">Model</label>
-                    <select id="openaiModel">
-                        <option value="gpt-5.2" selected>GPT-5.2 (Recommended)</option>
-                        <option value="gpt-5.2-pro">GPT-5.2 Pro</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Anthropic Panel -->
-            <div class="dialog-tab-panel" data-panel="anthropic" role="tabpanel" hidden>
-                <p class="provider-description">
-                    Anthropic Claude API. Get your API key from
-                    <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>.
-                </p>
-                <div class="input-wrapper">
-                    <label for="anthropicApiKey">API Key</label>
-                    <div class="input-with-toggle">
-                        <input type="password" id="anthropicApiKey" placeholder="sk-ant-..." autocomplete="off">
-                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
-                            <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
-                            <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="input-wrapper">
-                    <label for="anthropicModel">Model</label>
-                    <select id="anthropicModel">
-                        <option value="claude-sonnet-4-5-20250514" selected>Claude Sonnet 4.5 (Recommended)</option>
-                        <option value="claude-haiku-4-5-20250514">Claude Haiku 4.5</option>
-                        <option value="claude-opus-4-5-20250514">Claude Opus 4.5</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Ollama Panel -->
-            <div class="dialog-tab-panel" data-panel="ollama" role="tabpanel" hidden>
-                <p class="provider-description">
-                    Local LLM via Ollama. Install from
-                    <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>
-                    and run <code>ollama serve</code>. Requires Ollama v0.13.0+.
-                </p>
-                <div class="input-wrapper">
-                    <label for="ollamaEndpoint">Endpoint</label>
-                    <input type="text" id="ollamaEndpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
-                </div>
-                <div class="input-wrapper">
-                    <label for="ollamaModel">Model</label>
+                <!-- Ollama-specific: Endpoint -->
+                <div class="input-wrapper" id="ollamaEndpointWrapper" style="display: none;">
+                    <label for="ollamaEndpoint">Server-URL</label>
                     <div class="input-with-button">
-                        <input type="text" id="ollamaModel" value="deepseek-ocr" placeholder="deepseek-ocr">
-                        <button type="button" class="btn btn-secondary" id="ollamaRefreshModels">Refresh</button>
+                        <input type="text" id="ollamaEndpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
+                        <button type="button" class="btn btn-secondary btn-sm" id="ollamaRefreshModels">Modelle laden</button>
                     </div>
-                </div>
-                <div class="provider-note">
-                    Recommended: <code>deepseek-ocr</code> (optimiert für OCR). Alternativen: <code>llava</code>, <code>llama3.2-vision</code>
+                    <span class="input-hint">Ollama muss lokal laufen: <code>ollama serve</code></span>
                 </div>
             </div>
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" id="testApiConnection">Test Connection</button>
+            <button type="button" class="btn btn-secondary" id="testApiConnection">Verbindung testen</button>
             <div class="dialog-actions">
-                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveApiKeys">Save</button>
+                <button type="button" class="btn btn-secondary" data-close-dialog>Abbrechen</button>
+                <button type="button" class="btn btn-primary" id="saveApiKeys">Speichern</button>
             </div>
         </div>
     </dialog>
 
-    <!-- Context Dialog -->
-    <dialog id="contextDialog" class="dialog">
+    <!-- Transcription Dialog (combined context + transcribe) -->
+    <dialog id="transcribeDialog" class="dialog dialog-xl">
         <div class="dialog-header">
-            <h2 class="dialog-title">Document Context</h2>
+            <h2 class="dialog-title">Transkription starten</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
         <div class="dialog-body">
-            <p class="dialog-description">
-                Describe the document to improve transcription quality. The more context you provide, the better the result.
-            </p>
+            <!-- Context Section (collapsible) -->
+            <details class="context-details" id="contextDetails">
+                <summary class="context-summary">
+                    <span class="context-summary-title">Dokumentkontext (optional)</span>
+                    <span class="context-summary-hint">Reichert den KI-Prompt an</span>
+                </summary>
+                <div class="context-fields">
+                    <p class="context-explanation">Diese Angaben werden dem KI-Modell als Kontext mitgegeben, um die Transkription zu verbessern. Je mehr Informationen, desto besser das Ergebnis.</p>
+                    <!-- Document Type with custom option -->
+                    <div class="input-wrapper">
+                        <label for="contextDocType">Dokumenttyp</label>
+                        <div class="input-with-custom">
+                            <select id="contextDocType">
+                                <option value="">-- Auswählen --</option>
+                                <option value="letter">Brief / Korrespondenz</option>
+                                <option value="account_book">Rechnungsbuch / Kassabuch</option>
+                                <option value="diary">Tagebuch / Journal</option>
+                                <option value="register">Register / Liste</option>
+                                <option value="protocol">Protokoll / Sitzungsnotizen</option>
+                                <option value="contract">Vertrag / Rechtsdokument</option>
+                                <option value="inventory">Inventar</option>
+                                <option value="manuscript">Manuskript / Handschrift</option>
+                                <option value="certificate">Urkunde / Zertifikat</option>
+                                <option value="custom">Eigene Angabe...</option>
+                            </select>
+                            <input type="text" id="contextDocTypeCustom" class="custom-input" placeholder="Dokumenttyp eingeben..." style="display: none;">
+                        </div>
+                    </div>
 
-            <div class="input-wrapper">
-                <label for="contextDocType">Document Type</label>
-                <select id="contextDocType">
-                    <option value="">-- Select --</option>
-                    <option value="letter">Letter / Correspondence</option>
-                    <option value="account_book">Account Book / Ledger</option>
-                    <option value="diary">Diary / Journal</option>
-                    <option value="register">Register / List</option>
-                    <option value="protocol">Protocol / Minutes</option>
-                    <option value="contract">Contract / Legal Document</option>
-                    <option value="inventory">Inventory</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
+                    <!-- Period and Language -->
+                    <div class="input-row">
+                        <div class="input-wrapper">
+                            <label for="contextPeriod">Zeitraum</label>
+                            <input type="text" id="contextPeriod" placeholder="z.B. 1880-1920, 19. Jh.">
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="contextLanguage">Sprache(n)</label>
+                            <input type="text" id="contextLanguage" placeholder="z.B. Deutsch, Französisch">
+                        </div>
+                    </div>
 
-            <div class="input-wrapper">
-                <label for="contextPeriod">Historical Period</label>
-                <input type="text" id="contextPeriod" placeholder="e.g., 19th century, 1820-1850, early modern">
-            </div>
+                    <!-- Context Information -->
+                    <div class="input-wrapper">
+                        <label for="contextDescription">Kontextinformation</label>
+                        <textarea id="contextDescription" rows="4" placeholder="z.B. Brief aus dem Nachlass von Hugo Schuchardt an einen Kollegen. Handschrift teilweise schwer lesbar, enthält Fachbegriffe aus der Linguistik."></textarea>
+                        <span class="input-hint">Beschreibe Herkunft, Verfasser, Besonderheiten oder andere hilfreiche Informationen.</span>
+                    </div>
+                </div>
+            </details>
 
-            <div class="input-wrapper">
-                <label for="contextLanguage">Language(s)</label>
-                <input type="text" id="contextLanguage" placeholder="e.g., German, Latin, French, mixed">
-            </div>
-
-            <div class="input-wrapper">
-                <label for="contextDescription">Additional Information</label>
-                <textarea id="contextDescription" rows="4" placeholder="Describe specific features, structure, handwriting characteristics, abbreviations, or anything else that might help..."></textarea>
+            <!-- Model Info -->
+            <div class="transcribe-model-info" id="transcribeModelInfo">
+                <!-- Filled by JS -->
             </div>
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" id="clearContext">Clear</button>
-            <div class="dialog-actions">
-                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveContext">Save Context</button>
-            </div>
+            <button type="button" class="btn btn-secondary" data-close-dialog>Abbrechen</button>
+            <button type="button" class="btn btn-primary" id="startTranscription">
+                <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
+                </svg>
+                Transkribieren
+            </button>
         </div>
     </dialog>
 

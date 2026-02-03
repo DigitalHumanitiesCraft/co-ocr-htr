@@ -3,10 +3,11 @@
  *
  * Handles the transcription workflow:
  * 1. User clicks "Transcribe" button
- * 2. Validates document is loaded and API key is configured
- * 3. Calls LLM service with image
- * 4. Parses response and updates state
- * 5. Editor reflects the new transcription
+ * 2. Opens transcription dialog with optional context
+ * 3. Validates API key is configured
+ * 4. Calls LLM service with image
+ * 5. Parses response and updates state
+ * 6. Editor reflects the new transcription
  */
 
 import { llmService } from '../services/llm.js';
@@ -20,6 +21,8 @@ import { contextManager } from './context.js';
 class TranscriptionManager {
     constructor() {
         this.transcribeBtn = null;
+        this.transcribeDialog = null;
+        this.startBtn = null;
         this.isTranscribing = false;
     }
 
@@ -28,6 +31,9 @@ class TranscriptionManager {
      */
     init() {
         this.transcribeBtn = document.getElementById('btnTranscribe');
+        this.transcribeDialog = document.getElementById('transcribeDialog');
+        this.startBtn = document.getElementById('startTranscription');
+
         if (!this.transcribeBtn) {
             console.warn('Transcribe button not found');
             return;
@@ -40,7 +46,22 @@ class TranscriptionManager {
      * Bind event listeners
      */
     bindEvents() {
-        this.transcribeBtn.addEventListener('click', () => this.handleTranscribe());
+        // Open transcribe dialog
+        this.transcribeBtn.addEventListener('click', () => this.openTranscribeDialog());
+
+        // Start transcription from dialog
+        if (this.startBtn) {
+            this.startBtn.addEventListener('click', () => this.handleTranscribe());
+        }
+
+        // Close dialog on backdrop click
+        if (this.transcribeDialog) {
+            this.transcribeDialog.addEventListener('click', (e) => {
+                if (e.target === this.transcribeDialog) {
+                    this.transcribeDialog.close();
+                }
+            });
+        }
 
         // Listen for state changes
         appState.addEventListener('documentLoaded', () => {
@@ -49,28 +70,111 @@ class TranscriptionManager {
 
         appState.addEventListener('transcriptionComplete', () => {
             this.setLoading(false);
+            if (this.transcribeDialog) {
+                this.transcribeDialog.close();
+            }
         });
     }
 
     /**
-     * Handle transcribe button click
+     * Open the transcription dialog
      */
-    async handleTranscribe() {
+    openTranscribeDialog() {
         if (this.isTranscribing) return;
 
         // Validate document is loaded
         const state = appState.getState();
         if (!state.document.dataUrl && state.image.url === 'assets/mock-document.jpg') {
-            dialogManager.showToast('Please upload a document first', 'warning');
+            dialogManager.showToast('Bitte zuerst ein Dokument laden', 'warning');
             return;
         }
+
+        // Pre-fill context from existing state
+        const context = appState.getDocumentContext();
+        if (context) {
+            contextManager.populateForm(context);
+            // Open the details if context exists
+            const details = document.getElementById('contextDetails');
+            if (details) details.open = true;
+        }
+
+        // Update model info display
+        this.updateModelInfo();
+
+        // Show dialog
+        if (this.transcribeDialog) {
+            this.transcribeDialog.showModal();
+        }
+    }
+
+    /**
+     * Update the model info display in the dialog
+     */
+    updateModelInfo() {
+        const modelInfo = document.getElementById('transcribeModelInfo');
+        if (!modelInfo) return;
+
+        const provider = llmService.activeProvider;
+        const model = llmService.getCurrentModel();
+        const hasKey = llmService.hasApiKey();
+
+        if (provider === 'ollama' || hasKey) {
+            modelInfo.innerHTML = `
+                <div class="model-info-ready">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>Modell: <strong>${model}</strong> (${provider})</span>
+                    <button type="button" class="btn-link" id="changeModelBtn">ändern</button>
+                </div>
+            `;
+            // Bind change model button
+            const changeBtn = document.getElementById('changeModelBtn');
+            if (changeBtn) {
+                changeBtn.addEventListener('click', () => {
+                    this.transcribeDialog.close();
+                    dialogManager.openDialog('apiKey');
+                });
+            }
+        } else {
+            modelInfo.innerHTML = `
+                <div class="model-info-warning">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>API-Key für <strong>${provider}</strong> erforderlich</span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">Konfigurieren</button>
+                </div>
+            `;
+            // Bind configure button
+            const configBtn = document.getElementById('configureApiBtn');
+            if (configBtn) {
+                configBtn.addEventListener('click', () => {
+                    this.transcribeDialog.close();
+                    dialogManager.openDialog('apiKey');
+                });
+            }
+        }
+    }
+
+    /**
+     * Handle transcribe button click (from dialog)
+     */
+    async handleTranscribe() {
+        if (this.isTranscribing) return;
+
+        // Save context from form
+        contextManager.saveContextSilent();
 
         // Validate API key is configured
         if (!llmService.hasApiKey()) {
             const provider = llmService.activeProvider;
             if (provider !== 'ollama') {
-                dialogManager.showToast(`Please configure ${provider} API key first`, 'warning');
-                // Open API key dialog
+                dialogManager.showToast(`Bitte ${provider} API-Key konfigurieren`, 'warning');
+                this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
                 return;
             }
@@ -81,6 +185,7 @@ class TranscriptionManager {
 
         try {
             // Get image as base64 (without data URL prefix)
+            const state = appState.getState();
             const imageUrl = state.document.dataUrl || state.image.url;
             const base64 = await this.getImageBase64(imageUrl);
 
@@ -100,7 +205,7 @@ class TranscriptionManager {
             });
 
             dialogManager.showToast(
-                `Transcription complete (${result.provider})`,
+                `Transkription abgeschlossen (${result.provider})`,
                 'success'
             );
 
@@ -109,14 +214,15 @@ class TranscriptionManager {
 
             // Handle specific error types
             if (error.type === 'auth') {
-                dialogManager.showToast('Invalid API key. Please check your configuration.', 'error');
+                dialogManager.showToast('Ungültiger API-Key. Bitte Konfiguration prüfen.', 'error');
+                this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
             } else if (error.type === 'rate_limit') {
-                dialogManager.showToast('Rate limit exceeded. Please wait and try again.', 'warning');
+                dialogManager.showToast('Rate-Limit erreicht. Bitte warten und erneut versuchen.', 'warning');
             } else if (error.type === 'network') {
-                dialogManager.showToast('Network error. Please check your connection.', 'error');
+                dialogManager.showToast('Netzwerkfehler. Bitte Verbindung prüfen.', 'error');
             } else {
-                dialogManager.showToast(`Transcription failed: ${error.message}`, 'error');
+                dialogManager.showToast(`Transkription fehlgeschlagen: ${error.message}`, 'error');
             }
 
             this.setLoading(false);

@@ -4,165 +4,129 @@
  * Allows the expert to provide document context before transcription.
  * This context is used to enhance the LLM prompt for better results.
  *
- * Implements the "Expert as Instructor" pattern:
- * The expert doesn't just validate - they guide the machine.
+ * Context is now managed through the transcription dialog (transcribeDialog).
  */
 
 import { appState } from '../state.js';
-import { dialogManager } from './dialogs.js';
 import { getById } from '../utils/dom.js';
 
 class ContextManager {
     constructor() {
-        this.dialog = null;
         this.initialized = false;
     }
 
     init() {
         if (this.initialized) return;
-
-        this.dialog = getById('contextDialog');
-        if (!this.dialog) {
-            console.warn('[Context] Dialog not found');
-            return;
-        }
-
-        this.bindEvents();
         this.initialized = true;
+
+        // Bind custom document type toggle
+        this.bindCustomDocTypeToggle();
+
         console.log('[Context] Initialized');
     }
 
-    bindEvents() {
-        // Open dialog button
-        const btnContext = getById('btnContext');
-        if (btnContext) {
-            btnContext.addEventListener('click', () => this.openDialog());
-        }
+    /**
+     * Bind the custom document type input toggle
+     */
+    bindCustomDocTypeToggle() {
+        const docTypeSelect = getById('contextDocType');
+        const customInput = getById('contextDocTypeCustom');
 
-        // Save button
-        const saveBtn = getById('saveContext');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveContext());
-        }
+        if (!docTypeSelect || !customInput) return;
 
-        // Clear button
-        const clearBtn = getById('clearContext');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => this.clearContext());
-        }
-
-        // Close on backdrop click
-        this.dialog.addEventListener('click', (e) => {
-            if (e.target === this.dialog) {
-                this.dialog.close();
+        docTypeSelect.addEventListener('change', () => {
+            if (docTypeSelect.value === 'custom') {
+                customInput.style.display = 'block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customInput.value = '';
             }
         });
-
-        // Update button text when context changes
-        appState.addEventListener('contextChanged', () => this.updateButtonText());
-
-        // Update button on document load (restore saved context)
-        appState.addEventListener('documentLoaded', () => this.updateButtonText());
     }
 
-    openDialog() {
-        if (!this.dialog) return;
-
-        // Pre-fill with existing context
-        const context = appState.getDocumentContext();
-        if (context) {
-            this.populateForm(context);
-        } else {
-            this.clearForm();
-        }
-
-        this.dialog.showModal();
-    }
-
+    /**
+     * Populate the context form fields with existing context
+     */
     populateForm(context) {
         const docType = getById('contextDocType');
+        const docTypeCustom = getById('contextDocTypeCustom');
         const period = getById('contextPeriod');
         const language = getById('contextLanguage');
         const description = getById('contextDescription');
 
-        if (docType) docType.value = context.documentType || '';
+        // Handle custom document type
+        if (docType && context.documentType) {
+            // Check if it's a predefined type
+            const predefinedTypes = ['letter', 'account_book', 'diary', 'register', 'protocol', 'contract', 'inventory', 'manuscript', 'certificate'];
+            if (predefinedTypes.includes(context.documentType)) {
+                docType.value = context.documentType;
+                if (docTypeCustom) {
+                    docTypeCustom.style.display = 'none';
+                    docTypeCustom.value = '';
+                }
+            } else {
+                // It's a custom type
+                docType.value = 'custom';
+                if (docTypeCustom) {
+                    docTypeCustom.style.display = 'block';
+                    docTypeCustom.value = context.documentType;
+                }
+            }
+        } else if (docType) {
+            docType.value = '';
+        }
+
         if (period) period.value = context.period || '';
         if (language) language.value = context.language || '';
         if (description) description.value = context.description || '';
     }
 
+    /**
+     * Clear the context form fields
+     */
     clearForm() {
         const docType = getById('contextDocType');
+        const docTypeCustom = getById('contextDocTypeCustom');
         const period = getById('contextPeriod');
         const language = getById('contextLanguage');
         const description = getById('contextDescription');
 
         if (docType) docType.value = '';
+        if (docTypeCustom) {
+            docTypeCustom.value = '';
+            docTypeCustom.style.display = 'none';
+        }
         if (period) period.value = '';
         if (language) language.value = '';
         if (description) description.value = '';
     }
 
-    saveContext() {
-        const docType = getById('contextDocType')?.value || '';
+    /**
+     * Save context from form fields (called from transcription dialog)
+     */
+    saveContextSilent() {
+        const docTypeSelect = getById('contextDocType');
+        const docTypeCustom = getById('contextDocTypeCustom');
         const period = getById('contextPeriod')?.value || '';
         const language = getById('contextLanguage')?.value || '';
         const description = getById('contextDescription')?.value || '';
 
-        // Check if any context was provided
-        if (!docType && !period && !language && !description) {
-            dialogManager.showToast('Please provide at least some context', 'warning');
-            return;
+        // Get document type (use custom value if "custom" is selected)
+        let docType = docTypeSelect?.value || '';
+        if (docType === 'custom' && docTypeCustom) {
+            docType = docTypeCustom.value.trim() || '';
         }
 
-        appState.setDocumentContext({
-            documentType: docType,
-            period: period,
-            language: language,
-            description: description
-        });
-
-        dialogManager.showToast('Context saved', 'success');
-        this.dialog.close();
-    }
-
-    clearContext() {
-        this.clearForm();
-        appState.clearDocumentContext();
-        dialogManager.showToast('Context cleared', 'info');
-        this.dialog.close();
-    }
-
-    updateButtonText() {
-        const btnText = getById('contextBtnText');
-        if (!btnText) return;
-
-        const context = appState.getDocumentContext();
-        if (context && (context.documentType || context.description)) {
-            // Show abbreviated context
-            const label = context.documentType
-                ? this.getDocTypeLabel(context.documentType)
-                : 'Set';
-            btnText.textContent = label;
-            btnText.parentElement.classList.add('has-context');
-        } else {
-            btnText.textContent = 'Context';
-            btnText.parentElement.classList.remove('has-context');
+        // Only save if any context was provided
+        if (docType || period || language || description) {
+            appState.setDocumentContext({
+                documentType: docType,
+                period: period,
+                language: language,
+                description: description
+            });
         }
-    }
-
-    getDocTypeLabel(type) {
-        const labels = {
-            'letter': 'Letter',
-            'account_book': 'Account',
-            'diary': 'Diary',
-            'register': 'Register',
-            'protocol': 'Protocol',
-            'contract': 'Contract',
-            'inventory': 'Inventory',
-            'other': 'Other'
-        };
-        return labels[type] || 'Set';
     }
 
     /**
@@ -184,9 +148,13 @@ class ContextManager {
                 'protocol': 'a protocol or meeting minutes',
                 'contract': 'a contract or legal document',
                 'inventory': 'an inventory',
+                'manuscript': 'a manuscript or handwritten document',
+                'certificate': 'a certificate or official document',
                 'other': 'a historical document'
             };
-            parts.push(`This is ${typeLabels[context.documentType] || 'a document'}.`);
+            // Use the label if it's a known type, otherwise use the custom type directly
+            const typeDescription = typeLabels[context.documentType] || context.documentType;
+            parts.push(`This is ${typeDescription}.`);
         }
 
         if (context.period) {

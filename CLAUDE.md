@@ -9,7 +9,7 @@ Projektkontext für Claude Code.
 | Runtime | Vanilla JavaScript (ES6+) |
 | Dependencies | Keine (Tests: Vitest) |
 | Storage | LocalStorage |
-| API | Fetch API (Gemini, OpenAI, Anthropic, DeepSeek, Ollama) |
+| API | Fetch API (Gemini, OpenAI, Anthropic, Ollama) |
 | UI | Plain HTML/CSS, Dark Mode, Glass Morphism |
 | Hosting | GitHub Pages (`docs/` folder) |
 

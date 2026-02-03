@@ -2214,4 +2214,129 @@ Das Projekt ist feature-complete und produktionsbereit. Alle 7 Milestones aus de
 
 ---
 
+## 2026-02-03 | Session 19: Editor Simplification & API Dialog Redesign
+
+**Participants:** User, Claude Opus 4.5
+
+### Phase 1: Editor Simplification
+
+**Task:** Simplify editor from table-based to textarea-based for better usability.
+
+**Changes:**
+- Replaced grid editor with simple textarea
+- Added line numbers display (synced scrolling)
+- Added Undo/Redo buttons with visual feedback
+- Added Diff view toggle (shows changes vs original)
+- Added Structured/Normalized view toggle
+
+**New Editor Features:**
+
+| Feature | Description |
+|---------|-------------|
+| Line Numbers | Synced scrolling with textarea |
+| Undo/Redo | Visible buttons + keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z) |
+| Diff View | Shows word-level changes vs original transcription |
+| View Modes | Structured (preserves indentation) / Normalized (left-aligned) |
+| Change Stats | "X Änderungen" counter |
+
+### Phase 2: Document Context Integration
+
+**Task:** Move document context from separate dialog into transcription workflow.
+
+**Changes:**
+- Context fields now in collapsible section within Transcription Dialog
+- Clear explanation that context enriches the AI prompt
+- Context saved automatically when starting transcription
+
+**Context Fields:**
+- Document Type (dropdown + custom option)
+- Historical Period (free text)
+- Language(s) (free text)
+- Additional Description (textarea)
+
+### Phase 3: API Dialog Redesign
+
+**Task:** Simplify API configuration from tabbed interface to unified form.
+
+**Problems with old design:**
+- Separate tabs for each provider (unnecessary)
+- No clear way to select models
+- No local model support visible
+
+**New Design:**
+- Single unified form
+- Provider dropdown (Cloud vs Local groups)
+- Dynamic model dropdown per provider
+- Custom model input option ("Eigenes Modell...")
+- Ollama-specific: Server URL field, model refresh button
+
+**Provider Configuration:**
+
+| Provider | Models | Notes |
+|----------|--------|-------|
+| Google Gemini | gemini-3-flash-preview, gemini-3-pro-preview | Cloud, API key required |
+| OpenAI | gpt-4o, gpt-4o-mini | Cloud, API key required |
+| Anthropic | claude-4.5-sonnet, claude-4.5-haiku, claude-4.5-opus | Cloud, API key required |
+| Ollama | deepseek-ocr (recommended), llava, llama3.2-vision | Local, no API key |
+
+### Phase 4: DeepSeek-OCR Integration
+
+**Task:** Correctly integrate DeepSeek-OCR as local Ollama model.
+
+**Research Finding:** DeepSeek-OCR is NOT a cloud API service. It's a local vision model available via Ollama.
+
+**Changes:**
+- Removed DeepSeek from cloud providers
+- Added deepseek-ocr as recommended model for Ollama
+- Updated model hints and documentation
+
+**Installation:**
+```bash
+ollama pull deepseek-ocr
+```
+
+### Phase 5: Bug Fixes
+
+| Bug | Fix |
+|-----|-----|
+| "Verbindung testen" not working | Changed selector from `select('#testApiConnection', dialog)` to `getById('testApiConnection')` |
+| DeepSeek naming | Corrected to `deepseek-ocr` (official Ollama name) |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `docs/js/editor.js` | Complete rewrite: textarea, line numbers, diff view, view modes |
+| `docs/css/editor.css` | Styles for new editor components |
+| `docs/index.html` | New API dialog structure, context in transcription dialog |
+| `docs/css/dialogs.css` | LLM config styles, context explanation styles |
+| `docs/js/services/llm.js` | Updated PROVIDERS (removed DeepSeek cloud, added deepseek-ocr to Ollama) |
+| `docs/js/components/dialogs.js` | Rewritten API dialog handling, test connection fix |
+| `docs/js/components/transcription.js` | Context integration |
+| `docs/js/components/context.js` | Form population and context building |
+
+### Documentation Updates
+
+| File | Changes |
+|------|---------|
+| `README.md` | Updated provider list, added DeepSeek-OCR installation instructions |
+| `CLAUDE.md` | Removed DeepSeek from API list |
+| `JOURNAL.md` | Added Session 19 documentation |
+
+### Project Status
+
+**Completed in this session:**
+- [x] Editor simplified to textarea
+- [x] Line numbers with synced scroll
+- [x] Undo/Redo with visible buttons
+- [x] Diff view for change tracking
+- [x] Structured/Normalized view toggle
+- [x] Document context in transcription dialog
+- [x] API dialog redesign (unified form)
+- [x] DeepSeek-OCR as local Ollama model
+- [x] "Verbindung testen" button fix
+- [x] Documentation updates
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
