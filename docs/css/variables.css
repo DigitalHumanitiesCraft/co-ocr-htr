@@ -125,6 +125,14 @@
   --problematic-border: rgba(184, 92, 74, 0.3);
   --problematic-glow: 0 0 8px rgba(184, 92, 74, 0.15);
 
+  /* AI-Generated Content - Distinct purple/violet for AI identification */
+  --ai-primary: #7c5cbf;              /* Muted purple/violet */
+  --ai-rgb: 124, 92, 191;
+  --ai-secondary: #6a4fa8;
+  --ai-bg: rgba(124, 92, 191, 0.08);
+  --ai-border: rgba(124, 92, 191, 0.25);
+  --ai-glow: 0 0 8px rgba(124, 92, 191, 0.15);
+
   /* Shadows - Very soft, warm */
   --shadow-sm: 0 1px 3px rgba(61, 50, 41, 0.06);
   --shadow-md: 0 4px 12px rgba(61, 50, 41, 0.08);

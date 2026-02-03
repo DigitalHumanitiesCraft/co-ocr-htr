@@ -490,8 +490,13 @@ class ValidationPanel {
         if (llmResult.reasoning) {
             html += `
                 <details class="ai-details">
-                    <summary>Analyse anzeigen</summary>
-                    <p class="ai-reasoning">${llmResult.reasoning}</p>
+                    <summary>
+                        <span class="ai-label">KI</span>
+                        Analyse anzeigen
+                    </summary>
+                    <div class="ai-reasoning-container">
+                        <p class="ai-reasoning">${llmResult.reasoning}</p>
+                    </div>
                 </details>
             `;
         }
@@ -847,36 +852,95 @@ const validationStyles = `
     color: var(--text-secondary);
 }
 
-/* AI Analysis details */
+/* AI Analysis details - Distinct AI-generated content styling */
 .ai-details {
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
     font-size: var(--text-xs);
 }
 
 .ai-details summary {
-    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ai-primary, #7c5cbf);
     cursor: pointer;
-    padding: var(--space-1) 0;
+    padding: var(--space-2);
+    background: var(--ai-bg, rgba(124, 92, 191, 0.08));
+    border: 1px solid var(--ai-border, rgba(124, 92, 191, 0.25));
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
 }
 
 .ai-details summary:hover {
-    text-decoration: underline;
+    background: rgba(124, 92, 191, 0.12);
+    border-color: var(--ai-primary, #7c5cbf);
+}
+
+.ai-details[open] summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+}
+
+/* AI Label Badge */
+.ai-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--ai-primary, #7c5cbf);
+    color: white;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+/* AI Reasoning Container */
+.ai-reasoning-container {
+    background: var(--ai-bg, rgba(124, 92, 191, 0.08));
+    border: 1px solid var(--ai-border, rgba(124, 92, 191, 0.25));
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    padding: var(--space-3);
 }
 
 .ai-reasoning {
-    margin-top: var(--space-1);
-    padding: var(--space-2);
-    background: rgba(0,0,0,0.2);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    line-height: 1.5;
-    max-height: 150px;
+    margin: 0;
+    padding: 0;
+    color: var(--text-primary);
+    line-height: 1.6;
+    max-height: 200px;
     overflow-y: auto;
 }
 
 .text-muted {
     color: var(--text-muted);
     padding: var(--space-1) 0;
+}
+
+/* AI Section Title Styling */
+.section-title-ai {
+    border-left: 3px solid var(--ai-primary, #7c5cbf);
+    padding-left: var(--space-2);
+    margin-left: calc(-1 * var(--space-2));
+}
+
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--ai-primary, #7c5cbf);
+    color: white;
+    border-radius: 3px;
+    flex-shrink: 0;
 }
 `;
 
