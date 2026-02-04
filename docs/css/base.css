@@ -54,6 +54,29 @@ a:hover {
   text-decoration: underline;
 }
 
+/* ==========================================================================
+   ACCESSIBILITY - Skip Link
+   ========================================================================== */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  z-index: 9999;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: var(--space-2);
+  text-decoration: none;
+}
+
 code {
   font-family: var(--font-mono);
   font-size: 0.9em;

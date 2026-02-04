@@ -49,7 +49,9 @@ export function applyMarkers(text) {
  * @returns {boolean}
  */
 export function hasUncertainMarker(text) {
-    return text ? UNCERTAIN_PATTERN.test(text) : false;
+    if (!text) return false;
+    UNCERTAIN_PATTERN.lastIndex = 0;
+    return UNCERTAIN_PATTERN.test(text);
 }
 
 /**
@@ -58,7 +60,9 @@ export function hasUncertainMarker(text) {
  * @returns {boolean}
  */
 export function hasIllegibleMarker(text) {
-    return text ? ILLEGIBLE_PATTERN.test(text) : false;
+    if (!text) return false;
+    ILLEGIBLE_PATTERN.lastIndex = 0;
+    return ILLEGIBLE_PATTERN.test(text);
 }
 
 /**
