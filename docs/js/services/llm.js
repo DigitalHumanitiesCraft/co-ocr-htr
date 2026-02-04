@@ -582,6 +582,11 @@ class LLMService {
       body.images = [imageBase64];
     }
 
+    console.log(`[Ollama] Calling ${ollamaUrl}/api/generate model=${model} hasImage=${!!imageBase64}`);
+    if (imageBase64) {
+      console.log(`[Ollama] Image base64 length: ${imageBase64.length}, starts with: ${imageBase64.substring(0, 50)}...`);
+    }
+
     const response = await fetch(`${ollamaUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -589,10 +594,13 @@ class LLMService {
     });
 
     if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`[Ollama] API error: ${response.status}`, errorText);
+      throw new Error(`Ollama API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log(`[Ollama] Response:`, data);
     return data.response || '';
   }
 
