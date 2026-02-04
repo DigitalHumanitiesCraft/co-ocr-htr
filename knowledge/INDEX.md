@@ -39,6 +39,7 @@ knowledge/
 | [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | Project roadmap | Development | ARCHITECTURE |
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
 | [SECURITY](SECURITY.md) | How is it secured? | Everyone | ARCHITECTURE |
+| [TESTING](TESTING.md) | How is it tested? | Development | ARCHITECTURE |
 
 ## Core Concepts (Quick Reference)
 
