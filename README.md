@@ -109,12 +109,14 @@ docs/
 
 ## Supported Providers
 
-| Provider | Models | Vision Support |
-|----------|--------|----------------|
-| Gemini | gemini-3-flash-preview, gemini-3-pro-preview | Yes |
+| Provider | Default Models | Vision |
+|----------|----------------|--------|
+| Gemini | gemini-3-flash, gemini-3-pro | Yes |
 | OpenAI | gpt-5.2, gpt-5.2-mini | Yes |
-| Anthropic | claude-haiku-4, claude-sonnet-4-5, claude-opus-4-5 | Yes |
-| Ollama (local) | deepseek-ocr (recommended), llava, llama3.2-vision | Yes |
+| Anthropic | claude-4.5-sonnet, claude-4.5-haiku, claude-4.5-opus | Yes |
+| Ollama (local) | deepseek-ocr, llava, llama3.2-vision | Yes |
+
+> **Note:** Model lists change frequently. Use "Custom model..." in the UI to enter any model ID. Check provider docs for current models.
 
 ### Local OCR with DeepSeek-OCR
 

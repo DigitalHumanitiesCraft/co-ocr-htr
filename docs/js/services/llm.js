@@ -132,15 +132,25 @@ function buildValidationPrompt(text, customPrompt = '') {
 // Provider Configurations
 // ============================================
 
+/**
+ * Provider configurations
+ *
+ * NOTE: Model lists change frequently. Use "Eigenes Modell..." to enter
+ * any model ID not listed here. Check provider docs for current models:
+ * - Gemini: https://ai.google.dev/models
+ * - OpenAI: https://platform.openai.com/docs/models
+ * - Anthropic: https://docs.anthropic.com/en/docs/models
+ * - Ollama: https://ollama.com/library
+ */
 const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-    defaultModel: 'gemini-3-flash-preview',
+    defaultModel: 'gemini-3-flash',
     models: [
-      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (schnell, kosteneffizient)', recommended: true, hint: 'Gut für einfache Dokumente und schnelle Iteration' },
-      { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (beste Qualität)', hint: 'Beste Wahl für Handschriften (HTR) und komplexe Layouts' },
-      { id: 'custom', name: 'Eigenes Modell...' }
+      { id: 'gemini-3-flash', name: 'Gemini 3 Flash (schnell)', recommended: true },
+      { id: 'gemini-3-pro', name: 'Gemini 3 Pro (beste Qualität)' },
+      { id: 'custom', name: 'Eigenes Modell...', hint: 'Beliebige Gemini-Modell-ID' }
     ],
     authType: 'query',
     supportsVision: true,
@@ -154,7 +164,7 @@ const PROVIDERS = {
     models: [
       { id: 'gpt-5.2', name: 'GPT-5.2 (Empfohlen)', recommended: true },
       { id: 'gpt-5.2-mini', name: 'GPT-5.2 Mini (schneller)' },
-      { id: 'custom', name: 'Eigenes Modell...' }
+      { id: 'custom', name: 'Eigenes Modell...', hint: 'Beliebige OpenAI-Modell-ID' }
     ],
     authType: 'bearer',
     supportsVision: true,
@@ -169,7 +179,7 @@ const PROVIDERS = {
       { id: 'claude-sonnet-4-5-20250514', name: 'Claude 4.5 Sonnet (Empfohlen)', recommended: true },
       { id: 'claude-haiku-4-5-20250514', name: 'Claude 4.5 Haiku (schneller)' },
       { id: 'claude-opus-4-5-20250514', name: 'Claude 4.5 Opus (beste Qualität)' },
-      { id: 'custom', name: 'Eigenes Modell...' }
+      { id: 'custom', name: 'Eigenes Modell...', hint: 'z.B. claude-3-opus-*' }
     ],
     authType: 'header',
     supportsVision: true,
@@ -181,12 +191,10 @@ const PROVIDERS = {
     endpoint: 'http://localhost:11434/api/generate',
     defaultModel: 'deepseek-ocr',
     models: [
-      { id: 'deepseek-ocr', name: 'DeepSeek-OCR (Empfohlen für OCR)', recommended: true, hint: 'Gut für gedruckte Dokumente mit einfachen Layouts' },
-      { id: 'deepseek-ocr2', name: 'DeepSeek-OCR 2', hint: 'Verbesserte Version, besser für strukturierte Dokumente' },
-      { id: 'lightonocr', name: 'LightOnOCR-2', hint: 'State-of-the-Art Open Source OCR (erfordert Konvertierung)' },
+      { id: 'deepseek-ocr', name: 'DeepSeek-OCR (Empfohlen)', recommended: true },
       { id: 'llava', name: 'LLaVA' },
       { id: 'llama3.2-vision', name: 'Llama 3.2 Vision' },
-      { id: 'custom', name: 'Eigenes Modell...' }
+      { id: 'custom', name: 'Eigenes Modell...', hint: 'ollama list zeigt installierte Modelle' }
     ],
     authType: 'none',
     supportsVision: true,
