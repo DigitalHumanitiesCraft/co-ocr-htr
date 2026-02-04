@@ -164,17 +164,22 @@
             <section class="page-section">
                 <h2 class="section-title">API Key Security</h2>
                 <div class="section-content">
-                    <p>For your protection, API keys are <strong>not permanently stored</strong>. You'll need to re-enter them each browser session.</p>
+                    <p>API keys are stored <strong>in browser memory only</strong> (not localStorage) and cleared when you close the tab. This minimizes exposure but is <strong>not fully secure</strong>.</p>
 
-                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Why?</h3>
-                    <p>Browser-based applications cannot fully protect sensitive credentials. Storing API keys in localStorage (even with encryption) exposes them to potential risks like XSS attacks or browser extensions. By keeping keys in memory only, we minimize the exposure window.</p>
-
-                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Best Practices</h3>
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Known Risks</h3>
                     <ul style="margin-top: var(--space-2); padding-left: var(--space-4);">
-                        <li>Create a separate API key specifically for this tool</li>
-                        <li>Set spending limits at your provider (especially for paid APIs)</li>
-                        <li>Never share your API keys</li>
-                        <li>For sensitive documents, use Ollama locally (no API key needed)</li>
+                        <li><strong>Browser extensions</strong> with broad permissions can access page memory</li>
+                        <li><strong>XSS vulnerabilities</strong> (if any exist) could expose keys</li>
+                        <li><strong>Physical access</strong> to your device allows memory inspection via DevTools</li>
+                        <li><strong>Shared computers</strong>: your session may persist if not properly closed</li>
+                    </ul>
+
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Recommendations</h3>
+                    <ul style="margin-top: var(--space-2); padding-left: var(--space-4);">
+                        <li>Create a <strong>separate API key</strong> specifically for this tool</li>
+                        <li>Set <strong>spending limits</strong> at your provider</li>
+                        <li>Use a <strong>dedicated browser profile</strong> with minimal extensions</li>
+                        <li>For sensitive documents: use <strong>Ollama locally</strong> (no API key needed)</li>
                     </ul>
                 </div>
             </section>
@@ -258,7 +263,7 @@ php -S localhost:8000</code></pre>
                             </svg>
                         </button>
                         <div class="faq-answer">
-                            <p>API keys are <strong>not permanently stored</strong>. They remain only in browser memory during your session and are cleared when you close the tab. This is a deliberate security decision. For local usage, you can use a <code>config.local.js</code> file - see the "Local Setup" section above. Your keys are never sent to our servers - all API calls go directly to the providers.</p>
+                            <p>Keys are stored <strong>in memory only</strong> and cleared when you close the tab. However, browser-based storage is <strong>not fully secure</strong>: extensions, XSS, or physical access could expose them. Use a dedicated API key with spending limits. For maximum security, use Ollama locally. See "API Key Security" section above for details.</p>
                         </div>
                     </div>
                     <div class="faq-item">
