@@ -471,6 +471,77 @@ select.form-input {
 }
 
 /* ==========================================================================
+   BATCH PROGRESS PANEL
+   ========================================================================== */
+
+.batch-progress-panel {
+  position: fixed;
+  bottom: var(--space-4);
+  right: var(--space-4);
+  background: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  min-width: 280px;
+  z-index: 1000;
+  box-shadow: var(--shadow-lg);
+}
+
+.batch-progress-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.batch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.batch-title {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.batch-counter {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.batch-progress-bar {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.batch-progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  transition: width 0.3s ease;
+}
+
+.batch-abort-btn {
+  align-self: flex-end;
+}
+
+.batch-complete-message {
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-2) 0;
+}
+
+.batch-status-success .batch-complete-message {
+  color: var(--confident);
+}
+
+.batch-status-warning .batch-complete-message {
+  color: var(--uncertain);
+}
+
+/* ==========================================================================
    DROPDOWNS
    ========================================================================== */
 

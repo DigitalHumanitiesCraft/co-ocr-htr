@@ -355,6 +355,35 @@ class DialogManager {
         if (downloadBtn) {
             downloadBtn.addEventListener('click', () => this.handleExport());
         }
+
+        // Export scope toggle buttons
+        const scopeBtns = selectAll('.export-scope-btns .btn', dialog);
+        scopeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                scopeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+
+    /**
+     * Update export dialog when opened (show scope for multi-page)
+     */
+    updateExportDialogState() {
+        const scopeSection = getById('exportScope');
+        const scopeHint = getById('exportScopeHint');
+
+        if (appState.isMultiPage()) {
+            const pageCount = appState.getPageCount();
+            const transcribedCount = Object.keys(appState.data.pageTranscriptions || {}).length;
+
+            show(scopeSection);
+            if (scopeHint) {
+                scopeHint.textContent = `${transcribedCount} von ${pageCount} Seiten haben Transkriptionen`;
+            }
+        } else {
+            hide(scopeSection);
+        }
     }
 
     /**
@@ -766,6 +795,11 @@ class DialogManager {
             this.initApiKeyDialog();
         }
 
+        // Update export dialog state (show scope for multi-page)
+        if (name === 'export') {
+            this.updateExportDialogState();
+        }
+
         dialog.showModal();
         appState.openDialog(name);
 
@@ -1124,16 +1158,35 @@ class DialogManager {
     /**
      * Handle export action
      */
-    handleExport() {
+    async handleExport() {
         const format = document.querySelector('input[name="exportFormat"]:checked')?.value || 'txt';
         const includeValidation = document.getElementById('exportIncludeValidation')?.checked ?? true;
         const includeMetadata = document.getElementById('exportIncludeMetadata')?.checked ?? false;
 
-        // Dispatch export event - actual export logic in export service
-        const event = new CustomEvent('exportRequested', {
-            detail: { format, includeValidation, includeMetadata }
-        });
-        document.dispatchEvent(event);
+        // Check export scope
+        const scopeBtn = document.querySelector('.export-scope-btns .btn.active');
+        const scope = scopeBtn?.dataset.scope || 'current';
+
+        if (scope === 'all' && appState.isMultiPage()) {
+            // ZIP export for all pages
+            try {
+                const { exportService } = await import('../services/export.js');
+                const result = await exportService.exportAllPagesZip(format, {
+                    includeValidation,
+                    includeMetadata
+                });
+                this.showToast(`Exported ${result.pageCount} pages as ${result.filename}`, 'success');
+            } catch (error) {
+                console.error('ZIP export failed:', error);
+                this.showToast(`Export failed: ${error.message}`, 'error');
+            }
+        } else {
+            // Single page export
+            const event = new CustomEvent('exportRequested', {
+                detail: { format, includeValidation, includeMetadata }
+            });
+            document.dispatchEvent(event);
+        }
 
         this.closeDialog('export');
     }

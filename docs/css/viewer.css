@@ -342,6 +342,72 @@
   text-align: center;
 }
 
+/* Page Strip with Status Dots */
+.page-strip {
+  display: flex;
+  gap: var(--space-1);
+  max-width: 180px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: var(--space-1) 0;
+}
+
+.page-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.page-dot {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border-default);
+  background: var(--bg-secondary);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.page-dot:hover {
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.page-dot.current {
+  border-color: var(--accent-primary);
+  background: var(--accent-muted);
+  color: var(--accent-primary);
+}
+
+.page-dot.transcribed {
+  border-color: var(--uncertain);
+  background: rgba(var(--uncertain-rgb), 0.15);
+}
+
+.page-dot.validated {
+  border-color: var(--confident);
+  background: rgba(var(--confident-rgb), 0.15);
+}
+
+.page-dot.error {
+  border-color: var(--problematic);
+  background: rgba(var(--problematic-rgb), 0.15);
+}
+
+.page-dot.processing {
+  animation: pulse-dot 1s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* ==========================================================================
    LOADING STATE
    ========================================================================== */
