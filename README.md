@@ -33,6 +33,7 @@ coOCR/HTR provides:
 
 - **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, Ollama (local with DeepSeek-OCR)
 - **Hybrid Validation**: Deterministic rules + LLM-as-judge (with optional custom prompt)
+- **Validation Fallback**: Automatic cloud fallback for OCR-only models (local transcription + cloud validation)
 - **Expert-in-the-Loop**: Critical expert validation workflow
 - **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
 - **Document Viewer**: Pan, zoom, fit controls with keyboard shortcuts
@@ -42,7 +43,7 @@ coOCR/HTR provides:
 - **PAGE-XML Import**: Compatible with Transkribus exports
 - **METS-XML Support**: Parse multi-page documents from METS metadata
 - **Guided Workflow**: Step-by-step hints and progress tracking
-- **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15), TEI-XML
+- **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15), TEI-XML, ZIP (multi-page)
 - **PWA Support**: Works offline after first load
 - **No Dependencies**: Vanilla JavaScript, runs in any modern browser
 
@@ -96,7 +97,8 @@ docs/
 │   │   ├── dialogs.js      # Modal dialogs
 │   │   ├── upload.js       # File upload
 │   │   ├── transcription.js# LLM transcription
-│   │   └── validation.js   # Validation panel
+│   │   ├── validation.js   # Validation panel
+│   │   └── batch-progress.js # Batch progress panel
 │   └── services/
 │       ├── llm.js          # LLM provider abstraction
 │       ├── storage.js      # LocalStorage wrapper
@@ -127,6 +129,8 @@ ollama pull deepseek-ocr
 ```
 
 Requires Ollama v0.13.0+. Model size: ~6.7GB.
+
+**Hybrid Workflow**: DeepSeek-OCR is an OCR-only model optimized for text extraction but cannot perform text validation. When you use DeepSeek-OCR for transcription, validation automatically falls back to a cloud provider (Gemini, OpenAI, or Anthropic) if configured. This enables a privacy-conscious hybrid workflow: local transcription + cloud validation.
 
 ### API Key Security
 
@@ -164,12 +168,19 @@ npm test
 - PAGE-XML/METS-XML Import & Export
 - Multi-page navigation, IIIF support, Help & About pages
 
+**Phase 3: Batch Processing** - Complete
+- Batch transcription/validation for all pages with abort control
+- Page status indicators (dots showing idle/transcribed/validated/error)
+- Floating progress panel with progress bar
+- ZIP export for multi-page documents
+
 **Phase 4: Polish & Release** - Complete
 - 276 unit tests passing (state, storage, export, validation, llm, page-xml, textFormatting)
 - Simplified API configuration dialog with clickable model indicator
 - Document context for enhanced transcription
 - Undo/Redo, Diff view, Line numbers
 - Upload dropdown with demo badges (OCR/HTR, IIIF, XML, page count)
+- Validation fallback for OCR-only models (hybrid local+cloud workflow)
 
 See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
 

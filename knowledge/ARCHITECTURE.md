@@ -80,12 +80,13 @@ docs/
 │   │   ├── dialogs.js      # Dialog Manager
 │   │   ├── upload.js       # Upload Component
 │   │   ├── transcription.js# Transcription UI
-│   │   └── validation.js   # Validation Panel
+│   │   ├── validation.js   # Validation Panel
+│   │   └── batch-progress.js # Batch Progress Panel
 │   └── services/
 │       ├── llm.js          # Multi-Provider LLM Service
 │       ├── storage.js      # LocalStorage Wrapper
 │       ├── validation.js   # Validation Engine
-│       ├── export.js       # Export Service (incl. PAGE-XML)
+│       ├── export.js       # Export Service (incl. PAGE-XML, ZIP)
 │       ├── samples.js      # Demo Loader
 │       └── parsers/
 │           ├── page-xml.js # PAGE-XML Parser
@@ -138,6 +139,30 @@ Central state management using native EventTarget API. Replaces custom EventBus 
 | `transcriptionComplete` | `{ segments }` | LLM response parsed |
 | `validationComplete` | `{ results }` | Validation finished |
 | `segmentUpdated` | `{ index, text }` | Inline edit |
+| `batchStarted` | `{ operation, total }` | Batch operation begins |
+| `batchProgress` | `{ currentIndex, total, ... }` | Batch progress update |
+| `batchComplete` | `{ successCount, errorCount, ... }` | Batch operation finished |
+
+**Batch State:**
+
+For multi-page batch operations (transcription/validation), additional state tracks progress:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| batch.operation | string/null | 'transcription' \| 'validation' \| null |
+| batch.status | string | 'idle' \| 'running' \| 'complete' \| 'aborted' |
+| batch.currentIndex | number | Current page being processed |
+| batch.total | number | Total pages in batch |
+| batch.successCount | number | Successfully processed pages |
+| batch.errorCount | number | Failed pages |
+| batch.abortRequested | boolean | User requested abort |
+
+**Batch Methods:**
+- `startBatch(operation, total)` initializes batch and fires `batchStarted`
+- `updateBatchProgress(index, success)` updates counters and fires `batchProgress`
+- `requestBatchAbort()` sets abort flag for loop termination
+- `completeBatch()` finalizes batch and fires `batchComplete`
+- `getPageStatus(pageIndex)` returns transcription/validation status for page
 
 ### LLMService
 

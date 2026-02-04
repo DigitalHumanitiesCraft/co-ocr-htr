@@ -8,7 +8,7 @@ status: complete
 
 # Implementation Plan
 
-**Status:** Phase 4 - Polish & Release [x] COMPLETE
+**Status:** Phase 1-4 Complete, Phase 5 (i18n) Planned
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
 ---
@@ -103,14 +103,15 @@ status: complete
 
 ---
 
-## Phase 3: Batch-Processing [ ] PLANNED
+## Phase 3: Batch-Processing [x] COMPLETE
 
 | Task | Status | Beschreibung |
 |------|--------|--------------|
-| Batch-Transkription | [ ] | Alle Seiten automatisch transkribieren |
-| Progress-Anzeige | [ ] | "Page 5/83 transcribed..." |
-| Batch-Export | [ ] | Alle Seiten als ZIP exportieren |
-| Validierung pro Seite | [ ] | Validierungsstatus pro Seite anzeigen |
+| Batch-Transkription | [x] | Alle Seiten automatisch transkribieren mit Abort-Funktion |
+| Progress-Anzeige | [x] | Floating Progress Panel mit Fortschrittsbalken |
+| Batch-Export | [x] | Alle Seiten als ZIP exportieren (JSZip) |
+| Validierung pro Seite | [x] | Page-Dots zeigen Status (idle/transcribed/validated/error) |
+| Abort-Funktion | [x] | Batch-Operationen können jederzeit abgebrochen werden |
 
 ---
 
@@ -158,7 +159,8 @@ docs/
 │   │   ├── dialogs.js
 │   │   ├── upload.js
 │   │   ├── transcription.js
-│   │   └── validation.js
+│   │   ├── validation.js
+│   │   └── batch-progress.js  # [x] Batch Progress Panel
 │   └── services/
 │       ├── llm.js          # 4 Provider (Gemini, OpenAI, Anthropic, Ollama)
 │       ├── storage.js
@@ -178,6 +180,22 @@ docs/
     ├── logo.png
     └── logo-icon.png
 ```
+
+---
+
+## Phase 5: Internationalization (i18n) [ ] PLANNED
+
+| Task | Status | Beschreibung |
+|------|--------|--------------|
+| i18n Service | [ ] | `js/services/i18n.js` mit `t()` Funktion |
+| Translations | [ ] | `js/services/translations.js` (DE/EN) |
+| HTML Migration | [ ] | `data-i18n` Attribute zu ~185 Elementen |
+| JS Migration | [ ] | `t()` Aufrufe in allen Komponenten |
+| Language Switcher | [ ] | UI in Settings Dialog |
+| Testing | [ ] | Unit Tests, visuelle Verifikation |
+
+**Umfang:** ~400 Strings, ~800 LOC
+**Details:** Siehe [i18n-Plan](../.claude/plans/ticklish-prancing-kazoo.md)
 
 ---
 
