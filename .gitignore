@@ -14,6 +14,9 @@ secrets/
 credentials.json
 service-account.json
 
+# Local configuration (API keys for local development)
+docs/config.local.js
+
 # IDE
 .vscode/
 .idea/
@@ -42,3 +45,4 @@ temp/
 *.tmp
 .claude/settings.local.json
 nul
+.claude/settings.local.json

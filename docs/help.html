@@ -160,6 +160,70 @@
                 </div>
             </section>
 
+            <!-- API Key Security -->
+            <section class="page-section">
+                <h2 class="section-title">API Key Security</h2>
+                <div class="section-content">
+                    <p>For your protection, API keys are <strong>not permanently stored</strong>. You'll need to re-enter them each browser session.</p>
+
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Why?</h3>
+                    <p>Browser-based applications cannot fully protect sensitive credentials. Storing API keys in localStorage (even with encryption) exposes them to potential risks like XSS attacks or browser extensions. By keeping keys in memory only, we minimize the exposure window.</p>
+
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Best Practices</h3>
+                    <ul style="margin-top: var(--space-2); padding-left: var(--space-4);">
+                        <li>Create a separate API key specifically for this tool</li>
+                        <li>Set spending limits at your provider (especially for paid APIs)</li>
+                        <li>Never share your API keys</li>
+                        <li>For sensitive documents, use Ollama locally (no API key needed)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Local Configuration -->
+            <section class="page-section">
+                <h2 class="section-title">Local Setup (Convenience for Developers)</h2>
+                <div class="section-content">
+                    <p>If you run coOCR/HTR locally (by cloning the repository), you can configure API keys to load automatically.</p>
+
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Step 1: Clone the Repository</h3>
+                    <pre class="code-block"><code>git clone https://github.com/DigitalHumanitiesCraft/co-ocr-htr.git
+cd co-ocr-htr/docs</code></pre>
+
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Step 2: Create Local Config File</h3>
+                    <pre class="code-block"><code>cp config.local.example.js config.local.js</code></pre>
+
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Step 3: Add Your API Keys</h3>
+                    <p>Edit <code>config.local.js</code> and fill in your keys:</p>
+                    <pre class="code-block"><code>export const LOCAL_CONFIG = {
+    apiKeys: {
+        gemini: 'YOUR_GEMINI_KEY_HERE',
+        openai: 'YOUR_OPENAI_KEY_HERE',
+        anthropic: 'YOUR_ANTHROPIC_KEY_HERE'
+    },
+    // Optional: set default provider
+    defaultProvider: 'gemini'
+};</code></pre>
+
+                    <h3 class="subsection-title" style="margin-top: var(--space-4);">Step 4: Start a Local Server</h3>
+                    <p>ES modules require a server. Use any of these:</p>
+                    <pre class="code-block"><code># Python 3
+python -m http.server 8000
+
+# Node.js (npx)
+npx serve
+
+# PHP
+php -S localhost:8000</code></pre>
+                    <p style="margin-top: var(--space-2);">Then open <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> in your browser.</p>
+
+                    <div class="info-card" style="margin-top: var(--space-4); background: rgba(90, 138, 90, 0.1); border-color: var(--confident);">
+                        <div class="info-card-content">
+                            <p><strong>Security Note:</strong> The file <code>config.local.js</code> is gitignored and will never be committed. Your API keys stay on your machine.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- FAQ -->
             <section class="page-section">
                 <h2 class="section-title">Troubleshooting</h2>
@@ -194,7 +258,7 @@
                             </svg>
                         </button>
                         <div class="faq-answer">
-                            <p>API keys are stored in your browser's LocalStorage with basic obfuscation. This is sufficient for personal use but not recommended on shared or public computers. Your keys are never sent to our servers - all API calls go directly to the providers.</p>
+                            <p>API keys are <strong>not permanently stored</strong>. They remain only in browser memory during your session and are cleared when you close the tab. This is a deliberate security decision. For local usage, you can use a <code>config.local.js</code> file - see the "Local Setup" section above. Your keys are never sent to our servers - all API calls go directly to the providers.</p>
                         </div>
                     </div>
                     <div class="faq-item">
