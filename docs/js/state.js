@@ -67,8 +67,7 @@ class AppState extends EventTarget {
       validation: {
         status: 'idle',     // idle | running | complete | error
         rules: [],          // Rule-based validation results
-        llmJudge: null,     // LLM-judge validation result
-        perspective: 'paleographic'  // Current perspective
+        llmJudge: null      // LLM-judge validation result
       },
 
       // Corrections made by user
@@ -77,6 +76,17 @@ class AppState extends EventTarget {
       // Batch results (all pages)
       batchTranscriptions: [],  // Array of transcription results per page
       batchValidations: [],     // Array of validation results per page
+
+      // Batch operation state
+      batch: {
+        operation: null,      // 'transcription' | 'validation' | null
+        status: 'idle',       // 'idle' | 'running' | 'complete' | 'aborted'
+        currentIndex: 0,
+        total: 0,
+        successCount: 0,
+        errorCount: 0,
+        abortRequested: false
+      },
 
       // UI state
       ui: {
@@ -174,8 +184,7 @@ class AppState extends EventTarget {
     this.data.validation = {
       status: 'idle',
       rules: [],
-      llmJudge: null,
-      perspective: this.data.validation.perspective
+      llmJudge: null
     };
     this.data.corrections = [];
 
@@ -346,7 +355,6 @@ class AppState extends EventTarget {
         status: 'complete',
         rules: savedValidation.validation.rules || [],
         llmJudge: savedValidation.validation.llmJudge || null,
-        perspective: this.data.validation.perspective,
         summary: savedValidation.validation.summary || null
       };
     } else {
@@ -354,8 +362,7 @@ class AppState extends EventTarget {
       this.data.validation = {
         status: 'idle',
         rules: [],
-        llmJudge: null,
-        perspective: this.data.validation.perspective
+        llmJudge: null
       };
     }
 
@@ -518,6 +525,80 @@ class AppState extends EventTarget {
     this._scheduleAutoSave();
   }
 
+  // ============================================
+  // Batch Operation Control
+  // ============================================
+
+  /**
+   * Start a batch operation
+   * @param {string} operation - 'transcription' or 'validation'
+   * @param {number} total - Total number of pages
+   */
+  startBatch(operation, total) {
+    this.data.batch = {
+      operation,
+      status: 'running',
+      currentIndex: 0,
+      total,
+      successCount: 0,
+      errorCount: 0,
+      abortRequested: false
+    };
+    this._emit('batchStarted', { operation, total });
+  }
+
+  /**
+   * Update batch progress
+   * @param {number} index - Current page index (0-based)
+   * @param {boolean} success - Whether this page succeeded
+   */
+  updateBatchProgress(index, success) {
+    this.data.batch.currentIndex = index;
+    if (success) {
+      this.data.batch.successCount++;
+    } else {
+      this.data.batch.errorCount++;
+    }
+    this._emit('batchProgress', { ...this.data.batch });
+  }
+
+  /**
+   * Request batch abort (checked in batch loop)
+   */
+  requestBatchAbort() {
+    this.data.batch.abortRequested = true;
+    this._emit('batchAbortRequested');
+  }
+
+  /**
+   * Complete batch operation
+   */
+  completeBatch() {
+    this.data.batch.status = this.data.batch.abortRequested ? 'aborted' : 'complete';
+    this._emit('batchComplete', { ...this.data.batch });
+  }
+
+  /**
+   * Get status of a specific page (for UI indicators)
+   * @param {number} pageIndex - Page index (0-based)
+   * @returns {object} Status object
+   */
+  getPageStatus(pageIndex) {
+    const page = this.data.pages[pageIndex];
+    if (!page) return { hasTranscription: false, hasValidation: false, transcriptionError: false };
+
+    const pageTranscription = this.data.pageTranscriptions[page.id];
+    const hasTranscription = !!(pageTranscription?.segments?.length || pageTranscription?.raw);
+
+    const validation = this.data.batchValidations.find(v => v.pageIndex === pageIndex);
+    const hasValidation = validation?.success ?? false;
+
+    const transcriptionResult = this.data.batchTranscriptions.find(t => t.pageIndex === pageIndex);
+    const transcriptionError = transcriptionResult?.success === false;
+
+    return { hasTranscription, hasValidation, transcriptionError };
+  }
+
   /**
    * Set document context for transcription
    * The expert provides context to improve LLM transcription quality
@@ -632,11 +713,6 @@ class AppState extends EventTarget {
     this.data.meta.updatedAt = new Date().toISOString();
     this._emit('validationComplete', results);
     this._scheduleAutoSave();
-  }
-
-  setPerspective(perspective) {
-    this.data.validation.perspective = perspective;
-    this._emit('perspectiveChanged', { perspective });
   }
 
   // ============================================

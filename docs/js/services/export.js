@@ -231,7 +231,7 @@ class ExportService {
                     uncertain: 'Low Confidence'
                 }[state.validation.llmJudge.confidence] || state.validation.llmJudge.confidence;
 
-                lines.push(`**${confidence}** (${state.validation.llmJudge.perspective || 'general'})`);
+                lines.push(`**${confidence}**`);
                 lines.push('');
                 if (state.validation.llmJudge.reasoning) {
                     lines.push(state.validation.llmJudge.reasoning);
@@ -521,6 +521,160 @@ ${bodyLines.join('\n')}
         const result = this.export(format, options);
         this.download(result.content, result.filename, result.mimeType);
         return result;
+    }
+
+    /**
+     * Load external script dynamically
+     * @param {string} src - Script URL
+     * @returns {Promise}
+     */
+    _loadScript(src) {
+        return new Promise((resolve, reject) => {
+            // Check if already loaded
+            if (window.JSZip) {
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
+     * Export all pages as ZIP archive
+     * @param {string} format - Export format per file (txt, json, md, xml, tei)
+     * @param {object} options - Export options
+     * @returns {Promise<object>} Result with filename and page count
+     */
+    async exportAllPagesZip(format, options = {}) {
+        // Load JSZip dynamically (only when needed)
+        await this._loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+
+        const state = appState.getState();
+        const pages = state.pages || [];
+        const pageTranscriptions = state.pageTranscriptions || {};
+
+        if (pages.length === 0) {
+            throw new Error('No pages to export');
+        }
+
+        // Create ZIP
+        const zip = new window.JSZip();
+        const docName = state.document.filename?.replace(/\.[^.]+$/, '') || 'transcription';
+        const folder = zip.folder(docName);
+
+        let exportedCount = 0;
+
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            const transcription = pageTranscriptions[page.id];
+
+            // Skip pages without transcription
+            if (!transcription?.raw && !transcription?.segments?.length) {
+                continue;
+            }
+
+            // Create temporary state for this page's export
+            const pageState = {
+                document: {
+                    filename: page.filename,
+                    width: page.width,
+                    height: page.height
+                },
+                transcription: {
+                    raw: transcription.raw || '',
+                    segments: transcription.segments || [],
+                    lines: transcription.lines || [],
+                    provider: transcription.provider || '',
+                    model: transcription.model || ''
+                },
+                validation: state.batchValidations.find(v => v.pageIndex === i)?.validation || null,
+                regions: transcription.regions || [],
+                image: { width: page.width, height: page.height }
+            };
+
+            // Generate content for this page
+            const content = this._exportPageContent(format, pageState, options);
+            const extension = this._getExtension(format);
+            const filename = `${page.filename?.replace(/\.[^.]+$/, '') || `page_${i + 1}`}.${extension}`;
+
+            folder.file(filename, content);
+            exportedCount++;
+        }
+
+        if (exportedCount === 0) {
+            throw new Error('No pages with transcriptions to export');
+        }
+
+        // Add manifest
+        const manifest = {
+            exportDate: new Date().toISOString(),
+            format: format,
+            pageCount: pages.length,
+            exportedPages: exportedCount,
+            tool: 'coOCR/HTR',
+            version: '2.1'
+        };
+        folder.file('manifest.json', JSON.stringify(manifest, null, 2));
+
+        // Generate and download
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const zipFilename = `${docName}_${timestamp}.zip`;
+
+        this.download(blob, zipFilename, 'application/zip');
+
+        return { filename: zipFilename, pageCount: exportedCount };
+    }
+
+    /**
+     * Export content for a single page (used by ZIP export)
+     * @param {string} format - Export format
+     * @param {object} pageState - Page-specific state
+     * @param {object} options - Export options
+     * @returns {string} Exported content
+     */
+    _exportPageContent(format, pageState, options) {
+        const { includeValidation = true } = options;
+
+        switch (format) {
+            case 'txt':
+                return this.exportTxt(pageState);
+            case 'json':
+                return this.exportJson(pageState, includeValidation, false);
+            case 'md':
+                return this.exportMarkdown(pageState, includeValidation);
+            case 'xml':
+            case 'pagexml':
+                return this.exportPageXml(pageState);
+            case 'tei':
+            case 'tei-xml':
+                return this.exportTei(pageState);
+            default:
+                return pageState.transcription?.raw || '';
+        }
+    }
+
+    /**
+     * Get file extension for format
+     * @param {string} format - Export format
+     * @returns {string} File extension
+     */
+    _getExtension(format) {
+        switch (format) {
+            case 'txt': return 'txt';
+            case 'json': return 'json';
+            case 'md': return 'md';
+            case 'xml':
+            case 'pagexml': return 'xml';
+            case 'tei':
+            case 'tei-xml': return 'tei.xml';
+            default: return 'txt';
+        }
     }
 }
 

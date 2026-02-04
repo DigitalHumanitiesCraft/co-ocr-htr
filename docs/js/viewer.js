@@ -230,6 +230,25 @@ function setupStateListeners() {
         updatePageNavigation();
     });
 
+    // Batch progress - update page dots
+    appState.addEventListener('batchProgress', () => {
+        updatePageNavigation();
+    });
+
+    appState.addEventListener('batchComplete', () => {
+        updatePageNavigation();
+    });
+
+    // Page dot clicks
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('page-dot')) {
+            const pageIndex = parseInt(e.target.dataset.page, 10);
+            if (!isNaN(pageIndex)) {
+                appState.goToPage(pageIndex);
+            }
+        }
+    });
+
     // Image changed
     appState.addEventListener('imageChanged', (e) => {
         if (e.detail.url) {
@@ -296,14 +315,38 @@ function setupPageNavigation() {
 
 function updatePageNavigation() {
     const pageNavigation = getById('pageNavigation');
+    const pageStrip = getById('pageStrip');
     const pageCount = appState.getPageCount();
     const currentIndex = appState.data.currentPageIndex;
 
     if (pageCount > 1) {
         show(pageNavigation);
-        setText('pageInfo', `Page ${currentIndex + 1} / ${pageCount}`);
         setDisabled('btnPrevPage', currentIndex === 0);
         setDisabled('btnNextPage', currentIndex >= pageCount - 1);
+
+        // Render page dots with status
+        if (pageStrip) {
+            const dots = [];
+            for (let i = 0; i < pageCount; i++) {
+                const status = appState.getPageStatus(i);
+                let statusClass = '';
+                if (status.hasValidation) {
+                    statusClass = 'validated';
+                } else if (status.hasTranscription) {
+                    statusClass = 'transcribed';
+                } else if (status.transcriptionError) {
+                    statusClass = 'error';
+                }
+
+                const currentClass = i === currentIndex ? 'current' : '';
+                const processingClass = appState.data.batch.status === 'running' &&
+                    appState.data.batch.currentIndex === i ? 'processing' : '';
+
+                dots.push(`<button class="page-dot ${statusClass} ${currentClass} ${processingClass}"
+                    data-page="${i}" title="Page ${i + 1}">${i + 1}</button>`);
+            }
+            pageStrip.innerHTML = dots.join('');
+        }
     } else {
         hide(pageNavigation);
     }

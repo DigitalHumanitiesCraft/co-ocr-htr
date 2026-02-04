@@ -16,6 +16,7 @@ import { validationEngine } from '../services/validation.js';
 import { llmService, ISSUE_TYPES } from '../services/llm.js';
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
+import { batchProgress } from './batch-progress.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
 import { MENU_CLOSE_DELAY } from '../utils/constants.js';
 import { getConfidenceLabel, getStatusClass } from '../utils/textFormatting.js';
@@ -452,10 +453,13 @@ class ValidationPanel {
             return;
         }
 
+        // Initialize batch state
+        appState.startBatch('validation', pagesWithTranscription.length);
+        batchProgress.show('validation', pagesWithTranscription.length);
+
         this.isValidating = true;
         appState.setValidationStatus('running');
         this.setButtonLoading(true);
-        this.showBatchProgress(0, pagesWithTranscription.length);
 
         // Get options from dialog checkboxes
         const options = this.getValidationOptions();
@@ -466,12 +470,17 @@ class ValidationPanel {
         }
 
         const results = [];
-        let successCount = 0;
-        let errorCount = 0;
+        let processedCount = 0;
 
         for (let i = 0; i < pages.length; i++) {
             const page = pages[i];
             const batchResult = batchTranscriptions.find(r => r.pageIndex === i);
+
+            // Check for abort request
+            if (appState.data.batch.abortRequested) {
+                console.log('[Validation] Batch aborted by user');
+                break;
+            }
 
             // Skip pages without transcription
             if (!batchResult?.success || !batchResult?.transcription?.raw) {
@@ -486,7 +495,8 @@ class ValidationPanel {
 
             try {
                 // Update progress
-                this.showBatchProgress(successCount + errorCount + 1, pagesWithTranscription.length, page.filename);
+                processedCount++;
+                batchProgress.update(processedCount, pagesWithTranscription.length, 'validation');
 
                 const text = batchResult.transcription.raw;
                 const segments = batchResult.transcription.segments || [];
@@ -501,11 +511,11 @@ class ValidationPanel {
                     validation: validationResult
                 });
 
-                successCount++;
+                appState.updateBatchProgress(i, true);
 
                 // Small delay to avoid rate limiting (only if LLM validation)
                 if (options.includeLLM && i < pages.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await this._delay(500);
                 }
 
             } catch (error) {
@@ -516,7 +526,8 @@ class ValidationPanel {
                     success: false,
                     error: error.message
                 });
-                errorCount++;
+
+                appState.updateBatchProgress(i, false);
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
@@ -527,13 +538,16 @@ class ValidationPanel {
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
                     dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
-                    await new Promise(resolve => setTimeout(resolve, 30000));
+                    await this._delay(30000);
                 }
             }
         }
 
         // Store all validation results
         appState.setBatchValidations(results);
+
+        // Complete batch operation
+        appState.completeBatch();
 
         // Set current page validation
         const currentPageResult = results.find(r => r.pageIndex === state.currentPageIndex);
@@ -544,19 +558,22 @@ class ValidationPanel {
 
         this.isValidating = false;
         this.setButtonLoading(false);
-        this.hideBatchProgress();
+
+        // Show completion summary
+        const { successCount, errorCount, status } = appState.data.batch;
+        batchProgress.showComplete(successCount, errorCount, status === 'aborted');
 
         // Trigger session save for persistence
         appState.saveSessionNow();
 
-        // Show summary with save confirmation
-        if (errorCount === 0) {
-            dialogManager.showToast(`Alle ${successCount} Seiten validiert (automatisch gespeichert)`, 'success');
-        } else {
-            dialogManager.showToast(`${successCount} erfolgreich, ${errorCount} fehlgeschlagen`, 'warning');
-        }
-
         appState.setValidationStatus('complete');
+    }
+
+    /**
+     * Helper for delay (allows abort check)
+     */
+    _delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     /**

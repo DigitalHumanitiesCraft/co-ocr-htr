@@ -14,6 +14,7 @@ import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
 import { contextManager } from './context.js';
+import { batchProgress } from './batch-progress.js';
 
 /**
  * Transcription Manager
@@ -450,19 +451,25 @@ class TranscriptionManager {
             return;
         }
 
+        // Initialize batch state
+        appState.startBatch('transcription', pages.length);
+        batchProgress.show('transcription', pages.length);
         this.setLoading(true);
-        this.showBatchProgress(0, pages.length);
 
         const results = [];
-        let successCount = 0;
-        let errorCount = 0;
 
         for (let i = 0; i < pages.length; i++) {
             const page = pages[i];
 
+            // Check for abort request
+            if (appState.data.batch.abortRequested) {
+                console.log('[Transcription] Batch aborted by user');
+                break;
+            }
+
             try {
                 // Update progress
-                this.showBatchProgress(i + 1, pages.length, page.filename);
+                batchProgress.update(i + 1, pages.length, 'transcription');
 
                 // Get image as base64
                 const base64 = await this.getImageBase64(page.dataUrl);
@@ -487,11 +494,11 @@ class TranscriptionManager {
                     }
                 });
 
-                successCount++;
+                appState.updateBatchProgress(i, true);
 
                 // Small delay to avoid rate limiting
                 if (i < pages.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await this._delay(500);
                 }
 
             } catch (error) {
@@ -502,7 +509,8 @@ class TranscriptionManager {
                     success: false,
                     error: error.message
                 });
-                errorCount++;
+
+                appState.updateBatchProgress(i, false);
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
@@ -513,13 +521,16 @@ class TranscriptionManager {
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
                     dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
-                    await new Promise(resolve => setTimeout(resolve, 30000));
+                    await this._delay(30000);
                 }
             }
         }
 
         // Store all transcriptions
         appState.setBatchTranscriptions(results);
+
+        // Complete batch operation
+        appState.completeBatch();
 
         // Set current page transcription
         const currentPageResult = results.find(r => r.pageIndex === state.currentPageIndex);
@@ -528,17 +539,20 @@ class TranscriptionManager {
         }
 
         this.setLoading(false);
-        this.hideBatchProgress();
+
+        // Show completion summary
+        const { successCount, errorCount, status } = appState.data.batch;
+        batchProgress.showComplete(successCount, errorCount, status === 'aborted');
 
         // Trigger session save for persistence
         appState.saveSessionNow();
+    }
 
-        // Show summary with save confirmation
-        if (errorCount === 0) {
-            dialogManager.showToast(`Alle ${successCount} Seiten transkribiert (automatisch gespeichert)`, 'success');
-        } else {
-            dialogManager.showToast(`${successCount} erfolgreich, ${errorCount} fehlgeschlagen`, 'warning');
-        }
+    /**
+     * Helper for delay (allows abort check)
+     */
+    _delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     /**

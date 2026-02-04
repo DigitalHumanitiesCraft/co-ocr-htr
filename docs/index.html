@@ -268,7 +268,7 @@
                             <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
                     </button>
-                    <span class="page-info" id="pageInfo">Page 1 / 1</span>
+                    <div class="page-strip" id="pageStrip"></div>
                     <button class="icon-btn icon-sm" id="btnNextPage" title="Next Page" disabled>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="9 18 15 12 9 6"></polyline>
@@ -902,6 +902,16 @@
                         <input type="checkbox" id="exportIncludeMetadata">
                         <span>Include metadata (timestamp, provider, model)</span>
                     </label>
+                </div>
+
+                <!-- Export Scope (shown for multi-page documents) -->
+                <div class="export-scope" id="exportScope" hidden>
+                    <div class="form-label">Umfang</div>
+                    <div class="btn-group export-scope-btns">
+                        <button type="button" class="btn btn-secondary btn-sm active" data-scope="current">Aktuelle Seite</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-scope="all">Alle Seiten (ZIP)</button>
+                    </div>
+                    <p class="export-scope-hint text-muted text-xs" id="exportScopeHint"></p>
                 </div>
             </div>
 

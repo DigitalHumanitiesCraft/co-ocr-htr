@@ -1111,6 +1111,28 @@ dialog[open] {
   border-top: 1px solid var(--border-subtle);
 }
 
+/* Export Scope Section */
+.export-scope {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.export-scope .form-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+}
+
+.export-scope-btns {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.export-scope-hint {
+  margin-top: var(--space-2);
+}
+
 /* ==========================================================================
    DROP ZONE (Legacy)
    ========================================================================== */
