@@ -150,10 +150,10 @@ const PROVIDERS = {
   openai: {
     name: 'OpenAI',
     endpoint: 'https://api.openai.com/v1/chat/completions',
-    defaultModel: 'gpt-4o',
+    defaultModel: 'gpt-5.2',
     models: [
-      { id: 'gpt-4o', name: 'GPT-4o (Empfohlen)', recommended: true },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (schneller)' },
+      { id: 'gpt-5.2', name: 'GPT-5.2 (Empfohlen)', recommended: true },
+      { id: 'gpt-5.2-mini', name: 'GPT-5.2 Mini (schneller)' },
       { id: 'custom', name: 'Eigenes Modell...' }
     ],
     authType: 'bearer',
