@@ -915,7 +915,7 @@ class DialogManager {
         settings.activeModel = model;
         settings.activeProvider = provider;
         llmService.setProvider(provider);
-        llmService.setModel(provider, actualModel);
+        llmService.setModel(actualModel); // Set model for active provider (single argument)
 
         // Store API key in MEMORY ONLY (for non-Ollama providers)
         if (provider !== 'ollama' && apiKeyInput?.value) {

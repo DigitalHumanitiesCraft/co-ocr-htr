@@ -100,9 +100,18 @@ async function initApp() {
         llmService.setModel('ollama', settings.ollamaModel);
     }
 
-    // Set active provider
+    // Set active provider and model
     if (settings?.activeProvider) {
         llmService.setProvider(settings.activeProvider);
+        // Restore active model after setProvider (which resets it)
+        if (settings?.activeModel) {
+            // Extract actual model name (remove provider prefix if present)
+            let modelName = settings.activeModel;
+            if (modelName.startsWith('ollama:')) {
+                modelName = modelName.substring(7);
+            }
+            llmService.setModel(modelName);
+        }
     }
 
     // Initialize UI components
