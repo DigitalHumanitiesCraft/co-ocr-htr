@@ -1052,11 +1052,11 @@ class DialogManager {
 
         modelSelect.innerHTML = '';
 
-        // Add found vision models first
+        // Add found vision models first (with ollama: prefix for provider detection)
         if (visionModels.length > 0) {
             visionModels.forEach((model, i) => {
                 const option = document.createElement('option');
-                option.value = model;
+                option.value = `ollama:${model}`; // Add prefix for provider detection
                 option.textContent = model + (i === 0 ? ' (Empfohlen)' : '');
                 if (i === 0) option.selected = true;
                 modelSelect.appendChild(option);
@@ -1070,7 +1070,7 @@ class DialogManager {
             optgroup.label = 'Andere Modelle';
             otherModels.forEach(model => {
                 const option = document.createElement('option');
-                option.value = model;
+                option.value = `ollama:${model}`; // Add prefix for provider detection
                 option.textContent = model;
                 optgroup.appendChild(option);
             });
