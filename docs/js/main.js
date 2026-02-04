@@ -23,6 +23,49 @@ import { samplesService } from './services/samples.js';
 import { appState } from './state.js';
 
 /**
+ * Try to load local configuration file (for local development convenience)
+ * This file is gitignored and allows developers to pre-configure API keys
+ */
+async function loadLocalConfig() {
+    try {
+        const module = await import('../config.local.js');
+        const config = module.LOCAL_CONFIG;
+
+        if (config?.apiKeys) {
+            console.log('coOCR/HTR: Local config found, loading API keys...');
+
+            // Set API keys from local config
+            for (const [provider, apiKey] of Object.entries(config.apiKeys)) {
+                if (apiKey && typeof apiKey === 'string' && apiKey.trim() !== '') {
+                    llmService.setApiKey(provider, apiKey.trim());
+                    console.log(`coOCR/HTR: Loaded ${provider} API key from local config`);
+                }
+            }
+        }
+
+        // Set default provider if specified
+        if (config?.defaultProvider) {
+            llmService.setProvider(config.defaultProvider);
+        }
+
+        // Configure Ollama from local config
+        if (config?.ollama) {
+            if (config.ollama.endpoint) {
+                llmService.setEndpoint('ollama', config.ollama.endpoint);
+            }
+            if (config.ollama.model) {
+                llmService.setModel('ollama', config.ollama.model);
+            }
+        }
+
+        return true;
+    } catch (e) {
+        // config.local.js doesn't exist - this is normal for hosted version
+        return false;
+    }
+}
+
+/**
  * Initialize the application
  */
 async function initApp() {
@@ -44,6 +87,9 @@ async function initApp() {
 
     // Clean up any legacy stored API keys from previous versions
     storage.clearAllApiKeys();
+
+    // Try to load local config file (for local development)
+    const hasLocalConfig = await loadLocalConfig();
 
     // Configure Ollama
     if (settings?.ollamaEndpoint) {

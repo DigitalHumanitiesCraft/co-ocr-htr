@@ -413,6 +413,34 @@ html, body {
 }
 
 /* ==========================================================================
+   CODE BLOCKS
+   ========================================================================== */
+
+.code-block {
+    margin: var(--space-3) 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+}
+
+.code-block code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    white-space: pre;
+    line-height: 1.5;
+}
+
+.subsection-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+/* ==========================================================================
    FOOTER
    ========================================================================== */
 
