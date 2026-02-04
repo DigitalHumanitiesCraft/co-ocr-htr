@@ -3418,4 +3418,175 @@ DeepSeek-OCR successfully transcribed historical document (Lichenes flora), with
 
 ---
 
+## 2026-02-04 | Session 27: Batch Processing Implementation
+
+**Participants:** User, Claude Opus 4.5
+
+### Overview
+
+Implementation of Phase 3 from IMPLEMENTATION-PLAN.md: Batch Processing for multi-page documents.
+
+### Features Implemented
+
+#### 1. Batch State Management (state.js)
+
+New batch state properties:
+```javascript
+batch: {
+    operation: null,      // 'transcription' | 'validation' | null
+    status: 'idle',       // 'idle' | 'running' | 'complete' | 'aborted'
+    currentIndex: 0,
+    total: 0,
+    successCount: 0,
+    errorCount: 0,
+    abortRequested: false
+}
+```
+
+New methods:
+- `startBatch(operation, total)` - Initialize batch operation
+- `updateBatchProgress(index, success)` - Update progress and emit events
+- `requestBatchAbort()` - Request abort (checked in batch loop)
+- `completeBatch()` - Finalize batch with status
+- `getPageStatus(pageIndex)` - Get status for UI indicators
+
+#### 2. Page Status Indicators (viewer.js, viewer.css)
+
+Visual page strip with clickable dots showing status per page:
+- **idle** (grey) - No transcription yet
+- **transcribed** (yellow) - Has transcription, no validation
+- **validated** (green) - Has both transcription and validation
+- **error** (red) - Transcription/validation failed
+- **processing** (pulsing) - Currently being processed
+
+#### 3. Batch Progress Panel (batch-progress.js)
+
+Floating panel (bottom-right) showing:
+- Operation title (Batch-Transkription / Batch-Validierung)
+- Counter (3 / 6)
+- Progress bar
+- Abort button
+
+#### 4. Abort Functionality
+
+Batch operations check `abortRequested` flag in each iteration:
+```javascript
+if (appState.data.batch.abortRequested) {
+    break;
+}
+```
+
+#### 5. ZIP Export (export.js)
+
+New method `exportAllPagesZip(format, options)`:
+- Loads JSZip dynamically from CDN (only when needed)
+- Creates folder with document name
+- Exports each page in selected format
+- Adds manifest.json with metadata
+- Downloads as `{document}_{date}.zip`
+
+#### 6. Export Scope Selection (dialogs.js, index.html)
+
+Export dialog now shows scope selector for multi-page documents:
+- "Aktuelle Seite" - Single page export
+- "Alle Seiten (ZIP)" - Batch ZIP export
+
+### Files Changed
+
+| File | Changes |
+|------|---------|
+| `docs/js/state.js` | +80 LOC: batch state, getPageStatus() |
+| `docs/js/viewer.js` | +45 LOC: page dots rendering, event listeners |
+| `docs/js/components/batch-progress.js` | +110 LOC: new module |
+| `docs/js/components/transcription.js` | +15 LOC: abort-check, batchProgress |
+| `docs/js/components/validation.js` | +20 LOC: abort-check, batchProgress |
+| `docs/js/services/export.js` | +140 LOC: exportAllPagesZip() |
+| `docs/js/components/dialogs.js` | +50 LOC: export scope handling |
+| `docs/css/viewer.css` | +60 LOC: page-strip, page-dot styles |
+| `docs/css/components.css` | +60 LOC: batch-progress-panel |
+| `docs/css/dialogs.css` | +20 LOC: export-scope styles |
+| `docs/index.html` | +10 LOC: page-strip, export scope |
+
+**Total:** ~610 LOC
+
+### Test Results
+
+All 276 unit tests passing.
+
+### Phase 3 Status
+
+**COMPLETE** - All batch processing features implemented:
+- [x] Batch-Transkription mit Abort
+- [x] Progress-Anzeige (Floating Panel)
+- [x] Batch-Export (ZIP)
+- [x] Validierungsstatus pro Seite (Page Dots)
+
+---
+
+## 2026-02-04 | Session 28: i18n Planning
+
+**Participants:** User, Claude Opus 4.5
+
+### Goal
+
+Plan internationalization (i18n) for German/English UI support.
+
+### Analysis
+
+Comprehensive string inventory across codebase:
+
+| Source | Count | Type |
+|--------|-------|------|
+| `docs/index.html` | ~185 | Static UI (buttons, labels, dialogs) |
+| `docs/js/components/*.js` | ~100 | Dynamic messages (toasts, errors) |
+| `docs/js/services/*.js` | ~50 | Validation rules, error messages |
+| `docs/js/*.js` | ~65 | Editor labels, status text |
+| **Total** | **~400** | User-visible strings |
+
+### Current State
+
+- Mixed languages: German (~60%), English (~40%)
+- No i18n framework
+- Strings hardcoded in HTML and JS
+
+### Planned Architecture
+
+```
+docs/js/services/
+├── i18n.js           # Core service with t() function (~150 LOC)
+└── translations.js   # Translation data DE/EN (~800 LOC)
+```
+
+**Key Features:**
+- `t(key, params)` - Translation with interpolation
+- `setLanguage(locale)` - Runtime language switch
+- `translateDOM()` - Update HTML elements with `data-i18n` attributes
+- Browser language detection
+- LocalStorage persistence
+
+### Implementation Plan (Phase 5)
+
+1. Core Infrastructure (~2h)
+2. HTML Migration (~3h) - Add `data-i18n` attributes
+3. JS Migration Priority 1 (~3h) - dialogs.js, transcription.js, validation.js
+4. JS Migration Priority 2 (~2h) - batch-progress.js, editor.js
+5. JS Migration Priority 3 (~1h) - main.js, llm.js, export.js
+6. Language Switcher (~1h) - Settings dialog UI
+7. Testing (~2h) - Unit tests, visual verification
+
+**Estimated Total:** ~14h
+
+### Documentation Updates
+
+- IMPLEMENTATION-PLAN.md: Added Phase 5 (i18n) section
+- INDEX.md: Added i18n concept
+
+### Notes
+
+- LLM prompts will NOT be translated (English prompts work better)
+- Fallback strategy: Show key if translation missing
+- Pluralization support with `{one, other}` pattern
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
