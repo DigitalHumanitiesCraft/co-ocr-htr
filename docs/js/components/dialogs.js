@@ -10,6 +10,7 @@ import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 import { loadIIIFManifest } from '../viewer.js';
 import { getById, select, selectAll, show, hide, focusDelayed } from '../utils/dom.js';
+import { escapeHtml } from '../utils/textFormatting.js';
 import { IIIF_CONTEXT_V3, IIIF_VERSION, TOAST_DURATION_DEFAULT, TOAST_ANIMATION_DURATION, PAGE_RELOAD_DELAY, DIALOG_FOCUS_DELAY, DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
 
 // Model-to-provider mapping for simplified UI
@@ -1111,7 +1112,7 @@ class DialogManager {
 
         toast.innerHTML = `
             <span class="toast-icon">${icons[type] || icons.info}</span>
-            <span class="toast-message">${message}</span>
+            <span class="toast-message">${escapeHtml(message)}</span>
             <button class="toast-close" aria-label="Dismiss">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
