@@ -3214,6 +3214,57 @@ knowledge/
 | page-xml.test.js | 26 | passed |
 | **Total** | **226** | **all passed** |
 
+### Part 3: PWA/Offline Support
+
+**Task:** Add Progressive Web App support for offline functionality and installation.
+
+**New Files:**
+- [manifest.json](../docs/manifest.json) - Web App Manifest
+- [sw.js](../docs/sw.js) - Service Worker
+- [pwa.js](../docs/js/pwa.js) - PWA initialization and offline indicator
+
+**Implementation:**
+
+**manifest.json:**
+- App name, short name, description
+- Theme color (#4a7c9b) and background color (#1e1e2e)
+- Icons (192x192 and 512x512)
+- Standalone display mode
+- Start URL and scope
+
+**Service Worker (sw.js):**
+- Cache version management (coocr-v1)
+- Static asset caching (HTML, CSS, JS, images)
+- Cache-first strategy for static assets
+- Network-first for API calls (Gemini, OpenAI, Anthropic, Ollama)
+- Automatic cache cleanup on version change
+
+**PWA Module (pwa.js):**
+- Service Worker registration
+- Offline/online status detection
+- Visual indicator with pulse animation
+- Toast notifications for connectivity changes
+- Update notification for new versions
+
+**UI Changes:**
+- Added manifest link in [index.html](../docs/index.html) head
+- Added meta tags for PWA (theme-color, apple-mobile-web-app)
+- Added offline indicator in header
+- Added CSS for offline indicator with animation
+
+**Features:**
+- [x] App installable on desktop/mobile
+- [x] Static assets cached for offline use
+- [x] Offline indicator appears when disconnected
+- [x] Toast notifications for connectivity changes
+- [x] Cache versioning for updates
+
+**Verification:**
+- Chrome DevTools > Application > Manifest: Valid
+- Service Worker status: Activated
+- Cache Storage: Assets cached
+- Offline mode: App loads from cache
+
 ---
 
 *Format: YYYY-MM-DD | Session N: Title*

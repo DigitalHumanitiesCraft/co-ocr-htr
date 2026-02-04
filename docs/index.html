@@ -11,6 +11,13 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4a7c9b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/logo-icon.png">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,6 +114,11 @@
             <div class="demo-indicator" id="demoIndicator" hidden>
                 <span class="demo-indicator-dot"></span>
                 <span>DEMO</span>
+            </div>
+
+            <!-- Offline Indicator (PWA) -->
+            <div class="offline-indicator" id="offlineIndicator" hidden aria-hidden="true">
+                <span>Offline</span>
             </div>
 
             <div class="header-controls">
@@ -1221,6 +1233,11 @@
     <script src="https://openseadragon.github.io/svg-overlay/openseadragon-svg-overlay.js"></script>
     <!-- App -->
     <script type="module" src="js/main.js"></script>
+    <!-- PWA Support -->
+    <script type="module">
+        import { initPWA } from './js/pwa.js';
+        initPWA();
+    </script>
 </body>
 
 </html>
