@@ -3169,6 +3169,51 @@ knowledge/
 |------|-------|--------|
 | export.test.js | 49 | passed (+17) |
 
+### Part 2: Test Coverage Expansion
+
+**Task:** Add comprehensive tests for state.js and storage.js.
+
+**New Test Files:**
+- [state.test.js](../docs/tests/state.test.js) - 61 tests
+- [storage.test.js](../docs/tests/storage.test.js) - 23 tests
+
+**Test Coverage:**
+
+**state.test.js (61 tests):**
+- Initialization and structure
+- Document management (setDocument, dimensions, events)
+- Multi-page support (navigation, page preservation)
+- Transcription handling
+- Selection and zoom
+- Regions and coordinates
+- Validation state
+- UI state (loading, dialogs, errors, toasts)
+- Document context
+- Batch operations
+- Session management
+- Segment updates
+
+**storage.test.js (23 tests):**
+- Settings CRUD with defaults
+- API key security (deprecated methods return safe values)
+- Session management
+- Utility methods (clearAll, storageInfo)
+
+**Bug Fix:**
+- Updated llm.test.js for memory-only API key storage
+- Tests were using deprecated storage.hasApiKey mocks
+
+**Final Test Results:**
+| File | Tests | Status |
+|------|-------|--------|
+| state.test.js | 61 | passed (NEW) |
+| storage.test.js | 23 | passed (NEW) |
+| export.test.js | 49 | passed |
+| validation.test.js | 40 | passed |
+| llm.test.js | 27 | passed (fixed) |
+| page-xml.test.js | 26 | passed |
+| **Total** | **226** | **all passed** |
+
 ---
 
 *Format: YYYY-MM-DD | Session N: Title*
