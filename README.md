@@ -42,7 +42,8 @@ coOCR/HTR provides:
 - **PAGE-XML Import**: Compatible with Transkribus exports
 - **METS-XML Support**: Parse multi-page documents from METS metadata
 - **Guided Workflow**: Step-by-step hints and progress tracking
-- **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15)
+- **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15), TEI-XML
+- **PWA Support**: Works offline after first load
 - **No Dependencies**: Vanilla JavaScript, runs in any modern browser
 
 ## Quick Start
@@ -124,6 +125,14 @@ ollama pull deepseek-ocr
 ```
 
 Requires Ollama v0.13.0+. Model size: ~6.7GB.
+
+### API Key Security
+
+API keys are stored in browser memory only (not localStorage) and cleared when you close the tab. This is **not fully secure** - browser extensions, XSS, or physical access could expose them. Recommendations:
+- Use a dedicated API key with spending limits
+- For sensitive documents, use Ollama locally (no API key needed)
+
+See [Help](http://dhcraft.org/co-ocr-htr/help.html) for details.
 
 ## Documentation
 
