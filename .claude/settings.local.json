@@ -25,7 +25,12 @@
       "WebFetch(domain:iiif.archive.org)",
       "WebFetch(domain:archive.org)",
       "Bash(python -m http.server:*)",
-      "Bash(file:*)"
+      "Bash(file:*)",
+      "Bash(where:*)",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(ollama pull:*)"
     ]
   }
 }
