@@ -1,6 +1,29 @@
 {
   "samples": [
     {
+      "id": "raitbuch-docta",
+      "name": "Raitbuch (15. Jh.) - 4 Seiten",
+      "description": "OÖKAM Raitbuch 2, Kurrentschrift - DoCTA Projekt (HTR Demo)",
+      "language": "Deutsch (Frühneuhochdeutsch)",
+      "script": "Kurrent",
+      "type": "manuscript",
+      "pages": [
+        { "id": "fol_0v-1r", "image": "raitbuch/fol_0v-1r.jpg" },
+        { "id": "fol_1v-2r", "image": "raitbuch/fol_1v-2r.jpg" },
+        { "id": "fol_3v-4r", "image": "raitbuch/fol_3v-4r.jpg" },
+        { "id": "fol_4v-5r", "image": "raitbuch/fol_4v-5r.jpg" }
+      ]
+    },
+    {
+      "id": "raitbuch-single",
+      "name": "Raitbuch (15. Jh.) - Einzelseite",
+      "description": "OÖKAM Raitbuch 2, fol. 1v-2r - Kurrentschrift (HTR Demo)",
+      "language": "Deutsch (Frühneuhochdeutsch)",
+      "script": "Kurrent",
+      "type": "manuscript",
+      "image": "raitbuch/fol_1v-2r.jpg"
+    },
+    {
       "id": "arabic-historical-magazines",
       "name": "Arabic Historical Magazines (1937)",
       "description": "Arabische Zeitschriften via IIIF - Internet Archive (RTL-Script Test)",
