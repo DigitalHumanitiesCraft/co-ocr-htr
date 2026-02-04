@@ -65,14 +65,8 @@ class UploadManager {
             e.target.value = '';
         });
 
-        // Upload button
-        const uploadBtn = getById('btnUpload');
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.openFilePicker();
-            });
-        }
+        // Upload button click is now handled by main.js (dropdown menu)
+        // Only drop zone indicator opens file picker directly
 
         // Drop zone indicator click - open file picker
         const dropZoneIndicator = select('.drop-zone-indicator');
@@ -211,9 +205,21 @@ class UploadManager {
 
     /**
      * Open file picker dialog
+     * @param {string} type - 'image', 'xml', or 'all' (default)
      */
-    openFilePicker() {
-        this.fileInput?.click();
+    openFilePicker(type = 'all') {
+        if (!this.fileInput) return;
+
+        // Set accept based on type
+        if (type === 'image') {
+            this.fileInput.accept = SUPPORTED_IMAGE_TYPES.join(',');
+        } else if (type === 'xml') {
+            this.fileInput.accept = '.xml,application/xml,text/xml';
+        } else {
+            this.fileInput.accept = [...SUPPORTED_IMAGE_TYPES, '.xml'].join(',');
+        }
+
+        this.fileInput.click();
     }
 
     /**
