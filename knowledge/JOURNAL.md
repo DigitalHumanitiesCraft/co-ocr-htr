@@ -3136,4 +3136,39 @@ knowledge/
 
 ---
 
+## 2026-02-04 | Feature Implementation: TEI-XML, Tests, PWA
+
+**Participants:** User, Claude Opus 4.5
+
+### Part 1: TEI-XML Export
+
+**Task:** Add TEI-XML export format for Digital Humanities integration.
+
+**Implementation:**
+- Added `exportTei()` method to [export.js](../docs/js/services/export.js)
+- TEI P5 minimal schema with proper header structure
+- Marker conversion to TEI elements:
+  - `[word]?` → `<unclear>word</unclear>`
+  - `[?]` → `<gap reason="illegible"/>`
+  - `[illegible]`, `[...]` → `<gap reason="illegible"/>`
+  - `[abbr:expansion]` → `<choice><abbr>abbr</abbr><expan>expansion</expan></choice>`
+- Line breaks with `<lb/>` elements
+- Provider info in `<revisionDesc>`
+- Schema reference for validation
+
+**UI Changes:**
+- Added TEI option to export dialog in [index.html](../docs/index.html)
+- Format: `.tei.xml` extension
+
+**Tests Added:**
+- 18 new tests in [export.test.js](../docs/tests/export.test.js)
+- Coverage: structure, markers, escaping, edge cases
+
+**Test Results:**
+| File | Tests | Status |
+|------|-------|--------|
+| export.test.js | 49 | passed (+17) |
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*

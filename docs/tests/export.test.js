@@ -62,11 +62,12 @@ describe('ExportService', () => {
   });
 
   describe('Supported Formats', () => {
-    it('should support txt, json, md, and xml formats', () => {
+    it('should support txt, json, md, xml, and tei formats', () => {
       expect(service.formats).toContain('txt');
       expect(service.formats).toContain('json');
       expect(service.formats).toContain('md');
       expect(service.formats).toContain('xml');
+      expect(service.formats).toContain('tei');
     });
   });
 
@@ -320,6 +321,172 @@ describe('ExportService', () => {
     it('should return empty string for empty segments', () => {
       expect(service.segmentsToMarkdownTable([], [])).toBe('');
       expect(service.segmentsToMarkdownTable(null, [])).toBe('');
+    });
+  });
+
+  describe('TEI-XML Export', () => {
+    it('should include tei format in supported formats', () => {
+      expect(service.formats).toContain('tei');
+    });
+
+    it('should export valid TEI structure', () => {
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+      expect(result.content).toContain('<TEI xmlns="http://www.tei-c.org/ns/1.0">');
+      expect(result.content).toContain('<teiHeader>');
+      expect(result.content).toContain('<fileDesc>');
+      expect(result.content).toContain('<titleStmt>');
+      expect(result.content).toContain('<publicationStmt>');
+      expect(result.content).toContain('<sourceDesc>');
+      expect(result.content).toContain('</teiHeader>');
+      expect(result.content).toContain('<text>');
+      expect(result.content).toContain('<body>');
+      expect(result.content).toContain('</TEI>');
+    });
+
+    it('should have correct MIME type and extension', () => {
+      const result = service.export('tei');
+
+      expect(result.mimeType).toBe('application/xml');
+      expect(result.filename).toContain('.tei.xml');
+    });
+
+    it('should include filename in title', () => {
+      const result = service.export('tei');
+
+      // Filename includes extension in title
+      expect(result.content).toContain('<title>test-document.jpg</title>');
+    });
+
+    it('should include provider info in revisionDesc', () => {
+      const result = service.export('tei');
+
+      expect(result.content).toContain('gemini');
+      expect(result.content).toContain('gemini-3-flash-preview');
+    });
+
+    it('should number lines with n attribute', () => {
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<ab n="1">');
+      expect(result.content).toContain('<ab n="2">');
+      expect(result.content).toContain('<ab n="3">');
+    });
+
+    it('should escape XML special characters', () => {
+      mockState.transcription.segments = [
+        { text: 'Text with <angle> brackets & ampersand' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('tei');
+
+      expect(result.content).toContain('&lt;angle&gt;');
+      expect(result.content).toContain('&amp;');
+      expect(result.content).not.toContain('<angle>');
+    });
+
+    it('should convert [?] marker to gap element', () => {
+      mockState.transcription.segments = [
+        { text: 'Reading with [?] unclear part' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<gap reason="illegible"/>');
+      expect(result.content).not.toContain('[?]');
+    });
+
+    it('should convert [word]? marker to unclear element', () => {
+      mockState.transcription.segments = [
+        { text: 'The word [reading]? is uncertain' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<unclear>reading</unclear>');
+      expect(result.content).not.toContain('[reading]?');
+    });
+
+    it('should convert [illegible] marker to gap element', () => {
+      mockState.transcription.segments = [
+        { text: 'Text with [illegible] section' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<gap reason="illegible"/>');
+      expect(result.content).not.toContain('[illegible]');
+    });
+
+    it('should convert [...] marker to gap element', () => {
+      mockState.transcription.segments = [
+        { text: 'Text with [...] missing' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<gap reason="illegible"/>');
+      expect(result.content).not.toContain('[...]');
+    });
+
+    it('should convert abbreviation markers to choice elements', () => {
+      mockState.transcription.segments = [
+        { text: 'The [Dr:Doctor] visited' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<choice><abbr>Dr</abbr><expan>Doctor</expan></choice>');
+      expect(result.content).not.toContain('[Dr:Doctor]');
+    });
+
+    it('should add line breaks between lines except last', () => {
+      const result = service.export('tei');
+
+      // Count <lb/> occurrences - should be segments.length - 1
+      const lbCount = (result.content.match(/<lb\/>/g) || []).length;
+      expect(lbCount).toBe(mockState.transcription.segments.length - 1);
+    });
+
+    it('should handle empty segments gracefully', () => {
+      mockState.transcription.segments = [];
+      mockState.transcription.raw = 'Line one\nLine two';
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<ab n="1">Line one<lb/></ab>');
+      expect(result.content).toContain('<ab n="2">Line two</ab>');
+    });
+
+    it('should include application info in encodingDesc', () => {
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<encodingDesc>');
+      expect(result.content).toContain('<appInfo>');
+      expect(result.content).toContain('coOCR-HTR');
+      expect(result.content).toContain('coOCR/HTR Workbench');
+    });
+
+    it('should include TEI schema reference', () => {
+      const result = service.export('tei');
+
+      expect(result.content).toContain('<?xml-model');
+      expect(result.content).toContain('tei_all.rng');
+    });
+
+    it('should also accept tei-xml as format alias', () => {
+      const result = service.export('tei-xml');
+
+      expect(result.content).toContain('<TEI');
+      expect(result.format).toBe('tei-xml');
     });
   });
 });
