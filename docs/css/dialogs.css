@@ -1521,3 +1521,109 @@ kbd {
 .iiif-error .icon-sm {
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   SECURITY NOTICE (API Key Dialog)
+   ========================================================================== */
+
+.security-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  background: rgba(90, 138, 90, 0.1);
+  border: 1px solid var(--confident);
+  border-radius: var(--radius-md);
+}
+
+.security-notice-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--confident);
+  margin-top: 2px;
+}
+
+.security-notice-content {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.security-notice-content strong {
+  color: var(--confident);
+}
+
+.security-notice-content em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.security-notice-list {
+  margin: var(--space-2) 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.security-notice-list li {
+  margin-bottom: var(--space-1);
+  line-height: 1.4;
+}
+
+.security-details {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.security-details summary {
+  cursor: pointer;
+  color: var(--accent-primary);
+  font-weight: 500;
+}
+
+.security-details summary:hover {
+  text-decoration: underline;
+}
+
+.security-details p {
+  margin: var(--space-2) 0;
+  line-height: 1.5;
+}
+
+.security-details ul {
+  margin: var(--space-1) 0;
+  padding-left: var(--space-4);
+}
+
+.security-details li {
+  margin-bottom: var(--space-1);
+}
+
+.security-acknowledge {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.security-acknowledge input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--confident);
+}
+
+.security-acknowledge:has(input:checked) {
+  background: rgba(90, 138, 90, 0.15);
+  border: 1px solid var(--confident);
+}

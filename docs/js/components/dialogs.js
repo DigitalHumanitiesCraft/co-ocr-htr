@@ -159,11 +159,41 @@ class DialogManager {
         const dialog = this.dialogs.apiKey;
         if (!dialog) return;
 
+        // Security acknowledgment checkbox
+        const securityCheckbox = getById('securityAcknowledge');
+        const saveBtn = select('#saveApiKeys', dialog);
+        if (securityCheckbox && saveBtn) {
+            // Update save button state based on checkbox and provider
+            const updateSaveButtonState = () => {
+                const provider = getById('llmProvider')?.value;
+                // Ollama doesn't need acknowledgment (no API key)
+                if (provider === 'ollama') {
+                    saveBtn.disabled = false;
+                } else {
+                    saveBtn.disabled = !securityCheckbox.checked;
+                }
+            };
+
+            securityCheckbox.addEventListener('change', updateSaveButtonState);
+            // Initial state
+            updateSaveButtonState();
+        }
+
         // Provider selection change
         const providerSelect = getById('llmProvider');
         if (providerSelect) {
             providerSelect.addEventListener('change', () => {
                 this.updateLLMDialogForProvider(providerSelect.value);
+                // Update save button state when provider changes
+                const securityCheckbox = getById('securityAcknowledge');
+                const saveBtn = select('#saveApiKeys', dialog);
+                if (securityCheckbox && saveBtn) {
+                    if (providerSelect.value === 'ollama') {
+                        saveBtn.disabled = false;
+                    } else {
+                        saveBtn.disabled = !securityCheckbox.checked;
+                    }
+                }
             });
         }
 
@@ -182,8 +212,7 @@ class DialogManager {
             });
         }
 
-        // Save button
-        const saveBtn = select('#saveApiKeys', dialog);
+        // Save button click handler (saveBtn already declared above)
         if (saveBtn) {
             saveBtn.addEventListener('click', () => this.saveApiKeys());
         }
@@ -264,11 +293,12 @@ class DialogManager {
         }
 
         // Update API key placeholder and link
+        // NOTE: API keys are NOT loaded from storage - users must enter each session
         if (apiKeyInput) {
             apiKeyInput.placeholder = providerConfig.apiKeyPlaceholder || '';
-            // Load saved key for this provider
-            const savedKey = storage.loadApiKey(provider);
-            apiKeyInput.value = savedKey || '';
+            // Check if key is already in memory (current session)
+            const memoryKey = llmService.providers[provider]?.apiKey;
+            apiKeyInput.value = memoryKey || '';
         }
 
         if (apiKeyLink && providerConfig.apiKeyUrl) {
@@ -766,6 +796,21 @@ class DialogManager {
                 }
             }
         }
+
+        // Reset security acknowledgment and update save button state
+        const securityCheckbox = getById('securityAcknowledge');
+        const saveBtn = select('#saveApiKeys', this.dialogs.apiKey);
+        if (securityCheckbox) {
+            // Keep checkbox checked if user already acknowledged in this session
+            // (don't reset on every dialog open)
+            if (saveBtn) {
+                if (activeProvider === 'ollama') {
+                    saveBtn.disabled = false;
+                } else {
+                    saveBtn.disabled = !securityCheckbox.checked;
+                }
+            }
+        }
     }
 
     /**
@@ -783,7 +828,7 @@ class DialogManager {
 
 
     /**
-     * Load saved API keys into form fields
+     * Load saved settings into form fields (API keys are NOT loaded - memory only)
      */
     loadSavedApiKeys() {
         const settings = storage.loadSettings() || {};
@@ -824,10 +869,14 @@ class DialogManager {
                 }
             }
         }
+
+        // NOTE: API keys are intentionally NOT loaded from storage.
+        // Users must re-enter keys each session for security.
+        // The API key input field remains empty.
     }
 
     /**
-     * Save API keys from form fields
+     * Save API configuration (API keys stored in memory only, NOT persisted)
      */
     saveApiKeys() {
         const settings = storage.loadSettings() || {};
@@ -854,9 +903,9 @@ class DialogManager {
             llmService.setModel(provider, model);
         }
 
-        // Save API key (for non-Ollama providers)
+        // Store API key in MEMORY ONLY (for non-Ollama providers)
+        // Keys are NOT persisted to localStorage for security
         if (provider !== 'ollama' && apiKeyInput?.value) {
-            storage.saveApiKey(provider, apiKeyInput.value);
             llmService.setApiKey(provider, apiKeyInput.value);
         }
 
@@ -867,7 +916,7 @@ class DialogManager {
         }
 
         storage.saveSettings(settings);
-        this.showToast('Konfiguration gespeichert', 'success');
+        this.showToast('Konfiguration gespeichert (API-Key nur für diese Sitzung)', 'success');
         this.closeDialog('apiKey');
     }
 

@@ -491,7 +491,36 @@
         </div>
 
         <div class="dialog-body">
-            <p class="context-explanation">Wähle einen Anbieter und ein Modell für die KI-gestützte Transkription. Die Konfiguration wird lokal gespeichert.</p>
+            <!-- Security Notice -->
+            <div class="security-notice">
+                <svg class="security-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <div class="security-notice-content">
+                    <strong>Sicherheitshinweis:</strong>
+                    <ul class="security-notice-list">
+                        <li>API-Keys werden <em>nicht</em> gespeichert - Eingabe bei jedem Besuch erforderlich</li>
+                        <li>Keys bleiben nur im Browser-Speicher, solange der Tab offen ist</li>
+                        <li>Teile deine API-Keys niemals mit anderen</li>
+                        <li>Fuer maximale Sicherheit: Ollama lokal nutzen (kein API-Key noetig)</li>
+                    </ul>
+                    <details class="security-details">
+                        <summary>Mehr erfahren</summary>
+                        <p>Browser-basierte Apps koennen API-Keys nicht vollstaendig schuetzen. Der Key ist waehrend der Nutzung im Arbeitsspeicher des Browsers. Wir empfehlen:</p>
+                        <ul>
+                            <li>Einen separaten API-Key nur fuer dieses Tool erstellen</li>
+                            <li>Spending Limits beim Anbieter setzen</li>
+                            <li>Bei sensiblen Dokumenten: Ollama lokal verwenden</li>
+                        </ul>
+                    </details>
+                    <label class="security-acknowledge">
+                        <input type="checkbox" id="securityAcknowledge">
+                        <span>Ich verstehe, dass mein API-Key waehrend der Sitzung im Browser-Speicher liegt</span>
+                    </label>
+                </div>
+            </div>
+
+            <p class="context-explanation">Wähle einen Anbieter und ein Modell für die KI-gestützte Transkription.</p>
 
             <!-- Model Selection Guide -->
             <details class="model-guide-details">

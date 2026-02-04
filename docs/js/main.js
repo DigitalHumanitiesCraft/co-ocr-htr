@@ -31,19 +31,19 @@ async function initApp() {
     // Load saved settings
     const settings = storage.loadSettings();
 
-    // Configure LLM service with saved API keys
+    // Configure LLM service with saved model preferences
+    // NOTE: API keys are NOT loaded from storage - they must be entered each session
     const providers = ['gemini', 'openai', 'anthropic'];
     providers.forEach(provider => {
-        const key = storage.loadApiKey(provider);
-        if (key) {
-            llmService.setApiKey(provider, key);
-        }
-        // Load model preference
+        // Load model preference only (not API keys)
         const modelKey = `${provider}Model`;
         if (settings?.[modelKey]) {
             llmService.setModel(provider, settings[modelKey]);
         }
     });
+
+    // Clean up any legacy stored API keys from previous versions
+    storage.clearAllApiKeys();
 
     // Configure Ollama
     if (settings?.ollamaEndpoint) {
