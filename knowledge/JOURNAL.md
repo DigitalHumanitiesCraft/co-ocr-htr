@@ -3348,4 +3348,74 @@ knowledge/
 
 ---
 
+## 2026-02-04 | Session 26: DeepSeek-OCR Integration & Validation Fallback
+
+**Participants:** User, Claude Opus 4.5
+
+### Part 1: DeepSeek-OCR Fix
+
+**Problem:** DeepSeek-OCR via Ollama returned empty responses despite correct provider detection.
+
+**Root Cause:** DeepSeek-OCR requires `/api/chat` endpoint (not `/api/generate`) and works best with simple prompts.
+
+**Solution:**
+- Detect vision models (deepseek-ocr, llava, *vision*) when images are present
+- Route to `/api/chat` with messages format for vision models
+- Use simplified prompt "Extract the text in the image."
+- Keep `/api/generate` for text-only requests
+
+**Files Changed:**
+- [llm.js](../docs/js/services/llm.js) - `_callOllama()` method with vision model detection
+
+### Part 2: Validation Fallback for OCR-only Models
+
+**Problem:** DeepSeek-OCR is an OCR-only model - it cannot perform text validation (analyzing text without an image).
+
+**Solution:** Automatic fallback to alternative provider for validation:
+
+```
+Transcription: DeepSeek-OCR (local)
+       |
+       v
+Validation: Gemini/OpenAI/Anthropic (cloud fallback)
+```
+
+**Implementation:**
+- `isOcrOnlyModel()` - detects OCR-specific models
+- `getValidationFallback()` - finds alternative provider:
+  1. Cloud providers with API key (gemini, openai, anthropic)
+  2. Other Ollama models (llama3.2, mistral, etc.)
+- `_validateWithFallback()` - executes validation with fallback provider
+- UI shows "Fallback: Google Gemini" when fallback is used
+
+**Files Changed:**
+- [llm.js](../docs/js/services/llm.js) - Fallback detection and execution
+- [validation.js](../docs/js/services/validation.js) - Pass through fallbackUsed info
+- [validation.js](../docs/js/components/validation.js) - Display fallback notice
+- [validation.css](../docs/css/validation.css) - Fallback notice styling
+
+### Part 3: Export Button Fix
+
+**Problem:** Export button not responding to clicks.
+
+**Root Cause:** Selector `[title="Export"]` didn't match `title="Export transcription"`.
+
+**Fix:** Changed to `getById('btnExport')`.
+
+### Bug Fixes Summary
+
+| Issue | Fix |
+|-------|-----|
+| DeepSeek-OCR empty response | Use `/api/chat` for vision models |
+| Ollama model not detected as Ollama | Add `ollama:` prefix to populated models |
+| Model not persisted after reload | Restore model after `setProvider()` call |
+| Validation fails with OCR-only model | Automatic fallback to cloud provider |
+| Export button not working | Use `getById('btnExport')` instead of title selector |
+
+### Test Results
+
+DeepSeek-OCR successfully transcribed historical document (Lichenes flora), with Gemini providing validation. The validation correctly identified an OCR error: "Lichtenes" instead of "Lichenes".
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*
