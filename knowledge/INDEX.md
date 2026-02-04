@@ -55,6 +55,8 @@ knowledge/
 | IIIF Integration | Load images from external repositories | ARCHITECTURE |
 | Model Selection | Choose model based on document type | MODEL-LANDSCAPE |
 | Agentic Vision | AI investigates images step-by-step | MODEL-LANDSCAPE |
+| Validation Fallback | Auto-switch to cloud for OCR-only models | ARCHITECTURE |
+| Hybrid OCR Workflow | Local OCR + Cloud validation combined | ARCHITECTURE |
 
 ## UI Components (Quick Reference)
 
@@ -98,3 +100,4 @@ METHODOLOGY ──────────────────────�
 | 1.6 | 2026-02-03 | Added VISION.md with project goals and success criteria |
 | 1.7 | 2026-02-03 | Added MODEL-LANDSCAPE.md with OCR/HTR model comparison and external validation |
 | 1.8 | 2026-02-03 | Simplified validation: removed perspectives, added custom prompt option |
+| 1.9 | 2026-02-04 | Added validation fallback for OCR-only models, hybrid OCR workflow |

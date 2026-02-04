@@ -22,25 +22,13 @@ coOCR/HTR supports various historical document types with flexible editor render
 |------|-----------|-------------|---------|
 | **Prose** | Lines without columns | `lines` | Letters, diaries, manuscripts |
 | **Tabular** | Lines with columns | `grid` | Account books, inventories, registers |
-| **Structured** | Key-value pairs | `structured` | Index cards, forms |
-| **Mixed** | Varying | `auto` | Books with tables and text |
 
 ### Editor Modes
 
 | Mode | Configuration | Use Case |
 |------|---------------|----------|
-| lines | None | Prose text without columns |
+| lines | None | Prose text without columns (default) |
 | grid | columns array | Tabular data with defined columns |
-| structured | fields array | Key-value pair forms |
-| auto | None | System detects based on content |
-
-### Automatic Mode Detection
-
-The editor selects mode based on input characteristics:
-1. PAGE-XML with multiple TextLines without columns → lines mode
-2. Text containing pipe separators → grid mode with auto-detected columns
-3. Explicit columns configuration → grid mode
-4. Default fallback → lines mode
 
 ## Main Schema: Transcription
 
