@@ -572,6 +572,50 @@ class LLMService {
     // Use endpoint from provider config (set via setEndpoint) or fallback
     const ollamaUrl = this.providers.ollama.endpoint || 'http://localhost:11434';
 
+    // DeepSeek-OCR and other vision models require /api/chat endpoint
+    // and work better with simpler prompts
+    const isVisionModel = imageBase64 && (
+      model.includes('deepseek-ocr') ||
+      model.includes('llava') ||
+      model.includes('vision')
+    );
+
+    if (isVisionModel) {
+      // Use /api/chat for vision models (required for DeepSeek-OCR)
+      // DeepSeek-OCR works best with simple, direct prompts
+      const simplePrompt = 'Extract the text in the image.';
+
+      const body = {
+        model,
+        messages: [{
+          role: 'user',
+          content: simplePrompt,
+          images: [imageBase64]
+        }],
+        stream: false
+      };
+
+      console.log(`[Ollama] Calling ${ollamaUrl}/api/chat model=${model} (vision mode)`);
+      console.log(`[Ollama] Image base64 length: ${imageBase64.length}`);
+
+      const response = await fetch(`${ollamaUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Ollama] API error: ${response.status}`, errorText);
+        throw new Error(`Ollama API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`[Ollama] Response:`, data);
+      return data.message?.content || '';
+    }
+
+    // Standard /api/generate for non-vision models
     const body = {
       model,
       prompt,
@@ -582,10 +626,7 @@ class LLMService {
       body.images = [imageBase64];
     }
 
-    console.log(`[Ollama] Calling ${ollamaUrl}/api/generate model=${model} hasImage=${!!imageBase64}`);
-    if (imageBase64) {
-      console.log(`[Ollama] Image base64 length: ${imageBase64.length}, starts with: ${imageBase64.substring(0, 50)}...`);
-    }
+    console.log(`[Ollama] Calling ${ollamaUrl}/api/generate model=${model}`);
 
     const response = await fetch(`${ollamaUrl}/api/generate`, {
       method: 'POST',
