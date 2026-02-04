@@ -521,95 +521,54 @@
                 </div>
             </div>
 
-            <p class="context-explanation">Wähle einen Anbieter und ein Modell für die KI-gestützte Transkription.</p>
-
-            <!-- Model Selection Guide -->
-            <details class="model-guide-details">
-                <summary class="model-guide-summary">
-                    <span class="model-guide-title">Welches Modell für welches Dokument?</span>
-                </summary>
-                <div class="model-guide-content">
-                    <table class="model-guide-table">
-                        <thead>
-                            <tr>
-                                <th>Dokumenttyp</th>
-                                <th>Empfohlenes Modell</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Handschriften (HTR)</td>
-                                <td><strong>Gemini 3 Pro</strong> - beste Qualität für historische Handschriften</td>
-                            </tr>
-                            <tr>
-                                <td>Komplexe Layouts</td>
-                                <td><strong>Gemini 3 Pro</strong> - mehrspaltiges, Tabellen, verschachtelte Strukturen</td>
-                            </tr>
-                            <tr>
-                                <td>Einfache gedruckte Dokumente</td>
-                                <td><strong>Gemini 3 Flash</strong> - schnell und kosteneffizient</td>
-                            </tr>
-                            <tr>
-                                <td>Lokale Verarbeitung / Datenschutz</td>
-                                <td><strong>Ollama + DeepSeek-OCR</strong> - keine Cloud, alle Daten lokal</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </details>
-
             <div class="llm-config-fields">
-                <!-- Provider Selection -->
-                <div class="input-wrapper">
-                    <label for="llmProvider">Anbieter</label>
-                    <select id="llmProvider">
-                        <optgroup label="Cloud-Anbieter (API-Key erforderlich)">
-                            <option value="gemini">Google Gemini</option>
-                            <option value="openai">OpenAI</option>
-                            <option value="anthropic">Anthropic Claude</option>
-                        </optgroup>
-                        <optgroup label="Lokal (kein API-Key)">
-                            <option value="ollama">Ollama (lokal)</option>
-                        </optgroup>
-                    </select>
-                </div>
-
-                <!-- Model Selection -->
+                <!-- Model Selection (primary) -->
                 <div class="input-wrapper">
                     <label for="llmModel">Modell</label>
                     <div class="input-with-custom">
                         <select id="llmModel">
-                            <!-- Populated dynamically based on provider -->
+                            <optgroup label="Gemini (empfohlen)">
+                                <option value="gemini-3-flash-preview" data-provider="gemini">Gemini 3 Flash - schnell, kosteneffizient</option>
+                                <option value="gemini-3-pro-preview" data-provider="gemini">Gemini 3 Pro - beste Qualitaet</option>
+                            </optgroup>
+                            <optgroup label="Lokal (Ollama)">
+                                <option value="ollama:deepseek-ocr" data-provider="ollama">DeepSeek-OCR (lokal)</option>
+                                <option value="ollama:llava" data-provider="ollama">LLaVA (lokal)</option>
+                            </optgroup>
+                            <option value="custom">Eigenes Modell...</option>
                         </select>
-                        <input type="text" id="llmModelCustom" class="custom-input" placeholder="Eigenes Modell eingeben..." style="display: none;">
+                        <input type="text" id="llmModelCustom" class="custom-input" placeholder="z.B. gpt-4o, claude-sonnet-4-5-20250514, gemini-..." style="display: none;">
                     </div>
-                    <span class="input-hint" id="llmModelHint">Empfohlenes Modell für OCR/HTR-Aufgaben.</span>
+                    <span class="input-hint" id="llmModelHint">Gemini 3 Flash fuer schnelle Ergebnisse, Pro fuer komplexe Handschriften.</span>
                 </div>
 
                 <!-- API Key (hidden for Ollama) -->
                 <div class="input-wrapper" id="apiKeyWrapper">
                     <label for="llmApiKey">API-Key</label>
                     <div class="input-with-toggle">
-                        <input type="password" id="llmApiKey" placeholder="" autocomplete="off">
+                        <input type="password" id="llmApiKey" placeholder="AIza..." autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
                             <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
                             <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
                         </button>
                     </div>
                     <span class="input-hint" id="apiKeyHint">
-                        API-Key von <a href="#" id="apiKeyLink" target="_blank" rel="noopener">Provider</a> holen.
+                        API-Key von <a href="https://aistudio.google.com/apikey" id="apiKeyLink" target="_blank" rel="noopener">Google AI Studio</a> holen.
                     </span>
                 </div>
 
-                <!-- Ollama-specific: Endpoint -->
+                <!-- Ollama-specific: Endpoint (shown when Ollama model selected) -->
                 <div class="input-wrapper" id="ollamaEndpointWrapper" style="display: none;">
-                    <label for="ollamaEndpoint">Server-URL</label>
+                    <label for="ollamaEndpoint">Ollama Server-URL</label>
                     <div class="input-with-button">
                         <input type="text" id="ollamaEndpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
                         <button type="button" class="btn btn-secondary btn-sm" id="ollamaRefreshModels">Modelle laden</button>
                     </div>
                     <span class="input-hint">Ollama muss lokal laufen: <code>ollama serve</code></span>
                 </div>
+
+                <!-- Hidden provider field for JS logic -->
+                <input type="hidden" id="llmProvider" value="gemini">
             </div>
         </div>
 
@@ -636,10 +595,10 @@
             <details class="context-details" id="contextDetails">
                 <summary class="context-summary">
                     <span class="context-summary-title">Dokumentkontext (optional)</span>
-                    <span class="context-summary-hint">Reichert den KI-Prompt an</span>
+                    <span class="context-summary-hint">Zusaetzliche Informationen zum Dokument</span>
                 </summary>
                 <div class="context-fields">
-                    <p class="context-explanation">Diese Angaben werden dem KI-Modell als Kontext mitgegeben, um die Transkription zu verbessern. Je präziser und kompakter die Angaben, desto besser das Ergebnis.</p>
+                    <p class="context-explanation">Optionale Angaben zum Dokument, die bei der Transkription beruecksichtigt werden.</p>
                     <!-- Document Type with custom option -->
                     <div class="input-wrapper">
                         <label for="contextDocType">Dokumenttyp</label>

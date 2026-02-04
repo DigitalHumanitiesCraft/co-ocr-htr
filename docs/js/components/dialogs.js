@@ -12,8 +12,28 @@ import { loadIIIFManifest } from '../viewer.js';
 import { getById, select, selectAll, show, hide, focusDelayed } from '../utils/dom.js';
 import { IIIF_CONTEXT_V3, IIIF_VERSION, TOAST_DURATION_DEFAULT, TOAST_ANIMATION_DURATION, PAGE_RELOAD_DELAY, DIALOG_FOCUS_DELAY, DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
 
-// Provider configuration
-const PROVIDERS = ['gemini', 'openai', 'anthropic', 'ollama'];
+// Model-to-provider mapping for simplified UI
+const MODEL_PROVIDER_MAP = {
+    'gemini-3-flash-preview': 'gemini',
+    'gemini-3-pro-preview': 'gemini',
+    'ollama:deepseek-ocr': 'ollama',
+    'ollama:llava': 'ollama',
+    'ollama:llama3.2-vision': 'ollama'
+};
+
+// API key URLs by provider
+const API_KEY_URLS = {
+    gemini: 'https://aistudio.google.com/apikey',
+    openai: 'https://platform.openai.com/api-keys',
+    anthropic: 'https://console.anthropic.com/settings/keys'
+};
+
+// API key placeholders by provider
+const API_KEY_PLACEHOLDERS = {
+    gemini: 'AIza...',
+    openai: 'sk-...',
+    anthropic: 'sk-ant-...'
+};
 
 /**
  * Dialog Manager
@@ -159,60 +179,75 @@ class DialogManager {
         const dialog = this.dialogs.apiKey;
         if (!dialog) return;
 
-        // Security acknowledgment checkbox
+        const modelSelect = getById('llmModel');
+        const customModelInput = getById('llmModelCustom');
         const securityCheckbox = getById('securityAcknowledge');
         const saveBtn = select('#saveApiKeys', dialog);
-        if (securityCheckbox && saveBtn) {
-            // Update save button state based on checkbox and provider
-            const updateSaveButtonState = () => {
-                const provider = getById('llmProvider')?.value;
-                // Ollama doesn't need acknowledgment (no API key)
+
+        // Update UI based on selected model
+        const updateUIForModel = () => {
+            const modelValue = modelSelect?.value || '';
+            const provider = this.getProviderFromModel(modelValue);
+
+            // Update hidden provider field
+            const providerInput = getById('llmProvider');
+            if (providerInput) providerInput.value = provider;
+
+            // Show/hide custom model input
+            if (customModelInput) {
+                if (modelValue === 'custom') {
+                    customModelInput.style.display = 'block';
+                    customModelInput.focus();
+                } else {
+                    customModelInput.style.display = 'none';
+                }
+            }
+
+            // Show/hide API key field (hidden for Ollama)
+            const apiKeyWrapper = getById('apiKeyWrapper');
+            const ollamaWrapper = getById('ollamaEndpointWrapper');
+
+            if (provider === 'ollama') {
+                if (apiKeyWrapper) apiKeyWrapper.style.display = 'none';
+                if (ollamaWrapper) ollamaWrapper.style.display = 'block';
+            } else {
+                if (apiKeyWrapper) apiKeyWrapper.style.display = 'block';
+                if (ollamaWrapper) ollamaWrapper.style.display = 'none';
+
+                // Update API key hint based on detected provider
+                this.updateApiKeyHint(provider);
+            }
+
+            // Update save button state
+            if (securityCheckbox && saveBtn) {
                 if (provider === 'ollama') {
                     saveBtn.disabled = false;
                 } else {
                     saveBtn.disabled = !securityCheckbox.checked;
                 }
-            };
+            }
 
-            securityCheckbox.addEventListener('change', updateSaveButtonState);
-            // Initial state
-            updateSaveButtonState();
+            this.currentProvider = provider;
+        };
+
+        // Model selection change
+        if (modelSelect) {
+            modelSelect.addEventListener('change', updateUIForModel);
         }
 
-        // Provider selection change
-        const providerSelect = getById('llmProvider');
-        if (providerSelect) {
-            providerSelect.addEventListener('change', () => {
-                this.updateLLMDialogForProvider(providerSelect.value);
-                // Update save button state when provider changes
-                const securityCheckbox = getById('securityAcknowledge');
-                const saveBtn = select('#saveApiKeys', dialog);
-                if (securityCheckbox && saveBtn) {
-                    if (providerSelect.value === 'ollama') {
-                        saveBtn.disabled = false;
-                    } else {
-                        saveBtn.disabled = !securityCheckbox.checked;
-                    }
-                }
-            });
-        }
-
-        // Model selection change (for custom option)
-        const modelSelect = getById('llmModel');
-        const customModelInput = getById('llmModelCustom');
-        if (modelSelect && customModelInput) {
-            modelSelect.addEventListener('change', () => {
-                if (modelSelect.value === 'custom') {
-                    customModelInput.style.display = 'block';
-                    customModelInput.focus();
+        // Security acknowledgment checkbox
+        if (securityCheckbox && saveBtn) {
+            securityCheckbox.addEventListener('change', () => {
+                const provider = this.currentProvider;
+                if (provider === 'ollama') {
+                    saveBtn.disabled = false;
                 } else {
-                    customModelInput.style.display = 'none';
-                    customModelInput.value = '';
+                    saveBtn.disabled = !securityCheckbox.checked;
                 }
             });
         }
 
-        // Save button click handler (saveBtn already declared above)
+        // Save button click handler
         if (saveBtn) {
             saveBtn.addEventListener('click', () => this.saveApiKeys());
         }
@@ -229,7 +264,7 @@ class DialogManager {
             refreshBtn.addEventListener('click', () => this.refreshOllamaModels());
         }
 
-        // Password visibility toggle for new dialog
+        // Password visibility toggle
         const toggleBtn = select('.toggle-visibility', dialog);
         if (toggleBtn) {
             toggleBtn.addEventListener('click', (e) => {
@@ -249,83 +284,64 @@ class DialogManager {
                 }
             });
         }
+
+        // Initial UI update
+        updateUIForModel();
     }
 
     /**
-     * Update LLM dialog fields based on selected provider
+     * Get provider from model identifier
      */
-    updateLLMDialogForProvider(provider) {
-        const providerConfig = llmService.providers[provider];
-        if (!providerConfig) return;
-
-        const modelSelect = getById('llmModel');
-        const customModelInput = getById('llmModelCustom');
-        const apiKeyWrapper = getById('apiKeyWrapper');
-        const apiKeyInput = getById('llmApiKey');
-        const apiKeyHint = getById('apiKeyHint');
-        const apiKeyLink = getById('apiKeyLink');
-        const ollamaWrapper = getById('ollamaEndpointWrapper');
-        const modelHint = getById('llmModelHint');
-
-        // Update model dropdown
-        if (modelSelect) {
-            modelSelect.innerHTML = '';
-            providerConfig.models.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.id;
-                option.textContent = model.name;
-                if (model.id === providerConfig.defaultModel || model.recommended) {
-                    option.selected = true;
-                }
-                modelSelect.appendChild(option);
-            });
-
-            // Reset custom input
-            if (customModelInput) {
-                customModelInput.style.display = 'none';
-                customModelInput.value = '';
-            }
+    getProviderFromModel(modelValue) {
+        // Check predefined mapping
+        if (MODEL_PROVIDER_MAP[modelValue]) {
+            return MODEL_PROVIDER_MAP[modelValue];
         }
 
-        // Show/hide API key field
-        if (apiKeyWrapper) {
-            apiKeyWrapper.style.display = provider === 'ollama' ? 'none' : 'block';
+        // Check for ollama: prefix
+        if (modelValue.startsWith('ollama:')) {
+            return 'ollama';
         }
 
-        // Update API key placeholder and link
-        // NOTE: API keys are NOT loaded from storage - users must enter each session
-        if (apiKeyInput) {
-            apiKeyInput.placeholder = providerConfig.apiKeyPlaceholder || '';
-            // Check if key is already in memory (current session)
-            const memoryKey = llmService.providers[provider]?.apiKey;
-            apiKeyInput.value = memoryKey || '';
+        // For custom models, try to detect provider from model name
+        if (modelValue === 'custom') {
+            return 'gemini'; // Default for custom, will be updated when saving
         }
 
-        if (apiKeyLink && providerConfig.apiKeyUrl) {
-            apiKeyLink.href = providerConfig.apiKeyUrl;
-            apiKeyLink.textContent = providerConfig.name;
-        }
+        // Infer from model name patterns
+        const lower = modelValue.toLowerCase();
+        if (lower.includes('gemini')) return 'gemini';
+        if (lower.includes('gpt') || lower.includes('openai')) return 'openai';
+        if (lower.includes('claude') || lower.includes('anthropic')) return 'anthropic';
 
-        if (apiKeyHint) {
-            apiKeyHint.style.display = provider === 'ollama' ? 'none' : 'block';
-        }
-
-        // Show/hide Ollama-specific fields
-        if (ollamaWrapper) {
-            ollamaWrapper.style.display = provider === 'ollama' ? 'block' : 'none';
-        }
-
-        // Update model hint
-        if (modelHint) {
-            if (provider === 'ollama') {
-                modelHint.innerHTML = 'Vision-Modelle: <code>deepseek-ocr</code>, <code>llava</code>, <code>llama3.2-vision</code>';
-            } else {
-                modelHint.textContent = 'Empfohlenes Modell für OCR/HTR-Aufgaben.';
-            }
-        }
-
-        this.currentProvider = provider;
+        // Default to gemini
+        return 'gemini';
     }
+
+    /**
+     * Update API key hint based on provider
+     */
+    updateApiKeyHint(provider) {
+        const apiKeyInput = getById('llmApiKey');
+        const apiKeyLink = getById('apiKeyLink');
+        const apiKeyHint = getById('apiKeyHint');
+
+        if (apiKeyInput) {
+            apiKeyInput.placeholder = API_KEY_PLACEHOLDERS[provider] || 'API-Key';
+            // Load key from memory if available
+            const memoryKey = llmService.providers[provider]?.apiKey;
+            if (memoryKey) {
+                apiKeyInput.value = memoryKey;
+            }
+        }
+
+        if (apiKeyLink && API_KEY_URLS[provider]) {
+            apiKeyLink.href = API_KEY_URLS[provider];
+            const providerNames = { gemini: 'Google AI Studio', openai: 'OpenAI', anthropic: 'Anthropic' };
+            apiKeyLink.textContent = providerNames[provider] || provider;
+        }
+    }
+
 
     /**
      * Bind Export Dialog specific events
@@ -764,20 +780,12 @@ class DialogManager {
      */
     initApiKeyDialog() {
         const settings = storage.loadSettings() || {};
-        const activeProvider = settings.activeProvider || llmService.activeProvider || 'gemini';
+        const savedModel = settings.activeModel || 'gemini-3-flash-preview';
 
-        const providerSelect = getById('llmProvider');
-        if (providerSelect) {
-            providerSelect.value = activeProvider;
-            this.updateLLMDialogForProvider(activeProvider);
-        }
-
-        // Load saved model for active provider
-        const savedModel = settings[`${activeProvider}Model`];
         const modelSelect = getById('llmModel');
         const customModelInput = getById('llmModelCustom');
 
-        if (modelSelect && savedModel) {
+        if (modelSelect) {
             const options = Array.from(modelSelect.options);
             const found = options.find(opt => opt.value === savedModel);
 
@@ -795,21 +803,29 @@ class DialogManager {
                     customModelInput.value = savedModel;
                 }
             }
+
+            // Trigger change event to update UI
+            modelSelect.dispatchEvent(new Event('change'));
         }
 
-        // Reset security acknowledgment and update save button state
+        // Update save button state based on current provider
+        const provider = this.getProviderFromModel(savedModel);
         const securityCheckbox = getById('securityAcknowledge');
         const saveBtn = select('#saveApiKeys', this.dialogs.apiKey);
-        if (securityCheckbox) {
-            // Keep checkbox checked if user already acknowledged in this session
-            // (don't reset on every dialog open)
-            if (saveBtn) {
-                if (activeProvider === 'ollama') {
-                    saveBtn.disabled = false;
-                } else {
-                    saveBtn.disabled = !securityCheckbox.checked;
-                }
+
+        if (securityCheckbox && saveBtn) {
+            if (provider === 'ollama') {
+                saveBtn.disabled = false;
+            } else {
+                saveBtn.disabled = !securityCheckbox.checked;
             }
+        }
+
+        // Load API key from memory if available
+        const apiKeyInput = getById('llmApiKey');
+        if (apiKeyInput && provider !== 'ollama') {
+            const memoryKey = llmService.providers[provider]?.apiKey;
+            apiKeyInput.value = memoryKey || '';
         }
     }
 
@@ -833,28 +849,18 @@ class DialogManager {
     loadSavedApiKeys() {
         const settings = storage.loadSettings() || {};
 
-        // Load active provider
-        const activeProvider = settings.activeProvider || llmService.activeProvider || 'gemini';
-        const providerSelect = getById('llmProvider');
-
-        if (providerSelect) {
-            providerSelect.value = activeProvider;
-            this.updateLLMDialogForProvider(activeProvider);
-        }
-
         // Load Ollama endpoint
         const endpointInput = getById('ollamaEndpoint');
         if (endpointInput) {
             endpointInput.value = settings.ollamaEndpoint || DEFAULT_OLLAMA_ENDPOINT;
         }
 
-        // Load saved model for active provider
-        const savedModel = settings[`${activeProvider}Model`];
+        // Load saved model
+        const savedModel = settings.activeModel || 'gemini-3-flash-preview';
         const modelSelect = getById('llmModel');
         const customModelInput = getById('llmModelCustom');
 
-        if (modelSelect && savedModel) {
-            // Check if it's a predefined model
+        if (modelSelect) {
             const options = Array.from(modelSelect.options);
             const found = options.find(opt => opt.value === savedModel);
 
@@ -872,7 +878,6 @@ class DialogManager {
 
         // NOTE: API keys are intentionally NOT loaded from storage.
         // Users must re-enter keys each session for security.
-        // The API key input field remains empty.
     }
 
     /**
@@ -881,7 +886,6 @@ class DialogManager {
     saveApiKeys() {
         const settings = storage.loadSettings() || {};
 
-        const provider = getById('llmProvider')?.value || 'gemini';
         const modelSelect = getById('llmModel');
         const customModelInput = getById('llmModelCustom');
         const apiKeyInput = getById('llmApiKey');
@@ -893,18 +897,22 @@ class DialogManager {
             model = customModelInput.value.trim();
         }
 
-        // Save provider as active
-        settings.activeProvider = provider;
-        llmService.setProvider(provider);
+        // Determine provider from model
+        const provider = this.getProviderFromModel(model);
 
-        // Save model for this provider
-        if (model && model !== 'custom') {
-            settings[`${provider}Model`] = model;
-            llmService.setModel(provider, model);
+        // For Ollama models, extract the actual model name (remove "ollama:" prefix)
+        let actualModel = model;
+        if (model.startsWith('ollama:')) {
+            actualModel = model.substring(7); // Remove "ollama:" prefix
         }
 
+        // Save model and provider
+        settings.activeModel = model;
+        settings.activeProvider = provider;
+        llmService.setProvider(provider);
+        llmService.setModel(provider, actualModel);
+
         // Store API key in MEMORY ONLY (for non-Ollama providers)
-        // Keys are NOT persisted to localStorage for security
         if (provider !== 'ollama' && apiKeyInput?.value) {
             llmService.setApiKey(provider, apiKeyInput.value);
         }
@@ -916,7 +924,7 @@ class DialogManager {
         }
 
         storage.saveSettings(settings);
-        this.showToast('Konfiguration gespeichert (API-Key nur für diese Sitzung)', 'success');
+        this.showToast('Konfiguration gespeichert (API-Key nur fuer diese Sitzung)', 'success');
         this.closeDialog('apiKey');
     }
 
