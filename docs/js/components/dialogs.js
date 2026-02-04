@@ -149,7 +149,7 @@ class DialogManager {
         }
 
         // Export button
-        const exportBtn = select('[title="Export"]');
+        const exportBtn = getById('btnExport');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => this.openDialog('export'));
         }
