@@ -130,11 +130,11 @@ Requires Ollama v0.13.0+. Model size: ~6.7GB.
 
 ### API Key Security
 
-API keys are stored in browser memory only (not localStorage) and cleared when you close the tab. This is **not fully secure** - browser extensions, XSS, or physical access could expose them. Recommendations:
+API keys are stored in browser memory only (not localStorage) and cleared when you close the tab. This is **not fully secure** - browser extensions or physical access could expose them. Recommendations:
 - Use a dedicated API key with spending limits
 - For sensitive documents, use Ollama locally (no API key needed)
 
-See [Help](http://dhcraft.org/co-ocr-htr/help.html) for details.
+See [SECURITY.md](knowledge/SECURITY.md) for the complete security model.
 
 ## Documentation
 
