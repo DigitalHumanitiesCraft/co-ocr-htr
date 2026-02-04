@@ -21,6 +21,7 @@ import { exportService } from './services/export.js';
 import { pageXMLParser } from './services/parsers/page-xml.js';
 import { samplesService } from './services/samples.js';
 import { appState } from './state.js';
+import { escapeHtml } from './utils/textFormatting.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -202,9 +203,9 @@ async function initSamplesMenu() {
 
     // Populate menu
     samplesMenu.innerHTML = samples.map(sample => `
-        <button class="samples-menu-item" data-sample-id="${sample.id}">
-            <span class="sample-name">${sample.name}</span>
-            <span class="sample-desc">${sample.description}</span>
+        <button class="samples-menu-item" data-sample-id="${escapeHtml(sample.id)}">
+            <span class="sample-name">${escapeHtml(sample.name)}</span>
+            <span class="sample-desc">${escapeHtml(sample.description)}</span>
         </button>
     `).join('');
 
