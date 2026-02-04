@@ -150,83 +150,179 @@ async function initApp() {
     // Initialize samples menu
     await initSamplesMenu();
 
-    // Connect empty state buttons
-    initEmptyStateButtons();
-
     // Initialize guided workflow features
     initGuidedWorkflow();
 
     console.log('coOCR/HTR: Initialized');
 }
 
+
 /**
- * Connect empty state buttons to actions
+ * Generate badge HTML for a sample based on its properties
  */
-function initEmptyStateButtons() {
-    const btnLoadDemo = document.getElementById('btnLoadDemo');
-    const samplesBtn = document.getElementById('btnSamples');
+function generateSampleBadges(sample) {
+    const badges = [];
 
-    // "Load Demo" button opens the samples menu
-    if (btnLoadDemo && samplesBtn) {
-        btnLoadDemo.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent document click from closing menu
-            samplesBtn.click();
-        });
+    // OCR vs HTR badge (based on type)
+    const isHandwritten = ['manuscript', 'letter', 'card'].includes(sample.type);
+    if (isHandwritten) {
+        badges.push('<span class="sample-badge sample-badge-htr">HTR</span>');
+    } else {
+        badges.push('<span class="sample-badge sample-badge-ocr">OCR</span>');
     }
 
-    // "Load IIIF" button opens the IIIF dialog
-    const btnLoadIIIF = document.getElementById('btnLoadIIIF');
-    const btnIIIF = document.getElementById('btnIIIF');
-    if (btnLoadIIIF && btnIIIF) {
-        btnLoadIIIF.addEventListener('click', () => {
-            btnIIIF.click();
-        });
+    // IIIF badge
+    if (sample.iiifManifest) {
+        badges.push('<span class="sample-badge sample-badge-iiif">IIIF</span>');
     }
+
+    // PAGE-XML badge
+    const hasPageXml = sample.pageXml ||
+        (sample.pages && sample.pages.some(p => p.pageXml));
+    if (hasPageXml) {
+        badges.push('<span class="sample-badge sample-badge-xml">XML</span>');
+    }
+
+    // Multi-page badge
+    if (sample.pages && sample.pages.length > 1) {
+        badges.push(`<span class="sample-badge sample-badge-pages">${sample.pages.length}S</span>`);
+    }
+
+    return badges.join('');
 }
 
 /**
- * Initialize samples dropdown menu
+ * Generate tooltip HTML for sample details
  */
-async function initSamplesMenu() {
-    const samplesBtn = document.getElementById('btnSamples');
-    const samplesMenu = document.getElementById('samplesMenu');
+function generateSampleTooltip(sample) {
+    const details = [];
 
-    if (!samplesBtn || !samplesMenu) return;
-
-    // Load samples manifest
-    const samples = await samplesService.getSamples();
-
-    if (samples.length === 0) {
-        samplesBtn.style.display = 'none';
-        return;
+    if (sample.language) {
+        details.push(`<dt>Sprache</dt><dd>${escapeHtml(sample.language)}</dd>`);
+    }
+    if (sample.script) {
+        details.push(`<dt>Schrift</dt><dd>${escapeHtml(sample.script)}</dd>`);
     }
 
-    // Populate menu
-    samplesMenu.innerHTML = samples.map(sample => `
-        <button class="samples-menu-item" data-sample-id="${escapeHtml(sample.id)}">
-            <span class="sample-name">${escapeHtml(sample.name)}</span>
-            <span class="sample-desc">${escapeHtml(sample.description)}</span>
-        </button>
-    `).join('');
+    // Type label
+    const typeLabels = {
+        print: 'Druck',
+        manuscript: 'Handschrift',
+        letter: 'Brief',
+        card: 'Karteikarte'
+    };
+    if (sample.type && typeLabels[sample.type]) {
+        details.push(`<dt>Typ</dt><dd>${typeLabels[sample.type]}</dd>`);
+    }
 
-    // Toggle menu
-    samplesBtn.addEventListener('click', (e) => {
+    // Source
+    if (sample.iiifManifest) {
+        details.push('<dt>Quelle</dt><dd>IIIF (extern)</dd>');
+    } else if (sample.pageXml || (sample.pages && sample.pages.some(p => p.pageXml))) {
+        details.push('<dt>Daten</dt><dd>Mit Transkription</dd>');
+    } else {
+        details.push('<dt>Daten</dt><dd>Nur Bild</dd>');
+    }
+
+    return `<dl class="sample-info-tooltip">${details.join('')}</dl>`;
+}
+
+/**
+ * Initialize upload dropdown menu with all load options
+ */
+async function initSamplesMenu() {
+    const uploadBtn = document.getElementById('btnUpload');
+    const uploadMenu = document.getElementById('uploadMenu');
+    const uploadDropdown = uploadBtn?.closest('.upload-dropdown');
+    const samplesBtn = document.getElementById('btnSamples');
+    const samplesMenu = document.getElementById('samplesMenu');
+    const btnIIIF = document.getElementById('btnIIIF');
+    const btnUploadFile = document.getElementById('btnUploadFile');
+    const btnUploadPageXML = document.getElementById('btnUploadPageXML');
+
+    if (!uploadBtn || !uploadMenu) return;
+
+    // Load samples manifest for submenu
+    const samples = await samplesService.getSamples();
+
+    // Populate samples submenu with badges
+    if (samplesMenu && samples.length > 0) {
+        samplesMenu.innerHTML = samples.map(sample => {
+            const badges = generateSampleBadges(sample);
+            const tooltip = generateSampleTooltip(sample);
+
+            return `
+            <button class="samples-menu-item" data-sample-id="${escapeHtml(sample.id)}">
+                <div class="sample-header">
+                    <span class="sample-name">${escapeHtml(sample.name)}</span>
+                    <span class="sample-badges">
+                        ${badges}
+                        <span class="sample-info">i${tooltip}</span>
+                    </span>
+                </div>
+                <span class="sample-desc">${escapeHtml(sample.description)}</span>
+            </button>
+        `}).join('');
+    }
+
+    // Toggle upload menu
+    uploadBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        samplesMenu.classList.toggle('visible');
+        uploadMenu.classList.toggle('visible');
+        uploadDropdown?.classList.toggle('open');
+        // Close samples menu when opening upload menu
+        samplesMenu?.classList.remove('visible');
     });
 
-    // Close menu on outside click
+    // Close menus on outside click
     document.addEventListener('click', () => {
-        samplesMenu.classList.remove('visible');
+        uploadMenu.classList.remove('visible');
+        uploadDropdown?.classList.remove('open');
+        samplesMenu?.classList.remove('visible');
     });
 
-    // Handle sample selection
-    samplesMenu.addEventListener('click', async (e) => {
+    // Upload Image button - trigger file input for images
+    btnUploadFile?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        uploadMenu.classList.remove('visible');
+        uploadDropdown?.classList.remove('open');
+        uploadManager.openFilePicker('image');
+    });
+
+    // Upload PAGE-XML button - trigger file input for XML
+    btnUploadPageXML?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        uploadMenu.classList.remove('visible');
+        uploadDropdown?.classList.remove('open');
+        uploadManager.openFilePicker('xml');
+    });
+
+    // Demo button - show samples submenu
+    samplesBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Keep upload dropdown open state but show samples menu instead
+        uploadMenu.classList.remove('visible');
+        samplesMenu?.classList.add('visible');
+    });
+
+    // IIIF button - open IIIF dialog
+    btnIIIF?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        uploadMenu.classList.remove('visible');
+        uploadDropdown?.classList.remove('open');
+        dialogManager.showDialog('iiifDialog');
+    });
+
+    // Prevent samples menu from closing when clicking inside it
+    samplesMenu?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+
         const item = e.target.closest('.samples-menu-item');
         if (!item) return;
 
         const sampleId = item.dataset.sampleId;
         samplesMenu.classList.remove('visible');
+        uploadDropdown?.classList.remove('open');
 
         try {
             dialogManager.showToast('Loading sample...', 'info');

@@ -3267,4 +3267,85 @@ knowledge/
 
 ---
 
+## 2026-02-04 | Session 25: UI Improvements - Upload Dropdown & Model Indicator
+
+**Participants:** User, Claude Opus 4.5
+
+### Part 1: Upload Dropdown Redesign
+
+**Task:** Reorganize file loading options into a unified Upload dropdown menu.
+
+**Implementation:**
+- Created dropdown menu combining all load options:
+  - "Bild hochladen" (Upload Image)
+  - "PAGE-XML importieren" (Import PAGE-XML)
+  - "Demo laden" (Load Demo) - opens samples submenu
+  - "IIIF laden" (Load IIIF) - opens IIIF dialog
+- Added samples submenu with badge system
+- Removed separate upload button, consolidated all options
+
+**Files Changed:**
+- [index.html](../docs/index.html) - Upload dropdown structure
+- [components.css](../docs/css/components.css) - Dropdown and badge styles
+- [main.js](../docs/js/main.js) - Menu initialization and event handling
+
+### Part 2: Demo Sample Badge System
+
+**Task:** Add visual badges to demo samples showing document characteristics.
+
+**Badge Types:**
+| Badge | Color | Meaning |
+|-------|-------|---------|
+| OCR | Blue | Printed text (Flora Lichenes, etc.) |
+| HTR | Orange | Handwritten (manuscripts, letters, cards) |
+| IIIF | Green | External IIIF source |
+| XML | Purple | Has PAGE-XML transcription |
+| nS | Gray | Multi-page (n = page count) |
+
+**Implementation:**
+- `generateSampleBadges()` - creates HTML for badges based on sample properties
+- `generateSampleTooltip()` - creates info tooltip with sample details
+- Tooltip shows: language, script type, document type, data source
+- CSS with glass morphism and hover effects
+
+### Part 3: Model Indicator
+
+**Task:** Show current LLM model next to Transcribe button.
+
+**Implementation:**
+- Added clickable model indicator in Transcription panel header
+- Provider-specific color coding:
+  - Ollama: Green (#10b981)
+  - Gemini: Blue (#3b82f6)
+  - OpenAI: Purple (#8b5cf6)
+  - Anthropic: Orange (#f59e0b)
+- Click opens LLM configuration dialog
+- Display name shortening (e.g., "gemini-3-flash-preview" -> "Gemini Flash")
+- Local models show "(lokal)" suffix
+
+**Files Changed:**
+- [index.html](../docs/index.html) - Model indicator HTML
+- [editor.css](../docs/css/editor.css) - Model indicator styles
+- [dialogs.js](../docs/js/components/dialogs.js) - `updateModelIndicator()` function, click handler
+
+### Part 4: Header Cleanup
+
+**Task:** Remove redundant API Keys button since model indicator now opens config.
+
+**Result:**
+- Removed API Keys button (key icon) from header
+- Model indicator serves as entry point to LLM configuration
+- Cleaner header with fewer buttons
+
+### Bug Fixes
+
+| Issue | Fix |
+|-------|-----|
+| "Modelle laden" button not responding | Changed `select()` to `getById()` for button selector |
+| Upload button triggering file picker directly | Removed conflicting event handler |
+| Dropdown menu cut off on right | Changed `left: 0` to `right: 0` |
+| Demo selection not loading | Added `e.stopPropagation()` to samples menu handler |
+
+---
+
 *Format: YYYY-MM-DD | Session N: Title*

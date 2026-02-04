@@ -52,9 +52,9 @@ coOCR/HTR provides:
 
 **[Try coOCR/HTR](http://dhcraft.org/co-ocr-htr)**
 
-1. Click "Load Demo" to try with sample data
-2. Or click the key icon to configure your own API key
-3. Upload a document image or PAGE-XML file
+1. Click "Upload" > "Demo laden" to try with sample data
+2. Or click the model indicator (e.g., "Gemini Flash") to configure your LLM
+3. Upload a document image or PAGE-XML file via the Upload menu
 4. Click "Transcribe" to run LLM transcription
 5. Review validation results in the right panel
 6. Export your results
@@ -165,10 +165,11 @@ npm test
 - Multi-page navigation, IIIF support, Help & About pages
 
 **Phase 4: Polish & Release** - Complete
-- 125 unit tests passing (export, validation, llm, page-xml)
-- Simplified API configuration dialog
+- 276 unit tests passing (state, storage, export, validation, llm, page-xml, textFormatting)
+- Simplified API configuration dialog with clickable model indicator
 - Document context for enhanced transcription
 - Undo/Redo, Diff view, Line numbers
+- Upload dropdown with demo badges (OCR/HTR, IIIF, XML, page count)
 
 See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
 

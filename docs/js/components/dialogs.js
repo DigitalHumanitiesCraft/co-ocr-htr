@@ -142,10 +142,10 @@ class DialogManager {
      * Bind header button click events
      */
     bindHeaderButtons() {
-        // API Keys button
-        const apiKeysBtn = select('[title="API Keys"]');
-        if (apiKeysBtn) {
-            apiKeysBtn.addEventListener('click', () => this.openDialog('apiKey'));
+        // Model indicator click - opens LLM config dialog
+        const modelIndicator = getById('modelIndicator');
+        if (modelIndicator) {
+            modelIndicator.addEventListener('click', () => this.openDialog('apiKey'));
         }
 
         // Export button
@@ -260,7 +260,7 @@ class DialogManager {
         }
 
         // Ollama refresh models
-        const refreshBtn = select('#ollamaRefreshModels', dialog);
+        const refreshBtn = getById('ollamaRefreshModels');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.refreshOllamaModels());
         }
@@ -879,6 +879,10 @@ class DialogManager {
 
         // NOTE: API keys are intentionally NOT loaded from storage.
         // Users must re-enter keys each session for security.
+
+        // Update model indicator with saved model
+        const provider = this.getProviderFromModel(savedModel);
+        this.updateModelIndicator(savedModel, provider);
     }
 
     /**
@@ -925,8 +929,56 @@ class DialogManager {
         }
 
         storage.saveSettings(settings);
+
+        // Update model indicator in UI
+        this.updateModelIndicator(model, provider);
+
         this.showToast('Konfiguration gespeichert (API-Key nur fuer diese Sitzung)', 'success');
         this.closeDialog('apiKey');
+    }
+
+    /**
+     * Update the model indicator in the editor header
+     */
+    updateModelIndicator(model, provider) {
+        const indicator = getById('modelIndicator');
+        const textEl = getById('modelIndicatorText');
+        if (!indicator || !textEl) return;
+
+        // Set provider for styling
+        indicator.dataset.provider = provider;
+
+        // Create a short display name
+        let displayName = model;
+
+        // Shorten common model names
+        if (model.includes('gemini-3-flash')) {
+            displayName = 'Gemini Flash';
+        } else if (model.includes('gemini-3-pro')) {
+            displayName = 'Gemini Pro';
+        } else if (model.includes('gpt-5')) {
+            displayName = 'GPT-5';
+        } else if (model.includes('gpt-4')) {
+            displayName = 'GPT-4o';
+        } else if (model.includes('claude-4')) {
+            displayName = 'Claude 4';
+        } else if (model.includes('claude-3')) {
+            displayName = 'Claude 3.5';
+        } else if (model.includes('deepseek-ocr')) {
+            displayName = 'DeepSeek OCR';
+        } else if (model.includes('llava')) {
+            displayName = 'LLaVA';
+        } else if (model.startsWith('ollama:')) {
+            displayName = model.substring(7);
+        }
+
+        // Add provider prefix for local models
+        if (provider === 'ollama' && !displayName.includes('lokal')) {
+            displayName += ' (lokal)';
+        }
+
+        textEl.textContent = displayName;
+        indicator.title = `Model: ${model} (${provider})`;
     }
 
 

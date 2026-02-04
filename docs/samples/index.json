@@ -1,6 +1,15 @@
 {
   "samples": [
     {
+      "id": "flechte-flora",
+      "name": "Flora Lichenes (19. Jh.)",
+      "description": "Botanischer Fachtext über Flechten - Fraktur/Antiqua gemischt (OCR Demo)",
+      "language": "Deutsch/Latein",
+      "script": "Fraktur",
+      "type": "print",
+      "image": "flechte/page_001.jpg"
+    },
+    {
       "id": "raitbuch-docta",
       "name": "Raitbuch (15. Jh.) - 4 Seiten",
       "description": "OÖKAM Raitbuch 2, Kurrentschrift - DoCTA Projekt (HTR Demo)",
