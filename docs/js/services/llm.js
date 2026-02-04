@@ -146,10 +146,10 @@ const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-    defaultModel: 'gemini-3-flash',
+    defaultModel: 'gemini-3-flash-preview',
     models: [
-      { id: 'gemini-3-flash', name: 'Gemini 3 Flash (schnell)', recommended: true },
-      { id: 'gemini-3-pro', name: 'Gemini 3 Pro (beste Qualität)' },
+      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (schnell)', recommended: true },
+      { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (beste Qualität)' },
       { id: 'custom', name: 'Eigenes Modell...', hint: 'Beliebige Gemini-Modell-ID' }
     ],
     authType: 'query',
