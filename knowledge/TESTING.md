@@ -27,10 +27,9 @@ npx vitest run  # CI-Modus
 | `llm.js` | 27 | LLM-Provider-Abstraktion, API-Calls |
 | `page-xml.js` | 26 | PAGE-XML-Parser |
 | `storage.js` | 23 | LocalStorage-Wrapper |
-| `dom.js` | 28 | DOM-Utilities |
 | `textFormatting.js` | 50 | Marker, HTML-Escaping, Konfidenz |
 
-**Gesamt: 304 Tests**
+**Gesamt: 276 Tests**
 
 ### Nicht getestet (UI-Komponenten)
 
@@ -49,7 +48,6 @@ npx vitest run  # CI-Modus
 
 1. **Pure Functions** - Keine Seiteneffekte, deterministisch
    - `textFormatting.js`: `escapeHtml()`, `applyMarkers()`, etc.
-   - `dom.js`: Utility-Funktionen
 
 2. **Business-Logik** - Kernfunktionalität
    - `state.js`: State-Transitions, Event-Dispatching
@@ -73,6 +71,10 @@ npx vitest run  # CI-Modus
 3. **Visuelle Aspekte** - CSS, Layout
    - Keine visuelle Regression-Tests
 
+4. **Triviale Wrapper** - DOM-Utilities wie `getById()`, `show()`, `hide()`
+   - Testen nur Browser-APIs, nicht eigene Logik
+   - Kein Mehrwert gegenüber manuellem Testen
+
 ## Testmuster
 
 ### Service-Tests
@@ -88,31 +90,6 @@ describe('LLMService', () => {
 
   it('should return default model', () => {
     expect(service.getCurrentModel()).toBe('gemini-3-flash-preview');
-  });
-});
-```
-
-### DOM-Utility-Tests
-
-```javascript
-// Beispiel: dom.test.js
-describe('toggleVisibility', () => {
-  let container;
-
-  beforeEach(() => {
-    container = document.createElement('div');
-    document.body.appendChild(container);
-  });
-
-  afterEach(() => {
-    container.remove();
-  });
-
-  it('should toggle hidden attribute', () => {
-    const el = document.createElement('div');
-    container.appendChild(el);
-    toggleVisibility(el);
-    expect(el.hidden).toBe(true);
   });
 });
 ```
