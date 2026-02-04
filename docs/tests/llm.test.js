@@ -65,10 +65,12 @@ describe('LLMService', () => {
   });
 
   describe('API Key Handling', () => {
-    it('should check if API key exists', () => {
-      storage.hasApiKey.mockReturnValue(true);
+    it('should check if API key exists in memory', () => {
+      // API keys are now stored in memory only, not in storage
+      expect(service.hasApiKey()).toBe(false); // No key set yet
+
+      service.setApiKey('gemini', 'test-key');
       expect(service.hasApiKey()).toBe(true);
-      expect(storage.hasApiKey).toHaveBeenCalledWith('gemini');
     });
 
     it('should always return true for ollama', () => {
@@ -77,7 +79,8 @@ describe('LLMService', () => {
     });
 
     it('should list available providers with status', () => {
-      storage.hasApiKey.mockImplementation((provider) => provider === 'gemini');
+      // Set API key for gemini in memory
+      service.setApiKey('gemini', 'test-key');
 
       const providers = service.getAvailableProviders();
 
@@ -226,7 +229,8 @@ describe('LLMService', () => {
 
   describe('Transcription Validation', () => {
     it('should throw error if no API key configured', async () => {
-      storage.loadApiKey.mockReturnValue(null);
+      // API keys are now in memory only - ensure none is set
+      service.setApiKey('gemini', ''); // Clear any key
 
       await expect(service.transcribe('base64image'))
         .rejects.toThrow('No API key configured');
