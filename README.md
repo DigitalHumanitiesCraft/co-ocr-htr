@@ -112,7 +112,7 @@ docs/
 | Provider | Models | Vision Support |
 |----------|--------|----------------|
 | Gemini | gemini-3-flash-preview, gemini-3-pro-preview | Yes |
-| OpenAI | gpt-4o, gpt-4o-mini | Yes |
+| OpenAI | gpt-5.2, gpt-5.2-mini | Yes |
 | Anthropic | claude-haiku-4, claude-sonnet-4-5, claude-opus-4-5 | Yes |
 | Ollama (local) | deepseek-ocr (recommended), llava, llama3.2-vision | Yes |
 
