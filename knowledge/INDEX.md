@@ -38,6 +38,7 @@ knowledge/
 | [DATA-SCHEMA](DATA-SCHEMA.md) | What data? | Development | ARCHITECTURE |
 | [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | Project roadmap | Development | ARCHITECTURE |
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
+| [SECURITY](SECURITY.md) | How is it secured? | Everyone | ARCHITECTURE |
 
 ## Core Concepts (Quick Reference)
 
