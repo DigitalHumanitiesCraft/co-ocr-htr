@@ -730,6 +730,17 @@ class ValidationPanel {
             </div>
         `;
 
+        // Show fallback notice if a different model was used for validation
+        if (llmResult.fallbackUsed) {
+            html += `
+                <div class="validation-item fallback-notice">
+                    <span class="status-dot status-info"></span>
+                    <span class="item-label">Fallback</span>
+                    <span class="item-value text-xs">${llmResult.fallbackUsed.name}</span>
+                </div>
+            `;
+        }
+
         // Add issues with type badges
         if (llmResult.issues && llmResult.issues.length > 0) {
             html += llmResult.issues.map(issue => this.renderIssueItem(issue)).join('');

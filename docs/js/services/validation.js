@@ -311,13 +311,20 @@ class ValidationEngine {
     async validateWithLLM(text, customPrompt = '') {
         try {
             const result = await llmService.validate(text, { customPrompt });
-            return {
+            const validationResult = {
                 confidence: result.confidence,
                 reasoning: result.reasoning,
                 issues: result.issues || [],
                 summary: result.summary || result.reasoning,
                 raw: result.raw
             };
+
+            // Pass through fallback info if validation used a different model
+            if (result.fallbackUsed) {
+                validationResult.fallbackUsed = result.fallbackUsed;
+            }
+
+            return validationResult;
         } catch (error) {
             console.error('LLM validation error:', error);
             return {

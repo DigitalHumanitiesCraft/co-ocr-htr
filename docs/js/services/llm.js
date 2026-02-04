@@ -310,6 +310,52 @@ class LLMService {
     }));
   }
 
+  /**
+   * Check if current model is OCR-only (cannot do text validation)
+   * OCR-only models like DeepSeek-OCR are optimized for image-to-text
+   * but cannot analyze/validate text without an image
+   */
+  isOcrOnlyModel() {
+    const model = this.getCurrentModel();
+    // DeepSeek-OCR is specifically an OCR model, not a general LLM
+    return model.includes('deepseek-ocr');
+  }
+
+  /**
+   * Find a fallback provider for validation when using OCR-only models
+   * Returns provider info or null if none available
+   */
+  getValidationFallback() {
+    // Priority: configured cloud providers with API keys, then other Ollama models
+    const cloudProviders = ['gemini', 'openai', 'anthropic'];
+
+    for (const providerId of cloudProviders) {
+      const provider = this.providers[providerId];
+      if (provider.apiKey) {
+        return {
+          provider: providerId,
+          model: provider.activeModel || provider.defaultModel,
+          name: provider.name
+        };
+      }
+    }
+
+    // Check for other Ollama models that can do text analysis
+    // (llama, mistral, etc. - anything that's not OCR-specific)
+    if (this.activeProvider === 'ollama') {
+      const ollamaTextModels = ['llama3.2', 'llama3', 'mistral', 'phi3', 'qwen2'];
+      // We can't check if these are installed, but we can suggest them
+      return {
+        provider: 'ollama',
+        model: 'llama3.2',
+        name: 'Ollama (llama3.2)',
+        suggested: true // Indicates this model might not be installed
+      };
+    }
+
+    return null;
+  }
+
   // ============================================
   // Transcription
   // ============================================
@@ -388,6 +434,21 @@ class LLMService {
     }
 
     const { customPrompt = '' } = options;
+
+    // Check if current model is OCR-only and needs fallback
+    if (this.isOcrOnlyModel()) {
+      const fallback = this.getValidationFallback();
+      if (fallback) {
+        console.log(`[LLM] validate() OCR-only model detected, using fallback: ${fallback.name}`);
+        return this._validateWithFallback(text, customPrompt, fallback);
+      } else {
+        throw new Error(
+          `Das aktuelle Modell (${this.getCurrentModel()}) ist ein reines OCR-Modell und kann keine Textvalidierung durchführen. ` +
+          `Bitte konfigurieren Sie einen Cloud-Provider (Gemini, OpenAI, Anthropic) oder installieren Sie ein Sprachmodell wie llama3.2 in Ollama.`
+        );
+      }
+    }
+
     const config = this.getProviderConfig();
     console.log(`[LLM] validate() provider=${this.activeProvider} customPrompt=${!!customPrompt}`);
 
@@ -429,6 +490,54 @@ class LLMService {
       return result;
     } catch (error) {
       console.error(`[LLM] validate() FAILED:`, error.message);
+      throw this._handleError(error);
+    }
+  }
+
+  /**
+   * Validate using a fallback provider (when primary is OCR-only)
+   * @private
+   */
+  async _validateWithFallback(text, customPrompt, fallback) {
+    const prompt = buildValidationPrompt(text, customPrompt);
+    const { provider, model } = fallback;
+
+    console.log(`[LLM] _validateWithFallback() provider=${provider} model=${model}`);
+
+    try {
+      let response;
+      switch (provider) {
+        case 'gemini': {
+          const apiKey = this.providers.gemini.apiKey;
+          response = await this._callGemini(apiKey, model, prompt, null, {
+            useThinking: true,
+            thinkingLevel: 'high'
+          });
+          break;
+        }
+        case 'openai': {
+          const apiKey = this.providers.openai.apiKey;
+          response = await this._callOpenAI(apiKey, model, prompt);
+          break;
+        }
+        case 'anthropic': {
+          const apiKey = this.providers.anthropic.apiKey;
+          response = await this._callAnthropic(apiKey, model, prompt);
+          break;
+        }
+        case 'ollama':
+          response = await this._callOllama(model, prompt);
+          break;
+        default:
+          throw new Error(`Fallback provider ${provider} not implemented`);
+      }
+
+      const result = this._parseValidationResponse(response);
+      result.fallbackUsed = { provider, model, name: fallback.name };
+      console.log(`[LLM] _validateWithFallback() OK, confidence=${result.confidence}`);
+      return result;
+    } catch (error) {
+      console.error(`[LLM] _validateWithFallback() FAILED:`, error.message);
       throw this._handleError(error);
     }
   }

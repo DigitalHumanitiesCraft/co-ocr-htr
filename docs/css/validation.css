@@ -365,6 +365,20 @@
 .status-dot.status-error { background: var(--problematic); }
 .status-dot.status-info { background: var(--accent-primary); }
 
+/* Fallback notice for OCR-only models */
+.validation-item.fallback-notice {
+  background: rgba(var(--accent-primary-rgb, 59, 130, 246), 0.08);
+  margin: var(--space-1) calc(-1 * var(--space-2));
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border-bottom: none;
+}
+
+.validation-item.fallback-notice .item-value {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
 .item-label {
   color: var(--text-secondary);
   min-width: 90px;
