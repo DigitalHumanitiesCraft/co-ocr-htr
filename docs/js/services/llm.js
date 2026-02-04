@@ -1,9 +1,10 @@
 /**
  * LLM Service
  * Unified abstraction for multiple LLM providers with vision capabilities
+ *
+ * SECURITY NOTE: API keys are stored in memory only and are NOT persisted
+ * to localStorage. Users must re-enter their keys each browser session.
  */
-
-import { storage } from './storage.js';
 
 // ============================================
 // Prompts
@@ -280,11 +281,11 @@ class LLMService {
   }
 
   /**
-   * Check if API key is configured for current provider
+   * Check if API key is configured for current provider (memory only)
    */
   hasApiKey() {
     if (this.activeProvider === 'ollama') return true;
-    return storage.hasApiKey(this.activeProvider);
+    return !!this.providers[this.activeProvider]?.apiKey;
   }
 
   /**
@@ -294,7 +295,7 @@ class LLMService {
     return Object.entries(this.providers).map(([id, config]) => ({
       id,
       name: config.name,
-      hasKey: id === 'ollama' || storage.hasApiKey(id),
+      hasKey: id === 'ollama' || !!config.apiKey,
       supportsVision: config.supportsVision,
       models: config.models,
       isActive: id === this.activeProvider
@@ -319,9 +320,10 @@ class LLMService {
       throw new Error(`Provider ${config.name} does not support vision/image input`);
     }
 
-    const apiKey = storage.loadApiKey(this.activeProvider);
+    // Get API key from memory (not persisted for security)
+    const apiKey = this.providers[this.activeProvider]?.apiKey;
     if (!apiKey && config.authType !== 'none') {
-      throw new Error(`No API key configured for ${config.name}`);
+      throw new Error(`No API key configured for ${config.name}. Please enter your API key in the LLM configuration dialog.`);
     }
 
     // Build prompt with optional context from expert
@@ -380,10 +382,12 @@ class LLMService {
     const { customPrompt = '' } = options;
     const config = this.getProviderConfig();
     console.log(`[LLM] validate() provider=${this.activeProvider} customPrompt=${!!customPrompt}`);
-    const apiKey = storage.loadApiKey(this.activeProvider);
+
+    // Get API key from memory (not persisted for security)
+    const apiKey = this.providers[this.activeProvider]?.apiKey;
 
     if (!apiKey && config.authType !== 'none') {
-      throw new Error(`No API key configured for ${config.name}`);
+      throw new Error(`No API key configured for ${config.name}. Please enter your API key in the LLM configuration dialog.`);
     }
 
     const prompt = buildValidationPrompt(text, customPrompt);

@@ -15,24 +15,6 @@ const DEFAULT_SETTINGS = {
 };
 
 /**
- * Simple Base64 obfuscation for API keys
- * Note: This is NOT encryption, just basic obfuscation to prevent casual viewing
- */
-function obfuscate(value) {
-  if (!value) return null;
-  return btoa(encodeURIComponent(value));
-}
-
-function deobfuscate(value) {
-  if (!value) return null;
-  try {
-    return decodeURIComponent(atob(value));
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Storage Service class
  */
 class StorageService {
@@ -78,76 +60,58 @@ class StorageService {
   }
 
   // ============================================
-  // API Keys
+  // API Keys - NOT PERSISTED (memory-only for security)
   // ============================================
+  // API keys are intentionally NOT stored in localStorage.
+  // Users must re-enter their keys each session.
+  // This prevents accidental exposure of sensitive credentials.
 
   /**
-   * Save API key for a provider
-   * @param {string} provider - Provider name (gemini, openai, anthropic, deepseek, ollama)
-   * @param {string} key - API key (or URL for Ollama)
+   * @deprecated API keys are no longer persisted. Use llmService.setApiKey() directly.
    */
-  saveApiKey(provider, key) {
-    const keys = this._loadApiKeys();
-    keys[provider] = obfuscate(key);
-    localStorage.setItem(`${this.prefix}apikeys`, JSON.stringify(keys));
+  saveApiKey() {
+    console.warn('[Storage] API keys are no longer persisted for security reasons.');
+    // No-op: keys are stored in memory via llmService only
   }
 
   /**
-   * Load API key for a provider
-   * @param {string} provider - Provider name
-   * @returns {string|null} API key or null if not set
+   * @deprecated API keys are no longer persisted.
+   * @returns {null} Always returns null
    */
-  loadApiKey(provider) {
-    const keys = this._loadApiKeys();
-    return deobfuscate(keys[provider]);
+  loadApiKey() {
+    // Always return null - keys must be entered each session
+    return null;
   }
 
   /**
-   * Load all API keys (deobfuscated)
-   * @returns {object} Object with provider names as keys
+   * @deprecated API keys are no longer persisted.
+   * @returns {object} Always returns empty object
    */
   loadAllApiKeys() {
-    const keys = this._loadApiKeys();
-    const result = {};
-    for (const [provider, value] of Object.entries(keys)) {
-      result[provider] = deobfuscate(value);
-    }
-    return result;
+    return {};
   }
 
   /**
-   * Clear API key for a provider
-   * @param {string} provider - Provider name
+   * @deprecated API keys are no longer persisted.
    */
-  clearApiKey(provider) {
-    const keys = this._loadApiKeys();
-    delete keys[provider];
-    localStorage.setItem(`${this.prefix}apikeys`, JSON.stringify(keys));
+  clearApiKey() {
+    // No-op
   }
 
   /**
-   * Clear all API keys
+   * @deprecated API keys are no longer persisted.
    */
   clearAllApiKeys() {
+    // Clean up any legacy stored keys
     localStorage.removeItem(`${this.prefix}apikeys`);
   }
 
   /**
-   * Check if an API key is configured for a provider
-   * @param {string} provider - Provider name
-   * @returns {boolean}
+   * @deprecated API keys are no longer persisted.
+   * @returns {boolean} Always returns false
    */
-  hasApiKey(provider) {
-    return !!this.loadApiKey(provider);
-  }
-
-  _loadApiKeys() {
-    try {
-      const stored = localStorage.getItem(`${this.prefix}apikeys`);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
+  hasApiKey() {
+    return false;
   }
 
   // ============================================
