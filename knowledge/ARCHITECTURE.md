@@ -150,14 +150,38 @@ Abstraction layer for multiple LLM providers with unified API.
 - `setApiKey(key)` configures authentication
 - `transcribe(image, options)` sends image to VLM for OCR/HTR
 - `validate(text, options)` requests LLM-Judge analysis (options: `{ customPrompt }`)
+- `isOcrOnlyModel()` detects OCR-specific models (e.g., DeepSeek-OCR)
+- `getValidationFallback()` finds alternative provider for validation
 
 **Supported Providers:**
 | Provider | Endpoint | Default Model | Vision |
 |----------|----------|---------------|--------|
 | Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes |
-| OpenAI | api.openai.com | gpt-4o | Yes |
+| OpenAI | api.openai.com | gpt-5.2 | Yes |
 | Anthropic | api.anthropic.com | claude-sonnet-4-5 | Yes |
 | Ollama | localhost:11434 | deepseek-ocr | Yes |
+
+**Validation Fallback (OCR-only Models):**
+
+OCR-only models like DeepSeek-OCR cannot perform text validation (they require images). When such a model is active, validation automatically falls back to an alternative provider:
+
+```
+User selects: DeepSeek-OCR (Ollama)
+                    │
+    ┌───────────────┴───────────────┐
+    │                               │
+Transcription                   Validation
+    │                               │
+DeepSeek-OCR                   Fallback to:
+(local, /api/chat)             1. Cloud provider with API key
+                               2. Other Ollama model (llama3.2)
+```
+
+**Ollama Vision Models:**
+
+Vision models require `/api/chat` endpoint (not `/api/generate`) and work best with simple prompts:
+- DeepSeek-OCR: "Extract the text in the image."
+- LLaVA, llama3.2-vision: Standard vision prompts
 
 ### Document Viewer (OpenSeadragon)
 
