@@ -167,7 +167,64 @@ Traceability of all steps: model, corrections, timestamp.
 
 **Why this matters:** The framing of human-AI collaboration affects how users perceive their role. "Integrating experts into AI pipelines" positions the human as a component of the system. "Expert-led workflow with AI assistance" positions the human as the decision-maker using AI as a tool.
 
-**Open research question:** The terminology around human-AI collaboration in HCI (Human-Computer Interaction) literature varies. Further exploration of frameworks like "human-centered AI", "mixed-initiative systems", and "collaborative intelligence" could inform better framing.
+### The Functional Triad: A Taxonomy
+
+BJ Fogg's "Functional Triad" from Persuasive Technology (Captology) provides a useful framework for understanding computer roles. With some adaptation, this maps onto established Human-Computer Interaction paradigms:
+
+| Fogg's Triad | Computer as... | HCI Paradigm | Established Acronyms |
+|--------------|----------------|--------------|----------------------|
+| **Tool** | Amplifier of human capability | Computer-**Aided** | CAD, CAM, CAT, CALL |
+| **Medium** | Facilitator of human collaboration | Computer-**Supported** | CSCW, CSCL |
+| **Social Actor** | Autonomous agent | Computer-**Generated** | GenAI, CGI |
+
+**Paradigm definitions:**
+
+| Paradigm | Human-Computer Relationship | Examples |
+|----------|----------------------------|----------|
+| Computer-Aided/Assisted (CA*) | Human steers, computer assists | CAD (Design), CAM (Manufacturing), CAT (Translation), CALL (Language Learning) |
+| Computer-Supported (CS*) | Human collaborates, computer mediates | CSCW (Cooperative Work), CSCL (Collaborative Learning) |
+| Computer-Generated (CG/GenAI) | Computer generates, human curates | GenAI (text, images), CGI (visual effects) |
+
+### coOCR/HTR: Positioning in the Triad
+
+coOCR/HTR deliberately positions itself in the **Computer-Aided** paradigm while using GenAI technology:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              Computer-Generated (GenAI)                      │
+│              "Computer produces content"                     │
+│                           │                                  │
+│                           ▼                                  │
+│    ┌─────────────────────────────────────────────┐          │
+│    │         coOCR/HTR: Hybrid Approach          │          │
+│    │                                             │          │
+│    │   GenAI produces draft (transcription) ──┐  │          │
+│    │                                          │  │          │
+│    │   Expert validates, corrects, decides ◄──┘  │          │
+│    │              │                              │          │
+│    │              ▼                              │          │
+│    │   Final result = human responsibility      │          │
+│    └─────────────────────────────────────────────┘          │
+│                           │                                  │
+│                           ▼                                  │
+│              Computer-Aided (Tool)                           │
+│              "Human steers"                                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key insight:** We deliberately "downgrade" GenAI to the Tool role - not because it is less capable, but because the human bears responsibility for the result. The AI generates, but the expert authors.
+
+### Design Implications
+
+| Principle | Implementation in coOCR/HTR |
+|-----------|----------------------------|
+| Human as author | Expert corrects and approves every transcription |
+| AI as tool | LLM provides draft, validation hints - never final output |
+| Transparency | Clear distinction between AI-generated and human-edited |
+| Control | Abort, undo, override at every step |
+| Accountability | Export includes provenance (model, corrections, timestamp) |
+
+**Reference:** Fogg, B.J. (2003). *Persuasive Technology: Using Computers to Change What We Think and Do*. Chapter 2: The Functional Triad.
 
 ---
 
