@@ -9,107 +9,107 @@ status: active
 
 ## Mission Statement
 
-**coOCR/HTR ist ein browserbasiertes Werkzeug, das Fachexpert*innen dabei unterstuetzt, OCR/HTR-Ergebnisse zu verifizieren, validieren und korrigieren.**
+**coOCR/HTR is a browser-based tool that helps domain experts verify, validate, and correct OCR/HTR results.**
 
-## Kernproblem
+## Core Problem
 
-Standard-OCR/HTR-Pipelines liefern bei historischen Dokumenten oft fehlerhafte Ergebnisse:
-- Ungewoehnliche Schriftformen (Kurrent, Fraktur, historische Handschriften)
-- Komplexe Layouts (Tabellen, Marginalia, Streichungen)
-- Domänenspezifisches Vokabular (Fachtermini, historische Begriffe)
+Standard OCR/HTR pipelines often produce erroneous results on historical documents:
+- Unusual script forms (Kurrent, Fraktur, historical handwriting)
+- Complex layouts (tables, marginalia, strikethroughs)
+- Domain-specific vocabulary (technical terms, historical concepts)
 
-Diese Fehler erfordern **menschliche Expertise** zur Korrektur - aber die vorhandenen Tools sind oft:
-- Komplex und schwer zu bedienen
-- Nicht auf den Korrektur-Workflow optimiert
-- Ohne KI-Unterstuetzung fuer schwierige Stellen
+These errors require **human expertise** to correct - but existing tools are often:
+- Complex and difficult to use
+- Not optimized for the correction workflow
+- Without AI support for difficult passages
 
-## Loesung
+## Solution
 
-coOCR/HTR positioniert sich als **Editor-in-the-Loop Werkzeug**:
+coOCR/HTR positions itself as an **Editor-in-the-Loop tool**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        WORKFLOW                                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│   [Bild/PAGE-XML]  ──►  [coOCR/HTR]  ──►  [Korrektes OCR/HTR]   │
+│   [Image/PAGE-XML]  ──►  [coOCR/HTR]  ──►  [Correct OCR/HTR]    │
 │                              │                                   │
 │                              ▼                                   │
 │                     ┌─────────────────┐                         │
-│                     │ Expert*in       │                         │
-│                     │ - verifiziert   │                         │
-│                     │ - validiert     │                         │
-│                     │ - korrigiert    │                         │
+│                     │ Expert          │                         │
+│                     │ - verifies      │                         │
+│                     │ - validates     │                         │
+│                     │ - corrects      │                         │
 │                     └─────────────────┘                         │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Zwei Eingabe-Modi
+### Two Input Modes
 
-| Modus | Input | Anwendungsfall |
-|-------|-------|----------------|
-| **OCR erzeugen** | Bild hochladen | Dokument hat noch keine Transkription |
-| **OCR korrigieren** | PAGE-XML hochladen | Transkription existiert (z.B. aus Transkribus) |
+| Mode | Input | Use Case |
+|------|-------|----------|
+| **Generate OCR** | Upload image | Document has no transcription yet |
+| **Correct OCR** | Upload PAGE-XML | Transcription exists (e.g., from Transkribus) |
 
-### Unterstuetzung durch KI
+### AI Support
 
-- **LLM-Transkription**: Fuer schwierige Dokumente, bei denen Standard-OCR versagt
-- **Hybrid-Validierung**: Deterministische Regeln + KI-Judge zur Qualitaetspruefung
-- **Visuelles Interface**: Synchronisierte Ansicht von Bild, Text und Validierung
+- **LLM Transcription**: For difficult documents where standard OCR fails
+- **Hybrid Validation**: Deterministic rules + AI judge for quality assessment
+- **Visual Interface**: Synchronized view of image, text, and validation
 
-## Zielgruppe
+## Target Audience
 
-| Nutzer*in | Beduerfnis |
-|-----------|------------|
-| Digital Humanists | OCR-Korrektur fuer Editionsprojekte |
-| Archivar*innen | Schnelle Transkription von Bestaenden |
-| Historiker*innen | Quellenerschliessung mit KI-Unterstuetzung |
-| Citizen Scientists | Niederschwellige Transkriptionsarbeit |
+| User | Need |
+|------|------|
+| Digital Humanists | OCR correction for edition projects |
+| Archivists | Fast transcription of holdings |
+| Historians | Source access with AI support |
+| Citizen Scientists | Accessible transcription work |
 
-## Erfolgskriterien
+## Success Criteria
 
-**Das Produkt ist fertig, wenn:**
+**The product is complete when:**
 
-1. **Selbsterklaerend**: Jemand, der das Tool nicht kennt, kann es ohne Anleitung nutzen
-2. **Vollstaendiger Workflow**:
-   - Eigene Dokumente hochladen (Bild ODER PAGE-XML)
-   - OCR erzeugen oder vorhandenes bearbeiten
-   - Validieren und korrigieren
-   - In nutzbarem Format exportieren (PAGE-XML, TXT, JSON)
-3. **Workflow-Integration**: Output kann in anderen Prozessen weiterverwendet werden
-4. **Qualitaetssicherung**: "Gutes, korrektes OCR/HTR kommt auf der anderen Seite raus"
+1. **Self-explanatory**: Someone unfamiliar with the tool can use it without instructions
+2. **Complete Workflow**:
+   - Upload own documents (image OR PAGE-XML)
+   - Generate OCR or edit existing transcription
+   - Validate and correct
+   - Export in usable format (PAGE-XML, TXT, JSON)
+3. **Workflow Integration**: Output can be used in other processes
+4. **Quality Assurance**: "Good, correct OCR/HTR comes out the other side"
 
-## Nicht-Ziele
+## Non-Goals
 
-- Kein Ersatz fuer spezialisierte HTR-Modelle (Transkribus, eScriptorium)
-- Keine Batch-Verarbeitung grosser Korpora (Fokus: Einzeldokument-Korrektur)
-- Kein Trainingstool fuer eigene Modelle
+- Not a replacement for specialized HTR models (Transkribus, eScriptorium)
+- No batch processing of large corpora (focus: single document correction)
+- No training tool for custom models
 
-## Aktueller Status
+## Current Status
 
-| Phase | Status | Beschreibung |
-|-------|--------|--------------|
-| Phase 1: Core Application | [x] | LLM-Integration, Viewer, Editor, Validation |
-| Phase 2: Multi-Page & Docs | [x] | Seitennavigation, Help/About Pages |
-| Phase 3: Batch-Processing | [ ] | Alle Seiten automatisch transkribieren |
-| Phase 4: Polish & Release | [x] | Tests, PAGE-XML Export, UI-Feinschliff |
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1: Core Application | [x] | LLM integration, Viewer, Editor, Validation |
+| Phase 2: Multi-Page & Docs | [x] | Page navigation, Help/About Pages |
+| Phase 3: Batch Processing | [x] | Transcribe/validate all pages automatically |
+| Phase 4: Polish & Release | [x] | Tests, PAGE-XML Export, UI refinements |
 
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
-## Designprinzipien
+## Design Principles
 
-| Prinzip | Bedeutung |
-|---------|-----------|
-| **Expert-in-the-Loop** | Maschine assistiert, Mensch entscheidet |
-| **Kategorielle Konfidenz** | sicher/pruefenswert/problematisch statt 0-100% |
-| **Konstruktives UI** | Hilft bei der Arbeit, steht nicht im Weg |
-| **Workflow-Tool** | Input rein, korrekter Output raus |
-| **Zero Dependencies** | Laeuft im Browser, keine Installation |
+| Principle | Meaning |
+|-----------|---------|
+| **Expert-in-the-Loop** | Machine assists, human decides |
+| **Categorical Confidence** | confident/uncertain/problematic instead of 0-100% |
+| **Constructive UI** | Helps with work, doesn't get in the way |
+| **Workflow Tool** | Input in, correct output out |
+| **Zero Dependencies** | Runs in browser, no installation |
 
 ---
 
-**Referenzen:**
-- [METHODOLOGY](METHODOLOGY.md) - Wissenschaftliche Grundlagen
-- [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) - Technische Roadmap
-- [ARCHITECTURE](ARCHITECTURE.md) - Systemarchitektur
+**References:**
+- [METHODOLOGY](METHODOLOGY.md) - Scientific foundations
+- [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) - Technical roadmap
+- [ARCHITECTURE](ARCHITECTURE.md) - System architecture
