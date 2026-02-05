@@ -7,2270 +7,431 @@ status: complete
 
 # Development Journal
 
-Chronological documentation of project development.
+Chronological record of design decisions, problem analyses, and architectural changes. File lists, commit tables, and checklists are omitted (reconstructable from Git history).
+
+**Participants:** Christopher Pollin, Claude Opus 4.5 (Claude Code)
 
 ---
 
-## 2026-01-16 | Session 1: Initialization and Knowledge Consolidation
+## 2026-01-16 | Sessions 1–3: Bootstrapping and Knowledge Consolidation
 
-**Participants:** User, Claude Opus 4.5
+### Initialization
 
-### Phase 1: Project Initialization
+Promptotyping project for coOCR/HTR set up. Initial structure: README.md (EN), CLAUDE.md, docs/, src/ (empty).
 
-**Task:** Initialize promptotyping project for coOCR/HTR.
+### Knowledge Analysis
 
-**Result:** Initial structure created:
-- `README.md` (English, compact)
-- `CLAUDE.md` (Project context)
-- `docs/` with REQUIREMENTS, DESIGN, ARCHITECTURE, DATA
-- `src/` (empty)
+Material from prior Gemini 3 session analyzed. More extensive than expected:
 
-### Phase 2: Knowledge Analysis
+| Source | Assessment |
+|--------|------------|
+| Methodological foundations (LLM bias, Critical Expert) | Highly relevant |
+| Design system (detailed) | Highly relevant |
+| Architecture (modules, APIs) | Highly relevant |
+| Implementation plan (phases) | Moderate |
+| Working prototype (1400 LOC) | Highly relevant |
 
-**Task:** Analyze `new_knowledge/` folder (Gemini 3 material).
+**Key findings:** Categorical instead of numeric confidence (based on LLM bias research), validation perspectives (paleographic, linguistic, etc.), event-based text-image synchronization.
 
-**Finding:** Material from Gemini session was more extensive:
+### Knowledge Consolidation
 
-| Source | Content | Assessment |
-|--------|---------|------------|
-| `knowledge/coOCR-HTR Methodische Grundlagen.md` | Scientific foundation (LLM Bias, Critical Expert) | Highly relevant |
-| `docs/design-ui.md` | Detailed design system | Highly relevant |
-| `docs/architecture.md` | Concrete module structure, APIs | Highly relevant |
-| `docs/implementation-plan.md` | Phase plan for prototype | Moderately relevant |
-| `index.html` | Working prototype (1400 LOC) | Highly relevant |
+Everything integrated into shared `knowledge/` folder: INDEX.md (navigation, document matrix), METHODOLOGY.md, DESIGN-SYSTEM.md, ARCHITECTURE.md, VALIDATION.md, DATA-SCHEMA.md. Prototype moved to `src/index.html`.
 
-**Key Insights:**
-1. Categorical instead of numeric confidence (LLM bias research)
-2. Validation perspectives (Paleographic, Linguistic, etc.)
-3. Event-based text-image synchronization
-
-### Phase 3: Knowledge Consolidation
-
-**Task:** Integrate everything into common `knowledge/` folder.
-
-**Actions Performed:**
-
-| Action | Result |
-|--------|--------|
-| `knowledge/INDEX.md` created | Central navigation, document matrix |
-| `knowledge/METHODOLOGY.md` created | Promptotyping, LLM bias, Critical Expert |
-| `knowledge/DESIGN-SYSTEM.md` created | CSS variables, components, a11y |
-| `knowledge/ARCHITECTURE.md` created | System diagram, modules, APIs |
-| `knowledge/VALIDATION.md` created | Rules, perspectives, categories |
-| `knowledge/DATA-SCHEMA.md` created | TypeScript interfaces, JSON examples |
-| `new_knowledge/index.html` → `src/index.html` | Prototype moved |
-| `CLAUDE.md` updated | References to knowledge/ |
-| `docs/` deleted | Redundant |
-| `new_knowledge/` deleted | Integrated |
-
-### Final Project Structure
-
+**Document relationships:**
 ```
-coocr-htr/
-├── README.md
-├── CLAUDE.md
-├── knowledge/
-│   ├── INDEX.md
-│   ├── METHODOLOGY.md
-│   ├── DESIGN-SYSTEM.md
-│   ├── ARCHITECTURE.md
-│   ├── VALIDATION.md
-│   ├── DATA-SCHEMA.md
-│   └── JOURNAL.md
-└── src/
-    └── index.html
+METHODOLOGY → DESIGN-SYSTEM (color coding)
+            → ARCHITECTURE (technology decisions)
+            → VALIDATION (categories, perspectives)
+ARCHITECTURE → VALIDATION (engine integration)
+             → DATA-SCHEMA (storage formats)
+VALIDATION → DATA-SCHEMA (ValidationResult)
+           → DESIGN-SYSTEM (UI representation)
 ```
 
-### Open Items
+### UI Mockup Analysis (Session 2)
 
-- [ ] Split prototype into modular structure (js/, css/)
-- [ ] Implement real LLM integration
-- [ ] LocalStorage/IndexedDB persistence
-- [ ] Export functions (Markdown, JSON, TSV)
+Transferable patterns identified from Promptotyping prototype: Intersection Observer, Slide Panel, CSS Variables, Terminal UI (partially), TESTING.md.
 
----
+Screenshot of coOCR/HTR UI mockup analyzed. Three-column layout: Document Viewer (40%), Transcription (35%), Validation (25%). Header with logo, filename, pagination, upload, settings, user. Status bar with model/perspective/status/timestamp. Color palette extracted (GitHub Dark basis: `#0d1117` background, `#3fb950` success, `#d29922` warning, `#f85149` error).
 
-## Document Relationships
+**Recognized components:** Document Viewer (image with colored bounding boxes, zoom controls +/-/Reset), Transcription Table (columns: #, DATE, NAME, DESCRIPTION, AMOUNT), Validation Panel (two sections: RULE-BASED, AI ASSISTANT), Status Bar (model dropdown, perspective dropdown, status badge, timestamp).
 
-```
-METHODOLOGY ─────┬──→ DESIGN-SYSTEM (Color coding)
-                 ├──→ ARCHITECTURE (Technology decisions)
-                 └──→ VALIDATION (Categories, perspectives)
+**Key insights:** Triple synchronization (Viewer ↔ Transcription ↔ Validation bidirectional), tabular transcription (structured columns instead of free text for account books), validation separation into RULE-BASED (deterministic) vs. AI ASSISTANT (probabilistic), expandable card pattern with status indicator (border-left).
 
-ARCHITECTURE ────┬──→ VALIDATION (Engine integration)
-                 └──→ DATA-SCHEMA (Storage formats)
+### Prototype v2 Analysis (Session 3)
 
-VALIDATION ──────┬──→ DATA-SCHEMA (ValidationResult)
-                 └──→ DESIGN-SYSTEM (UI representation)
-```
+Significant improvement over v1: Modular (322 HTML + 260 JS) instead of monolithic (1413 LOC), AppState with EventTarget instead of DOM-based state, external CSS files instead of inline, ES6 modules, SVG overlay instead of CSS-based bounding boxes.
 
----
+**AppState core concept:** `class AppState extends EventTarget` with `dispatchEvent(new CustomEvent(...))` replaces planned EventBus with native browser API.
 
-## 2026-01-16 | Session 2: UI Mockup Analysis and Integration
+7-phase implementation plan created (Core Services → Dialogs → Transcription → Validation → Export → UX → Polish).
 
-**Participants:** User, Claude Opus 4.5
+### Data Analysis (Session 3b)
 
-### Phase 1: Promptotyping Prototype Analysis
+Three datasets with PAGE-XML standard: Raitbuch 2 (account book 16th/17th c., 123 pages, FINAL), 1617-wecker (medical book Latin, 83 pages, partial), o_szd (Stefan Zweig letters, 12 pages, METS-XML). Plus Schliemann archive images (21 JPG).
 
-**Task:** Analyze `Promptotyping/prototype/` folder for transferable patterns.
-
-**Finding:** Different project (Living Paper), but useful patterns:
-
-| Pattern | Description | Transferable? |
-|---------|-------------|---------------|
-| Intersection Observer | Scroll-based navigation | Yes |
-| Slide Panel | Side panel with overlay | Yes |
-| CSS Variables | Structured color palette | Yes |
-| Terminal UI | Monospace aesthetic | Partially |
-| TESTING.md | Manual test checklist | Yes |
-
-### Phase 2: UI Mockup Detail Analysis
-
-**Task:** Analyze screenshot of coOCR/HTR UI mockup.
-
-**Extracted Information:**
-
-#### Layout Structure
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ HEADER: Logo | Filename | Pagination | Upload | Settings | User    │
-├──────────────────┬────────────────────┬─────────────────────────────┤
-│ Document Viewer  │ Transcription      │ Validation                  │
-│ (40%)           │ (35%)              │ (25%)                       │
-│                 │                    │                             │
-│ Bounding Boxes  │ Structured Table   │ Rule-Based + AI Assistant   │
-│ Zoom Controls   │ Inline Markers     │ Expandable Cards            │
-└──────────────────┴────────────────────┴─────────────────────────────┘
-│ STATUS BAR: Model | Perspective | Status | Timestamp               │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-#### Recognized Components
-
-| Component | Details |
-|-----------|---------|
-| **Document Viewer** | Image with colored bounding boxes, zoom controls (+/-/Reset) |
-| **Transcription Table** | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT |
-| **Validation Panel** | Two sections: RULE-BASED, AI ASSISTANT |
-| **Status Bar** | Model dropdown, Perspective dropdown, Status badge, Timestamp |
-
-#### Color Palette (extracted from mockup)
-- Background: `#0d1117` (GitHub Dark)
-- Surface: `#161b22`
-- Border: `#30363d`
-- Success: `#3fb950`
-- Warning: `#d29922`
-- Error: `#f85149`
-
-### Phase 3: Knowledge Base Integration
-
-**Task:** Incorporate UI mockup insights into knowledge base.
-
-**Updated Documents:**
-
-| Document | Changes |
-|----------|---------|
-| **DESIGN-SYSTEM.md** | Layout diagram, header elements, status bar, Document Viewer CSS, Transcription Table CSS, Validation Panel, card anatomy, interaction patterns |
-| **ARCHITECTURE.md** | Extended EventBus events, three synchronization flows (Transcription→All, Viewer→All, Validation→All) |
-| **VALIDATION.md** | Panel structure ASCII diagram, card anatomy, card interaction, expanded state |
-| **DATA-SCHEMA.md** | Added `lineNumber` and `fields` to Segment, `ColumnDefinition` interface, example with structured fields |
-| **INDEX.md** | UI components quick reference, Version 1.1 entry |
-
-### Key Insights
-
-1. **Triple Synchronization:** Document Viewer ↔ Transcription ↔ Validation must stay bidirectionally synchronized
-2. **Tabular Transcription:** Structured columns instead of free text for account books
-3. **Validation Separation:** RULE-BASED (deterministic) vs. AI ASSISTANT (probabilistic)
-4. **Card Pattern:** Expandable cards with status indicator (border-left)
-
-### Open Items
-
-- [x] Git commit for knowledge base updates
-- [x] Adapt prototype to new insights → Completed with new modular Prototype v2
-- [x] EventBus implementation for synchronization → AppState with EventTarget
-- [x] Implement Transcription Table component → editor.js with CSS Grid
-
----
-
-## 2026-01-16 | Session 3: Prototype v2 Analysis and Implementation Plan
-
-**Participants:** User, Claude Opus 4.5
-
-### Phase 1: New Prototype Analysis
-
-**Task:** Analyze `newer prototpye/` folder and compare with knowledge base.
-
-**Finding:** Significant improvements over Prototype v1:
-
-| Aspect | Prototype v1 | Prototype v2 |
-|--------|--------------|--------------|
-| Architecture | Monolithic (1413 LOC) | Modular (322 HTML + 260 JS) |
-| State | DOM-based | AppState with EventTarget |
-| CSS | Inline `<style>` | External files with tokens |
-| JS | Inline `<script>` | ES6 Modules |
-| Bounding Boxes | CSS-based | SVG Overlay |
-
-### Phase 2: Module Structure Documented
-
-**Analyzed Files:**
-
-| File | LOC | Function |
-|------|-----|----------|
-| `js/main.js` | 15 | Entry point, load modules |
-| `js/state.js` | 61 | Central state with EventTarget |
-| `js/viewer.js` | 67 | Document Viewer, SVG regions, zoom |
-| `js/editor.js` | 77 | Grid-based editor, marker rendering |
-| `js/ui.js` | 40 | Validation interactions, flash effects |
-| `css/variables.css` | 52 | Design system tokens |
-
-**Core Implementation - AppState:**
-
-```javascript
-class AppState extends EventTarget {
-  setSelection(lineNum) {
-    this.data.selectedLine = lineNum;
-    this.dispatchEvent(new CustomEvent('selectionChanged', { detail: { line: lineNum } }));
-  }
-}
-```
-
-→ Replaces planned EventBus with native browser API.
-
-### Phase 3: Knowledge Base Update
-
-**Updated Documents:**
-
-| Document | Changes |
-|----------|---------|
-| **ARCHITECTURE.md** | Current vs. target structure, AppState implementation, event listener code |
-| **DESIGN-SYSTEM.md** | Z-Index layers, extended spacing/transitions, glass morphism, mobile warning, editor grid, SVG regions |
-| **INDEX.md** | Added IMPLEMENTATION-PLAN.md, Version 1.2 |
-
-### Phase 4: Implementation Plan Created
-
-**New Document:** `IMPLEMENTATION-PLAN.md`
-
-**7 Phases Defined:**
-
-1. **Core Services** - LLM Service, Storage Service
-2. **Dialogs & Upload** - API Key Dialog, Image Upload
-3. **LLM Transcription** - Flow: Upload → LLM → Parser → State
-4. **Rule-Based Validation** - Deterministic checks
-5. **LLM-Judge Validation** - Perspective system
-6. **Export & Persistence** - JSON/Markdown/TSV, Auto-Save
-7. **Polish & UX** - Inline editing, Undo/Redo, Shortcuts
-
-**Recommended Next Step:** Phase 1.1 - Create LLM Service
-
-### Current Project Structure
-
-```
-coocr-htr/
-├── README.md
-├── CLAUDE.md
-├── knowledge/
-│   ├── INDEX.md
-│   ├── METHODOLOGY.md
-│   ├── DESIGN-SYSTEM.md
-│   ├── ARCHITECTURE.md
-│   ├── VALIDATION.md
-│   ├── DATA-SCHEMA.md
-│   ├── IMPLEMENTATION-PLAN.md  ← NEW
-│   └── JOURNAL.md
-├── src/
-│   └── index.html              # Prototype v1 (monolithic)
-├── newer prototpye/            # Prototype v2 (modular)
-│   ├── index.html
-│   ├── css/
-│   │   ├── variables.css
-│   │   └── styles.css
-│   ├── js/
-│   │   ├── main.js
-│   │   ├── state.js
-│   │   ├── viewer.js
-│   │   ├── editor.js
-│   │   └── ui.js
-│   └── assets/
-│       └── mock-document.jpg
-└── data/                       # Example data (user created)
-```
-
-### Open Items
-
-- [x] Git commit for Session 3 updates → Commit `3e7f219`
-- [x] Populate data folder with example data → Raitbuch 2 with 340 files
-- [ ] Phase 1: Implement LLM Service
-- [ ] Migrate Prototype v2 to `src/`
-
----
-
-## 2026-01-16 | Session 3b: Data Folder Analysis and Documentation
-
-**Participants:** User, Claude Opus 4.5
-
-### Example Data Analysis
-
-**Task:** Analyze data folder in detail and document.
-
-**Finding:** Three main datasets with PAGE-XML standard:
-
-| Dataset | Type | Pages | Format | Status |
-|---------|------|-------|--------|--------|
-| **Raitbuch 2** | Account book (16th/17th c.) | 123 | PAGE-XML + doc.xml | FINAL |
-| **1617-wecker** | Medical book (Latin) | 83 | PAGE-XML | Partial |
-| **o_szd** | Stefan Zweig letters | 12 | METS-XML + JSON | Metadata |
-| **Schliemann** | Archive images | 21 | JPG only | - |
-
-### PAGE-XML Format Documented
-
-**Insights:**
-- Standard format from Transkribus/PyLaia
-- Polygon-based coordinates (not rectangular)
-- Hierarchy: Page → TextRegion → TextLine → Word
-- Transcription status: NEW, IN_PROGRESS, FINAL
-
-**Mapping to coOCR/HTR:**
-```
-TextLine/Coords@points → bounds (Polygon→BoundingBox)
-TextLine/TextEquiv/Unicode → text
-TranskribusMetadata@status → confidence
-```
-
-### Documentation Created
-
-| Action | Result |
-|--------|--------|
-| `data/README.md` created | Data formats, structure, usage |
-| `DATA-SCHEMA.md` extended | PAGE-XML import schema, conversion |
-
-### Commit
-
-Commit `40a6d9c` - Data documentation added
-
-### Open Items
-
-- [ ] Implement PAGE-XML import service
-- [ ] Test coordinate conversion
-- [ ] Example import with Raitbuch 2
-
----
+**PAGE-XML mapping to coOCR/HTR:** TextLine/Coords@points → bounds (Polygon→BoundingBox), TextLine/TextEquiv/Unicode → text, TranskribusMetadata@status → confidence.
 
 ---
 
 ## 2026-01-16 | Session 4: Full Implementation Started
 
-**Participants:** User, Claude Opus 4.5
+### Design Decisions
 
-### Phase 1: Requirements Clarification
-
-**Task:** Create complete implementation plan with milestones.
-
-**User Decisions:**
-
-| Question | Answer |
-|----------|--------|
-| LLM Providers | Gemini 2.5 Flash, GPT-4.5 Mini, Haiku 4.5, DeepSeek (local+API) |
-| API Key Storage | LocalStorage (simple) |
-| Data Formats | Images + PAGE-XML |
-| Export Formats | .txt, .json, .md (PAGE-XML as expansion stage) |
+| Question | Decision |
+|----------|----------|
+| LLM providers | Gemini 2.5 Flash, GPT-4.5 Mini, Haiku 4.5, DeepSeek (local+API) |
+| API key storage | LocalStorage (simple) |
+| Data formats | Images + PAGE-XML |
+| Export formats | .txt, .json, .md (PAGE-XML as expansion stage) |
 | Validation | Rule-based + LLM-Judge parallel |
-| Tests | Vitest for critical services |
-| Folder Rename | `newer prototpye` → `prototype` |
-| Test Framework | Vitest (Claude's decision) |
-| DeepSeek | Both options (API + Ollama local) |
-| Deployment | GitHub Pages + local file:// usage |
+| Tests | Vitest (Claude's recommendation) |
+| DeepSeek | Both (API + Ollama local) |
+| Deployment | GitHub Pages + local file:// |
 
-### Phase 2: Milestone 0 - Preparation
+### Milestone 0: Preparation
 
-**Tasks Completed:**
+Folder `newer prototpye` → `prototype` renamed. Project structure with `js/services/`, `js/components/`, `tests/` created. package.json with Vitest, vitest.config.js.
 
-| Task | Status |
-|------|--------|
-| Rename folder `newer prototpye` → `prototype` | [x] |
-| Create project structure (`js/services/`, `js/components/`, `tests/`) | [x] |
-| Create `package.json` with Vitest | [x] |
-| Create `vitest.config.js` | [x] |
-| Update IMPLEMENTATION-PLAN.md paths | [x] |
-| Update ARCHITECTURE.md paths | [x] |
+### Milestone 1: Core Services
 
-### Phase 3: Milestone 1 - Core Services
+**Storage Service (~230 LOC):** Settings CRUD with defaults, API key storage (Base64-obfuscated), session auto-save/restore.
 
-**Tasks Completed:**
+**State.js extended (~440 LOC):** Document management, transcription state, validation state, UI state, session auto-save with storage service, backward compatibility with old API.
 
-| Task | Status | File |
-|------|--------|------|
-| Storage Service | Done | `js/services/storage.js` |
-| State.js extended | Done | `js/state.js` |
-| LLM Service Base | Done | `js/services/llm.js` |
-| Gemini Provider | Done | in llm.js |
-| OpenAI Provider | Done | in llm.js |
-| Anthropic Provider | Done | in llm.js |
-| DeepSeek Provider (API + Ollama) | Done | in llm.js |
-| LLM Service Tests | Done | `tests/llm.test.js` |
+**LLM Service (~500 LOC):** 5 providers (Gemini, OpenAI, Anthropic, DeepSeek, Ollama), transcription prompt (historical handwriting), validation prompts (4 perspectives), response parsing (Markdown tables, JSON), error handling with categorization.
 
-**Implemented Features:**
+### Rename to docs/
 
-1. **Storage Service** (~230 LOC)
-   - Settings CRUD with defaults
-   - API key storage (Base64-obfuscated)
-   - Session auto-save/restore
-   - Storage info utility
-
-2. **State.js Extended** (~440 LOC)
-   - Document management (upload, dimensions)
-   - Transcription state (provider, segments, lines)
-   - Validation state (rules, LLM-Judge, perspective)
-   - UI state (loading, dialogs, errors)
-   - Session auto-save with storage service
-   - Backward compatibility with old API
-
-3. **LLM Service** (~500 LOC)
-   - 5 providers: Gemini, OpenAI, Anthropic, DeepSeek, Ollama
-   - Transcription prompt (historical handwriting)
-   - Validation prompts (4 perspectives)
-   - Response parsing (Markdown tables, JSON)
-   - Error handling with categorization
-
-### Phase 4: Rename to docs/
-
-**Task:** Rename folder for GitHub Pages compatibility.
-
-| Action | Status |
-|--------|--------|
-| Deleted `src/index.html` | Done |
-| `prototype/` -> `docs/` | Done |
-| Updated documentation | Done |
-
-### Current Project Structure
-
-```
-coocr-htr/
-├── README.md
-├── CLAUDE.md
-├── knowledge/
-│   ├── INDEX.md
-│   ├── METHODOLOGY.md
-│   ├── DESIGN-SYSTEM.md
-│   ├── ARCHITECTURE.md
-│   ├── VALIDATION.md
-│   ├── DATA-SCHEMA.md
-│   ├── IMPLEMENTATION-PLAN.md
-│   └── JOURNAL.md
-├── docs/                       # GitHub Pages ready
-│   ├── index.html
-│   ├── css/
-│   │   ├── variables.css
-│   │   └── styles.css
-│   ├── js/
-│   │   ├── main.js
-│   │   ├── state.js            # Extended
-│   │   ├── viewer.js
-│   │   ├── editor.js
-│   │   ├── ui.js
-│   │   ├── components/
-│   │   ├── services/
-│   │   │   ├── llm.js          # NEW
-│   │   │   ├── storage.js      # NEW
-│   │   │   └── parsers/
-│   │   └── utils/
-│   ├── tests/
-│   │   └── llm.test.js         # NEW
-│   ├── assets/
-│   │   └── mock-document.jpg
-│   ├── package.json
-│   └── vitest.config.js
-└── data/
-```
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| `3cfb93c` | Milestone 0: Preparation |
-| `0c4ae1c` | Milestone 1: Core Services |
-
-### Next Steps
-
-- [x] Milestone 2: Dialogs & Upload
-- [x] Milestone 3: LLM Transcription
-- [x] Milestone 4: Validation
-- [ ] Milestone 5: Export
-- [ ] Milestone 6: UX (Inline-Edit, Undo/Redo)
-- [ ] Milestone 7: Polish & Release
+`prototype/` → `docs/` for GitHub Pages compatibility. `src/index.html` (Prototype v1) deleted.
 
 ---
 
-## 2026-01-16 | Session 5: Milestone 2-4 Implementation
+## 2026-01-16 | Session 5: Milestones 2–4
 
-**Participants:** User, Claude Opus 4.5
+### Milestone 2: Dialogs & Upload
 
-### Milestone 2: Input - Dialogs & Upload
+Native `<dialog>` with glass morphism backdrop. Tab-based provider configuration (5 providers). Password toggle for API keys. File input + drag & drop upload zone. PAGE-XML import with coordinate conversion. Toast notification system.
 
-**Tasks Completed:**
+### Milestone 3: LLM Transcription
 
-| Task | Status | File |
-|------|--------|------|
-| Dialog CSS (Glass Morphism) | Done | `css/styles.css` (+480 LOC) |
-| API Key Dialog HTML | Done | `index.html` |
-| Export Dialog HTML | Done | `index.html` |
-| Dialog Manager JS | Done | `js/components/dialogs.js` |
-| Upload Manager (Drag&Drop) | Done | `js/components/upload.js` |
-| PAGE-XML Parser | Done | `js/services/parsers/page-xml.js` |
-| PAGE-XML Tests | Done | `tests/page-xml.test.js` |
+Transcription flow: Upload → Transcribe Click → Loading State → LLM API Call → Response Parse → State Update → Editor/Viewer Update. Image-to-Base64 conversion. Error handling with retry.
 
-**New Features:**
-- Native `<dialog>` element with glass morphism backdrop
-- Tab-based provider configuration (5 providers)
-- Password toggle for API keys
-- File input + drag & drop upload zone
-- PAGE-XML import with coordinate conversion
-- Toast notification system
+### Milestone 4: Validation
 
-### Milestone 3: Transcription - LLM Integration
+**8 rule-based rules:** Date format, currency (Taler, Groschen, Gulden/Kreuzer), uncertain readings [?], illegible passages [illegible], column count consistency, empty cells.
 
-**Tasks Completed:**
-
-| Task | Status | File |
-|------|--------|------|
-| Transcribe Button with Spinner | Done | `index.html` |
-| Transcription Manager | Done | `js/components/transcription.js` |
-| Image-to-Base64 Conversion | Done | in transcription.js |
-| Error Handling with Retry | Done | in transcription.js |
-
-**Transcription Flow:**
-```
-Upload → Transcribe Click → Loading State → LLM API Call
-    → Response Parse → State Update → Editor/Viewer Update
-```
-
-### Milestone 4: Validation (in progress)
-
-**Tasks Completed:**
-
-| Task | Status | File |
-|------|--------|------|
-| Validation Engine | Done | `js/services/validation.js` |
-| Rule-Based Validation | Done | 8 rules defined |
-| LLM-Judge Integration | Done | 4 perspectives |
-| Validation Panel UI | Done | `js/components/validation.js` |
-| Perspective Dropdown | Done | in validation.js |
-
-**Validation Rules:**
-1. Date format (DD. Month)
-2. Currency Taler
-3. Currency Groschen
-4. Currency Gulden/Kreuzer
-5. Uncertain readings [?]
-6. Illegible passages [illegible]
-7. Column count consistency
-8. Empty cells
-
-**Perspectives:**
-- Paleographic (letter forms, ligatures)
-- Linguistic (grammar, historical orthography)
-- Structural (tables, sums, references)
-- Domain knowledge (technical terms, plausibility)
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| `8060c3a` | Milestone 2 & 3: Dialogs, Upload, PAGE-XML, Transcription |
-
-### Current Project Structure
-
-```
-docs/
-├── js/
-│   ├── components/
-│   │   ├── dialogs.js       # NEW
-│   │   ├── upload.js        # NEW
-│   │   ├── transcription.js # NEW
-│   │   └── validation.js    # NEW
-│   ├── services/
-│   │   ├── llm.js
-│   │   ├── storage.js
-│   │   ├── validation.js    # NEW
-│   │   └── parsers/
-│   │       └── page-xml.js  # NEW
-│   ├── main.js              # Extended
-│   └── state.js             # Extended
-├── tests/
-│   ├── llm.test.js
-│   └── page-xml.test.js     # NEW
-└── css/
-    └── styles.css           # Extended (+480 LOC)
-```
-
-### Next Steps
-
-- [x] Milestone 5: Export Service
-- [x] Milestone 6: Inline Editing, Undo/Redo
-- [ ] Milestone 7: Polish, GitHub Pages Deployment
+**4 LLM-Judge perspectives:** Paleographic (letter forms, ligatures), linguistic (grammar, historical orthography), structural (tables, sums, references), domain knowledge (technical terms, plausibility).
 
 ---
 
-## 2026-01-16 | Session 5b: Milestone 5-6 Completion
+## 2026-01-16 | Session 5b: Milestones 5–6
 
-**Participants:** User, Claude Opus 4.5
+### Milestone 5: Export
 
-### Milestone 5: Export Service
+Plain text (tab-separated), JSON (with metadata option), Markdown (with validation notes). Download via Blob + createObjectURL.
 
-**Tasks Completed:**
+### Milestone 6: UX
 
-| Task | Status | File |
-|------|--------|------|
-| Export Service | Done | `js/services/export.js` |
-| Plain Text Export | Done | Tab-separated |
-| JSON Export | Done | With metadata option |
-| Markdown Export | Done | With validation notes |
-| Download Trigger | Done | Blob + createObjectURL |
+**Inline editing:** Double-click starts editing, Enter saves, Escape cancels, Tab navigates to next cell.
 
-### Milestone 6: UX Features
-
-**Tasks Completed:**
-
-| Task | Status | File |
-|------|--------|------|
-| Inline Editing | Done | `js/editor.js` |
-| Undo/Redo Stack | Done | `js/editor.js` |
-| Keyboard Shortcuts | Done | `js/editor.js` |
-| Cell CSS | Done | `css/styles.css` |
-
-**Inline Editing Features:**
-- Double-click on cell starts editing
-- Enter finishes and saves
-- Escape cancels
-- Tab navigates to next cell
-
-**Keyboard Shortcuts:**
-- Ctrl+Z / Cmd+Z: Undo
-- Ctrl+Shift+Z / Ctrl+Y: Redo
-- Arrow keys: Line navigation
-- Enter: Start editing
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| `4e78d0f` | Milestone 5: Export Service |
-| `5bd62bc` | Milestone 6: Inline Editing, Undo/Redo, Shortcuts |
-
-### Project Status
-
-**All Core Features Implemented:**
-
-| Feature | Status |
-|---------|--------|
-| LLM Providers (5) | Done |
-| Dialogs & Upload | Done |
-| PAGE-XML Import | Done |
-| LLM Transcription | Done |
-| Rule-Based Validation | Done |
-| LLM-Judge Validation | Done |
-| Export (txt, json, md) | Done |
-| Inline Editing | Done |
-| Undo/Redo | Done |
-| Keyboard Shortcuts | Done |
-
-**Still Open:**
-- [ ] Tests for all new services
-- [ ] End-to-end test
-- [ ] GitHub Pages activation
+**Keyboard shortcuts:** Ctrl+Z/Cmd+Z undo, Ctrl+Shift+Z/Ctrl+Y redo, arrow keys line navigation, Enter starts editing.
 
 ---
 
-## 2026-01-16 | Session 6: Milestone 7 - Demo Loader and Polish
+## 2026-01-16 | Session 6: Demo Loader
 
-**Participants:** User, Claude Opus 4.5
+### Problem
 
-### Problem Statement
+`data/` lies outside `docs/` and is therefore not accessible via the browser. GitHub Pages only serves from `docs/`.
 
-**Task:** Replace placeholder image with real demo functionality. Data from `data/` folder should be loadable.
+### Solution
 
-**Challenge:**
-- `data/` is outside `docs/` and therefore not accessible via browser
-- GitHub Pages only serves from `docs/`
-
-### Solution: Demo Loader System
-
-**Architecture Decision:** Copy selected example data to `docs/samples/`.
-
-| Action | Result |
-|--------|--------|
-| `docs/samples/` created | Folder structure for demos |
-| `docs/samples/index.json` | Manifest with metadata |
-| `docs/js/services/samples.js` | Sample loader service |
-| Example data copied | raitbuch, letter, karteikarte |
-
-### Samples Manifest
-
-```json
-{
-  "samples": [
-    {
-      "id": "raitbuch-0v1r",
-      "name": "Raitbuch 2, fol. 0v-1r",
-      "description": "Upper Austrian church office account book",
-      "image": "raitbuch/fol-0v-1r.jpg",
-      "pageXml": "raitbuch/fol-0v-1r.xml"
-    },
-    ...
-  ]
-}
-```
+Selected example data copied to `docs/samples/`. Manifest `samples/index.json` with metadata per sample (schema: id, name, description, image path, pageXml path). Sample loader service. Three samples: Raitbuch, letter, index card.
 
 ### UI Extensions
 
-**Tasks Completed:**
-
-| Task | Status | File |
-|------|--------|------|
-| Samples Dropdown in Header | Done | `index.html` |
-| Viewer Empty State | Done | `index.html` |
-| Empty State Buttons | Done | `main.js` |
-| Samples Menu CSS | Done | `styles.css` |
-| Empty State CSS | Done | `styles.css` |
-| viewer.js documentLoaded Handler | Done | `viewer.js` |
-
-**CSS Refactoring:**
-
-| Problem | Solution |
-|---------|----------|
-| Missing `--accent-rgb` variable | Added in `variables.css` |
-| Old onclick handlers | Removed, added IDs |
-
-### New UI Elements
-
-**Empty State (Viewer):**
-- Icon, title, description
-- "Load Demo" button (opens Samples Menu)
-- "Upload Image" button (triggers upload)
-
-**Samples Dropdown:**
-- Button in header "Demo"
-- Dropdown with all available samples
-- Click loads sample via samplesService
-
-### Project Structure Update
-
-```
-docs/
-├── samples/                    # NEW
-│   ├── index.json
-│   ├── raitbuch/
-│   │   ├── fol-0v-1r.jpg
-│   │   └── fol-0v-1r.xml
-│   ├── letter/
-│   │   └── image.jpg
-│   └── karteikarte/
-│       └── image.jpg
-├── js/
-│   ├── services/
-│   │   └── samples.js          # NEW
-│   ├── viewer.js               # Extended
-│   └── main.js                 # Extended
-└── css/
-    ├── variables.css           # --accent-rgb added
-    └── styles.css              # Samples Menu + Empty State CSS
-```
-
-### Next Steps
-
-- [x] Browser test of demo functionality
-- [ ] Activate GitHub Pages
-- [ ] README with deploy instructions
+Samples dropdown in header ("Demo" button), viewer empty state with icon/title/description and buttons for "Load Demo" and "Upload Image".
 
 ---
 
-## 2026-01-16 | Session 6b: Bugfixes and GitHub Pages
+## 2026-01-16 | Session 6b: Bugfixes and Deployment
 
-**Participants:** User, Claude Opus 4.5
-
-### Problem Statement
-
-**Task:** Test app and fix bugs, then deploy to GitHub Pages.
-
-**Bugs Found:**
+### Bugs Fixed
 
 | Bug | Cause | Solution |
 |-----|-------|----------|
-| `appState.setUI is not a function` | Method doesn't exist | Replaced with `setLoading()`, `openDialog()`, `closeDialog()` |
+| `appState.setUI is not a function` | Method does not exist | Replaced with `setLoading()`, `openDialog()`, `closeDialog()` |
 | `validationPanel.init is not a function` | Init call missing | Added `validationPanel.init()` in main.js |
-| CSS `rgba(var(--bg-rgb))` faulty | `--bg-rgb` variable missing | Added RGB variants in variables.css |
-| Zoom doesn't work | Stale state reference | Used `appState.zoom` getter |
-| Export Dialog backdrop missing | `.dialog-container` wrapper missing | Corrected HTML structure |
+| `rgba(var(--bg-rgb))` broken | `--bg-rgb` variable missing | Added RGB variants in variables.css |
+| Zoom not working | Stale state reference | Used `appState.zoom` getter |
+| Export dialog backdrop missing | `.dialog-container` wrapper missing | Corrected HTML structure |
 
-### Fixed Files
+### Deployment
 
-| File | Change |
-|------|--------|
-| `js/components/upload.js` | `setUI` → `setLoading` |
-| `js/components/transcription.js` | `setUI` → `setLoading` |
-| `js/components/dialogs.js` | `setUI` → `openDialog`/`closeDialog` |
-| `js/main.js` | Added `validationPanel.init()` |
-| `css/variables.css` | `--bg-rgb`, `--success-rgb`, `--warning-rgb`, `--error-rgb` |
-| `js/viewer.js` | `state.zoom` → `appState.zoom` |
-| `index.html` | Export Dialog `.dialog-container` wrapper |
-
-### Test Results
-
-**Local Server:** `npx serve docs -l 3000`
-
-| Feature | Status |
-|---------|--------|
-| Demo Loader | Works |
-| Samples Dropdown | Works |
-| Viewer Empty State | Works |
-| Validation Panel | Works |
-| API Configuration Dialog | Works |
-| Export Dialog | Works |
-| Zoom Controls | Works |
-
-### GitHub Deployment
-
-| Action | Status |
-|--------|--------|
-| Commits pushed | Done |
-| README updated | Done |
-| Live demo URL added | Done |
-
-**Live URL:** http://dhcraft.org/co-ocr-htr
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| `785a38d` | feat: add demo-loader with samples dropdown and viewer empty state |
-| `ba43546` | fix: resolve critical runtime bugs |
-
-### Project Status
-
-**All Milestones Completed:**
-
-| Milestone | Status |
-|-----------|--------|
-| 0: Preparation | Done |
-| 1: Core Services | Done |
-| 2: Dialogs & Upload | Done |
-| 3: LLM Transcription | Done |
-| 4: Validation | Done |
-| 5: Export | Done |
-| 6: UX | Done |
-| 6.5: Bugfixes & Demo Loader | Done |
-| 7: GitHub Pages Deployment | Done |
-
-### Next Steps (Optional)
-
-- [x] Favicon added (already present)
-- [ ] Complete Vitest unit tests
-- [ ] Test LLM transcription with real API key
-- [ ] Improve mobile warning
+Local test with `npx serve docs -l 3000`. All features functional. Live URL: http://dhcraft.org/co-ocr-htr
 
 ---
 
 ## 2026-01-16 | Session 7: Flexible Editor & Guided Workflow
 
-**Participants:** User, Claude Opus 4.5
+### Problem
 
-### Problem Statement
+Editor was hardcoded for account book structure (4 columns: Date/Name/Description/Amount). DATA-SCHEMA.md already supported flexible structures, but the editor code did not.
 
-**Task:** Editor was hardcoded for account book structure (4 columns: Date/Name/Description/Amount). Should support flexible source types.
+### Solution: Two Editor Modes
 
-**Analysis of Knowledge Documents:**
-- DATA-SCHEMA.md already supported flexible structure
-- Editor code was not flexibly implemented
+Automatic mode detection: `grid` when columns[] defined, segments with fields, or text contains `|`. Otherwise `lines` for prose (letters, diaries, manuscripts).
 
-### Solution: Flexible Editor Modes
+### Guided Workflow
 
-**Automatic Mode Detection:**
+Workflow stepper in status bar (6 steps: Load → Configure → Transcribe → Edit → Validate → Export). Panel hints (contextual hints per panel, dismissable, persistent). Info tooltips (methodology explanations in panel headers). Onboarding toast for first-time visitors.
 
-| Condition | Mode |
-|-----------|------|
-| `columns[]` defined | grid |
-| Segments with `fields` | grid |
-| Text contains `\|` | grid |
-| Standard/Fallback | lines |
+### CSS/HTML Cleanup
 
-**New Editor Modes:**
-
-| Mode | Usage | Example |
-|------|-------|---------|
-| `lines` | Prose text | Letters, diaries, manuscripts |
-| `grid` | Tables | Account books, inventories, registers |
-
-### Guided Workflow Features
-
-**Implemented:**
-
-| Feature | Description |
-|---------|-------------|
-| Workflow Stepper | 6 steps in status bar (Load → Export) |
-| Panel Hints | Contextual hints per panel |
-| Info Tooltips | Methodology explanations in panel headers |
-| Onboarding Toast | Welcome message for first-time visitors |
-| Hint Dismissal | Hints can be dismissed (persistent) |
-
-### Implemented Files
-
-| File | Changes |
-|------|---------|
-| `js/editor.js` | Completely refactored for flexible modes |
-| `js/main.js` | `initGuidedWorkflow()`, `showOnboardingToast()` |
-| `index.html` | Panel hints, workflow stepper, info tooltips |
-| `css/styles.css` | Lines editor CSS, workflow stepper CSS |
-| `knowledge/DATA-SCHEMA.md` | Source types documentation |
-
-### CSS/HTML Refactoring
-
-**CSS Improvements:**
-
-| Problem | Solution |
-|---------|----------|
-| Duplicate `.editor-grid-row` | Merged |
-| Hardcoded colors (`#30363d`) | CSS variables (`--bg-tertiary-hover`) |
-| Missing border variables | Added `--border-subtle`, `--border-muted` |
-| Orphaned modal styles | Removed (now use `<dialog>`) |
-
-**HTML Improvements:**
-
-| Problem | Solution |
-|---------|----------|
-| Empty `<style>` tag | Removed |
-| Inline styles | Created utility classes |
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| `1823692` | feat: add flexible editor modes and guided workflow UX |
-
-### Project Status
-
-**Milestone 8 Completed:**
-
-| Feature | Status |
-|---------|--------|
-| Flexible Editor (lines/grid) | Done |
-| Automatic Mode Detection | Done |
-| Workflow Stepper | Done |
-| Panel Hints | Done |
-| Info Tooltips | Done |
-| Onboarding Toast | Done |
-| CSS Refactoring | Done |
-
-### Knowledge Documents Status
-
-| Document | Status |
-|----------|--------|
-| DATA-SCHEMA.md | Updated with source types |
-| JOURNAL.md | Updated (this session) |
-| README.md | Updated with Milestone 8 |
-| ARCHITECTURE.md | Current |
-| METHODOLOGY.md | Current |
+Duplicate `.editor-grid-row` merged. Hardcoded colors (`#30363d`) replaced with CSS variables. Missing border variables added (`--border-subtle`, `--border-muted`). Orphaned modal styles removed (now using `<dialog>`). Empty `<style>` tag and inline styles cleaned up.
 
 ---
 
 ## 2026-01-16 | Session 8: CSS Refactoring & Warm Editorial Theme
 
-**Participants:** User, Claude Opus 4.5
+### CSS Modularization
 
-### Phase 1: CSS Modularization
+Monolithic 1530-line `styles.css` split into: variables.css (~110), base.css (~120), layout.css (~280), components.css (~340), dialogs.css (~280), editor.css (~200), viewer.css (~250), validation.css (~150), styles.css (~10, imports only).
 
-**Task:** Refactor monolithic 1530-line `styles.css` into modular structure.
+### Theme Evolution
 
-**New CSS Architecture:**
+Three stages: Dark (#0d1117, GitHub Dark) → Cold Light (#f5f5f5, user request) → Warm Editorial (final).
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `variables.css` | Design tokens, colors, spacing | ~110 |
-| `base.css` | Reset, typography, utilities | ~120 |
-| `layout.css` | Grid, panels, header, tooltips | ~280 |
-| `components.css` | Buttons, inputs, status indicators | ~340 |
-| `dialogs.css` | Dialog system, tabs, upload zone | ~280 |
-| `editor.css` | Transcription editor, grid/lines modes | ~200 |
-| `viewer.css` | Document viewer, regions overlay | ~250 |
-| `validation.css` | Validation panel, cards | ~150 |
-| `styles.css` | Entry point with @imports | ~10 |
+**Warm Editorial palette:**
+- Backgrounds: `#faf8f5` (cream), `#ffffff` (panels), `#f0ebe3` (viewer, paper-like)
+- Text: `#3d3229` (dark warm brown), `#8a7e72` (medium gray-brown)
+- Status: `#5a8a5a` (muted forest green), `#c4973a` (warm amber/gold), `#b85c4a` (muted terracotta)
 
-**Benefits:**
-- Clear separation of concerns
-- Easier maintenance
-- Smaller file sizes for debugging
-- Consistent naming conventions
+**Rationale:** Archival/manuscript aesthetic, reduced eye strain for extended editing sessions, colors evoke historical documents.
 
-### Phase 2: Theme Evolution
+### Demo Auto-Load
 
-**Timeline:**
+`autoLoadDemo()` loads first sample when no user session exists. Demo indicator in header (yellow dot + "DEMO"). Hidden when user uploads own file.
 
-| Stage | Theme | Decision Basis |
-|-------|-------|----------------|
-| Initial | Dark (#0d1117) | GitHub Dark aesthetic |
-| Change 1 | Cold Light (#f5f5f5) | User request |
-| Change 2 | Warm Editorial | User mockup analysis |
+### UI Analysis: 6 Problems Identified and Fixed
 
-**Warm Editorial Theme (Final):**
+| Problem | Severity | Cause | Solution |
+|---------|----------|-------|----------|
+| Transcription not displayed | Critical | `transcriptionComplete` event not handled after demo load | `documentLoaded` listener checks existing transcription |
+| Panel hints don't disappear | Medium | Timing issue with `appState.hasDocument` | New `documentLoaded` handler checks segments |
+| Viewer background too dark | Medium | Already using `var(--bg-viewer)`, no inline override | No fix needed |
+| Toolbar barely visible | Medium | Insufficient contrast | White background, primary text color, larger shadow |
+| Bounding box colors too cold | Low | Not matching warm theme | New variables: `--region-stroke: #8b7355` (sienna) |
+| Tooltip clipped | Low | CSS overflow | Fixed |
 
-```css
-/* Backgrounds - Cream/Beige */
---bg-primary: #faf8f5;      /* Warm off-white */
---bg-secondary: #ffffff;     /* Pure white for panels */
---bg-viewer: #f0ebe3;        /* Warm paper-like */
+### Settings & Help Dialogs
 
-/* Text - Warm Browns */
---text-primary: #3d3229;     /* Dark warm brown */
---text-secondary: #8a7e72;   /* Medium gray-brown */
-
-/* Status Colors - Archival Palette */
---confident: #5a8a5a;        /* Muted forest green */
---uncertain: #c4973a;        /* Warm amber/gold */
---problematic: #b85c4a;      /* Muted terracotta red */
-```
-
-**Design Rationale:**
-- Archival/manuscript aesthetic
-- Reduced eye strain for extended editing
-- Colors evoke historical documents
-
-### Phase 3: Demo Auto-Load
-
-**Task:** Auto-load demo dataset on startup with visible indicator.
-
-**Implementation:**
-
-| Component | Description |
-|-----------|-------------|
-| `autoLoadDemo()` in main.js | Loads first sample if no user session |
-| Demo Indicator in header | Yellow dot + "DEMO" label |
-| `hideDemoIndicator()` | Called when user uploads own file |
-| Session check | `session?.data?.document?.filename` |
-
-**Bug Fixes:**
-- `storage.saveSetting()` → `storage.saveSettings({ key: value })`
-- Session check path corrected
-
-### Phase 4: UI Analysis - Open Issues
-
-**Task:** Analyze current UI state and document problems.
-
-**Problems Identified:**
-
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Transkription nicht angezeigt | Editor Panel | Kritisch |
-| 2 | Panel-Hints verschwinden nicht | All Panels | Mittel |
-| 3 | Viewer-Hintergrund zu dunkel | Image Container | Mittel |
-| 4 | Toolbar kaum sichtbar | Viewer Toolbar | Mittel |
-| 5 | Bounding-Box Farben kalt | Region Overlay | Gering |
-| 6 | Tooltip wird abgeschnitten | Panel Headers | Gering (gelöst) |
-
-**Problem 1 Analysis - Transkription fehlt:**
-- PAGE-XML wird korrekt geparsed (pageXMLParser)
-- Event `pageXMLLoaded` wird gefeuert
-- `appState.setTranscription()` wird aufgerufen
-- ABER: `transcriptionComplete` Event wird nicht richtig gehandelt
-- Editor rendert nicht nach Demo-Load
-
-**Problem 2 Analysis - Panel-Hints:**
-- Hints sollten verschwinden wenn Dokument geladen ist
-- `updatePanelHints()` wird aufgerufen
-- Kondition prüft `appState.hasDocument` - aber Timing-Problem
-
-**Problem 3-5 Analysis - Visuelle Probleme:**
-- Hardcodierte Werte in index.html überschreiben CSS
-- `background-color: #050505` inline im image-container
-- Viewer background zu dunkel für warmes Theme
-
-### Phase 5: Fixes Implemented
-
-**Fix 1: Transkription anzeigen** [x]
-- Added `documentLoaded` event listener in `main.js` that checks for existing transcription
-- Added `regionsChanged` and `transcriptionComplete` listeners in `viewer.js` for region rendering
-- Editor already listens to `transcriptionComplete` - now regions render properly
-
-**Fix 2: Panel-Hints verbergen** [x]
-- Added new `documentLoaded` event handler in `main.js`
-- Checks if transcription segments already exist (from PAGE-XML)
-- Hides editor hint and updates workflow stepper accordingly
-
-**Fix 3: Viewer-Hintergrund** [x]
-- `index.html` already uses `var(--bg-viewer)` (warm paper-like #f0ebe3)
-- No inline style override needed
-
-**Fix 4: Toolbar sichtbarer** [x]
-- Changed `viewer.css` toolbar background to `rgba(255, 255, 255, 0.95)`
-- Set icon color to `var(--text-primary)` instead of secondary
-- Hover now uses `var(--bg-tertiary)` with accent color
-- Increased shadow to `--shadow-lg`
-
-**Fix 5: Region-Farben** [x]
-- Added new CSS variables in `variables.css`:
-  - `--region-stroke: #8b7355` (warm sienna brown)
-  - `--region-stroke-hover: #6d5a45`
-  - `--region-fill-hover: rgba(139, 115, 85, 0.1)`
-- Updated `viewer.css` to use these variables
-- Regions now blend with warm editorial theme
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `js/main.js` | Added `documentLoaded` listener for hint hiding |
-| `js/viewer.js` | Added region listeners for `regionsChanged` and `transcriptionComplete` |
-| `css/variables.css` | Added `--region-stroke`, `--region-stroke-hover`, `--region-fill-hover` |
-| `css/viewer.css` | Updated toolbar styling, region colors |
-| `knowledge/JOURNAL.md` | Documented all issues and fixes |
-
-### Phase 6: Settings & Help Dialogs
-
-**Task:** Implement missing dialogs for Settings and Help buttons.
-
-**Settings Dialog:**
-- Editor settings: Auto-save, line numbers, highlight uncertain
-- Validation settings: Auto-validate, default perspective
-- Display settings: Show hints, show workflow stepper
-- Data management: Clear session, reset to defaults
-
-**Help Dialog:**
-- Quick Start guide (4-step workflow)
-- Keyboard shortcuts grid
-- Confidence markers legend
-- Resource links (GitHub, Knowledge Vault, Methodology)
-
-**Files Modified:**
-
-| File | Changes |
-|------|---------|
-| `index.html` | Added `#settingsDialog` and `#helpDialog` |
-| `css/dialogs.css` | Added styles for settings sections, help layout, kbd, shortcuts grid |
-| `js/components/dialogs.js` | Added handlers for Settings and Help buttons |
-
-**New CSS Classes:**
-- `.settings-section`, `.settings-section-title`, `.settings-actions`
-- `.dialog-wide` (640px width for Help)
-- `.help-section`, `.help-section-title`, `.help-steps`
-- `.shortcut-grid`, `.shortcut-item`, `kbd`
-- `.marker-legend`, `.marker-item`, `.marker-indicator`
-- `.help-links`, `.help-link`, `.help-note`
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| TBD | feat: add Settings and Help dialogs with full functionality |
+Settings: editor settings (auto-save, line numbers, highlight uncertain), validation (auto-validate, default perspective), display (hints, workflow stepper), data management (clear session, reset defaults). Help: quick start (4 steps), keyboard shortcuts grid, confidence legend, resource links.
 
 ---
 
 ## 2026-01-16 | Session 9: Logo Integration
 
-**Participants:** User, Claude Opus 4.5
+Two logo candidates analyzed: Logo 1 (horizontal, eye/wave, elegant flowing) and Logo 2 (compact circle, "Co"/Yin-Yang). Logo 1 selected as primary.
 
-### Phase 1: Logo Analysis
+**Placement:** Compact circular logo (`logo-icon.png`) in header, wide eye/wave logo (`logo.png`) in help dialog about section.
 
-**Task:** Analyze two logo candidates and integrate into application.
-
-**Logo Candidates:**
-
-| Logo | Format | Characteristics |
-|------|--------|-----------------|
-| Logo 1 (puoofl) | Horizontal, eye/wave | Elegant flowing lines, wide format |
-| Logo 2 (wdvlo9) | Compact circle | Abstract "Co"/Yin-Yang, square format |
-
-**Decision:** Logo 1 (puoofl) selected as primary logo - elegant eye/wave design with document symbolism.
-
-### Phase 2: Logo Integration
-
-**Implementation:**
-
-| Component | File | Changes |
-|-----------|------|---------|
-| Logo image | `docs/assets/logo.png` | Copied eye/wave logo |
-| Header | `index.html` | Replaced SVG icon with `<img class="logo-image">` |
-| CSS | `css/layout.css` | Added `.logo-image` class (28x28px, border-radius) |
-| Favicon | `favicon.svg` | Redesigned with warm colors and golden circle |
-
-**Favicon Design:**
-- Background: `#faf8f5` (--bg-primary)
-- Circle: `#c4973a` (--uncertain, golden amber)
-- Inner curves: Cream colored, suggesting collaboration
-
-### Color Alignment
-
-**Verified color consistency:**
-
-| Element | Color | Variable |
-|---------|-------|----------|
-| Logo gold | `#c4973a` | `--uncertain` |
-| Background | `#faf8f5` | `--bg-primary` |
-| Favicon matches | Design System v2.1 | Warm editorial palette |
-
-### Files Created/Modified
-
-| File | Action |
-|------|--------|
-| `docs/assets/logo.png` | Eye/Wave logo for About section |
-| `docs/assets/logo-icon.png` | Compact logo for Header |
-| `docs/index.html` | Header + Help Dialog logos |
-| `docs/css/layout.css` | Added `.logo-image` |
-| `docs/favicon.svg` | Redesigned with warm colors |
+**Favicon:** Redesigned with warm background (`#faf8f5`), golden circle (`#c4973a`), cream-colored inner curves.
 
 ---
 
 ## 2026-01-16 | Session 10: Color System Refinement
 
-**Participants:** User, Claude Opus 4.5
+### Problem
 
-### Phase 1: Color Analysis
+Logo gold (`#b89850`) was conflated with status color `--uncertain` (`#c4973a`). No dedicated brand color category.
 
-**Problem:** Logo colors did not match UI color system.
+### Solution: Brand Color Category
 
-**Analysis:**
+New variables: `--brand-gold: #b89850`, `--brand-brown: #3d3229`, plus overlays (`--brand-bg`, `--brand-border`, `--brand-glow`).
 
-| Element | Logo Color | UI Variable | Match? |
-|---------|------------|-------------|--------|
-| Logo Gold | `#b89850` | `--uncertain (#c4973a)` | Close but different |
-| Logo Brown | `#3d3229` | `--text-primary` | Exact match |
-| Accent Blue | `#4a7c9b` | Not in logo | Missing |
+**Color function matrix (clear separation):**
 
-**Issue:** No dedicated Brand color category - logo gold was conflated with status color `--uncertain`.
-
-### Phase 2: Brand Color Introduction
-
-**Solution:** Add separate Brand color category for identity elements.
-
-**New Variables in `variables.css`:**
-
-```css
-/* Brand - Logo colors (identity, distinct from functional colors) */
---brand-gold: #b89850;           /* Logo gold - warm ochre */
---brand-gold-rgb: 184, 152, 80;
---brand-brown: #3d3229;          /* Logo brown - matches text-primary */
-
-/* Brand overlays */
---brand-bg: rgba(184, 152, 80, 0.08);
---brand-border: rgba(184, 152, 80, 0.25);
---brand-glow: 0 0 12px rgba(184, 152, 80, 0.2);
-```
-
-### Phase 3: Color Function Matrix
-
-**Clear separation of concerns:**
-
-| Category | Purpose | Colors | Usage |
-|----------|---------|--------|-------|
-| **Brand** | Identity | Gold `#b89850`, Brown `#3d3229` | Logo, About section |
-| **Accent** | Interactive | Steel Blue `#4a7c9b` | Buttons, links, active states |
-| **Status** | Confidence | Green/Amber/Terracotta | Validation feedback |
-| **Neutral** | Layout | Cream/White/Brown | Backgrounds, text |
-| **Region** | Annotations | Sienna `#8b7355` | Bounding boxes |
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `css/variables.css` | Added `--brand-gold`, `--brand-brown`, brand overlays |
-| `css/dialogs.css` | Updated `.help-about` to use brand colors |
-| `knowledge/DESIGN-SYSTEM.md` | Complete color documentation rewrite |
-
-### Logo Placement Correction
-
-**Issue:** Eye/Wave logo too wide for header, getting clipped.
-
-**Solution:**
-- Header: Compact circular logo (`logo-icon.png`)
-- Help Dialog About: Wide eye/wave logo (`logo.png`)
+| Category | Purpose | Colors |
+|----------|---------|--------|
+| Brand | Identity | Gold `#b89850`, Brown `#3d3229` |
+| Accent | Interactive | Steel Blue `#4a7c9b` |
+| Status | Confidence | Green/Amber/Terracotta |
+| Neutral | Layout | Cream/White/Brown |
+| Region | Annotations | Sienna `#8b7355` |
 
 ---
 
 ## 2026-01-16 | Session 11: Gemini 3 API Optimization
 
-**Participants:** User, Claude Opus 4.5
+### Model Name Correction
 
-### Phase 1: Model Name Correction
+`gemini-3.0-flash-preview` → `gemini-3-flash-preview` (404 error fixed).
 
-**Problem:** Initial Gemini 3 model names were incorrect.
+### Gemini 3 Developer Guide Findings
 
-| Attempted | Correct | Result |
-|-----------|---------|--------|
-| `gemini-3.0-flash-preview` | `gemini-3-flash-preview` | 404 error fixed |
-| `gemini-3.0-pro-preview` | `gemini-3-pro-preview` | 404 error fixed |
+`thinking_level` (high/low) controls reasoning depth. `media_resolution: 'high'` improves OCR quality. **temperature=1.0 is mandatory for Gemini 3** — lower values cause unexpected behavior.
 
-**Files Updated:**
-- `docs/js/services/llm.js` - Provider config
-- `docs/index.html` - Model dropdown
-- `docs/tests/llm.test.js` - Test expectations
-- `README.md` - Provider table
-
-### Phase 2: Gemini 3 Developer Guide Analysis
-
-**Task:** Analyze official Gemini 3 documentation for project improvements.
-
-**Key Findings:**
-
-| Feature | Description | Benefit for coOCR/HTR |
-|---------|-------------|----------------------|
-| `thinking_level` | Controls reasoning depth (high/low) | Better validation analysis |
-| `media_resolution` | Image quality setting | Improved OCR on historical documents |
-| Temperature=1.0 | Required for Gemini 3 | Prevents unexpected behavior |
-| Thought signatures | Multi-turn reasoning chains | Future: iterative validation |
-
-### Phase 3: Implementation
-
-**Changes to `_callGemini()` in llm.js:**
-
-```javascript
-// Before
-generationConfig: {
-  temperature: 0.1,  // Wrong for Gemini 3
-  maxOutputTokens: 8192
-}
-
-// After
-generationConfig: {
-  temperature: 1.0,  // Gemini 3 requirement
-  maxOutputTokens: 8192
-},
-// For images: better OCR quality
-media_resolution: 'high',
-// For validation: deeper reasoning
-thinking_config: { thinking_level: 'high' }
-```
-
-**Feature Matrix:**
-
-| Feature | Transcription | Validation |
-|---------|--------------|------------|
-| temperature | 1.0 | 1.0 |
-| media_resolution | high | - |
-| thinking_config | - | high |
-
-### Phase 4: Cleanup
-
-**Tasks Completed:**
-
-| Task | Status |
-|------|--------|
-| Delete defective konvolute transcriptions | Done |
-| Delete outdated docs/README.md | Done |
-| Update root README.md | Done |
-| Update CLAUDE.md | Done |
-| Update IMPLEMENTATION-PLAN.md (mark complete) | Done |
-| Update JOURNAL.md | Done |
-
-### Technical Details
-
-**Gemini 3 API Structure:**
-
-```javascript
-{
-  contents: [{ parts: [...] }],
-  generationConfig: {
-    temperature: 1.0,           // Required for Gemini 3
-    maxOutputTokens: 8192,
-    media_resolution: 'high',   // For images
-    thinking_config: {          // For complex analysis
-      thinking_level: 'high'    // or 'low'
-    }
-  }
-}
-```
-
-**Why temperature=1.0?**
-From Gemini 3 Developer Guide:
-> "Wenn Sie die Temperatur ändern (auf unter 1.0 setzen), kann dies zu unerwartetem Verhalten führen"
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/js/services/llm.js` | Gemini 3 config (temp, media_resolution, thinking_config) |
-| `knowledge/JOURNAL.md` | Session 11 documentation |
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| Previous | refactor: major cleanup and bugfixes |
-| This session | feat: optimize Gemini 3 API integration |
+**Application:** Transcription gets `media_resolution: 'high'`, validation gets `thinking_config: { thinking_level: 'high' }`, both temperature=1.0.
 
 ---
 
-## 2026-01-16 | Session 12: Bug Analysis & Requirements Documentation
+## 2026-01-16 | Session 12: Bug Analysis & Requirements
 
-**Participants:** User, Claude Opus 4.5
+### Empty State Fix
 
-### Phase 1: UI Empty State Fix
+Empty state not visible on fresh start (Incognito). Fix: z-index and click handler corrected, auto-load demo disabled.
 
-**Task:** Start-Screen zeigt keine Drag-and-Drop Oberfläche.
+### Critical Bug: Transcription Not Displayed in Editor
 
-**Problem:** Beim frischen Start (Incognito) war der Empty State nicht sichtbar.
+**Symptom:** HSA letter → Transcribe → Console shows 41 segments, but editor cells empty, 0 regions.
 
-**Lösung:**
+**Root cause (state.js:405-415):** `data.segments.filter(s => s.bounds)` filters out all LLM segments because LLM transcriptions have no coordinates (`bounds`). All segments removed → 0 regions → editor shows nothing.
 
-| Datei | Änderung |
-|-------|----------|
-| `index.html` | Empty State mit drop-zone-indicator |
-| `viewer.css` | z-index: 10 für .viewer-empty-state |
-| `upload.js` | Click-Handler für Drop Zone |
-| `main.js` | Auto-load Demo deaktiviert |
+### Further Bugs Identified
 
-### Phase 2: Kritische Bug-Analyse
+| Bug | Cause |
+|-----|-------|
+| PAGE-XML word fragments | Wrong TextEquiv in page-xml.js |
+| Table prompt used for letters | Single prompt for all document types |
+| Validation initially visible | Missing conditional display |
 
-**Task:** Transkribierter Text erscheint nicht im Editor.
+### Requirements Document
 
-**Symptom:**
-- HSA Brief → Transcribe → Console: "segments=41"
-- Editor-Zellen bleiben leer
-- 0 Regions im Viewer
-
-**Root Cause gefunden in `state.js:405-415`:**
-
-```javascript
-if (data.segments?.length > 0) {
-  this.data.regions = data.segments
-    .filter(s => s.bounds)  // ← BUG: LLM-Segments haben KEIN bounds!
-    .map(s => ({...}));
-}
-```
-
-**Erklärung:** LLM-Transkriptionen haben keine Koordinaten (`bounds`), daher werden alle Segments gefiltert → 0 Regions → Editor zeigt nichts.
-
-### Phase 3: Vollständige Analyse
-
-**Drei parallele Explore-Agents für:**
-
-1. **UI/UX Elements Dokumentation**
-   - Alle 3 Panels dokumentiert (Viewer, Editor, Validation)
-   - Feature-Matrix erstellt
-
-2. **Expert Workflow Analyse**
-   - 6-Schritt Workflow identifiziert
-   - Lücken in Validierung gefunden
-
-3. **Data Flow Bug Analysis**
-   - Exakte Bug-Location: `state.js:405`
-   - Bounds-Filter als Ursache
-
-### Phase 4: Requirements Documentation
-
-**Task:** Vollständiges Requirements-Dokument erstellen.
-
-**Erstellt:** `knowledge/REQUIREMENTS.md`
-
-**Inhalt:**
-- 26 implementierte Features (alle kategorisiert)
-- 9 offene Features (mit Prioritäten)
-- 4 bekannte Bugs (mit Ursachen und Lösungen)
-- Demo-Samples Übersicht
-- Validation Rules (8 Regeln)
-- LLM Provider Konfiguration
-
-### Identifizierte Bugs
-
-| Bug | Priorität | Ursache | Status |
-|-----|-----------|---------|--------|
-| Transkription nicht sichtbar | KRITISCH | bounds-Filter in state.js | Identifiziert |
-| PAGE-XML Wortfragmente | HOCH | falsches TextEquiv in page-xml.js | Identifiziert |
-| Tabellen-Prompt für Briefe | MITTEL | ein Prompt für alle Dokumente | Identifiziert |
-| Validation initial sichtbar | NIEDRIG | fehlende Conditional Display | Identifiziert |
-
-### Files Created/Modified
-
-| File | Action |
-|------|--------|
-| `knowledge/REQUIREMENTS.md` | NEU: Vollständige Requirements |
-| `knowledge/JOURNAL.md` | Session 12 dokumentiert |
-| `knowledge/INDEX.md` | REQUIREMENTS.md hinzugefügt |
-| `knowledge/DATA-SCHEMA.md` | Kleine Updates |
-
-### Open Items für nächste Session
-
-- [ ] Bug 1 fixen: Pseudo-Regions für LLM-Transkriptionen
-- [ ] Bug 2 fixen: PAGE-XML Direct Text
-- [ ] Bug 3 fixen: Dual-Prompts für Dokumenttypen
-- [ ] METS-XML Upload Integration
-
-### Commits
-
-| Commit | Description |
-|--------|-------------|
-| TBD | docs: add REQUIREMENTS.md and update documentation |
+`knowledge/REQUIREMENTS.md` created: 26 implemented features, 9 open, 4 known bugs.
 
 ---
 
 ## 2026-01-17 | Session 13: Bug Fixes, Features & Tests
 
-**Participants:** User, Claude Opus 4.5
+### Bug Fixes
 
-### Phase 1: Critical Bug Fixes
+**Pseudo-regions for LLM segments:** Evenly distributed regions generated when no bounds available (`synthetic: true`). Height per region = 100% / total segments.
 
-**Task:** Fix all 4 identified bugs from Session 12.
+**PAGE-XML text extraction:** New `extractLineText()` prefers direct TextEquiv of TextLine, then falls back to Word children. Solves word fragment problem.
 
-| Bug | Lösung | Datei |
-|-----|--------|-------|
-| LLM-Segmente ohne bounds | Pseudo-Regionen generieren | `state.js` |
-| PAGE-XML Wortfragmente | `extractLineText()` + Word-Fallback | `page-xml.js` |
-| Tabellen-Prompt für alle | Dual-Prompts + UI-Selector | `llm.js`, `index.html` |
-| Validation initial sichtbar | Conditional display | `validation.js` |
+**Dual prompt system:** `TRANSCRIPTION_PROMPT_TABLE` for account books, `TRANSCRIPTION_PROMPT_TEXT` for letters/prose. UI dropdown for document type.
 
-**Bug 1.1: Pseudo-Regionen**
-```javascript
-// state.js - Gleichmäßig verteilte Regionen für LLM-Segmente
-if (!s.bounds || s.bounds.width === 0) {
-  const heightPercent = 100 / totalSegments;
-  return { line, x: 2, y: index * heightPercent, w: 96, h: heightPercent, synthetic: true };
-}
-```
+**Validation conditional display:** `updateVisibility()` shows validation only after transcription.
 
-**Bug 1.2: PAGE-XML Text-Extraktion**
-```javascript
-// page-xml.js - Direktes TextEquiv bevorzugen, dann Word-Fallback
-extractLineText(line) {
-  const directTextEquiv = this.findDirectChild(line, 'TextEquiv');
-  if (directTextEquiv) return unicode.textContent;
-  const words = this.findDirectChildren(line, 'Word');
-  if (words.length > 0) return words.map(w => ...).join(' ');
-}
-```
+### New Features
 
-**Bug 1.3: Dual-Prompt-System**
-- `TRANSCRIPTION_PROMPT_TABLE` für Rechnungsbücher
-- `TRANSCRIPTION_PROMPT_TEXT` für Briefe/Fließtext
-- UI-Dropdown: "Dokumenttyp" (Tabelle/Fließtext)
+**PAGE-XML export:** PAGE 2019-07-15 schema, metadata, TextRegion with TextLine, Coords points, TextEquiv, confidence mapping (certain→0.95, likely→0.75, uncertain→0.5).
 
-### Phase 2: Feature Implementation
+**METS-XML upload:** Parser integration in upload.js.
 
-| Feature | Beschreibung | Datei |
-|---------|--------------|-------|
-| PAGE-XML Export | PAGE 2019-07-15 Schema | `export.js` |
-| XML Export Dialog | Option im Export-Dialog | `index.html` |
-| METS-XML Upload | Parser-Integration | `upload.js` |
+### Tests
 
-**PAGE-XML Export Features:**
-- Metadata (Creator, Created, LastChange)
-- Page mit imageFilename, Dimensionen
-- TextRegion mit TextLine-Elementen
-- Coords points, TextEquiv mit Unicode
-- Confidence-Mapping (certain→0.95, likely→0.75, uncertain→0.5)
+118 unit tests (100% passing): llm.test.js (28), page-xml.test.js (26), export.test.js (32), validation.test.js (32).
 
-### Phase 3: Test Implementation
-
-| Test-Datei | Tests | Abdeckung |
-|------------|-------|-----------|
-| `llm.test.js` | 28 | Provider, Transcription, Validation |
-| `page-xml.test.js` | 26 | Parser, Segments, Metadata |
-| `export.test.js` | 32 | Alle Formate, XML-Escaping |
-| `validation.test.js` | 32 | Regeln, Marker, Summary |
-| **Gesamt** | **118** | |
-
-**Test-Fixes benötigt:**
-1. `jsdom` als Dev-Dependency hinzugefügt
-2. pagexml alias: Filename-Extension statt Format geprüft
-3. Markdown table: Field-Keys an Header-Konvertierung angepasst
-4. Summary calculation: Korrekter Property-Pfad (`summary.counts.success`)
-
-### Phase 4: Documentation Update
-
-| Datei | Änderung |
-|-------|----------|
-| `ACTIONPLAN.md` | 512 → 60 Zeilen (-89%), komprimiert |
-| `IMPLEMENTATION-PLAN.md` | Phase 2 [x], Phase 4 [~], Bugs [x] |
-| `README.md` | PAGE-XML Export, 118 Tests |
-| `INDEX.md` | ACTIONPLAN.md hinzugefügt |
-
-### Files Modified
-
-| Datei | Änderungen |
-|-------|------------|
-| `docs/js/state.js` | Pseudo-Regionen für LLM-Segmente |
-| `docs/js/services/llm.js` | Dual-Prompt-System |
-| `docs/js/services/parsers/page-xml.js` | extractLineText(), findDirectChild() |
-| `docs/js/services/export.js` | exportPageXml() |
-| `docs/js/components/validation.js` | updateVisibility() |
-| `docs/js/components/transcription.js` | documentType-Integration |
-| `docs/js/components/upload.js` | METS-XML Handler |
-| `docs/index.html` | Dokumenttyp-Dropdown, XML-Export-Option |
-| `docs/tests/export.test.js` | 32 neue Tests |
-| `docs/tests/validation.test.js` | 32 neue Tests |
-
-### Commits
-
-| Commit | Beschreibung |
-|--------|--------------|
-| `11adef4` | test: add comprehensive tests for export and validation services |
-| `dce0b94` | feat: add PAGE-XML export UI and METS-XML upload support |
-| `6645959` | fix: resolve 4 critical bugs and add PAGE-XML export |
-| `e6567c9` | docs: add comprehensive action plan for open issues |
-| `e481a64` | docs: update documentation to reflect completed fixes |
-
-### Project Status
-
-**Abgeschlossen:**
-- 4 kritische Bugs behoben
-- PAGE-XML Export implementiert
-- METS-XML Upload integriert
-- 118 Unit Tests (100% passing)
-- Dokumentation aktualisiert und komprimiert
-
-**Offen:**
-- Phase 3: Batch-Processing
-- Phase 4: E2E Tests, Performance Audit
+**Test fixes required:** jsdom as dev dependency, pagexml alias (filename extension instead of format checked), Markdown table field keys adapted to header conversion, summary calculation corrected property path (`summary.counts.success`).
 
 ---
 
 ## 2026-01-18 | Session 14: OpenSeadragon Viewer Rewrite
 
-**Participants:** User, Claude Opus 4.5
+### Problem
 
-### Problem Statement
+Region overlay synchronization broken. Regions appeared mispositioned because SVG viewBox="0 0 100 100" with preserveAspectRatio="none" failed for non-square images. Custom pan/zoom via CSS transform had to be manually synchronized with SVG overlay, creating multiple interacting failure points in organically grown code.
 
-**Issue:** Region-Overlay Synchronisation funktionierte nicht korrekt.
+### Decision
 
-**Symptome:**
-- Regions erschienen in der falschen Position (links oben statt über dem Text)
-- SVG viewBox="0 0 100 100" mit preserveAspectRatio="none" funktionierte nicht für nicht-quadratische Bilder
-- Eigene Pan/Zoom-Implementierung mit Transform war fehleranfällig
+Complete rewrite with OpenSeadragon + IIIF instead of incremental fixes. Advantages: automatic SVG transformation, native IIIF support, proven pan/zoom (touch-capable), significantly reduced code complexity.
 
-**Analyse:** Der alte Viewer-Code war organisch gewachsen mit mehreren interagierenden Problemen:
-- Custom Pan/Zoom mit CSS Transform
-- SVG Overlay musste manuell synchronisiert werden
-- Koordinatensystem-Mismatch zwischen Bild und Overlay
+### Architecture Change
 
-### Solution: Complete Rewrite with OpenSeadragon
+Old: `imageWrapper` with CSS transform + separate SVG (viewBox 0 0 100 100). New: OpenSeadragon container with Canvas + SVG Overlay plugin, coordinates in viewport space.
 
-**Entscheidung:** Komplettes Rewrite mit OpenSeadragon + IIIF-Support statt inkrementeller Fixes.
+### Coordinate Conversion (Core Problem)
 
-**Vorteile:**
-1. **Korrekte Region-Overlay** - SVG wird automatisch transformiert
-2. **IIIF Support** - Bilder von externen Repositorien laden
-3. **Professionelles Pan/Zoom** - Smooth, touch-fähig, bewährt
-4. **Vereinfachter Code** - OpenSeadragon übernimmt komplexe Logik
+OSD SVG Overlay normalizes X to 0–1 (image width), but Y to 0 through aspectRatio (not image height). PAGE-XML stores percentages (0–100). Conversion: `x = reg.x/100`, `y = (reg.y/100) * (imgHeight/imgWidth)`, same for w/h.
 
-### Implementation
+### Details
 
-**Phase 1: Dependencies**
-
-| Datei | Aenderung |
-|-------|----------|
-| `index.html` | OpenSeadragon 4.1 + SVG Overlay Plugin via CDN |
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/openseadragon.min.js"></script>
-<script src="https://openseadragon.github.io/svg-overlay/openseadragon-svg-overlay.js"></script>
-```
-
-**Phase 2: HTML Structure**
-
-| Alt | Neu |
-|-----|-----|
-| `<div class="image-container"><div id="imageWrapper">...</div></div>` | `<div id="osd-viewer" class="osd-viewer">` |
-| `<img id="docImage">` + `<svg id="regionsOverlay">` | OpenSeadragon rendert intern |
-
-**Phase 3: viewer.js Rewrite (~500 LOC)**
-
-| Feature | Implementation |
-|---------|----------------|
-| OpenSeadragon Init | `OpenSeadragon({ id: 'osd-viewer', ... })` |
-| SVG Overlay | `viewer.svgOverlay()` |
-| Local Images | `viewer.open({ type: 'image', url, buildPyramid: false })` |
-| IIIF Images | `viewer.open(infoJsonUrl)` |
-| Regions | `svgOverlay.node()` + SVG rect elements |
-| Pan/Zoom | Built-in (wheel, drag, dblclick) |
-| Selection Sync | `viewer.viewport.panTo(new OpenSeadragon.Point(x, y))` |
-| Rotation | `viewer.viewport.setRotation()` |
-| Flip | `viewer.viewport.setFlip()` |
-
-**Phase 4: Koordinaten-Konvertierung (Aspect Ratio Fix)**
-
-Das OpenSeadragon SVG Overlay verwendet ein spezielles Koordinatensystem:
-- X-Koordinate: 0-1 (normalisiert auf Bildbreite)
-- Y-Koordinate: 0 bis aspectRatio (normalisiert auf Bildbreite, NICHT Bildhoehe)
-
-```javascript
-// PAGE-XML speichert als Prozent (0-100)
-// OSD SVG Overlay: X normalisiert auf Breite, Y muss mit Aspect Ratio multipliziert werden
-const aspectRatio = imgHeight / imgWidth;
-const x = reg.x / 100;
-const y = (reg.y / 100) * aspectRatio;
-const w = reg.w / 100;
-const h = (reg.h / 100) * aspectRatio;
-```
-
-**Phase 5: Rotation und Flip Controls**
-
-| Feature | Keyboard | Button |
-|---------|----------|--------|
-| Rotate Left | `r` | btnRotateLeft |
-| Rotate Right | `R` (Shift+R) | btnRotateRight |
-| Flip Horizontal | `h` | btnFlipH |
-| Reset View | `0` | btnResetView |
-
-**Phase 6: CSS Updates**
-
-| Aenderung | Beschreibung |
-|----------|--------------|
-| `#osd-viewer` | Container-Styles |
-| `.region-box` | SVG Overlay Styles mit `vector-effect: non-scaling-stroke` |
-| `.viewer-toolbar .icon-btn svg` | Icon-Groesse auf 20px erhoeht |
-
-### IIIF Support (Prepared)
-
-| Feature | Status |
-|---------|--------|
-| IIIF Image API | Bereit (via OpenSeadragon) |
-| IIIF Presentation API | `loadIIIFManifest()` implementiert |
-| Multi-Page via Manifest | Unterstuetzt |
-
-### Files Modified
-
-| Datei | Aenderung |
-|-------|----------|
-| `docs/index.html` | OSD Scripts + HTML Structure + Rotation/Flip Buttons |
-| `docs/js/viewer.js` | Komplettes Rewrite (~520 LOC) |
-| `docs/css/viewer.css` | OSD Container + Region Styles + Icon-Groesse |
-| `knowledge/VIEWER-REWRITE-PLAN.md` | Planungs-Dokument |
-
-### Architecture Comparison
-
-**Alt:**
-```
-image-container
-  imageWrapper (transform: translate + scale)
-    docImage
-    regionsOverlay (SVG, viewBox: 0 0 100 100)
-```
-
-**Neu:**
-```
-#osd-viewer (OpenSeadragon Container)
-  Canvas (Bild-Rendering, managed by OSD)
-  SVG Overlay (via svg-overlay Plugin)
-    rect (viewport coordinates with aspect ratio)
-```
-
-### Results
-
-- [x] Region-Synchronisation funktioniert korrekt
-- [x] Regionen bleiben bei allen Zoom-Stufen exakt ueber den Textzeilen
-- [x] Klick auf Region waehlt Zeile im Editor
-- [x] Klick auf Zeile im Editor pannt zur Region
-- [x] Rotation und Flip funktionieren
-- [x] Smooth Pan und Zoom mit Maus/Touch
+Dependencies: OpenSeadragon 4.1 + SVG Overlay plugin via CDN. New controls: Rotate Left/Right (`r`/`R`), Flip Horizontal (`h`), Reset View (`0`). IIIF: `loadIIIFManifest()` implemented, multi-page via manifest supported. CSS: `vector-effect: non-scaling-stroke` for regions, toolbar icons at 20px.
 
 ---
 
-## 2026-01-18 | Session 15: IIIF Dialog Implementation
-
-**Participants:** User, Claude Opus 4.5
-
-### Task
-
-**Request:** Implement IIIF Dialog UI for loading images from external IIIF repositories.
-
-**Context:** The `loadIIIFManifest()` function in viewer.js was already implemented in Session 14, but lacked a user-facing dialog.
+## 2026-01-18 | Session 15: IIIF Dialog
 
 ### Implementation
 
-**Components Created:**
+Dialog with URL input, example links (Bodleian, Gallica, BSB), preview mode (fetch manifest, show metadata), automatic IIIF v2/v3 detection, page count, error handling (timeout, HTTP, invalid manifest).
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| IIIF Dialog HTML | `index.html` | Native dialog with URL input, examples, preview |
-| IIIF Button | Header | Opens IIIF dialog |
-| Dialog Logic | `dialogs.js` | Preview, load, error handling |
-| CSS Styles | `dialogs.css` | IIIF-specific styling |
+### Bug Fixes
 
-**Dialog Features:**
+**Editor not clearing on IIIF load:** Editor only listened to `documentLoaded`, not `pageChanged`/`pagesLoaded`. Event listeners added.
 
-| Feature | Description |
-|---------|-------------|
-| URL Input | Text field for IIIF Manifest URL |
-| Example Links | Pre-filled URLs (Bodleian, Gallica, BSB) |
-| Preview Mode | Fetch manifest and show metadata before loading |
-| Version Detection | Auto-detect IIIF v2 or v3 |
-| Page Count | Shows number of canvases in manifest |
-| Error Handling | Timeout, HTTP errors, invalid manifest |
-| Loading State | Spinner during fetch operations |
+**Preview required before Load:** Unintuitive UX. Load button now calls `loadIIIFDirectly()`, Enter in URL input loads directly.
 
-**Workflow:**
+**No IIIF option in empty state:** "Load IIIF" button added next to "Load Demo".
 
-```
-1. Click "IIIF" button in header
-2. Enter manifest URL (or click example)
-3. Click "Preview" to fetch and validate
-4. See manifest title, version, page count
-5. Click "Load" to import into viewer
-6. Dialog closes, first page displays
-```
+### Known Issue
 
-**Example Manifests Included:**
-
-| Repository | Type | URL |
-|------------|------|-----|
-| Bodleian Library | v2 | Oxford manuscripts |
-| Gallica (BnF) | v2 | French national library |
-| BSB Munich | v2 | Bavarian State Library |
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/index.html` | IIIF Dialog HTML, IIIF Button in header |
-| `docs/js/components/dialogs.js` | IIIF event bindings, preview/load functions |
-| `docs/css/dialogs.css` | IIIF dialog styling (~130 lines) |
-| `knowledge/JOURNAL.md` | Session 15 documentation |
-
-### Technical Details
-
-**Preview Implementation:**
-
-```javascript
-async previewIIIFManifest() {
-  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
-  const manifest = await response.json();
-
-  // Version detection
-  const version = context?.includes('presentation/3') ? 3 : 2;
-
-  // Extract canvases
-  const canvases = version === 3 ? manifest.items : manifest.sequences?.[0]?.canvases;
-}
-```
-
-**CSS Classes Added:**
-
-- `.iiif-examples`, `.iiif-examples-label`, `.iiif-example-links`
-- `.btn-link` (inline link-style button)
-- `.iiif-preview`, `.iiif-preview-header`, `.iiif-preview-content`
-- `.iiif-preview-title`, `.iiif-preview-info`, `.iiif-preview-pages`
-- `.iiif-loading`, `.iiif-error`
-
-### Integration with Existing Code
-
-The IIIF Dialog integrates with:
-
-1. **viewer.js** - `loadIIIFManifest()` handles the actual manifest loading
-2. **state.js** - `setPages()` stores multi-page documents
-3. **Page Navigation** - Existing next/prev buttons work with IIIF pages
-
-### Results
-
-- [x] IIIF button visible in header
-- [x] Dialog opens with URL input
-- [x] Example links pre-fill URLs
-- [x] Preview shows manifest metadata
-- [x] Load button imports into viewer
-- [x] Error handling for invalid URLs/manifests
-
-### Bug Fixes (Session 15 continued)
-
-**Issue 1: Editor not clearing on IIIF load**
-
-When loading a new IIIF manifest, the transcription from the previous document remained visible.
-
-**Root Cause:** Editor only listened to `documentLoaded` event, not `pageChanged` or `pagesLoaded`.
-
-**Fix:** Added event listeners in `editor.js`:
-
-```javascript
-// React to page changes (multi-page documents, IIIF)
-appState.addEventListener('pageChanged', () => {
-    const state = appState.getState();
-    renderEditor(state.transcription);
-    history.stack = [];
-    history.index = -1;
-    updateUndoRedoButtons();
-});
-
-// React to new pages loaded (IIIF manifest, folder upload)
-appState.addEventListener('pagesLoaded', () => {
-    const state = appState.getState();
-    renderEditor(state.transcription);
-    history.stack = [];
-    history.index = -1;
-    updateUndoRedoButtons();
-});
-```
-
-**Issue 2: IIIF Dialog required Preview before Load**
-
-Users had to click "Preview" before "Load" would work - unintuitive UX.
-
-**Fix:**
-1. Load button now calls `loadIIIFDirectly()` instead of `loadIIIFFromDialog()`
-2. Removed `disabled` attribute from Load button
-3. Enter key in URL input directly loads manifest
-
-**Issue 3: No IIIF option in empty state**
-
-The empty state only showed "Load Demo" button.
-
-**Fix:** Added "Load IIIF" button next to "Load Demo" in empty state:
-
-```html
-<div class="empty-state-actions">
-    <button class="btn btn-secondary btn-sm" id="btnLoadDemo">Load Demo</button>
-    <button class="btn btn-secondary btn-sm" id="btnLoadIIIF">Load IIIF</button>
-</div>
-```
-
-### Files Modified (Bug Fixes)
-
-| File | Changes |
-|------|---------|
-| `docs/js/editor.js` | Added `pageChanged` and `pagesLoaded` event listeners |
-| `docs/js/components/dialogs.js` | Load button calls `loadIIIFDirectly()`, removed disabled logic |
-| `docs/index.html` | Added "Load IIIF" button, removed `disabled` from Load button |
-| `docs/js/main.js` | Added click handler for `btnLoadIIIF` |
-
-### Known Issues
-
-- **Page navigation lag**: Slight delay when navigating pages in large IIIF manifests (1000+ pages). This is expected behavior due to image loading.
+Slight delay when navigating pages in large IIIF manifests (1000+ pages). Expected behavior due to image loading.
 
 ---
 
 ## 2026-01-18 | Session 16: CSS & HTML Refactoring
 
-**Participants:** User, Claude Opus 4.5
+### Accessibility
 
-### Task
+Focus-visible tokens (`--focus-ring-color`, `--focus-ring-width`, `--focus-ring-offset`). Mouse focus removal (`:focus:not(:focus-visible)`). Reduced motion support (`@media (prefers-reduced-motion: reduce)`).
 
-**Request:** CSS and HTML refactoring for maintainability and consistency.
+### Design Tokens
 
-### CSS Refactoring (High & Medium Priority)
+Selection colors (`--selection-bg`, `--selection-bg-hover`, `--selection-bg-active`). Hardcoded RGBA replaced with token references. Z-index system expanded (dropdown, sticky, overlay, modal, tooltip, toast).
 
-**High Priority - Accessibility:**
+### HTML Semantics
 
-| Fix | Files | Description |
-|-----|-------|-------------|
-| Focus-visible tokens | `variables.css`, `base.css` | Added `--focus-ring-color`, `--focus-ring-width`, `--focus-ring-offset` |
-| Mouse focus removal | `base.css` | `:focus:not(:focus-visible) { outline: none; }` |
-| Reduced motion | `base.css` | `@media (prefers-reduced-motion: reduce)` support |
+`<div class="app-container">` → `<main>`. ~30 inline styles moved to CSS classes. `style="display:none"` → `hidden` attribute. SVG icon sprite with `<symbol>` definitions for reusable icons (`<use href="#icon-close">`).
 
-**High Priority - Design Tokens:**
+### Utility Classes
 
-| Fix | Files | Description |
-|-----|-------|-------------|
-| Selection colors | `variables.css` | Added `--selection-bg`, `--selection-bg-hover`, `--selection-bg-active` |
-| Hardcoded RGBA | `editor.css`, `viewer.css`, `dialogs.css` | Replaced with token references |
-
-**Medium Priority - Architecture:**
-
-| Fix | Files | Description |
-|-----|-------|-------------|
-| z-index system | `variables.css` | Expanded: `--z-dropdown`, `--z-sticky`, `--z-overlay`, `--z-modal`, `--z-tooltip`, `--z-toast` |
-| Duplicate keyframes | `dialogs.css` | Removed duplicate `@keyframes spin` (already in `base.css`) |
-
-### HTML Refactoring
-
-**Semantic Improvements:**
-
-| Change | Description |
-|--------|-------------|
-| `<div class="app-container">` → `<main>` | Proper semantic landmark |
-| Inline styles → CSS classes | ~30 inline styles moved to `components.css` |
-| `style="display:none"` → `hidden` attribute | Consistent visibility control |
-
-**SVG Icon Sprite:**
-
-Added centralized SVG symbol definitions for reusable icons:
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" hidden>
-    <symbol id="icon-close">...</symbol>
-    <symbol id="icon-eye-show">...</symbol>
-    <symbol id="icon-eye-hide">...</symbol>
-    <symbol id="icon-upload">...</symbol>
-    <symbol id="icon-download">...</symbol>
-    <symbol id="icon-info">...</symbol>
-    <symbol id="icon-spinner">...</symbol>
-</svg>
-```
-
-Icons now referenced via `<use href="#icon-close">`.
-
-**New Utility Classes (components.css):**
-
-| Class | Purpose |
-|-------|---------|
-| `.flex`, `.flex-center`, `.flex-between` | Flexbox utilities |
-| `.gap-1`, `.gap-2`, `.gap-4` | Gap spacing |
-| `.ml-auto`, `.mr-1` | Margin utilities |
-| `.panel-col-1/2/3` | Panel grid columns |
-| `.viewer-panel-content` | Viewer background |
-| `.document-type-select` | Document type dropdown |
-| `.zoom-label` | Zoom display |
-| `.validation-badge` | Issue counter badge |
-| `.section-title` | Validation section headers |
-| `.status-bar-right` | Status bar alignment |
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/css/variables.css` | Focus ring tokens, selection tokens, z-index system |
-| `docs/css/base.css` | Focus-visible, reduced motion |
-| `docs/css/components.css` | ~80 new utility classes |
-| `docs/css/editor.css` | Selection tokens |
-| `docs/css/viewer.css` | Selection tokens |
-| `docs/css/dialogs.css` | Confident/problematic tokens, removed duplicate keyframes |
-| `docs/index.html` | `<main>`, SVG sprite, utility classes, hidden attributes |
-| `docs/js/components/dialogs.js` | `hidden` property for icon toggle |
-| `docs/js/components/transcription.js` | `hidden` property for spinner |
-
-### Results
-
-- [x] Zero inline styles remaining in index.html
-- [x] Consistent `hidden` attribute usage
-- [x] SVG icons deduplicated via sprite
-- [x] Semantic `<main>` element
-- [x] Focus accessibility improved
-- [x] Reduced motion preference respected
+Flexbox (`.flex`, `.flex-center`, `.flex-between`), gap spacing, margin utilities, panel grid columns, viewer panel content, various component classes.
 
 ---
 
 ## 2026-01-18 | Session 17: JavaScript Refactoring & Utilities
 
-**Participants:** User, Claude Opus 4.5
+### New Utility Modules in docs/js/utils/
 
-### Task
+**constants.js:** Timing (toast, autosave, dialog focus), file limits, API endpoints (Gemini, OpenAI, Anthropic, Ollama default), IIIF constants (context v3, version enum), storage keys, events, CSS classes, PAGE-XML namespace, confidence levels and thresholds, toast types, document types, JPEG quality.
 
-**Request:** JavaScript refactoring to reduce code duplication and improve maintainability.
+**dom.js:** Safe DOM manipulation: `getById()`, `select()`, `selectAll()`, `withElement()`, event listener helpers (`onById`, `on`, `onAll`), visibility toggle (`show`/`hide`), class manipulation, content setters, `createSVGElement()`, `focusDelayed()`.
 
-### New Utility Modules
-
-Created `docs/js/utils/` folder with centralized utilities:
-
-**1. constants.js - Centralized magic numbers and strings:**
-
-| Category | Constants |
-|----------|-----------|
-| Timing | `TOAST_DURATION_DEFAULT`, `AUTOSAVE_DELAY`, `DIALOG_FOCUS_DELAY`, `PAGE_RELOAD_DELAY`, `MENU_CLOSE_DELAY` |
-| File Limits | `MAX_FILE_SIZE`, `MAX_FILE_SIZE_MB` |
-| API Endpoints | `DEFAULT_OLLAMA_ENDPOINT`, `GEMINI_API_BASE`, `OPENAI_API_ENDPOINT`, `ANTHROPIC_API_ENDPOINT` |
-| IIIF | `IIIF_CONTEXT_V3`, `IIIF_VERSION` (V2/V3) |
-| Storage Keys | `STORAGE_KEYS` object |
-| Events | `EVENTS` object |
-| CSS Classes | `CSS_CLASSES` object |
-| PAGE-XML | `PAGE_XML_NAMESPACE` |
-| Confidence | `CONFIDENCE`, `CONFIDENCE_THRESHOLD_PERCENT` |
-| Toast Types | `TOAST_TYPES` |
-| Document Types | `DOCUMENT_TYPES` |
-| Image | `JPEG_QUALITY` |
-
-**2. dom.js - Safe DOM manipulation helpers:**
-
-| Function | Purpose |
-|----------|---------|
-| `getById(id)` | Safe `getElementById` |
-| `select(selector, parent)` | Safe `querySelector` |
-| `selectAll(selector, parent)` | Safe `querySelectorAll` |
-| `withElement(id, callback)` | Execute callback if element exists |
-| `onById(id, event, handler)` | Safe event listener by ID |
-| `on(selector, event, handler)` | Safe event listener by selector |
-| `onAll(selector, event, handler)` | Event listener on all matching |
-| `toggleVisibility(el, show)` | Toggle hidden attribute |
-| `show(el)`, `hide(el)` | Show/hide helpers |
-| `toggleClass(el, class, force)` | Class toggle helper |
-| `addClass`, `removeClass` | Class manipulation |
-| `setText`, `setHTML` | Content manipulation |
-| `setDisabled` | Disabled state helper |
-| `createSVGElement(tag)` | SVG namespace helper |
-| `clearChildren` | Remove all children |
-| `focusDelayed(el, delay)` | Delayed focus for dialogs |
-
-**3. textFormatting.js - Text marker utilities:**
-
-| Function | Purpose |
-|----------|---------|
-| `applyMarkers(text)` | Replace `[?]` and `[illegible]` with spans |
-| `hasUncertainMarker(text)` | Check for `[?]` |
-| `hasIllegibleMarker(text)` | Check for `[illegible]` |
-| `hasAnyMarker(text)` | Check for any marker |
-| `countUncertainMarkers(text)` | Count `[?]` occurrences |
-| `countIllegibleMarkers(text)` | Count `[illegible]` occurrences |
-| `getConfidenceClass(confidence)` | Get CSS class for confidence |
-| `getStatusClass(confidence)` | Get status indicator class |
-| `getConfidenceLabel(confidence)` | Human-readable label |
-| `determineConfidence(uncertain, illegible)` | Determine overall confidence |
-| `stripMarkers(text)` | Remove markers from text |
-| `escapeHtml(text)` | HTML escape |
-| `safeApplyMarkers(text)` | Escape then apply markers |
-
-### Files Updated
-
-| File | Changes |
-|------|---------|
-| `docs/js/viewer.js` | Import utilities, use `getById`, `show`, `hide`, `setText`, `setDisabled`, `select`, `selectAll`, IIIF constants |
-| `docs/js/editor.js` | Import utilities, use `applyMarkers`, `getConfidenceClass`, DOM helpers |
-| `docs/js/components/validation.js` | Import utilities, use DOM helpers, timing constants |
-| `docs/js/components/dialogs.js` | Import utilities, convert `onclick` to `addEventListener`, use DOM helpers |
-| `docs/js/components/upload.js` | Import utilities, use constants, DOM helpers |
-| `docs/css/base.css` | Added display utilities (`.d-none`, `.d-block`, `.d-flex`, etc.) |
+**textFormatting.js:** Marker utilities: `applyMarkers()` (replaces `[?]` and `[illegible]` with spans), confidence classes/labels, `escapeHtml()`, `safeApplyMarkers()`. Deduplicated 4 instances of marker regex replacement.
 
 ### Code Quality Improvements
 
-**Visibility Control:**
-- Unified `style.display = 'none'` → `hidden` attribute or utility functions
-- Added CSS `[hidden] { display: none !important; }` rule
-
-**Event Listeners:**
-- Converted `onclick = handler` → `addEventListener('click', handler)`
-- Affects: `dialogs.js`, `upload.js`
-
-**DOM Queries:**
-- `document.getElementById()` → `getById()`
-- `document.querySelector()` → `select()`
-- `document.querySelectorAll()` → `selectAll()`
-
-**Text Markers:**
-- Deduplicated 4 instances of marker regex replacement
-- Centralized in `applyMarkers()` utility
-
-### Results
-
-- [x] 3 new utility modules created
-- [x] Eliminated duplicated marker replacement code
-- [x] Unified visibility control patterns
-- [x] Converted onclick handlers to addEventListener
-- [x] DOM manipulation centralized through helpers
-- [x] Magic numbers extracted to constants
-- [x] IIIF version detection uses constants
+Unified visibility control via `hidden` attribute. `onclick = handler` → `addEventListener('click', handler)`. DOM queries through helpers instead of direct API calls. Magic numbers extracted to constants.
 
 ---
 
-## 2026-01-18 | Session 18: Testing & Deployment Status
+## 2026-01-18 | Session 18: Deployment Status
 
-**Participants:** User, Claude Opus 4.5
+Project feature-complete and deployed. Live URL: https://digitalhumanitiecraft.github.io/co-ocr-htr/
 
-### Projektstatus Übersicht
-
-**Vollständig implementiert und deployed:**
-
-| Komponente | Status |
-|------------|--------|
-| Document Viewer (OpenSeadragon) | [x] Mit IIIF Support |
-| Transcription Editor | [x] Lines/Grid Modes |
-| Validation Panel | [x] Rule-based + LLM-Judge |
-| LLM Integration | [x] 5 Provider (Gemini, OpenAI, Anthropic, DeepSeek, Ollama) |
-| IIIF Support | [x] Manifest laden, Seitennavigation |
-| PAGE-XML Import/Export | [x] Vollständig |
-| Export Formate | [x] TXT, JSON, Markdown, PAGE-XML |
-| Inline Editing | [x] Mit Undo/Redo |
-| Demo Samples | [x] 3 Beispieldokumente |
-| Settings & Help Dialogs | [x] Vollständig |
-| CSS Modular Architecture | [x] 9 Dateien |
-| JS Utility Modules | [x] 3 Module (constants, dom, textFormatting) |
-
-### Live Deployment
-
-**URL:** https://digitalhumanitiecraft.github.io/co-ocr-htr/
-
-**GitHub:** https://github.com/DigitalHumanitiesCraft/co-ocr-htr
-
-### Test Coverage
-
-| Test-Datei | Tests |
-|------------|-------|
-| `llm.test.js` | 28 |
-| `page-xml.test.js` | 26 |
-| `export.test.js` | 32 |
-| `validation.test.js` | 32 |
-| **Gesamt** | **118** |
-
-### Offene Features (Optional)
-
-| Feature | Priorität | Beschreibung |
-|---------|-----------|--------------|
-| PDF Multi-Page Support | Niedrig | Mehrseitige PDFs laden |
-| Auto-Save | Niedrig | Entwürfe automatisch speichern |
-| E2E Tests | Niedrig | Playwright/Cypress Integration |
-| Performance Audit | Niedrig | Große Dokumente (100+ Seiten) |
-
-### Wartungsstatus
-
-Das Projekt ist feature-complete und produktionsbereit. Alle 7 Milestones aus dem ursprünglichen IMPLEMENTATION-PLAN.md sind abgeschlossen, plus zusätzliche Features:
-
-- Milestone 0: Preparation [x]
-- Milestone 1: Core Services [x]
-- Milestone 2: Dialogs & Upload [x]
-- Milestone 3: LLM Transcription [x]
-- Milestone 4: Validation [x]
-- Milestone 5: Export [x]
-- Milestone 6: UX (Inline-Edit, Undo/Redo) [x]
-- Milestone 7: Polish & Demo Loader [x]
-- Milestone 8: Flexible Editor [x]
-- Milestone 9: OpenSeadragon Viewer Rewrite [x]
-- Milestone 10: IIIF Dialog [x]
-- Milestone 11: CSS/HTML Refactoring [x]
-- Milestone 12: JS Utilities [x]
-
-### Commits (Session 17-18)
-
-| Commit | Beschreibung |
-|--------|--------------|
-| `e0f1475` | refactor: extract JS utility modules for DOM, text formatting, and constants |
-| `e1ffb83` | style: improve CSS accessibility and consistency |
+All 7 original milestones plus 5 additional completed (Milestones 0–7 + Flexible Editor, OpenSeadragon, IIIF Dialog, CSS/HTML Refactoring, JS Utilities). 118 unit tests. Open optional features: PDF multi-page, auto-save, E2E tests, performance audit.
 
 ---
 
-## 2026-02-03 | Session 19: Editor Simplification & API Dialog Redesign
+## 2026-01-19 | Session 19: Editor Simplification
 
-**Participants:** User, Claude Opus 4.5
+Grid editor replaced with textarea. New features: synced line numbers, visible undo/redo buttons, diff view (word-level changes vs. original), structured/normalized view toggle, change counter. Document context fields (document type, historical period, languages, description) moved into collapsible section within transcription dialog.
 
-### Phase 1: Editor Simplification
+---
 
-**Task:** Simplify editor from table-based to textarea-based for better usability.
+## 2026-02-03 | Session 20: API Dialog Redesign
 
-**Changes:**
-- Replaced grid editor with simple textarea
-- Added line numbers display (synced scrolling)
-- Added Undo/Redo buttons with visual feedback
-- Added Diff view toggle (shows changes vs original)
-- Added Structured/Normalized view toggle
+### API Dialog Redesign
 
-**New Editor Features:**
+**Problem:** Separate tabs per provider (unnecessary), no clear model selector, local models not visible.
 
-| Feature | Description |
-|---------|-------------|
-| Line Numbers | Synced scrolling with textarea |
-| Undo/Redo | Visible buttons + keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z) |
-| Diff View | Shows word-level changes vs original transcription |
-| View Modes | Structured (preserves indentation) / Normalized (left-aligned) |
-| Change Stats | "X Änderungen" counter |
+**Solution:** Unified form with provider dropdown (cloud vs. local groups), dynamic model dropdown per provider, custom model input ("Custom model..."), Ollama-specific server URL field and model refresh button.
 
-### Phase 2: Document Context Integration
-
-**Task:** Move document context from separate dialog into transcription workflow.
-
-**Changes:**
-- Context fields now in collapsible section within Transcription Dialog
-- Clear explanation that context enriches the AI prompt
-- Context saved automatically when starting transcription
-
-**Context Fields:**
-- Document Type (dropdown + custom option)
-- Historical Period (free text)
-- Language(s) (free text)
-- Additional Description (textarea)
-
-### Phase 3: API Dialog Redesign
-
-**Task:** Simplify API configuration from tabbed interface to unified form.
-
-**Problems with old design:**
-- Separate tabs for each provider (unnecessary)
-- No clear way to select models
-- No local model support visible
-
-**New Design:**
-- Single unified form
-- Provider dropdown (Cloud vs Local groups)
-- Dynamic model dropdown per provider
-- Custom model input option ("Eigenes Modell...")
-- Ollama-specific: Server URL field, model refresh button
-
-**Provider Configuration:**
+**Provider-model mapping:**
 
 | Provider | Models | Notes |
 |----------|--------|-------|
@@ -2279,1314 +440,326 @@ Das Projekt ist feature-complete und produktionsbereit. Alle 7 Milestones aus de
 | Anthropic | claude-4.5-sonnet, claude-4.5-haiku, claude-4.5-opus | Cloud, API key required |
 | Ollama | deepseek-ocr (recommended), llava, llama3.2-vision | Local, no API key |
 
-### Phase 4: DeepSeek-OCR Integration
+### DeepSeek-OCR Correction
 
-**Task:** Correctly integrate DeepSeek-OCR as local Ollama model.
+**Finding:** DeepSeek-OCR is NOT a cloud API service. It is a local vision model available via Ollama. Removed from cloud providers, added as recommended Ollama model.
 
-**Research Finding:** DeepSeek-OCR is NOT a cloud API service. It's a local vision model available via Ollama.
+### Bug Fix
 
-**Changes:**
-- Removed DeepSeek from cloud providers
-- Added deepseek-ocr as recommended model for Ollama
-- Updated model hints and documentation
-
-**Installation:**
-```bash
-ollama pull deepseek-ocr
-```
-
-### Phase 5: Bug Fixes
-
-| Bug | Fix |
-|-----|-----|
-| "Verbindung testen" not working | Changed selector from `select('#testApiConnection', dialog)` to `getById('testApiConnection')` |
-| DeepSeek naming | Corrected to `deepseek-ocr` (official Ollama name) |
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/js/editor.js` | Complete rewrite: textarea, line numbers, diff view, view modes |
-| `docs/css/editor.css` | Styles for new editor components |
-| `docs/index.html` | New API dialog structure, context in transcription dialog |
-| `docs/css/dialogs.css` | LLM config styles, context explanation styles |
-| `docs/js/services/llm.js` | Updated PROVIDERS (removed DeepSeek cloud, added deepseek-ocr to Ollama) |
-| `docs/js/components/dialogs.js` | Rewritten API dialog handling, test connection fix |
-| `docs/js/components/transcription.js` | Context integration |
-| `docs/js/components/context.js` | Form population and context building |
-
-### Documentation Updates
-
-| File | Changes |
-|------|---------|
-| `README.md` | Updated provider list, added DeepSeek-OCR installation instructions |
-| `CLAUDE.md` | Removed DeepSeek from API list |
-| `JOURNAL.md` | Added Session 19 documentation |
-
-### Project Status
-
-**Completed in this session:**
-- [x] Editor simplified to textarea
-- [x] Line numbers with synced scroll
-- [x] Undo/Redo with visible buttons
-- [x] Diff view for change tracking
-- [x] Structured/Normalized view toggle
-- [x] Document context in transcription dialog
-- [x] API dialog redesign (unified form)
-- [x] DeepSeek-OCR as local Ollama model
-- [x] "Verbindung testen" button fix
-- [x] Documentation updates
+"Test connection" button not working: selector `select('#testApiConnection', dialog)` → `getById('testApiConnection')`.
 
 ---
 
-## 2026-02-03 | Session 20: AI Styling & Validation-to-Image Highlighting
+## 2026-02-03 | Session 21: AI Styling & Validation-to-Image Highlighting
 
-**Participants:** User, Claude Opus 4.5
+### AI Content Identification
 
-### Phase 1: AI Content Identification
+Violet/purple color family introduced for AI-generated content: `--ai-primary: #7c5cbf`, `--ai-bg`, `--ai-border`. AI section header with "KI" badge and violet left border. Clear visual separation from rule-based (deterministic) results.
 
-**Task:** Clearly distinguish AI-generated content from deterministic results.
+### Loading Overlay
 
-**Solution:** Introduced violet/purple color family for AI elements:
+Dark overlay made text unreadable. Changed to light blur effect: `rgba(250, 248, 245, 0.7)` with `blur(8px)`, white content box with shadow.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--ai-primary` | `#7c5cbf` | AI badges, labels, borders |
-| `--ai-bg` | `rgba(124, 92, 191, 0.08)` | AI section backgrounds |
-| `--ai-border` | `rgba(124, 92, 191, 0.25)` | AI section borders |
+### Validation-to-Image Highlighting
 
-**UI Changes:**
-- AI section header with "KI" badge and violet left border
-- AI reasoning container with violet-tinted background
-- Clear visual separation from rule-based (deterministic) results
+**Graceful degradation:** PAGE-XML (with coordinates) → image region highlighted + pan. Plain image (without coordinates) → editor line highlighted + info toast.
 
-### Phase 2: Loading Overlay Improvements
+**Click handler fix:** Selector expanded from only `.validation-card` to `.validation-card[data-line], .validation-item[data-line]`.
 
-**Task:** Fix dark overlay that made text unreadable.
+### Sample Cleanup
 
-**Changes:**
-- Changed from dark overlay to light blur effect
-- Background: `rgba(250, 248, 245, 0.7)` with `blur(8px)`
-- White content box with shadow for better readability
-- Consistent styling between transcription and validation panels
-
-### Phase 3: Validation-to-Image Highlighting
-
-**Task:** Clicking on validation issues should highlight the corresponding region in the document.
-
-**Solution:** Graceful degradation based on coordinate availability:
-
-| Document Type | Coordinates | Behavior |
-|---------------|-------------|----------|
-| PAGE-XML | Yes | Image region highlighted + pan to region |
-| Plain Image | No | Editor line highlighted + info toast |
-
-**Implementation:**
-
-| File | Changes |
-|------|---------|
-| `state.js` | Added `hasRegionCoordinates()` method |
-| `viewer.js` | Selection handler with fallback toast |
-| `editor.js` | `highlightEditorLine()` + `scrollToLine()` |
-| `validation.js` | Fixed click handler selector |
-| `editor.css` | `.line-number.selected` styling |
-
-**Click Handler Fix:**
-```javascript
-// Before: only .validation-card
-// After: both legacy and compact elements
-const selector = '.validation-card[data-line], .validation-item[data-line]';
-```
-
-### Phase 4: Sample Cleanup
-
-**Task:** Remove Raitbuch sample (blank pages not useful for demo).
-
-**Changes:**
-- Removed Raitbuch entry from `samples/index.json`
-- Deleted `docs/samples/raitbuch/` folder
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/css/variables.css` | AI color tokens |
-| `docs/css/editor.css` | Selected line number styling |
-| `docs/js/state.js` | `hasRegionCoordinates()` |
-| `docs/js/viewer.js` | Fallback toast for documents without coordinates |
-| `docs/js/editor.js` | Line highlighting and scrolling |
-| `docs/js/components/validation.js` | AI styling, click handler fix, loading overlay |
-| `docs/js/components/transcription.js` | Loading overlay consistency |
-| `docs/index.html` | AI badge in section header |
-| `docs/samples/index.json` | Removed Raitbuch |
-| `knowledge/DESIGN-SYSTEM.md` | v2.2 with AI colors |
-| `knowledge/VALIDATION.md` | v2.1 with Issue Navigation |
-
-### Project Status
-
-**Completed:**
-- [x] AI content identification (violet color system)
-- [x] Loading overlay improvements
-- [x] Validation-to-image highlighting with graceful degradation
-- [x] Editor line highlighting
-- [x] Sample cleanup
-- [x] Documentation updates
+Raitbuch sample removed (blank pages not useful for demo).
 
 ---
 
-## 2026-02-03 | Session 21: Refactoring Iteration
+## 2026-02-03 | Session 22: Refactoring Iteration
 
-**Participants:** User, Claude Opus 4.5
+### Dead Code Removal
 
-### Phase 1: Dead Code Removal
+`autoLoadDemo()` (~30 lines, never called) and `showOnboardingToast()` (~15 lines, commented out) removed from main.js. -79 lines.
 
-**Task:** Remove unused code from main.js.
+### Circular Dependency Resolution
 
-**Removed:**
-- `autoLoadDemo()` function (~30 lines) - Never called
-- `showOnboardingToast()` function (~15 lines) - Commented out
-- Various commented-out code blocks
+viewer.js used dynamic `import()` to avoid circular dependency with dialogs.js.
 
-**Result:** -79 lines from main.js
+**Solution:** Event-based decoupling via state.js: `showToast()` method emits `toastRequested` event, main.js forwards to dialogManager. Clean unidirectional data flow architecture, no dynamic imports, reusable pattern.
 
-### Phase 2: Circular Dependency Resolution
+### CSS Extraction
 
-**Task:** viewer.js used dynamic `import()` to avoid circular dependency with dialogs.js.
+~340 lines inline CSS extracted from validation.js to `validation.css`. Benefits: IDE support, browser caching, no duplicate style definitions.
 
-**Solution:** Event-based decoupling via state.js:
+### VISION.md
 
-```javascript
-// state.js - New method
-showToast(message, type = 'info', duration = 3000) {
-    this._emit('toastRequested', { message, type, duration });
-}
-
-// main.js - Event listener
-appState.addEventListener('toastRequested', (event) => {
-    const { message, type, duration } = event.detail;
-    dialogManager.showToast(message, type, duration);
-});
-
-// viewer.js - No more dynamic import
-appState.showToast('Message', 'info', 2000);
-```
-
-**Benefits:**
-- Cleaner architecture (unidirectional data flow)
-- No dynamic imports
-- Reusable pattern for other modules
-
-### Phase 3: CSS Extraction
-
-**Task:** Extract ~340 lines of inline CSS from validation.js.
-
-**Before:**
-```javascript
-const validationStyles = `/* 340 lines of CSS */`;
-function injectStyles() { /* ... */ }
-```
-
-**After:**
-- All styles moved to `docs/css/validation.css`
-- `injectStyles()` function removed
-- validation.js reduced from ~995 to ~645 lines
-
-**Benefits:**
-- Better IDE support (syntax highlighting, autocomplete)
-- Browser caching for CSS
-- No duplicate style definitions
-- Cleaner separation of concerns
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/js/main.js` | Dead code removal, toast event listener |
-| `docs/js/state.js` | `showToast()` method |
-| `docs/js/viewer.js` | Event-based toast instead of dynamic import |
-| `docs/js/components/validation.js` | Removed inline CSS (-350 lines) |
-| `docs/css/validation.css` | Added extracted styles (+273 lines) |
-
-### Commits
-
-| Hash | Message |
-|------|---------|
-| `f0f33e3` | refactor: remove dead code and resolve circular dependency |
-| `d18eb02` | refactor: extract inline CSS from validation.js to validation.css |
-
-### Phase 4: Vision Documentation
-
-**Task:** Klares Projektziel dokumentieren und im Repository abbilden.
-
-**Neues Dokument:** `knowledge/VISION.md`
-
-**Kernaussagen:**
-- **Mission:** Editor-in-the-Loop Werkzeug zur OCR/HTR-Verifikation und -Korrektur
-- **Zwei Input-Modi:** Bild (OCR erzeugen) ODER PAGE-XML (korrigieren)
-- **Erfolgskriterien:**
-  1. Selbsterklaerend (ohne Anleitung nutzbar)
-  2. Vollstaendiger Workflow (Upload → Bearbeiten → Export)
-  3. Workflow-Integration (Output in anderen Prozessen nutzbar)
-  4. Qualitaetssicherung ("korrektes OCR/HTR kommt raus")
-
-**Aktualisierte Dokumente:**
-- `README.md` - Vision im Header, "Why coOCR/HTR?" Sektion
-- `CLAUDE.md` - Projektziel-Sektion am Anfang
-- `knowledge/INDEX.md` - VISION.md in Document Matrix
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/js/main.js` | Dead code removal, toast event listener |
-| `docs/js/state.js` | `showToast()` method |
-| `docs/js/viewer.js` | Event-based toast instead of dynamic import |
-| `docs/js/components/validation.js` | Removed inline CSS (-350 lines) |
-| `docs/css/validation.css` | Added extracted styles (+273 lines) |
-| `knowledge/VISION.md` | NEW - Project goals and success criteria |
-| `README.md` | Vision statement, "Why coOCR/HTR?" section |
-| `CLAUDE.md` | Projektziel section |
-| `knowledge/INDEX.md` | VISION.md in document matrix |
-
-### Commits
-
-| Hash | Message |
-|------|---------|
-| `f0f33e3` | refactor: remove dead code and resolve circular dependency |
-| `d18eb02` | refactor: extract inline CSS from validation.js to validation.css |
-| `2c53196` | docs: add Session 21 refactoring documentation |
-| `4425770` | docs: add VISION.md with project goals and success criteria |
-
-### Project Status
-
-**Completed:**
-- [x] Dead code removal (-79 lines)
-- [x] Circular dependency resolution (toast event system)
-- [x] CSS extraction from validation.js (-350 lines JS, +273 lines CSS)
-- [x] VISION.md created with project goals
-- [x] Vision integrated into README.md, CLAUDE.md, INDEX.md
+New document with project goal: editor-in-the-loop tool for OCR/HTR verification and correction. Two input modes (image for OCR generation, PAGE-XML for correction). Success criteria: self-explanatory (usable without instructions), complete workflow (upload → edit → export), workflow integration (output usable in other processes), quality assurance ("correct OCR/HTR comes out"). Integrated into README.md, CLAUDE.md, and INDEX.md.
 
 ---
 
-## 2026-02-03 | Session 22: Model Landscape & Community Validation
+## 2026-02-03 | Session 23: Model Landscape & Community Validation
 
-**Participants:** User, Claude Opus 4.5
+### Community Feedback (DH Discussion)
 
-### Phase 1: Repository Analysis
+Gemini 3 Pro leads significantly among closed models. LightOnOCR-2 is state-of-the-art for open source. DeepSeek OCR 2 "works okay for simple layouts". Layout analysis as a separate step improves accuracy. Agentic Vision Mode relevant for complex layouts. HTR remains more challenging than OCR.
 
-**Task:** Vollstaendige Analyse des Repositories.
+### Web Research Results
 
-**Result:** Umfassende Dokumentation aller Komponenten:
-- Architektur-Schichten (UI, Application, Service, Persistence)
-- State-Management via EventTarget
-- LLM-Service mit 5 Providern
-- Hybride Validierung
-- CSS Design System
+| Model | Details |
+|-------|---------|
+| LightOnOCR-2 | 1B parameters, SotA on OlmOCR-Bench (83.2), Apache 2.0 |
+| Gemini 3 Pro | "Solves" English HTR (18th–19th c.), error rate comparable to best humans |
+| Gemini 3 Flash Agentic Vision | Think-Act-Observe loop, 5–10% quality improvement |
+| dots.ocr | 1.7B, 100+ languages, MIT license, best layout recognition |
+| DeepSeek OCR 2 | 3B, good for simple layouts, handwriting limitations |
 
-### Phase 2: Community Feedback Integration
+**Sources:**
+- LightOnOCR-2: https://huggingface.co/lightonai/LightOnOCR-2-1B
+- Gemini 3 Pro Vision: https://blog.google/technology/developers/gemini-3-pro-vision/
+- Gemini 3 HTR Analysis: https://generativehistory.substack.com/p/gemini-3-solves-handwriting-recognition
+- Agentic Vision: https://blog.google/innovation-and-ai/technology/developers-tools/agentic-vision-gemini-3-flash/
+- dots.ocr: https://github.com/rednote-hilab/dots.ocr
 
-**Task:** Erkenntnisse aus Digital Humanities Community-Diskussion integrieren.
+### Knowledge Base
 
-**Zentrale Erkenntnisse:**
-- Gemini 3 Pro fuehrt bei Closed Models deutlich
-- LightOnOCR-2 ist State-of-the-Art bei Open Source
-- DeepSeek OCR 2 "works okay for simple layouts"
-- Layout-Analyse als separater Schritt verbessert Genauigkeit
-- Agentic Vision Mode relevant fuer komplexe Layouts
-- HTR bleibt anspruchsvoller als OCR
-
-### Phase 3: Web Research
-
-**Task:** Technologien recherchieren und dokumentieren.
-
-**Recherchierte Themen:**
-
-| Thema | Ergebnis |
-|-------|----------|
-| LightOnOCR-2 | 1B Parameter, SotA auf OlmOCR-Bench (83.2), Apache 2.0 |
-| Gemini 3 Pro HTR | "Loest" englisches HTR (18.-19. Jh.), Fehlerrate wie beste Menschen |
-| Gemini 3 Flash Agentic Vision | Think-Act-Observe Loop, 5-10% Qualitaetsverbesserung |
-| dots.ocr | 1.7B, 100+ Sprachen, MIT Lizenz, beste Layout-Erkennung |
-| DeepSeek OCR 2 | 3B, gut fuer einfache Layouts, Handschrift-Limitationen |
-
-### Phase 4: Knowledge Base Update
-
-**Neues Dokument:** `knowledge/MODEL-LANDSCAPE.md`
-
-**Inhalt:**
-- External Validation (Community-Erkenntnisse)
-- Model Comparison Matrix (Closed vs Open Source)
-- Gemini 3 Details (Pro vs Flash, Agentic Vision, HTR-Durchbruch)
-- LightOnOCR-2 Details (Architektur, Performance)
-- dots.ocr Details (Multilingual, Layout)
-- DeepSeek OCR 2 Limitationen
-- Recommendations fuer coOCR/HTR
-- Model Selection Guide
-
-**Aktualisierte Dokumente:**
-
-| Datei | Aenderung |
-|-------|-----------|
-| `knowledge/INDEX.md` | MODEL-LANDSCAPE.md in Struktur und Matrix |
-| `knowledge/METHODOLOGY.md` | Verweis auf MODEL-LANDSCAPE, externe Validierung |
-
-### Phase 5: Implementation
-
-**Task:** Erkenntnisse in Code umsetzen.
-
-**Implementiert:**
-
-| Feature | Datei | Beschreibung |
-|---------|-------|--------------|
-| Gemini 3 Pro | `llm.js` | Als Modelloption mit Hint "beste Qualitaet fuer HTR" |
-| Model Selection Guide | `index.html` | Collapsible Info-Box im API-Key Dialog |
-| Model Guide CSS | `dialogs.css` | Styling fuer die Tabelle |
-| Ollama-Modelle | `llm.js` | DeepSeek OCR 2 + LightOnOCR-2 als Optionen |
-
-**Konzepte dokumentiert (nicht implementiert):**
-
-| Konzept | Beschreibung |
-|---------|--------------|
-| Agentic Vision | Think-Act-Observe Loop fuer komplexe Dokumente |
-| Ollama-Konvertierung | Anleitung fuer LightOnOCR-2 via llama.cpp |
-
-### Files Created/Modified
-
-| File | Changes |
-|------|---------|
-| `knowledge/MODEL-LANDSCAPE.md` | NEW - OCR/HTR model comparison, implementation concepts |
-| `knowledge/INDEX.md` | Added MODEL-LANDSCAPE to structure and matrix |
-| `knowledge/METHODOLOGY.md` | Added external validation section, link to MODEL-LANDSCAPE |
-| `docs/js/services/llm.js` | Gemini 3 Pro, DeepSeek OCR 2, LightOnOCR-2 options with hints |
-| `docs/index.html` | Model Selection Guide collapsible in API-Key Dialog |
-| `docs/css/dialogs.css` | Model Guide styling (+70 lines) |
-| `knowledge/JOURNAL.md` | This session documentation |
-
-### Key Sources
-
-- [LightOnOCR-2 Hugging Face](https://huggingface.co/lightonai/LightOnOCR-2-1B)
-- [Gemini 3 Pro Vision](https://blog.google/technology/developers/gemini-3-pro-vision/)
-- [Gemini 3 HTR Analysis](https://generativehistory.substack.com/p/gemini-3-solves-handwriting-recognition)
-- [Agentic Vision](https://blog.google/innovation-and-ai/technology/developers-tools/agentic-vision-gemini-3-flash/)
-- [dots.ocr GitHub](https://github.com/rednote-hilab/dots.ocr)
-
-### Next Steps (Identified)
-
-**Kurzfristig:**
-- [x] Gemini 3 Pro als Modelloption hinzufuegen
-- [x] Model Selection Guide im UI
-
-**Mittelfristig:**
-- [ ] Agentic Vision Mode testen
-- [ ] LightOnOCR-2 via Ollama integrieren
+New document `knowledge/MODEL-LANDSCAPE.md` with model comparison, recommendations, selection guide. Implementation: Gemini 3 Pro as model option with hint "best quality for HTR", model selection guide as collapsible info box in API key dialog, Ollama models (DeepSeek OCR 2, LightOnOCR-2).
 
 ---
 
-## 2026-02-03 | Session 22b: Arabic IIIF Sample Integration
+## 2026-02-03 | Session 23b: Arabic IIIF Sample
 
-**Participants:** User, Claude Opus 4.5
+Arabic test document integrated for non-Latin script systems. Source: Internet Archive IIIF, Historical Arabic Magazines (1937), 82 pages, IIIF 3.0. Samples service extended with IIIF support (`iiifManifest` property). METHODOLOGY.md: Arabic moved from "Untested" to "Testing".
 
-### Task
+---
 
-Integration eines arabischen Test-Dokuments fuer nicht-lateinische Schriftsysteme.
-
-### Research
-
-**Gefundene Quelle:** Internet Archive IIIF
-- Historical Arabic Magazines (1937)
-- 82 Seiten, 1200x1322 px
-- Aegyptische Zeitschriften (Koenig Farouk Aera)
-- IIIF 3.0 Manifest
+## 2026-02-03 | Session 23c: Batch Transcription
 
 ### Implementation
 
-**1. Samples Service erweitert:**
-- IIIF-Support hinzugefuegt (`iiifManifest` Property)
-- Direkte Integration mit `loadIIIFManifest()` aus viewer.js
-
-**2. Arabisches Sample hinzugefuegt:**
-```json
-{
-  "id": "arabic-historical-magazines",
-  "name": "Arabic Historical Magazines (1937)",
-  "description": "Arabische Zeitschriften via IIIF - Internet Archive (RTL-Script Test)",
-  "language": "Arabic",
-  "script": "Arabic",
-  "type": "print",
-  "iiifManifest": "https://iiif.archive.org/iiif/Historical-magazines/manifest.json"
-}
-```
-
-**3. METHODOLOGY.md aktualisiert:**
-- Arabic von "Untested" zu "Testing" verschoben
-- Test-Corpus dokumentiert
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/js/services/samples.js` | IIIF sample support, import loadIIIFManifest |
-| `docs/samples/index.json` | Arabic IIIF sample added |
-| `knowledge/METHODOLOGY.md` | Arabic test corpus documented |
-
-### Test Instructions
-
-1. Oeffne https://dhcraft.org/co-ocr-htr
-2. Klicke auf "Demos" im Header
-3. Waehle "Arabic Historical Magazines (1937)"
-4. Warte bis IIIF-Manifest geladen
-5. Starte Transkription mit Gemini 3 Pro
-6. Evaluiere: RTL-Rendering, Ligatur-Erkennung, Textqualitaet
-
-### Status
-
-- [x] IIIF-Support in Samples Service
-- [x] Arabisches Sample hinzugefuegt
-- [x] Dokumentation aktualisiert
-- [ ] Praktischer Test mit Transkription (manuell)
-
----
-
-*Format: YYYY-MM-DD | Session N: Title*
-
-## 2026-02-03 | Session 22c: Batch Transcription Feature
-
-**Participants:** User, Claude Opus 4.5
-
-### Task
-
-Implementierung einer Batch-Transkription fuer Multi-Page-Dokumente mit:
-1. Auswahl zwischen "Nur aktuelle Seite" und "Alle Seiten"
-2. Warnung ueber Dauer und Token-Kosten bei Batch-Operationen
-3. Fortschrittsanzeige waehrend der Batch-Verarbeitung
-
-### Implementation
-
-**1. Page Selection UI (index.html):**
-- Radio-Buttons fuer Seiten-Auswahl
-- Dynamische Anzeige der Seitenanzahl
-- Warnung mit Token-Schaetzung (~1000 Tokens/Seite)
-
-**2. Transcription Manager erweitert (transcription.js):**
-- `updatePageSelectionUI()` - Zeigt/versteckt UI basierend auf Multi-Page
-- `getSelectedPageMode()` - Liest ausgewaehlte Option
-- `transcribeAllPages()` - Iteriert durch alle Seiten mit:
-  - Rate-Limit-Handling (500ms Delay, 30s bei Rate-Limit)
-  - Fortschrittsanzeige mit Prozent und aktuellem Dateinamen
-  - Auth-Fehler bricht Batch ab
-  - Zusammenfassung am Ende
-
-**3. State Management erweitert (state.js):**
-- `setBatchTranscriptions(results)` - Speichert alle Transkriptionen
-- `batchTranscriptionComplete` Event
-
-**4. CSS Styling (dialogs.css):**
-- `.transcribe-page-selection` Container
-- `.page-selection-option` Radio-Buttons
-- `.batch-warning` Hinweis-Box
-- `.batch-progress-bar` Fortschrittsbalken
-
-### User Experience
-
-1. Bei Einzelseiten-Dokumenten: Keine aenderung
-2. Bei Multi-Page-Dokumenten:
-   - Standard: "Nur aktuelle Seite" (empfohlen zum Testen)
-   - Option: "Alle Seiten" mit sichtbarer Warnung
-   - Warnung zeigt Seitenanzahl und geschaetzte Token-Kosten
-   - Fortschrittsbalken mit Seite X von Y
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `docs/index.html` | Page Selection UI (~30 lines) |
-| `docs/js/components/transcription.js` | Batch methods (~150 lines) |
-| `docs/js/state.js` | `setBatchTranscriptions()` method |
-| `docs/css/dialogs.css` | Page Selection + Batch Warning styles |
+Radio buttons for page selection ("Current page only" / "All pages"). Warning with token estimate (~1000 tokens/page). `transcribeAllPages()` with rate-limit handling (500ms delay, 30s on rate limit), progress display, auth errors abort batch, summary at end. `setBatchTranscriptions()` in state.js.
 
 ### Design Decisions
 
-| Entscheidung | Begruendung |
-|--------------|-------------|
-| 500ms Delay zwischen Seiten | Rate-Limit-Praevention |
-| 30s Pause bei Rate-Limit | Automatische Erholung statt Abbruch |
-| Auth-Fehler bricht ab | Keine sinnlose Verarbeitung ohne API-Key |
-| ~1000 Tokens/Seite Schaetzung | Konservativer Durchschnitt fuer Warnung |
-| Standard: aktuelle Seite | Ermutigt zum Testen bevor Batch |
-
-### Status
-
-- [x] Page Selection UI implementiert
-- [x] Batch-Logik in transcription.js
-- [x] State-Management fuer Batch-Ergebnisse
-- [x] CSS-Styling fuer alle Komponenten
-- [x] Praktischer Test mit Antidotarium (6 Seiten) - siehe Session 22e
+| Decision | Rationale |
+|----------|-----------|
+| 500ms delay between pages | Rate limit prevention |
+| 30s pause on rate limit | Automatic recovery instead of abort |
+| Auth error aborts batch | No pointless processing without API key |
+| Default "current page" | Encourages testing before batch |
+| ~1000 tokens/page estimate | Conservative average for warning |
 
 ---
 
-*Format: YYYY-MM-DD | Session N: Title*
+## 2026-02-03 | Session 23d: RTL Support and UI Improvements
 
-## 2026-02-03 | Session 22d: RTL Support and UI Improvements
+### IIIF Loading Screen
 
-**Participants:** User, Claude Opus 4.5
+Visual loading state during IIIF manifest loading with progress ("Processing X pages...").
 
-### Tasks Completed
+### Load Demo Button Fix
 
-**1. IIIF Loading Screen**
-- Added visual loading state during IIIF manifest loading
-- Shows progress: "Verarbeite X Seiten..."
-- New elements in index.html, CSS in viewer.css
+Event propagation issue: `e.stopPropagation()` prevents immediate menu close.
 
-**2. Load Demo Button Fix**
-- Fixed event propagation issue
-- `e.stopPropagation()` prevents immediate menu close
+### RTL Support
 
-**3. RTL Support for Arabic Text**
-- Automatic detection of RTL scripts (Arabic, Hebrew, Persian)
-- Line numbers move to right side
-- Text aligned right-to-left
-- Works in both structured and diff view
+Automatic detection of RTL scripts (Arabic, Hebrew, Persian). Threshold: >30% RTL characters. Line numbers move to right side, text aligned right-to-left. Works in both structured and diff view.
 
-### Files Modified
+### Test
 
-| File | Changes |
-|------|---------|
-| `docs/index.html` | Loading state container |
-| `docs/css/viewer.css` | Loading state styles (+55 lines) |
-| `docs/js/viewer.js` | Loading progress in loadIIIFManifest() |
-| `docs/js/main.js` | stopPropagation for Load Demo button |
-| `docs/js/editor.js` | detectRTL(), applyRTLDirection() functions |
-| `docs/css/editor.css` | RTL styles (+65 lines) |
-
-### RTL Detection Logic
-
-```javascript
-function detectRTL(text) {
-    // Count RTL characters (Arabic, Hebrew, Persian, Urdu ranges)
-    const rtlChars = text.match(/[\u0600-\u06FF\u0750-\u077F...]/g);
-    const ltrChars = text.match(/[a-zA-Z]/g);
-    // If more than 30% RTL characters, consider it RTL text
-    return (rtlCount / total) > 0.3;
-}
-```
-
-### Test Results
-
-Arabic OCR/HTR test with Gemini 3 Flash:
-- 82 pages loaded from Internet Archive IIIF
-- RTL rendering works correctly
-- Validation shows "Hohe Konfidenz"
-- Historical Arabic correctly recognized (1937 magazine)
-
-### Status
-
-- [x] IIIF Loading Screen
-- [x] Load Demo Button Fix
-- [x] RTL Support (Arabic)
-- [x] Arabic Test Successful
+Arabic OCR/HTR with Gemini 3 Flash: 82 pages from Internet Archive IIIF, RTL rendering correct, validation shows "high confidence", historical Arabic (1937) correctly recognized.
 
 ---
 
-## 2026-02-03 | Session 22e: Batch Transcription Test - Antidotarium
+## 2026-02-03 | Session 23e: Batch Test Antidotarium
 
-**Participants:** User, Claude Opus 4.5
+Antidotarium Nicolai (1574, medical text, Heidelberg), 6 pages via IIIF, Gemini 3 Flash. All 6 pages successfully batch-transcribed. Rate limit handling worked. Latin abbreviations and 16th-century typography handled well. Two-column layout on page 6 correctly recognized.
 
-### Test Scenario
-
-**Document:** Antidotarium Nicolai (1574 medical text from Heidelberg University)
-**Source:** IIIF Sample (6 pages)
-**Model:** Gemini 3 Flash
-**Mode:** Batch transcription (all pages)
-
-### Test Results
-
-| Page | Content | Status |
-|------|---------|--------|
-| 1 | PRAEFATIO - Latin preface | Success |
-| 2 | PRAEFATIO continued | Success |
-| 3 | PRAEFATIO continued (M.D.LXXIV date) | Success |
-| 4 | AD LECTOREM - Verse by Nic. Taurellus M.D. | Success |
-| 5 | AVTHORES - Alphabetical author list | Success |
-| 6 | AVTHORES continued (two-column layout) | Success |
-
-**Key Observations:**
-- All 6 pages transcribed successfully in batch mode
-- Rate-limit handling worked (500ms delay between pages)
-- Progress bar showed correct page/total counts
-- Latin abbreviations and 16th-century typography handled well
-- Two-column layout on page 6 correctly recognized
-
-### User Feedback
-
-> "Fuer mich sieht das eigentlich sehr gut aus. Das hat gut funktioniert."
-> (For me this looks very good. It worked well.)
-
-### Status
-
-- [x] Batch Transcription Feature Complete
-- [x] Multi-page IIIF Processing Validated
-- [x] Rate Limiting Works Correctly
-- [x] Historical Latin Documents Supported
+User feedback: "For me this actually looks very good. It worked well."
 
 ---
 
-## 2026-02-03 | Session 22f: Batch Validation and Persistence
+## 2026-02-03 | Session 23f: Batch Validation and Persistence
 
-**Participants:** User, Claude Opus 4.5
+### Batch Validation
 
-### Features Implemented
+Dialog with page selection (analogous to transcription). Batch logic iterates all pages with progress bar, 500ms delay, rate limit handling. Results per page in `batchValidations[]`.
 
-**1. Batch Validation Dialog**
-- New dialog with page selection (current page / all pages)
-- Shows validation mode info (rule-based + LLM-as-Judge)
-- Batch warning with page count for multi-page documents
-- Reuses UI patterns from transcription dialog
+### Validation Persistence Bug
 
-**2. Batch Validation Logic**
-- Iterates all pages with progress bar
-- 500ms delay between pages (30s on rate limit)
-- Stores results per page in `batchValidations[]`
-- Summary toast with success/failure counts
+**Problem:** Validation results disappeared when navigating pages.
 
-**3. Validation Persistence on Page Change**
-- Bug fix: Validation results disappeared when navigating pages
-- New `_saveCurrentPageValidation()` in state.js
-- `loadPageValidation()` in ValidationPanel restores results
-- `pageChanged` event now loads saved validation instead of clearing
+**User report:** "When I go to the next page after running 'Validate', the results for page 2 are gone."
 
-**4. LocalStorage Persistence for Multi-Page Data**
-- Extended `_saveSession()` to include:
-  - `pages`, `currentPageIndex`
-  - `pageTranscriptions`, `batchTranscriptions`
-  - `batchValidations`
-- Extended `_restoreSession()` to restore all multi-page data
-- Automatic save after batch operations with user notification
+**Solution:** `_saveCurrentPageValidation()` in state.js, `loadPageValidation()` in ValidationPanel restores results. `pageChanged` event loads saved validation instead of clearing.
 
-### Files Modified
+### LocalStorage Persistence
 
-| File | Changes |
-|------|---------|
-| `docs/index.html` | Validate Dialog (page selection UI) |
-| `docs/js/components/validation.js` | Batch validation methods, loadPageValidation() |
-| `docs/js/state.js` | batchValidations[], persistence, _saveCurrentPageValidation() |
-| `docs/js/components/transcription.js` | saveSessionNow() after batch transcription |
-| `docs/css/dialogs.css` | Validation dialog styles |
-| `README.md` | Updated "Batch Processing" to include validation |
-
-### User Feedback
-
-> "wenn ich dann auf die nächste Seite gehe, nachdem ich 'Validate' gemacht habe, sind die Ergebnisse für Seite 2 verschwunden"
-
-This bug was fixed by implementing proper page-level validation state management.
-
-### Status
-
-- [x] Batch Validation Dialog
-- [x] Batch Validation Logic with Progress
-- [x] Validation Persistence on Page Change
-- [x] LocalStorage Persistence for Multi-Page Data
-- [x] Automatic Save after Batch Operations
+`_saveSession()` extended to include: pages, currentPageIndex, pageTranscriptions, batchTranscriptions, batchValidations. Automatic save after batch operations with user notification.
 
 ---
 
-## 2026-02-03 | Session 23: Validation Simplification and Refactoring
+## 2026-02-03 | Session 24: Validation Simplification and Refactoring
 
-**Participants:** User, Claude Opus 4.5
+### English Prompts
 
-### Context
+All LLM prompts converted from German to English for better model performance.
 
-User requested simplification of the validation system and comprehensive code refactoring.
+### Generic Validation Prompt
 
-### Part 1: English Prompts
+**Decision:** 4 specialized perspectives (paleographic, linguistic, structural, domain) replaced with one generic default prompt. Optional custom prompt field for advanced users (collapsed by default). Perspective dropdown removed from UI.
 
-**Changes:**
-- Converted all LLM prompts from German to English for better model performance
-- Includes: `TRANSCRIPTION_PROMPT_BASE`, `ISSUE_TYPE_INSTRUCTION`, validation prompts
+### Dead Code Removal (~280 lines)
 
-### Part 2: Generic Validation Prompt
+After perspective removal: `renderRuleSection()`, `renderLLMSection()` (~95), `getPerspectives()` (~10), `VALIDATION_PROMPTS` (~12), perspective CSS (~110), validation mode info CSS (~55).
 
-**User Request:** Remove the 4 specialized perspectives (paleographic, linguistic, structural, domain) and replace with one generic default prompt.
+### Tests Updated
 
-**Implemented:**
-- New `DEFAULT_VALIDATION_PROMPT` covers all validation aspects
-- New `buildValidationPrompt(text, customPrompt)` function
-- Optional custom prompt field for advanced users (collapsed by default)
-- Removed perspective dropdown from UI
+Old tests for `deepseek` provider and `perspective` parameter removed. New tests for category filtering, `customPrompt`, new rules. Final result: 125 tests (llm 27, export 32, validation 40, page-xml 26), all passing.
 
-**Files Changed:**
-| File | Changes |
-|------|---------|
-| `docs/js/services/llm.js` | DEFAULT_VALIDATION_PROMPT, buildValidationPrompt(), removed VALIDATION_PROMPTS |
-| `docs/index.html` | Replaced perspective dropdown with custom prompt details element |
-| `docs/css/dialogs.css` | Removed perspective CSS, added custom-prompt-details styles |
-| `docs/js/services/validation.js` | Updated validateWithLLM() to use customPrompt |
-| `docs/js/components/validation.js` | Updated getValidationOptions(), removed perspective logic |
+### Documentation Cleanup
 
-### Part 3: Dead Code Removal (Refactoring)
-
-**Analysis:** Comprehensive codebase scan for unused code after perspective removal.
-
-**Removed (~280 lines):**
-
-| File | Removed | Lines |
-|------|---------|-------|
-| `validation.js` (component) | `renderRuleSection()`, `renderLLMSection()` | ~95 |
-| `validation.js` (service) | `getPerspectives()` | ~10 |
-| `llm.js` | `VALIDATION_PROMPTS` constant + export | ~12 |
-| `validation.css` | `.perspective-dropdown`, `.perspective-menu`, `.perspective-item`, `.perspective-badge`, `.dropdown-menu`, `.dropdown-item` | ~110 |
-| `dialogs.css` | `.validation-mode-info`, `.validation-mode-item`, `.mode-icon`, `.mode-text`, `.mode-label`, `.mode-hint` | ~55 |
-
-### What Remains Active
-
-- `renderRuleCards()` - Active rule rendering (compact)
-- `renderLLMCards()` - Active AI analysis rendering
-- `renderIssueItem()` - Issue type badge rendering
-- `renderValidationCard()` - Individual validation items
-- `getCategories()` - Rule categories for UI
-- `DEFAULT_VALIDATION_PROMPT` - Generic validation prompt
-- `buildValidationPrompt()` - Custom prompt builder
-- `ISSUE_TYPES` - Issue type definitions
-
-### Part 4: Unit Tests Update
-
-**Problem:** Existing tests were outdated after refactoring:
-- `deepseek` provider (removed)
-- `perspective` parameter (now `customPrompt`)
-- `date_format`, `currency_*`, `table_*` rules (removed)
-
-**Solution:** Updated both test files to match new architecture.
-
-**validation.test.js Changes:**
-- Removed tests for `date_format`, `currency_*`, `table_consistency`, `empty_cells`
-- Added tests for category filtering (`markers`, `stats`, `artifacts`)
-- Added tests for `customPrompt` parameter
-- Added tests for `abbreviations`, `special_chars`, `control_chars`
-- Updated mock for `ISSUE_TYPES`
-- New test count: 40 (was 27)
-
-**llm.test.js Changes:**
-- Removed `deepseek` provider tests
-- Removed `perspective` parameter in `_parseValidationResponse()`
-- Updated provider count from 5 to 4
-- Added test for issue parsing in validation response
-- New test count: 27 (was 27)
-
-**Final Test Results:**
-| File | Tests | Status |
-|------|-------|--------|
-| llm.test.js | 27 | passed |
-| export.test.js | 32 | passed |
-| validation.test.js | 40 | passed |
-| page-xml.test.js | 26 | passed |
-| **Total** | **125** | **all passed** |
-
-### Status
-
-- [x] English prompts throughout
-- [x] Generic validation prompt (no more perspectives)
-- [x] Optional custom prompt field
-- [x] Dead code removed (~280 lines)
-- [x] Unit tests updated and passing (125 tests)
+`REQUIREMENTS.md`, `VIEWER-REWRITE-PLAN.md`, `ACTIONPLAN.md` deleted (outdated, purpose fulfilled). References in CLAUDE.md, INDEX.md, IMPLEMENTATION-PLAN.md, help.html, about.html, README.md updated. Export fix: raw text support for transcriptions without segments/lines.
 
 ---
 
-## 2026-02-03 | Part 5: Documentation Cleanup
+## 2026-02-04 | Session 25: TEI-XML, Tests, PWA
 
-**Participants:** User, Claude Opus 4.5
+### TEI-XML Export
 
-### Knowledge Base Cleanup
+TEI P5 minimal schema. Marker conversion: `[word]?` → `<unclear>`, `[?]`/`[illegible]`/`[...]` → `<gap reason="illegible"/>`, `[abbr:expansion]` → `<choice><abbr>/<expan>`. Line breaks with `<lb/>`, provider info in `<revisionDesc>`. 18 new tests.
 
-Removed obsolete planning documents and updated all references:
+### Test Coverage Expansion
 
-**Deleted Files:**
-- `knowledge/REQUIREMENTS.md` - Outdated bug/feature tracker (bugs fixed, features implemented)
-- `knowledge/VIEWER-REWRITE-PLAN.md` - Plan completed, OpenSeadragon implemented
-- `knowledge/ACTIONPLAN.md` - Sprint tracking no longer needed
+**state.test.js (61 tests):** Initialization, document management, multi-page, transcription, selection/zoom, regions, validation, UI state, document context, batch, session, segment updates.
 
-**Updated Documentation:**
+**storage.test.js (23 tests):** Settings CRUD, API key security (deprecated methods return safe values), session management, utilities.
 
-| File | Changes |
-|------|---------|
-| `CLAUDE.md` | Replaced "Perspektiven" with "Custom Validation Prompt" |
-| `INDEX.md` | Removed REQUIREMENTS/ACTIONPLAN references, updated concepts |
-| `IMPLEMENTATION-PLAN.md` | Updated test count (125), provider count (4) |
-| `help.html` | Removed DeepSeek references |
-| `about.html` | Fixed perspectives → custom prompt, MIT → CC BY 4.0 |
-| `README.md` | Updated test count (125) |
+**Final result:** 226 tests, all passing.
 
-**Export Fix:**
-- Added raw text support to export service
-- Export now works with transcriptions that only have `raw` text (no segments/lines)
+### PWA/Offline Support
 
-### Final Knowledge Structure
+**manifest.json:** App name, icons (192/512px), standalone display, theme color (#4a7c9b).
 
-```
-knowledge/
-├── INDEX.md          # Navigation
-├── VISION.md         # Project goals
-├── METHODOLOGY.md    # Scientific foundations
-├── MODEL-LANDSCAPE.md # OCR/HTR model comparison
-├── DESIGN-SYSTEM.md  # UI/UX specification
-├── ARCHITECTURE.md   # Technical architecture
-├── VALIDATION.md     # Hybrid validation
-├── DATA-SCHEMA.md    # Data structures
-├── IMPLEMENTATION-PLAN.md # Roadmap (complete)
-└── JOURNAL.md        # Development log
-```
+**Service Worker (sw.js):** Cache version management (coocr-v1), static asset caching, cache-first for static assets, network-first for API calls (Gemini, OpenAI, Anthropic, Ollama), automatic cache cleanup on version change.
+
+**PWA module (pwa.js):** SW registration, offline/online detection, visual indicator with pulse animation, toast notifications for connectivity changes, update notification.
 
 ---
 
-## 2026-02-04 | Feature Implementation: TEI-XML, Tests, PWA
+## 2026-02-04 | Session 26: Upload Dropdown & Model Indicator
 
-**Participants:** User, Claude Opus 4.5
+### Upload Dropdown
 
-### Part 1: TEI-XML Export
+All load options unified in one dropdown: upload image, import PAGE-XML, load demo (submenu), load IIIF (dialog).
 
-**Task:** Add TEI-XML export format for Digital Humanities integration.
+### Demo Sample Badge System
 
-**Implementation:**
-- Added `exportTei()` method to [export.js](../docs/js/services/export.js)
-- TEI P5 minimal schema with proper header structure
-- Marker conversion to TEI elements:
-  - `[word]?` → `<unclear>word</unclear>`
-  - `[?]` → `<gap reason="illegible"/>`
-  - `[illegible]`, `[...]` → `<gap reason="illegible"/>`
-  - `[abbr:expansion]` → `<choice><abbr>abbr</abbr><expan>expansion</expan></choice>`
-- Line breaks with `<lb/>` elements
-- Provider info in `<revisionDesc>`
-- Schema reference for validation
+Visual badges: OCR (blue, printed text), HTR (orange, handwriting), IIIF (green, external), XML (purple, has PAGE-XML), nS (gray, multi-page with n pages). Tooltips with details (language, script type, document type, source).
 
-**UI Changes:**
-- Added TEI option to export dialog in [index.html](../docs/index.html)
-- Format: `.tei.xml` extension
+### Model Indicator
 
-**Tests Added:**
-- 18 new tests in [export.test.js](../docs/tests/export.test.js)
-- Coverage: structure, markers, escaping, edge cases
+Clickable model indicator next to Transcribe button. Provider-specific color coding: Ollama green, Gemini blue, OpenAI purple, Anthropic orange. Click opens LLM config dialog. Display name shortening, local models show "(local)".
 
-**Test Results:**
-| File | Tests | Status |
-|------|-------|--------|
-| export.test.js | 49 | passed (+17) |
+### Header Cleanup
 
-### Part 2: Test Coverage Expansion
-
-**Task:** Add comprehensive tests for state.js and storage.js.
-
-**New Test Files:**
-- [state.test.js](../docs/tests/state.test.js) - 61 tests
-- [storage.test.js](../docs/tests/storage.test.js) - 23 tests
-
-**Test Coverage:**
-
-**state.test.js (61 tests):**
-- Initialization and structure
-- Document management (setDocument, dimensions, events)
-- Multi-page support (navigation, page preservation)
-- Transcription handling
-- Selection and zoom
-- Regions and coordinates
-- Validation state
-- UI state (loading, dialogs, errors, toasts)
-- Document context
-- Batch operations
-- Session management
-- Segment updates
-
-**storage.test.js (23 tests):**
-- Settings CRUD with defaults
-- API key security (deprecated methods return safe values)
-- Session management
-- Utility methods (clearAll, storageInfo)
-
-**Bug Fix:**
-- Updated llm.test.js for memory-only API key storage
-- Tests were using deprecated storage.hasApiKey mocks
-
-**Final Test Results:**
-| File | Tests | Status |
-|------|-------|--------|
-| state.test.js | 61 | passed (NEW) |
-| storage.test.js | 23 | passed (NEW) |
-| export.test.js | 49 | passed |
-| validation.test.js | 40 | passed |
-| llm.test.js | 27 | passed (fixed) |
-| page-xml.test.js | 26 | passed |
-| **Total** | **226** | **all passed** |
-
-### Part 3: PWA/Offline Support
-
-**Task:** Add Progressive Web App support for offline functionality and installation.
-
-**New Files:**
-- [manifest.json](../docs/manifest.json) - Web App Manifest
-- [sw.js](../docs/sw.js) - Service Worker
-- [pwa.js](../docs/js/pwa.js) - PWA initialization and offline indicator
-
-**Implementation:**
-
-**manifest.json:**
-- App name, short name, description
-- Theme color (#4a7c9b) and background color (#1e1e2e)
-- Icons (192x192 and 512x512)
-- Standalone display mode
-- Start URL and scope
-
-**Service Worker (sw.js):**
-- Cache version management (coocr-v1)
-- Static asset caching (HTML, CSS, JS, images)
-- Cache-first strategy for static assets
-- Network-first for API calls (Gemini, OpenAI, Anthropic, Ollama)
-- Automatic cache cleanup on version change
-
-**PWA Module (pwa.js):**
-- Service Worker registration
-- Offline/online status detection
-- Visual indicator with pulse animation
-- Toast notifications for connectivity changes
-- Update notification for new versions
-
-**UI Changes:**
-- Added manifest link in [index.html](../docs/index.html) head
-- Added meta tags for PWA (theme-color, apple-mobile-web-app)
-- Added offline indicator in header
-- Added CSS for offline indicator with animation
-
-**Features:**
-- [x] App installable on desktop/mobile
-- [x] Static assets cached for offline use
-- [x] Offline indicator appears when disconnected
-- [x] Toast notifications for connectivity changes
-- [x] Cache versioning for updates
-
-**Verification:**
-- Chrome DevTools > Application > Manifest: Valid
-- Service Worker status: Activated
-- Cache Storage: Assets cached
-- Offline mode: App loads from cache
-
----
-
-## 2026-02-04 | Session 25: UI Improvements - Upload Dropdown & Model Indicator
-
-**Participants:** User, Claude Opus 4.5
-
-### Part 1: Upload Dropdown Redesign
-
-**Task:** Reorganize file loading options into a unified Upload dropdown menu.
-
-**Implementation:**
-- Created dropdown menu combining all load options:
-  - "Bild hochladen" (Upload Image)
-  - "PAGE-XML importieren" (Import PAGE-XML)
-  - "Demo laden" (Load Demo) - opens samples submenu
-  - "IIIF laden" (Load IIIF) - opens IIIF dialog
-- Added samples submenu with badge system
-- Removed separate upload button, consolidated all options
-
-**Files Changed:**
-- [index.html](../docs/index.html) - Upload dropdown structure
-- [components.css](../docs/css/components.css) - Dropdown and badge styles
-- [main.js](../docs/js/main.js) - Menu initialization and event handling
-
-### Part 2: Demo Sample Badge System
-
-**Task:** Add visual badges to demo samples showing document characteristics.
-
-**Badge Types:**
-| Badge | Color | Meaning |
-|-------|-------|---------|
-| OCR | Blue | Printed text (Flora Lichenes, etc.) |
-| HTR | Orange | Handwritten (manuscripts, letters, cards) |
-| IIIF | Green | External IIIF source |
-| XML | Purple | Has PAGE-XML transcription |
-| nS | Gray | Multi-page (n = page count) |
-
-**Implementation:**
-- `generateSampleBadges()` - creates HTML for badges based on sample properties
-- `generateSampleTooltip()` - creates info tooltip with sample details
-- Tooltip shows: language, script type, document type, data source
-- CSS with glass morphism and hover effects
-
-### Part 3: Model Indicator
-
-**Task:** Show current LLM model next to Transcribe button.
-
-**Implementation:**
-- Added clickable model indicator in Transcription panel header
-- Provider-specific color coding:
-  - Ollama: Green (#10b981)
-  - Gemini: Blue (#3b82f6)
-  - OpenAI: Purple (#8b5cf6)
-  - Anthropic: Orange (#f59e0b)
-- Click opens LLM configuration dialog
-- Display name shortening (e.g., "gemini-3-flash-preview" -> "Gemini Flash")
-- Local models show "(lokal)" suffix
-
-**Files Changed:**
-- [index.html](../docs/index.html) - Model indicator HTML
-- [editor.css](../docs/css/editor.css) - Model indicator styles
-- [dialogs.js](../docs/js/components/dialogs.js) - `updateModelIndicator()` function, click handler
-
-### Part 4: Header Cleanup
-
-**Task:** Remove redundant API Keys button since model indicator now opens config.
-
-**Result:**
-- Removed API Keys button (key icon) from header
-- Model indicator serves as entry point to LLM configuration
-- Cleaner header with fewer buttons
+API Keys button removed, model indicator serves as entry point to LLM configuration.
 
 ### Bug Fixes
 
-| Issue | Fix |
-|-------|-----|
-| "Modelle laden" button not responding | Changed `select()` to `getById()` for button selector |
-| Upload button triggering file picker directly | Removed conflicting event handler |
-| Dropdown menu cut off on right | Changed `left: 0` to `right: 0` |
-| Demo selection not loading | Added `e.stopPropagation()` to samples menu handler |
+"Load models" button: `select()` → `getById()`. Upload button conflict: duplicate event handler removed. Dropdown overflow: `left: 0` → `right: 0`. Demo selection: `e.stopPropagation()` added.
 
 ---
 
-## 2026-02-04 | Session 26: DeepSeek-OCR Integration & Validation Fallback
+## 2026-02-04 | Session 27: DeepSeek-OCR Integration & Validation Fallback
 
-**Participants:** User, Claude Opus 4.5
+### DeepSeek-OCR Fix
 
-### Part 1: DeepSeek-OCR Fix
+**Problem:** Empty responses despite correct provider detection.
 
-**Problem:** DeepSeek-OCR via Ollama returned empty responses despite correct provider detection.
+**Root cause:** DeepSeek-OCR requires `/api/chat` endpoint (not `/api/generate`) and works best with simple prompts.
 
-**Root Cause:** DeepSeek-OCR requires `/api/chat` endpoint (not `/api/generate`) and works best with simple prompts.
+**Solution:** Detect vision models (deepseek-ocr, llava, *vision*) and route to `/api/chat` with messages format. Simplified prompt "Extract the text in the image." `/api/generate` remains for text-only.
 
-**Solution:**
-- Detect vision models (deepseek-ocr, llava, *vision*) when images are present
-- Route to `/api/chat` with messages format for vision models
-- Use simplified prompt "Extract the text in the image."
-- Keep `/api/generate` for text-only requests
+### Validation Fallback
 
-**Files Changed:**
-- [llm.js](../docs/js/services/llm.js) - `_callOllama()` method with vision model detection
+**Problem:** DeepSeek-OCR is OCR-only, cannot perform text validation (without an image).
 
-### Part 2: Validation Fallback for OCR-only Models
+**Solution:** Automatic fallback: transcription with DeepSeek-OCR (local) → validation with cloud provider (Gemini/OpenAI/Anthropic). `isOcrOnlyModel()` detects OCR-specific models. `getValidationFallback()` finds alternative (1. cloud with API key, 2. other Ollama models). UI shows "Fallback: Google Gemini".
 
-**Problem:** DeepSeek-OCR is an OCR-only model - it cannot perform text validation (analyzing text without an image).
+### Export Button Fix
 
-**Solution:** Automatic fallback to alternative provider for validation:
+Selector `[title="Export"]` did not match `title="Export transcription"`. Fix: `getById('btnExport')`.
 
-```
-Transcription: DeepSeek-OCR (local)
-       |
-       v
-Validation: Gemini/OpenAI/Anthropic (cloud fallback)
-```
+### Test Validation
 
-**Implementation:**
-- `isOcrOnlyModel()` - detects OCR-specific models
-- `getValidationFallback()` - finds alternative provider:
-  1. Cloud providers with API key (gemini, openai, anthropic)
-  2. Other Ollama models (llama3.2, mistral, etc.)
-- `_validateWithFallback()` - executes validation with fallback provider
-- UI shows "Fallback: Google Gemini" when fallback is used
-
-**Files Changed:**
-- [llm.js](../docs/js/services/llm.js) - Fallback detection and execution
-- [validation.js](../docs/js/services/validation.js) - Pass through fallbackUsed info
-- [validation.js](../docs/js/components/validation.js) - Display fallback notice
-- [validation.css](../docs/css/validation.css) - Fallback notice styling
-
-### Part 3: Export Button Fix
-
-**Problem:** Export button not responding to clicks.
-
-**Root Cause:** Selector `[title="Export"]` didn't match `title="Export transcription"`.
-
-**Fix:** Changed to `getById('btnExport')`.
-
-### Bug Fixes Summary
-
-| Issue | Fix |
-|-------|-----|
-| DeepSeek-OCR empty response | Use `/api/chat` for vision models |
-| Ollama model not detected as Ollama | Add `ollama:` prefix to populated models |
-| Model not persisted after reload | Restore model after `setProvider()` call |
-| Validation fails with OCR-only model | Automatic fallback to cloud provider |
-| Export button not working | Use `getById('btnExport')` instead of title selector |
-
-### Test Results
-
-DeepSeek-OCR successfully transcribed historical document (Lichenes flora), with Gemini providing validation. The validation correctly identified an OCR error: "Lichtenes" instead of "Lichenes".
+DeepSeek-OCR transcribed historical document (Lichenes flora), Gemini validated. Validation correctly identified OCR error: "Lichtenes" instead of "Lichenes".
 
 ---
 
-## 2026-02-04 | Session 27: Batch Processing Implementation
+## 2026-02-04 | Session 28: Batch Processing Implementation
 
-**Participants:** User, Claude Opus 4.5
+### Batch State Management
 
-### Overview
+New state area: operation (transcription/validation/null), status (idle/running/complete/aborted), currentIndex, total, successCount, errorCount, abortRequested. Methods: `startBatch()`, `updateBatchProgress()`, `requestBatchAbort()`, `completeBatch()`, `getPageStatus()`.
 
-Implementation of Phase 3 from IMPLEMENTATION-PLAN.md: Batch Processing for multi-page documents.
+### Page Status Indicators
 
-### Features Implemented
+Visual page strip with clickable dots: idle (gray), transcribed (yellow), validated (green), error (red), processing (pulsing).
 
-#### 1. Batch State Management (state.js)
+### Batch Progress Panel
 
-New batch state properties:
-```javascript
-batch: {
-    operation: null,      // 'transcription' | 'validation' | null
-    status: 'idle',       // 'idle' | 'running' | 'complete' | 'aborted'
-    currentIndex: 0,
-    total: 0,
-    successCount: 0,
-    errorCount: 0,
-    abortRequested: false
-}
-```
+Floating panel (bottom right): operation title, counter (3/6), progress bar, abort button. Abort checks `abortRequested` flag in each iteration.
 
-New methods:
-- `startBatch(operation, total)` - Initialize batch operation
-- `updateBatchProgress(index, success)` - Update progress and emit events
-- `requestBatchAbort()` - Request abort (checked in batch loop)
-- `completeBatch()` - Finalize batch with status
-- `getPageStatus(pageIndex)` - Get status for UI indicators
+### ZIP Export
 
-#### 2. Page Status Indicators (viewer.js, viewer.css)
+`exportAllPagesZip()`: JSZip loaded dynamically via CDN, folder with document name, each page in selected format, manifest.json with metadata. Export dialog shows scope selector for multi-page ("Current page" / "All pages ZIP").
 
-Visual page strip with clickable dots showing status per page:
-- **idle** (grey) - No transcription yet
-- **transcribed** (yellow) - Has transcription, no validation
-- **validated** (green) - Has both transcription and validation
-- **error** (red) - Transcription/validation failed
-- **processing** (pulsing) - Currently being processed
-
-#### 3. Batch Progress Panel (batch-progress.js)
-
-Floating panel (bottom-right) showing:
-- Operation title (Batch-Transkription / Batch-Validierung)
-- Counter (3 / 6)
-- Progress bar
-- Abort button
-
-#### 4. Abort Functionality
-
-Batch operations check `abortRequested` flag in each iteration:
-```javascript
-if (appState.data.batch.abortRequested) {
-    break;
-}
-```
-
-#### 5. ZIP Export (export.js)
-
-New method `exportAllPagesZip(format, options)`:
-- Loads JSZip dynamically from CDN (only when needed)
-- Creates folder with document name
-- Exports each page in selected format
-- Adds manifest.json with metadata
-- Downloads as `{document}_{date}.zip`
-
-#### 6. Export Scope Selection (dialogs.js, index.html)
-
-Export dialog now shows scope selector for multi-page documents:
-- "Aktuelle Seite" - Single page export
-- "Alle Seiten (ZIP)" - Batch ZIP export
-
-### Files Changed
-
-| File | Changes |
-|------|---------|
-| `docs/js/state.js` | +80 LOC: batch state, getPageStatus() |
-| `docs/js/viewer.js` | +45 LOC: page dots rendering, event listeners |
-| `docs/js/components/batch-progress.js` | +110 LOC: new module |
-| `docs/js/components/transcription.js` | +15 LOC: abort-check, batchProgress |
-| `docs/js/components/validation.js` | +20 LOC: abort-check, batchProgress |
-| `docs/js/services/export.js` | +140 LOC: exportAllPagesZip() |
-| `docs/js/components/dialogs.js` | +50 LOC: export scope handling |
-| `docs/css/viewer.css` | +60 LOC: page-strip, page-dot styles |
-| `docs/css/components.css` | +60 LOC: batch-progress-panel |
-| `docs/css/dialogs.css` | +20 LOC: export-scope styles |
-| `docs/index.html` | +10 LOC: page-strip, export scope |
-
-**Total:** ~610 LOC
-
-### Test Results
-
-All 276 unit tests passing.
-
-### Phase 3 Status
-
-**COMPLETE** - All batch processing features implemented:
-- [x] Batch-Transkription mit Abort
-- [x] Progress-Anzeige (Floating Panel)
-- [x] Batch-Export (ZIP)
-- [x] Validierungsstatus pro Seite (Page Dots)
+**Scope:** ~610 LOC. 276 unit tests passing.
 
 ---
 
-## 2026-02-04 | Session 28: i18n Planning
+## 2026-02-04 | Session 29: i18n Planning
 
-**Participants:** User, Claude Opus 4.5
+### String Inventory
 
-### Goal
-
-Plan internationalization (i18n) for German/English UI support.
-
-### Analysis
-
-Comprehensive string inventory across codebase:
-
-| Source | Count | Type |
-|--------|-------|------|
-| `docs/index.html` | ~185 | Static UI (buttons, labels, dialogs) |
-| `docs/js/components/*.js` | ~100 | Dynamic messages (toasts, errors) |
-| `docs/js/services/*.js` | ~50 | Validation rules, error messages |
-| `docs/js/*.js` | ~65 | Editor labels, status text |
-| **Total** | **~400** | User-visible strings |
-
-### Current State
-
-- Mixed languages: German (~60%), English (~40%)
-- No i18n framework
-- Strings hardcoded in HTML and JS
+~400 user-visible strings: index.html (~185 static), JS components (~100 dynamic), services (~50 rules/errors), core JS (~65 labels/status). Currently mixed: German ~60%, English ~40%.
 
 ### Planned Architecture
 
-```
-docs/js/services/
-├── i18n.js           # Core service with t() function (~150 LOC)
-└── translations.js   # Translation data DE/EN (~800 LOC)
-```
+`i18n.js` (core with `t()` function, ~150 LOC) + `translations.js` (DE/EN data, ~800 LOC). `t(key, params)` with interpolation, `setLanguage(locale)` for runtime switch, `translateDOM()` with `data-i18n` attributes, browser language detection, LocalStorage persistence.
 
-**Key Features:**
-- `t(key, params)` - Translation with interpolation
-- `setLanguage(locale)` - Runtime language switch
-- `translateDOM()` - Update HTML elements with `data-i18n` attributes
-- Browser language detection
-- LocalStorage persistence
+### Implementation Plan (Phase 5, ~14h)
 
-### Implementation Plan (Phase 5)
+7 steps: Core Infrastructure (2h) → HTML Migration (3h) → JS Priority 1 (3h, dialogs/transcription/validation) → JS Priority 2 (2h, batch/editor) → JS Priority 3 (1h, main/llm/export) → Language Switcher (1h) → Testing (2h).
 
-1. Core Infrastructure (~2h)
-2. HTML Migration (~3h) - Add `data-i18n` attributes
-3. JS Migration Priority 1 (~3h) - dialogs.js, transcription.js, validation.js
-4. JS Migration Priority 2 (~2h) - batch-progress.js, editor.js
-5. JS Migration Priority 3 (~1h) - main.js, llm.js, export.js
-6. Language Switcher (~1h) - Settings dialog UI
-7. Testing (~2h) - Unit tests, visual verification
-
-**Estimated Total:** ~14h
-
-### Documentation Updates
-
-- IMPLEMENTATION-PLAN.md: Added Phase 5 (i18n) section
-- INDEX.md: Added i18n concept
-
-### Notes
-
-- LLM prompts will NOT be translated (English prompts work better)
-- Fallback strategy: Show key if translation missing
-- Pluralization support with `{one, other}` pattern
+**Note:** LLM prompts will NOT be translated (English prompts perform better). Fallback: show key if translation missing. Pluralization with `{one, other}` pattern.
 
 ---
 
-*Format: YYYY-MM-DD | Session N: Title*
+## 2026-02-05 | Session 30: Knowledge Base Overview Redesign
+
+### knowledge.html Overview Page
+
+Complete restructuring of the Knowledge Vault overview page.
+
+**Design Principles (5 items, 3+2 grid layout):**
+1. Critical Expert in the Loop - explicit mention of hallucination and sycophancy, LLM literacy required
+2. Hybrid Validation - deterministic rules + LLM-Judge, categorical confidence integrated
+3. Workflow-Agnostic - PAGE-XML import/export, multiple formats, pipeline integration
+4. Open Browser Tool - no backend, vanilla JS, open source (CC BY 4.0)
+5. Cloud & Local Models (new) - provider choice between cloud LLMs and local Ollama
+
+**Development Methodology:**
+- Promptotyping with agentic coding using Claude Code + Opus 4.5
+- Link to L.I.S.A. (Gerda Henkel Stiftung) blog
+
+**CSS Changes:**
+- New `.five-items` grid class for 3+2 layout (6-column grid, first row spans 2 each, second row centered)
+- Responsive fallback to single column on mobile
+
+**Content improvements:**
+- Removed product references (Transkribus) from workflow description
+- Removed empty marketing phrases ("robust quality assurance")
+- Added concrete examples (dates, currency, historical spelling)
+- Explicit LLM limitations (sycophancy, hallucination)
+
+### Repository Analysis
+
+Systematic verification of design principles against codebase. All 5 principles confirmed with evidence in code and documentation (METHODOLOGY.md, VALIDATION.md, SECURITY.md, llm.js, validation.js).
