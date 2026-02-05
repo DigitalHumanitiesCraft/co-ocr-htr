@@ -215,6 +215,7 @@ function setupStateListeners() {
     appState.addEventListener('documentLoaded', (e) => {
         console.log('[Viewer] Document loaded:', e.detail.filename);
         showViewer(e.detail.filename);
+        updatePageNavigation();
     });
 
     // Pages loaded (multi-page)
@@ -346,6 +347,12 @@ function updatePageNavigation() {
                     data-page="${i}" title="Page ${i + 1}">${i + 1}</button>`);
             }
             pageStrip.innerHTML = dots.join('');
+
+            // Scroll current page into view
+            const currentDot = pageStrip.querySelector('.page-dot.current');
+            if (currentDot) {
+                currentDot.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
         }
     } else {
         hide(pageNavigation);

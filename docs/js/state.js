@@ -109,8 +109,7 @@ class AppState extends EventTarget {
     this._autoSaveTimer = null;
     this._autoSaveDelay = 30000; // 30 seconds
 
-    // Try to restore session
-    this._restoreSession();
+    // Don't auto-restore - let main.js handle the confirmation dialog
   }
 
   // ============================================
@@ -181,6 +180,15 @@ class AppState extends EventTarget {
       lines: []
     };
     this.data.regions = [];  // Clear bounding boxes
+    this._emit('regionsChanged', { regions: [] });  // Notify UI to clear overlays
+
+    // Reset multi-page data for single-page documents
+    this.data.pages = [];
+    this.data.currentPageIndex = 0;
+    this.data.pageTranscriptions = {};
+    this.data.batchTranscriptions = {};
+    this.data.batchValidations = {};
+
     this.data.validation = {
       status: 'idle',
       rules: [],
@@ -796,7 +804,26 @@ class AppState extends EventTarget {
     this._emit('sessionSaved');
   }
 
-  _restoreSession() {
+  /**
+   * Check if a saved session exists
+   * @returns {object|null} Session info (timestamp, filename) or null
+   */
+  hasSavedSession() {
+    const session = storage.loadSession();
+    if (session?.data?.document?.filename) {
+      return {
+        timestamp: session.timestamp,
+        filename: session.data.document.filename,
+        hasTranscription: session.data.transcription?.segments?.length > 0
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Restore session from storage (called after user confirmation)
+   */
+  restoreSession() {
     const session = storage.loadSession();
     if (session?.data) {
       // Restore data
@@ -820,7 +847,10 @@ class AppState extends EventTarget {
       }
 
       this._emit('sessionRestored', { timestamp: session.timestamp });
+      this._emit('documentLoaded', { filename: session.data.document.filename });
+      return true;
     }
+    return false;
   }
 
   saveSessionNow() {

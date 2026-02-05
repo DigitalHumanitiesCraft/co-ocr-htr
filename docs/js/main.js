@@ -162,7 +162,82 @@ async function initApp() {
     // Initialize guided workflow features
     initGuidedWorkflow();
 
+    // Check for saved session and offer to restore
+    await checkSavedSession();
+
     console.log('coOCR/HTR: Initialized');
+}
+
+/**
+ * Check if there's a saved session and offer to restore it
+ */
+async function checkSavedSession() {
+    const savedSession = appState.hasSavedSession();
+    if (!savedSession) return;
+
+    // Format timestamp - show relative for recent, absolute for older
+    const date = new Date(savedSession.timestamp);
+    const timeDisplay = formatSessionTime(date);
+
+    // Build structured HTML content
+    const messageHtml = `
+        <div class="session-info">
+            <div class="session-info-row">
+                <span class="session-label">Gespeichert:</span>
+                <span class="session-value">${timeDisplay}</span>
+            </div>
+            <div class="session-info-row">
+                <span class="session-label">Dokument:</span>
+                <span class="session-value session-filename">${escapeHtml(savedSession.filename)}</span>
+            </div>
+            <div class="session-info-row">
+                <span class="session-label">Status:</span>
+                <span class="session-value ${savedSession.hasTranscription ? 'status-success' : 'status-neutral'}">
+                    ${savedSession.hasTranscription ? 'Mit Transkription' : 'Ohne Transkription'}
+                </span>
+            </div>
+        </div>
+    `;
+
+    // Show confirmation dialog with icon
+    const shouldRestore = await dialogManager.showConfirm(
+        'Letzte Sitzung fortsetzen?',
+        messageHtml,
+        'Fortsetzen',
+        'Neu starten',
+        { icon: 'restore', html: true }
+    );
+
+    if (shouldRestore) {
+        appState.restoreSession();
+        dialogManager.showToast('Sitzung wiederhergestellt', 'success');
+    } else {
+        appState.clearSession();
+    }
+}
+
+/**
+ * Format session timestamp - relative for recent, absolute date for older
+ */
+function formatSessionTime(date) {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    // Recent: relative time
+    if (diffMins < 1) return 'Gerade eben';
+    if (diffMins < 60) return `Vor ${diffMins} Minute${diffMins === 1 ? '' : 'n'}`;
+    if (diffHours < 24) return `Vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`;
+    if (diffDays < 7) return `Vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`;
+
+    // Older: show date
+    return date.toLocaleDateString('de-DE', {
+        day: 'numeric',
+        month: 'long',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
 }
 
 

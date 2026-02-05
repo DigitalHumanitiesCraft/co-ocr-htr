@@ -1261,6 +1261,86 @@ class DialogManager {
             }
         }, 300);
     }
+
+    /**
+     * Show a confirmation dialog
+     * @param {string} title - Dialog title
+     * @param {string} message - Dialog message (plain text) or HTML if options.html is true
+     * @param {string} confirmText - Text for confirm button
+     * @param {string} cancelText - Text for cancel button
+     * @param {object} options - Additional options (icon, html)
+     * @returns {Promise<boolean>} - True if confirmed, false if cancelled
+     */
+    showConfirm(title, message, confirmText = 'OK', cancelText = 'Abbrechen', options = {}) {
+        return new Promise((resolve) => {
+            // Icon options
+            const icons = {
+                restore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>',
+                warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+                info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+                question: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+            };
+
+            const iconHtml = options.icon && icons[options.icon]
+                ? `<span class="dialog-icon dialog-icon-${options.icon}">${icons[options.icon]}</span>`
+                : '';
+
+            // Create dialog element
+            const dialog = document.createElement('dialog');
+            dialog.className = 'confirm-dialog glass-panel';
+
+            // Message content - either escaped text or raw HTML
+            const messageContent = options.html ? message : `<p>${escapeHtml(message)}</p>`;
+
+            dialog.innerHTML = `
+                <div class="dialog-header">
+                    ${iconHtml}
+                    <h3>${escapeHtml(title)}</h3>
+                </div>
+                <div class="dialog-body">
+                    ${messageContent}
+                </div>
+                <div class="dialog-actions">
+                    <button class="btn btn-ghost" data-action="cancel">${escapeHtml(cancelText)}</button>
+                    <button class="btn btn-primary" data-action="confirm">${escapeHtml(confirmText)}</button>
+                </div>
+            `;
+
+            // Handle button clicks
+            dialog.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                if (action === 'confirm') {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(true);
+                } else if (action === 'cancel') {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(false);
+                }
+            });
+
+            // Handle backdrop click
+            dialog.addEventListener('click', (e) => {
+                if (e.target === dialog) {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(false);
+                }
+            });
+
+            // Handle escape key
+            dialog.addEventListener('cancel', (e) => {
+                e.preventDefault();
+                dialog.close();
+                dialog.remove();
+                resolve(false);
+            });
+
+            document.body.appendChild(dialog);
+            dialog.showModal();
+        });
+    }
 }
 
 // Export singleton instance

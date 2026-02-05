@@ -123,6 +123,106 @@ dialog[open] {
   margin-left: auto;
 }
 
+/* Confirm Dialog (smaller, centered) */
+.confirm-dialog {
+  width: 420px;
+  max-width: 90vw;
+}
+
+.confirm-dialog .dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.confirm-dialog .dialog-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.confirm-dialog .dialog-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.confirm-dialog .dialog-icon-restore {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.confirm-dialog .dialog-icon-warning {
+  background: var(--warning-subtle);
+  color: var(--warning);
+}
+
+.confirm-dialog .dialog-icon-info {
+  background: var(--info-subtle);
+  color: var(--info);
+}
+
+.confirm-dialog .dialog-icon-question {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.confirm-dialog .dialog-body p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.confirm-dialog .dialog-actions {
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-default);
+  justify-content: flex-end;
+}
+
+/* Session Info (structured display) */
+.session-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.session-info-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.session-label {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.session-value {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.session-filename {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.session-value.status-success {
+  color: var(--success);
+}
+
+.session-value.status-neutral {
+  color: var(--text-secondary);
+}
+
 /* ==========================================================================
    DIALOG TABS
    ========================================================================== */

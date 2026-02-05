@@ -346,14 +346,25 @@
 .page-strip {
   display: flex;
   gap: var(--space-1);
-  max-width: 180px;
+  max-width: min(400px, 50vw);
   overflow-x: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
   padding: var(--space-1) 0;
+  scroll-behavior: smooth;
 }
 
 .page-strip::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+
+.page-strip::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-strip::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 2px;
 }
 
 .page-dot {

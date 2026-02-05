@@ -1,7 +1,7 @@
 ---
 type: knowledge
 created: 2026-01-16
-updated: 2026-02-03
+updated: 2026-02-05
 tags: [coocr-htr, methodology, llm-bias, script-coverage]
 status: complete
 ---
@@ -35,14 +35,16 @@ Three expertise components for OCR/HTR validation:
 
 **Core statement:** Expert knowledge is irreplaceable. The machine assists, the human decides.
 
+**Knowledge Hierarchy (AIL-ML Framework):** Research on Agent-in-the-Loop ML confirms a clear capability ordering: General Users < LLMs < Domain Experts. LLMs possess general knowledge plus their training corpus, but lack the specialized expert knowledge that domain specialists bring. This epistemic asymmetry is why coOCR/HTR positions the expert as final authority - the LLM generates, the expert authors.
+
 ## LLM-Judge Bias
 
 Empirical evidence against numerical confidence values:
 
 | Bias Type | Effect | Measurement |
 |-----------|--------|-------------|
-| Position Bias | Preference for certain input positions | 56-83% variation with position swaps |
-| Verbosity Bias | Longer outputs rated higher | +5.5 to +8.2 percentage points |
+| Position Bias | Preference for certain input positions | Significant variation; >80% of evaluations affected |
+| Verbosity Bias | Longer outputs rated higher | Systematic preference, varies by model |
 | Self-Enhancement | Own outputs preferred | GPT-4: 70.5% self-preference |
 | Semantic Perturbation | Equivalent variations → different scores | 3-77% performance degradation |
 
@@ -123,17 +125,29 @@ See [MODEL-LANDSCAPE](MODEL-LANDSCAPE.md) for detailed comparison.
 
 ## Interface Design Theory
 
-### Visual Information Seeking Mantra (Shneiderman)
+### Direct Manipulation (Shneiderman 1983)
 
-> "Overview first, zoom and filter, then details on demand."
+Core principles for interactive editors:
 
-**coOCR/HTR implementation:** Page overview → Single page → Detail view of an entry
+| Principle | coOCR/HTR Implementation |
+|-----------|-------------------------|
+| Visible objects | Transcription text directly editable in place |
+| Rapid, reversible actions | Immediate updates, undo available |
+| Incremental feedback | Validation runs on each change |
+| Replace command syntax | Click to edit, no markup language required |
 
-### Coordinated Multiple Views
+**Design goal:** Users work directly with their transcription, not with an abstraction layer.
 
-Image, text, and validation are linked:
-- Click on text passage → Image region highlighted
-- Click on validation hint → Jump to location
+### Gulfs of Execution & Evaluation (Norman 1986)
+
+Two gaps that interface design must bridge:
+
+| Gulf | Question | coOCR/HTR Solution |
+|------|----------|-------------------|
+| Execution | "How do I do what I want?" | Clear affordances, minimal UI |
+| Evaluation | "What happened? Did it work?" | Visual feedback, validation status |
+
+**Design goal:** Minimize cognitive load. The interface should feel obvious.
 
 ### Progressive Disclosure
 
@@ -169,7 +183,7 @@ Traceability of all steps: model, corrections, timestamp.
 
 ### The Functional Triad: A Taxonomy
 
-BJ Fogg's "Functional Triad" from Persuasive Technology (Captology) provides a useful framework for understanding computer roles. With some adaptation, this maps onto established Human-Computer Interaction paradigms:
+BJ Fogg's "Functional Triad" from Persuasive Technology (Captology) provides a framework for understanding computer roles. With adaptation for coOCR/HTR, this maps onto established Human-Computer Interaction paradigms:
 
 | Fogg's Triad | Computer as... | HCI Paradigm | Established Acronyms |
 |--------------|----------------|--------------|----------------------|
@@ -228,4 +242,33 @@ coOCR/HTR deliberately positions itself in the **Computer-Aided** paradigm while
 
 ---
 
-**Sources:** Promptotyping methodology, Critical Expert in the Loop, LLM-Judge bias research, Vision-Language Models, Document AI, Shneiderman (Visual Information Seeking).
+## Sources
+
+### Promptotyping & Expert-in-the-Loop
+- Promptotyping methodology: https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin
+- Related: Prompt-based Prototyping in Collaborative Teams (CHI 2025): https://dl.acm.org/doi/10.1145/3706598.3713166
+- Expert in the Loop: https://link.springer.com/article/10.1007/s10462-025-11255-1
+
+### LLM-Judge Bias Research
+- Position Bias (ACL 2025): https://aclanthology.org/2025.ijcnlp-long.18/
+- Self-Preference Bias (NeurIPS 2024): https://proceedings.neurips.cc/paper_files/paper/2024/file/7f1f0218e45f5414c79c0679633e47bc-Paper-Conference.pdf
+- Self-Preference Bias (arXiv): https://arxiv.org/abs/2410.21819
+- Verbosity Bias: https://openreview.net/pdf?id=magEgFpK1y
+- Semantic Perturbation: https://www.mdpi.com/2078-2489/16/8/652
+- LLM Calibration Survey (ACL 2024): https://aclanthology.org/2024.naacl-long.366/
+
+### Vision-Language Models
+- VLM Architecture (IBM): https://www.ibm.com/think/topics/vision-language-models
+- VLM Architectures Collection: https://github.com/gokayfem/awesome-vlm-architectures
+- FastVLM (Apple): https://machinelearning.apple.com/research/fast-vision-language-models
+- Emergent OCR (ChatVLA-2): https://arxiv.org/html/2505.21906v2
+- VLMs Explained (Hugging Face): https://huggingface.co/blog/vlms
+
+### Interface Design Theory
+- Direct Manipulation (Shneiderman 1983): https://www.cs.umd.edu/~ben/papers/Shneiderman1983Direct.pdf
+- Gulfs of Execution/Evaluation (Norman 1986): https://www.nngroup.com/articles/two-ux-gulfs-evaluation-execution/
+
+### Functional Triad
+- Fogg, B.J. (2003) Persuasive Technology: https://books.google.com/books/about/Persuasive_Technology.html?id=r9JIkNjjTfEC
+- Functional Triad Chapter: https://www.globalspec.com/reference/33525/203279/chapter-2-the-functional-triad-computers-in-persuasive-roles
+- Captology in the Age of AI: https://law.stanford.edu/2023/05/21/the-power-of-persuasion-captology-in-the-age-of-ai-and-quantum-computing/
