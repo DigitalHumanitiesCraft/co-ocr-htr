@@ -763,3 +763,60 @@ Complete restructuring of the Knowledge Vault overview page.
 ### Repository Analysis
 
 Systematic verification of design principles against codebase. All 5 principles confirmed with evidence in code and documentation (METHODOLOGY.md, VALIDATION.md, SECURITY.md, llm.js, validation.js).
+
+---
+
+## 2026-02-05 | Session 31: Bugfixes, Session Restore Dialog, Methodology Updates
+
+### Methodology Documentation
+
+**Interface Design Theory updated:**
+- Removed Shneiderman "Overview first" (not applicable to workbench UI)
+- Removed Coordinated Multiple Views reference (too academic)
+- Added Direct Manipulation (Shneiderman 1983) - fits editor paradigm
+- Added Gulfs of Execution & Evaluation (Norman 1986) - explains minimal UI goal
+
+**Knowledge Hierarchy (AIL-ML Framework):**
+- Integrated from Agent-in-the-Loop ML paper (Gao et al. 2025)
+- Key insight: General Users < LLMs < Domain Experts
+- Epistemic asymmetry justifies Expert-in-the-Loop approach
+- Phrase: "the LLM generates, the expert authors"
+
+### Session Restore Dialog
+
+New feature: App asks before restoring saved session on startup.
+
+**Components:**
+- `appState.hasSavedSession()` - checks if session exists
+- `appState.restoreSession()` - restores on user confirmation
+- `dialogManager.showConfirm()` - new reusable confirm dialog with icon support
+- Structured display: timestamp, filename, transcription status
+
+**Design:**
+- Icon support (restore, warning, info, question)
+- Relative time for recent sessions (<7 days), absolute date for older
+- Session info with label-value pairs, filename in mono font
+
+### Multi-Page Navigation Bugfixes
+
+**Issues fixed:**
+1. Page navigation visible after switching from multi-page to single-page document
+2. Old regions (bounding boxes) persisted when loading new document
+3. Page strip too narrow for many pages (82+ in IIIF samples)
+
+**Solutions:**
+- `updatePageNavigation()` called on `documentLoaded` event
+- `regionsChanged` event emitted when clearing regions in `setDocument()`
+- Multi-page data reset in `setDocument()`: pages, currentPageIndex, pageTranscriptions, batchTranscriptions, batchValidations
+- Page strip max-width increased to `min(400px, 50vw)` with visible scrollbar
+- Current page auto-scrolls into view
+
+### Export Encoding Fix
+
+TEI-XML export had UTF-8 encoding issues (Umlauts displayed as `Ã¼`).
+
+**Fix:** Added charset declaration to Blob creation:
+```javascript
+const charset = mimeType.includes('xml') ? '; charset=utf-8' : '';
+const blob = new Blob([content], { type: mimeType + charset });
+```

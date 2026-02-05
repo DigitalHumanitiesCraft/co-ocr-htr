@@ -498,7 +498,11 @@ ${bodyLines.join('\n')}
      * Trigger file download
      */
     download(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
+        // Ensure UTF-8 encoding for text formats
+        const charset = mimeType.startsWith('text/') || mimeType.includes('xml') || mimeType.includes('json')
+            ? '; charset=utf-8'
+            : '';
+        const blob = new Blob([content], { type: mimeType + charset });
         const url = URL.createObjectURL(blob);
 
         const link = document.createElement('a');
