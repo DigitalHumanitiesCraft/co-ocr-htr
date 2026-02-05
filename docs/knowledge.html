@@ -377,7 +377,7 @@
 
                 try {
                     // Fetch markdown file
-                    const response = await fetch(`../knowledge/${docName}.md`);
+                    const response = await fetch(`knowledge/${docName}.md`);
 
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

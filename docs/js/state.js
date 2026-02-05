@@ -186,8 +186,8 @@ class AppState extends EventTarget {
     this.data.pages = [];
     this.data.currentPageIndex = 0;
     this.data.pageTranscriptions = {};
-    this.data.batchTranscriptions = {};
-    this.data.batchValidations = {};
+    this.data.batchTranscriptions = [];
+    this.data.batchValidations = [];
 
     this.data.validation = {
       status: 'idle',
