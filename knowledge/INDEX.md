@@ -46,6 +46,8 @@ knowledge/
 | Concept | Definition | Document |
 |---------|------------|----------|
 | Critical Expert in the Loop | Human validates, machine assists | METHODOLOGY |
+| Functional Triad (Fogg) | Tool / Medium / Social Actor → CA* / CS* / GenAI | METHODOLOGY |
+| Computer-Aided Paradigm | Human steers, AI assists (CAD, CAT, CALL) | METHODOLOGY |
 | Categorical Confidence | confident/uncertain/problematic instead of 0-100% | METHODOLOGY |
 | Hybrid Validation | Deterministic + LLM-Judge combined | VALIDATION |
 | Custom Validation Prompt | Optional user-defined validation prompt | VALIDATION |
