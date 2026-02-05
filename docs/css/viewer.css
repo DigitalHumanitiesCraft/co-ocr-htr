@@ -335,6 +335,22 @@
   font-size: var(--text-xs);
   color: var(--text-secondary);
   z-index: 10;
+  max-width: calc(100% - var(--space-6));
+}
+
+.page-navigation .icon-btn {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.page-navigation .icon-btn:not(:disabled):hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.page-navigation .icon-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .page-navigation .page-info {
