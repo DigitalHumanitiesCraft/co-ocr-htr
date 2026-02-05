@@ -9,7 +9,10 @@ status: complete
 # Implementation Plan
 
 **Status:** Phase 1-4 Complete, Phase 5 (i18n) Planned
+
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
+
+**Architecture:** See [ARCHITECTURE.md](ARCHITECTURE.md) for project structure and module details.
 
 ---
 
@@ -42,175 +45,122 @@ status: complete
 
 ## Phase 2: Multi-Page & Documentation [x] COMPLETE
 
-### 2.1 Unterseiten [x] COMPLETE
+### 2.1 Subpages [x] COMPLETE
 
 | Task | Status | File |
 |------|--------|------|
-| `help.html` erstellen | [x] | `docs/help.html` |
-| `about.html` erstellen | [x] | `docs/about.html` |
-| `knowledge.html` erstellen | [x] | `docs/knowledge.html` |
+| Create `help.html` | [x] | `docs/help.html` |
+| Create `about.html` | [x] | `docs/about.html` |
+| Create `knowledge.html` | [x] | `docs/knowledge.html` |
 | `pages.css` Shared Styles | [x] | `docs/css/pages.css` |
-| Header-Links (Help/About/Knowledge) | [x] | `docs/index.html` |
-| Scroll-Fix für Unterseiten | [x] | `docs/css/pages.css` |
+| Header Links (Help/About/Knowledge) | [x] | `docs/index.html` |
+| Scroll Fix for Subpages | [x] | `docs/css/pages.css` |
 
 ### 2.2 Multi-Page Navigation [x] COMPLETE
 
 | Task | Status | File |
 |------|--------|------|
-| State erweitern (pages[], currentPageIndex) | [x] | `js/state.js` |
+| Extend State (pages[], currentPageIndex) | [x] | `js/state.js` |
 | Per-Page Transcriptions (pageTranscriptions) | [x] | `js/state.js` |
 | Page Navigation UI | [x] | `index.html`, `js/viewer.js` |
 | Samples Service Multi-Page | [x] | `js/services/samples.js` |
-| Keyboard: ←/→ Navigation | [x] | `js/viewer.js` |
-| Multi-Page Demo (Wecker 6 Seiten) | [x] | `samples/wecker/` |
+| Keyboard: Left/Right Navigation | [x] | `js/viewer.js` |
+| Multi-Page Demo (Wecker 6 pages) | [x] | `samples/wecker/` |
 
-**UI-Element:**
+**UI Element:**
 ```
 ◀ Prev │ Page 3 / 6 │ Next ▶
 ```
 
 ### 2.3 UI State Management [x] COMPLETE
 
-**Problem:** Initial State zeigt falsches UI
-- Editor zeigt leere Tabelle statt Empty State [x] FIXED
-- Viewer zeigt nicht den Empty State [x] FIXED
+**Problem:** Initial state shows incorrect UI
+- Editor shows empty table instead of empty state [x] FIXED
+- Viewer doesn't show empty state [x] FIXED
 - Drag & Drop Empty State [x] FIXED (z-index)
 
 | Task | Status | File |
 |------|--------|------|
-| Editor: Empty State bei leerer Transkription | [x] | `js/editor.js` |
-| Viewer: Initial Empty State | [x] | `js/viewer.js` |
+| Editor: Empty state for empty transcription | [x] | `js/editor.js` |
+| Viewer: Initial empty state | [x] | `js/viewer.js` |
 | Drag & Drop Visibility | [x] | `css/viewer.css` (z-index fix) |
 
 ### 2.4 Bug Fixes [x] COMPLETE
 
-| Bug | Lösung | Status |
-|-----|--------|--------|
-| Transkription nicht sichtbar | Pseudo-Regionen in `state.js` | [x] |
-| PAGE-XML Wortfragmente | `extractLineText()` + Word-Fallback | [x] |
-| Tabellen-Prompt für Briefe | Dual-Prompts + UI-Selector | [x] |
-| Validation initial sichtbar | Conditional display | [x] |
+| Bug | Solution | Status |
+|-----|----------|--------|
+| Transcription not visible | Pseudo-regions in `state.js` | [x] |
+| PAGE-XML word fragments | `extractLineText()` + Word-Fallback | [x] |
+| Table prompt for letters | Dual prompts + UI selector | [x] |
+| Validation initially visible | Conditional display | [x] |
 
-### 2.4 Demo-Daten [x] COMPLETE
+### 2.5 Demo Data [x] COMPLETE
 
-| Sample | Typ | Seiten | Status |
-|--------|-----|--------|--------|
+| Sample | Type | Pages | Status |
+|--------|------|-------|--------|
 | Wecker Antidotarium | Multi-Page | 6 | [x] |
 | Wecker Single Page | Single | 1 | [x] |
 | Raitbuch | Single | 1 | [x] |
-| HSA Brief | Single | 1 | [x] |
-| Karteikarte | Single | 1 | [x] |
+| HSA Letter | Single | 1 | [x] |
+| Index Card | Single | 1 | [x] |
 
 ---
 
-## Phase 3: Batch-Processing [x] COMPLETE
+## Phase 3: Batch Processing [x] COMPLETE
 
-| Task | Status | Beschreibung |
-|------|--------|--------------|
-| Batch-Transkription | [x] | Alle Seiten automatisch transkribieren mit Abort-Funktion |
-| Progress-Anzeige | [x] | Floating Progress Panel mit Fortschrittsbalken |
-| Batch-Export | [x] | Alle Seiten als ZIP exportieren (JSZip) |
-| Validierung pro Seite | [x] | Page-Dots zeigen Status (idle/transcribed/validated/error) |
-| Abort-Funktion | [x] | Batch-Operationen können jederzeit abgebrochen werden |
+| Task | Status | Description |
+|------|--------|-------------|
+| Batch Transcription | [x] | Automatically transcribe all pages with abort function |
+| Progress Display | [x] | Floating progress panel with progress bar |
+| Batch Export | [x] | Export all pages as ZIP (JSZip) |
+| Per-Page Validation | [x] | Page dots show status (idle/transcribed/validated/error) |
+| Abort Function | [x] | Batch operations can be aborted at any time |
 
 ---
 
 ## Phase 4: Polish & Release [x] COMPLETE
 
-| Task | Status | Beschreibung |
-|------|--------|--------------|
+| Task | Status | Description |
+|------|--------|-------------|
 | PAGE-XML Export | [x] | PAGE 2019-07-15 Schema |
-| Vitest Unit Tests | [x] | 125 Tests (export, validation, llm, page-xml) |
-| Editor Simplification | [x] | Textarea mit Line Numbers, Diff View |
-| Undo/Redo Buttons | [x] | Sichtbare Buttons mit Feedback |
-| API Dialog Redesign | [x] | Unified Form statt Tabs |
-| Document Context | [x] | In Transcription Dialog integriert |
-| DeepSeek-OCR Integration | [x] | Als lokales Ollama-Modell |
-| E2E Test | [ ] | Vollständiger Workflow-Test (optional) |
-| Performance Audit | [ ] | Lighthouse, große Dokumente (optional) |
-
----
-
-## Architektur (aktuell)
-
-```
-docs/
-├── index.html              # Haupt-App
-├── help.html               # [x] Hilfe-Seite
-├── about.html              # [x] About-Seite
-├── knowledge.html          # [x] Knowledge Base Seite
-├── css/
-│   ├── variables.css       # Design Tokens
-│   ├── base.css            # Reset, Typography
-│   ├── layout.css          # Grid, Panels
-│   ├── components.css      # Buttons, Inputs
-│   ├── dialogs.css         # Modal Dialogs
-│   ├── editor.css          # Transcription Editor
-│   ├── viewer.css          # Document Viewer
-│   ├── validation.css      # Validation Panel
-│   └── pages.css           # [x] Shared für Unterseiten
-├── js/
-│   ├── main.js             # Entry Point
-│   ├── state.js            # Central State + Multi-Page
-│   ├── viewer.js           # Pan/Zoom/Fit/Regions + Page Nav
-│   ├── editor.js           # Lines/Grid Editor
-│   ├── ui.js               # UI Interactions
-│   ├── components/
-│   │   ├── dialogs.js
-│   │   ├── upload.js
-│   │   ├── transcription.js
-│   │   ├── validation.js
-│   │   └── batch-progress.js  # [x] Batch Progress Panel
-│   └── services/
-│       ├── llm.js          # 4 Provider (Gemini, OpenAI, Anthropic, Ollama)
-│       ├── storage.js
-│       ├── validation.js
-│       ├── export.js
-│       ├── samples.js      # Multi-Page Support
-│       └── parsers/
-│           ├── page-xml.js
-│           └── mets-xml.js
-├── samples/
-│   ├── index.json          # 5 Samples (1 Multi-Page)
-│   ├── raitbuch/
-│   ├── wecker/             # [x] 6 Seiten + PAGE-XML
-│   ├── hsa-letter/
-│   └── karteikarte/
-└── assets/
-    ├── logo.png
-    └── logo-icon.png
-```
+| Vitest Unit Tests | [x] | 125 tests (export, validation, llm, page-xml) |
+| Editor Simplification | [x] | Textarea with line numbers, diff view |
+| Undo/Redo Buttons | [x] | Visible buttons with feedback |
+| API Dialog Redesign | [x] | Unified form instead of tabs |
+| Document Context | [x] | Integrated in transcription dialog |
+| DeepSeek-OCR Integration | [x] | As local Ollama model |
+| E2E Test | [ ] | Complete workflow test (optional) |
+| Performance Audit | [ ] | Lighthouse, large documents (optional) |
 
 ---
 
 ## Phase 5: Internationalization (i18n) [ ] PLANNED
 
-| Task | Status | Beschreibung |
-|------|--------|--------------|
-| i18n Service | [ ] | `js/services/i18n.js` mit `t()` Funktion |
+| Task | Status | Description |
+|------|--------|-------------|
+| i18n Service | [ ] | `js/services/i18n.js` with `t()` function |
 | Translations | [ ] | `js/services/translations.js` (DE/EN) |
-| HTML Migration | [ ] | `data-i18n` Attribute zu ~185 Elementen |
-| JS Migration | [ ] | `t()` Aufrufe in allen Komponenten |
+| HTML Migration | [ ] | `data-i18n` attributes to ~185 elements |
+| JS Migration | [ ] | `t()` calls in all components |
 | Language Switcher | [ ] | UI in Settings Dialog |
-| Testing | [ ] | Unit Tests, visuelle Verifikation |
+| Testing | [ ] | Unit tests, visual verification |
 
-**Umfang:** ~400 Strings, ~800 LOC
-**Details:** Siehe [i18n-Plan](../.claude/plans/ticklish-prancing-kazoo.md)
-
----
-
-## Legende
-
-| Symbol | Bedeutung |
-|--------|-----------|
-| [x] | Abgeschlossen |
-| [~] | In Arbeit |
-| [ ] | Geplant |
+**Scope:** ~400 strings, ~800 LOC
 
 ---
 
-**Referenzen:**
-- [ARCHITECTURE](ARCHITECTURE.md) - Technische Details
-- [VALIDATION](VALIDATION.md) - Validierungsregeln
-- [DATA-SCHEMA](DATA-SCHEMA.md) - Datenstrukturen
-- [JOURNAL](JOURNAL.md) - Entwicklungshistorie
+## Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| [x] | Complete |
+| [~] | In Progress |
+| [ ] | Planned |
+
+---
+
+**References:**
+- [ARCHITECTURE](ARCHITECTURE.md) - Technical Details
+- [VALIDATION](VALIDATION.md) - Validation Rules
+- [DATA-SCHEMA](DATA-SCHEMA.md) - Data Structures
+- [JOURNAL](JOURNAL.md) - Development History

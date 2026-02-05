@@ -45,11 +45,11 @@ Generic rules applicable to all document types (letters, diaries, account books,
 
 | Rule ID | Name | Pattern | Type | Description |
 |---------|------|---------|------|-------------|
-| uncertain_marker | Unsichere Lesungen | [?] | warning | Marks passages with uncertain readings |
-| illegible_marker | Unleserliche Stellen | [illegible], [...] | warning | Marks unreadable passages |
-| abbreviations | Abkuerzungen | word[expansion] | info | Expanded abbreviations like admi[nistrateurs] |
-| line_breaks | Zeilenanzahl | (custom logic) | info | Counts transcribed lines |
-| special_chars | Sonderzeichen | Non-standard chars | info | Potential OCR artifacts |
+| uncertain_marker | Uncertain Readings | [?] | warning | Marks passages with uncertain readings |
+| illegible_marker | Illegible Passages | [illegible], [...] | warning | Marks unreadable passages |
+| abbreviations | Abbreviations | word[expansion] | info | Expanded abbreviations like admi[nistrateurs] |
+| line_breaks | Line Count | (custom logic) | info | Counts transcribed lines |
+| special_chars | Special Characters | Non-standard chars | info | Potential OCR artifacts |
 
 ### Design Rationale (v2.0)
 
@@ -86,30 +86,30 @@ Generic validation prompt covering all relevant aspects:
 
 ### Custom Prompt Option
 
-Advanced users can provide their own validation prompt via the "Eigenen Prompt verwenden" option in the validate dialog. Use `{text}` as placeholder for the transcription text.
+Advanced users can provide their own validation prompt via the "Use custom prompt" option in the validate dialog. Use `{text}` as placeholder for the transcription text.
 
 ### Issue Types (v2.0)
 
 | Type | Name | Color | Description |
 |------|------|-------|-------------|
-| spelling | Rechtschreibung | warning | Spelling errors |
-| accent | Akzentfehler | warning | Missing/wrong diacritics |
-| abbreviation | Abkuerzung | info | Abbreviation expansion needed |
-| illegible | Unleserlich | error | Unreadable passage |
-| ocr_artifact | OCR-Artefakt | error | OCR recognition error |
-| historical | Historisch | info | Historical spelling variant |
-| structural | Strukturell | warning | Layout/structure issue |
-| plausibility | Plausibilitaet | warning | Implausible content |
+| spelling | Spelling | warning | Spelling errors |
+| accent | Accent Error | warning | Missing/wrong diacritics |
+| abbreviation | Abbreviation | info | Abbreviation expansion needed |
+| illegible | Illegible | error | Unreadable passage |
+| ocr_artifact | OCR Artifact | error | OCR recognition error |
+| historical | Historical | info | Historical spelling variant |
+| structural | Structural | warning | Layout/structure issue |
+| plausibility | Plausibility | warning | Implausible content |
 
 ## Confidence Categories
 
 No numeric values (see [METHODOLOGY](METHODOLOGY.md): LLM Bias).
 
-| Category | German | UI Color | Meaning |
-|----------|--------|----------|---------|
-| `certain` | Hohe Konfidenz | Green | High agreement |
-| `likely` | Mittlere Konfidenz | Orange | Expert should review |
-| `uncertain` | Niedrige Konfidenz | Red | Likely incorrect |
+| Category | Label | UI Color | Meaning |
+|----------|-------|----------|---------|
+| `certain` | High Confidence | Green | High agreement |
+| `likely` | Medium Confidence | Orange | Expert should review |
+| `uncertain` | Low Confidence | Red | Likely incorrect |
 
 ## ValidationResult Format
 
@@ -137,17 +137,17 @@ Each validation result contains:
 │ VALIDATION            [Validate]    1 Issue     │
 ├─────────────────────────────────────────────────┤
 │ RULE-BASED                                      │
-│ ● Unsichere Lesungen     Keine Markierungen     │
-│ ● Unleserliche Stellen   1 unleserliche Stelle  │
-│ ● Abkuerzungen           1 aufgeloest           │
-│ ● Zeilenanzahl           36 Zeilen transkribiert│
-│ ● Sonderzeichen          Keine ungewoehnlichen  │
+│ ● Uncertain Readings   No markers found         │
+│ ● Illegible Passages   1 illegible passage      │
+│ ● Abbreviations        1 expanded               │
+│ ● Line Count           36 lines transcribed     │
+│ ● Special Characters   None unusual             │
 ├─────────────────────────────────────────────────┤
 │ AI ASSISTANT                                    │
-│ ● Konfidenz              Mittlere Konfidenz     │
-│ ● Zeile 5                Le prix lorem ipsum    │
-│ ● Zeile 16               admi[illegible]trateurs│
-│ > Analyse anzeigen                              │
+│ ● Confidence           Medium Confidence        │
+│ ● Line 5               Le prix lorem ipsum      │
+│ ● Line 16              admi[illegible]trateurs  │
+│ > Show Analysis                                 │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -192,7 +192,7 @@ User clicks "Validate" button
        ▼
 ┌──────────────────┐
 │ Show Loading     │ (Overlay on validation panel)
-│ "Validierung..." │
+│ "Validating..."  │
 └──────┬───────────┘
        │
        ▼
@@ -213,7 +213,7 @@ User clicks "Validate" button
        ▼
   Hide Loading
   Update UI
-  Toast: "Validierung abgeschlossen"
+  Toast: "Validation complete"
 ```
 
 **Key changes in v2.0:**

@@ -12,14 +12,14 @@ Current state of OCR/HTR models relevant for coOCR/HTR (as of February 2026).
 
 ## External Validation
 
-Erkenntnisse aus der Digital Humanities Community (2026-02):
+Findings from the Digital Humanities community (2026-02):
 
-- Gemini 3 Pro führt bei Closed Models "by a long way"
-- LightOnOCR ist aktuell State-of-the-Art bei Open Source
+- Gemini 3 Pro leads closed models "by a long way"
+- LightOnOCR is currently state-of-the-art for open source
 - DeepSeek OCR 2 "works okay for simple layouts"
-- Layout-Analyse als separater Schritt verbessert Genauigkeit erheblich
-- Agentic Vision Mode relevant für komplexe Layouts
-- HTR (Handschrift) bleibt anspruchsvoller als OCR (Druck) über alle Modelle hinweg
+- Layout analysis as a separate step significantly improves accuracy
+- Agentic Vision Mode relevant for complex layouts
+- HTR (handwriting) remains more challenging than OCR (print) across all models
 
 ---
 
@@ -216,95 +216,95 @@ Is it handwritten?
 
 ### Agentic Vision (Future)
 
-**Konzept:** Gemini 3 Flash kann Bilder aktiv untersuchen statt nur passiv zu analysieren.
+**Concept:** Gemini 3 Flash can actively investigate images instead of just passively analyzing them.
 
 **Think-Act-Observe Loop:**
 ```
-1. THINK: Modell analysiert Anfrage, plant mehrstufige Untersuchung
-2. ACT: Modell generiert Python-Code zum Zoomen, Croppen, Annotieren
-3. OBSERVE: Transformiertes Bild wird neu analysiert
-4. REPEAT: Bis ausreichende Klarheit erreicht
+1. THINK: Model analyzes request, plans multi-step investigation
+2. ACT: Model generates Python code to zoom, crop, annotate
+3. OBSERVE: Transformed image is re-analyzed
+4. REPEAT: Until sufficient clarity is reached
 ```
 
-**Potenzielle Anwendungsfaelle in coOCR/HTR:**
-- Automatisches Zoomen auf unleserliche Stellen
-- Segmentierung komplexer Layouts
-- Qualitaetsverbesserung bei beschaedigten Dokumenten
-- Verifikation unsicherer Lesungen durch Re-Analyse
+**Potential use cases in coOCR/HTR:**
+- Automatic zooming on illegible passages
+- Segmentation of complex layouts
+- Quality improvement for damaged documents
+- Verification of uncertain readings through re-analysis
 
-**Technische Umsetzung:**
+**Technical implementation:**
 ```javascript
-// Konzept: Agentic Vision API-Aufruf
+// Concept: Agentic Vision API call
 const requestBody = {
   contents: [{ parts }],
   generationConfig: {
     temperature: 1.0,
     maxOutputTokens: 8192
   },
-  // Code Execution aktivieren fuer Agentic Vision
+  // Enable Code Execution for Agentic Vision
   tools: [{
     codeExecution: {}
   }]
 };
 ```
 
-**Voraussetzungen:**
-- Gemini API mit Code Execution Support
-- Prompt-Engineering fuer mehrstufige Analyse
-- UI fuer Visualisierung der Zwischenschritte (optional)
+**Prerequisites:**
+- Gemini API with Code Execution support
+- Prompt engineering for multi-step analysis
+- UI for visualization of intermediate steps (optional)
 
-**Status:** Konzept dokumentiert, nicht implementiert.
+**Status:** Concept documented, not implemented.
 
 ---
 
-### Ollama-Integration (Erweitert)
+### Ollama Integration (Extended)
 
-**Aktueller Stand:**
-- DeepSeek-OCR als Standardmodell
-- DeepSeek-OCR 2 als Option hinzugefuegt
-- LightOnOCR-2 als Option hinzugefuegt (erfordert Konvertierung)
+**Current state:**
+- DeepSeek-OCR as default model
+- DeepSeek-OCR 2 added as option
+- LightOnOCR-2 added as option (requires conversion)
 
 **LightOnOCR-2 via Ollama:**
 
-Das Modell ist auf Hugging Face verfuegbar, muss aber fuer Ollama konvertiert werden:
+The model is available on Hugging Face but must be converted for Ollama:
 
 ```bash
-# 1. Modell von Hugging Face laden
+# 1. Load model from Hugging Face
 git lfs install
 git clone https://huggingface.co/lightonai/LightOnOCR-2-1B
 
-# 2. In GGUF konvertieren (erfordert llama.cpp)
+# 2. Convert to GGUF (requires llama.cpp)
 python convert.py lightonai/LightOnOCR-2-1B --outtype f16
 
-# 3. Modelfile erstellen
+# 3. Create Modelfile
 cat > Modelfile << EOF
 FROM ./lightonocr-2-1b.gguf
 PARAMETER temperature 0.1
 PARAMETER num_ctx 4096
 EOF
 
-# 4. In Ollama importieren
+# 4. Import into Ollama
 ollama create lightonocr -f Modelfile
 ```
 
-**Hinweis:** Die Konvertierung ist nicht trivial und erfordert:
-- llama.cpp mit Vision-Support
-- Ausreichend RAM (16GB+)
-- GPU empfohlen fuer brauchbare Geschwindigkeit
+**Note:** The conversion is not trivial and requires:
+- llama.cpp with Vision support
+- Sufficient RAM (16GB+)
+- GPU recommended for usable speed
 
 **DeepSeek-OCR 2:**
 
-Einfacher verfuegbar, kann direkt mit Ollama verwendet werden:
+More easily available, can be used directly with Ollama:
 
 ```bash
-# Falls verfuegbar im Ollama Registry
+# If available in Ollama Registry
 ollama pull deepseek-ocr2
 
-# Oder manuell mit Modelfile
+# Or manually with Modelfile
 ollama create deepseek-ocr2 -f Modelfile
 ```
 
-**Status:** Optionen in UI hinzugefuegt, Konvertierungsanleitung dokumentiert.
+**Status:** Options added to UI, conversion guide documented.
 
 ---
 

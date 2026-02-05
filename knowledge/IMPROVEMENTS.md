@@ -1,60 +1,60 @@
-# Verbesserungsplan coOCR/HTR
+# Improvement Plan coOCR/HTR
 
-Status: Erstellt 2026-02-04
+Status: Created 2026-02-04
 
-## Priorität 1: Testabdeckung erweitern
+## Priority 1: Extend Test Coverage
 
-### 1.1 Kritische Komponenten testen
-| Modul | Zeilen | Risiko | Aufwand |
-|-------|--------|--------|---------|
-| `dialogs.js` | ~1200 | Hoch | Mittel |
-| `editor.js` | ~600 | Hoch | Mittel |
-| `viewer.js` | ~400 | Mittel | Niedrig |
-| `upload.js` | ~300 | Mittel | Niedrig |
+### 1.1 Test Critical Components
+| Module | Lines | Risk | Effort |
+|--------|-------|------|--------|
+| `dialogs.js` | ~1200 | High | Medium |
+| `editor.js` | ~600 | High | Medium |
+| `viewer.js` | ~400 | Medium | Low |
+| `upload.js` | ~300 | Medium | Low |
 
-**Konkrete Tests:**
-- [ ] `dialogs.test.js`: Modal öffnen/schließen, Form-Validierung, Settings speichern
-- [ ] `editor.test.js`: Zeilen-Rendering, Konfidenz-Styling, Diff-Anzeige
-- [ ] `viewer.test.js`: OpenSeadragon-Integration, Zoom, Pan
-- [ ] `upload.test.js`: Drag&Drop, Datei-Validierung, PAGE-XML-Parsing
+**Specific Tests:**
+- [ ] `dialogs.test.js`: Modal open/close, form validation, save settings
+- [ ] `editor.test.js`: Line rendering, confidence styling, diff display
+- [ ] `viewer.test.js`: OpenSeadragon integration, zoom, pan
+- [ ] `upload.test.js`: Drag & drop, file validation, PAGE-XML parsing
 
-### 1.2 Utils testen
-- [ ] `dom.js`: Alle 8 Utility-Funktionen
-- [ ] `textFormatting.js`: Unicode-Normalisierung, Whitespace-Handling
+### 1.2 Test Utils
+- [ ] `dom.js`: All 8 utility functions
+- [ ] `textFormatting.js`: Unicode normalization, whitespace handling
 
 ---
 
-## Priorität 2: Sicherheitsdokumentation
+## Priority 2: Security Documentation
 
-### 2.1 Security-Hinweis in README erweitern
-**Aktuell:** Kurzer Hinweis zu API-Keys in Memory
+### 2.1 Expand Security Note in README
+**Current:** Brief note about API keys in memory
 
-**Ergänzen:**
+**Add:**
 ```markdown
 ## Security Model
 
 ### API Key Handling
-- Keys werden **nur im Browser-Memory** gehalten (nicht localStorage)
-- Keys sind im Browser DevTools sichtbar (Network Tab, Memory)
-- Für sensible Arbeit: Ollama lokal verwenden (keine Cloud-API)
+- Keys are stored **only in browser memory** (not localStorage)
+- Keys are visible in browser DevTools (Network Tab, Memory)
+- For sensitive work: Use Ollama locally (no cloud API)
 
 ### Anthropic Direct Browser Access
-Diese App nutzt `anthropic-dangerous-direct-browser-access` Header.
-Das ist notwendig für client-seitige Apps ohne Backend.
-Risiko: API-Key im Browser sichtbar. Empfehlung: Rate-limited Keys verwenden.
+This app uses the `anthropic-dangerous-direct-browser-access` header.
+This is required for client-side apps without a backend.
+Risk: API key visible in browser. Recommendation: Use rate-limited keys.
 ```
 
-### 2.2 SECURITY.md erstellen
-- [ ] Responsible Disclosure Policy
-- [ ] Bekannte Einschränkungen dokumentieren
-- [ ] Empfehlungen für Produktiv-Einsatz
+### 2.2 Create SECURITY.md
+- [x] Responsible Disclosure Policy
+- [x] Document known limitations
+- [x] Recommendations for production use
 
 ---
 
-## Priorität 3: Code-Qualität
+## Priority 3: Code Quality
 
-### 3.1 Konstanten zentralisieren
-**Datei:** `docs/js/utils/constants.js` erweitern
+### 3.1 Centralize Constants
+**File:** Extend `docs/js/utils/constants.js`
 
 ```javascript
 // Validation Status
@@ -80,8 +80,8 @@ export const EDITOR_MODE = {
 };
 ```
 
-### 3.2 HTML-Escaping standardisieren
-**Datei:** `docs/js/utils/dom.js` ergänzen
+### 3.2 Standardize HTML Escaping
+**File:** Add to `docs/js/utils/dom.js`
 
 ```javascript
 /**
@@ -96,47 +96,47 @@ export function escapeHtml(text) {
 }
 ```
 
-**Anwenden in:**
+**Apply in:**
 - `main.js:204-208` (samples menu)
 - `dialogs.js` (error messages)
 - `components/transcription.js` (model info)
 
-### 3.3 transcription.js aufteilen
-Aktuelle Verantwortlichkeiten:
-1. UI-Rendering
-2. LLM-Aufrufe
-3. State-Updates
+### 3.3 Split transcription.js
+Current responsibilities:
+1. UI rendering
+2. LLM calls
+3. State updates
 
 **Refactoring:**
-- [ ] `transcription-ui.js` - Nur DOM-Manipulation
-- [ ] `transcription-service.js` - LLM-Logik (oder in `llm.js` integrieren)
+- [ ] `transcription-ui.js` - DOM manipulation only
+- [ ] `transcription-service.js` - LLM logic (or integrate into `llm.js`)
 
 ---
 
-## Priorität 4: Dokumentation präzisieren
+## Priority 4: Clarify Documentation
 
 ### 4.1 README.md
-**Ändern:**
+**Change:**
 ```diff
 - No Dependencies: Vanilla JavaScript
 + No npm Dependencies: Vanilla JavaScript (uses OpenSeadragon via CDN)
 ```
 
 ### 4.2 CLAUDE.md
-**Ändern:**
+**Change:**
 ```diff
-- | Dependencies | Keine (Tests: Vitest) |
-+ | Runtime Dependencies | Keine (CDN: OpenSeadragon) |
+- | Dependencies | None (Tests: Vitest) |
++ | Runtime Dependencies | None (CDN: OpenSeadragon) |
 + | Dev Dependencies | Vitest, jsdom |
 ```
 
 ---
 
-## Priorität 5: Accessibility
+## Priority 5: Accessibility
 
-### 5.1 Farb-Indikatoren mit Text ergänzen
-**Aktuell:** Nur Farbe (grün/gelb/rot)
-**Besser:** Farbe + Icon oder Text
+### 5.1 Add Text to Color Indicators
+**Current:** Color only (green/yellow/red)
+**Better:** Color + icon or text
 
 ```css
 .confidence-certain::before { content: "✓ "; }
@@ -144,45 +144,45 @@ Aktuelle Verantwortlichkeiten:
 .confidence-unknown::before { content: "! "; }
 ```
 
-### 5.2 Skip-Link hinzufügen
+### 5.2 Add Skip Link
 ```html
-<a href="#main-content" class="skip-link">Zum Hauptinhalt springen</a>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 ```
 
 ---
 
-## Umsetzungsreihenfolge
+## Implementation Order
 
 ```
-Phase 1 (Sofort)
-├── 2.1 Security-Hinweis in README
-└── 3.2 escapeHtml() Utility
+Phase 1 (Immediate)
+├── 2.1 Security note in README
+└── 3.2 escapeHtml() utility
 
-Phase 2 (Kurzfristig)
+Phase 2 (Short-term)
 ├── 1.1 dialogs.test.js
 ├── 1.1 editor.test.js
-├── 3.1 Konstanten zentralisieren
-└── 4.1 + 4.2 Dokumentation
+├── 3.1 Centralize constants
+└── 4.1 + 4.2 Documentation
 
-Phase 3 (Mittelfristig)
+Phase 3 (Medium-term)
 ├── 1.1 viewer.test.js + upload.test.js
-├── 1.2 Utils testen
+├── 1.2 Test utils
 ├── 2.2 SECURITY.md
 └── 5.1 + 5.2 Accessibility
 
-Phase 4 (Bei Gelegenheit)
-└── 3.3 transcription.js Refactoring
+Phase 4 (When opportunity arises)
+└── 3.3 transcription.js refactoring
 ```
 
 ---
 
-## Nicht umsetzen
+## Not Implementing
 
-Diese Punkte wurden bewusst als "kein echtes Problem" eingestuft:
+These items were deliberately classified as "not a real problem":
 
-| Punkt | Begründung |
-|-------|------------|
-| Backend für Anthropic | Würde Hosting-Komplexität erhöhen, Zielgruppe sind technische Nutzer |
-| TypeScript Migration | Widerspricht Vanilla-JS-Philosophie des Projekts |
-| localStorage für Keys | Bewusst vermieden aus Sicherheitsgründen |
-| innerHTML komplett ersetzen | Aufwand/Nutzen-Verhältnis schlecht, da Daten kontrolliert |
+| Item | Rationale |
+|------|-----------|
+| Backend for Anthropic | Would increase hosting complexity, target audience is technical users |
+| TypeScript migration | Contradicts the vanilla JS philosophy of the project |
+| localStorage for keys | Deliberately avoided for security reasons |
+| Completely replace innerHTML | Poor effort/benefit ratio since data is controlled |

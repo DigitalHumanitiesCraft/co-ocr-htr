@@ -30,7 +30,10 @@
       "Bash(pip show:*)",
       "Bash(pip install:*)",
       "Bash(python:*)",
-      "Bash(ollama pull:*)"
+      "Bash(ollama pull:*)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "Bash(sort:*)",
+      "WebFetch(domain:lisa.gerda-henkel-stiftung.de)"
     ]
   }
 }

@@ -1,6 +1,6 @@
 # coOCR/HTR
 
-> **Work in Progress** - This tool is under active development using the [Promptotyping methodology](https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin). Core features are functional, but expect rough edges. Feedback welcome via [GitHub Issues](https://github.com/DigitalHumanitiesCraft/co-ocr-htr/issues).
+> **Research Preview (Beta)** - This tool is under active development using the [Promptotyping methodology](https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin). Core features are functional, but expect rough edges. Feedback welcome via [GitHub Issues](https://github.com/DigitalHumanitiesCraft/co-ocr-htr/issues).
 
 **Editor-in-the-Loop tool for OCR/HTR verification, validation, and correction.**
 
@@ -45,7 +45,7 @@ coOCR/HTR provides:
 - **Guided Workflow**: Step-by-step hints and progress tracking
 - **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15), TEI-XML, ZIP (multi-page)
 - **PWA Support**: Works offline after first load
-- **No Dependencies**: Vanilla JavaScript, runs in any modern browser
+- **No npm Dependencies**: Vanilla JavaScript (OpenSeadragon via CDN), runs in any modern browser
 
 ## Quick Start
 

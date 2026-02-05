@@ -2,85 +2,85 @@
 
 Status: 2026-02-04
 
-## Überblick
+## Overview
 
-coOCR/HTR verwendet **Vitest** für Unit-Tests. Die Teststrategie priorisiert Logik-Tests über UI-Tests.
+coOCR/HTR uses **Vitest** for unit tests. The testing strategy prioritizes logic tests over UI tests.
 
-## Test-Runner
+## Test Runner
 
 ```bash
 cd docs
-npm test        # Watch-Modus
-npm run test    # Einmalig
-npx vitest run  # CI-Modus
+npm test        # Watch mode
+npm run test    # Single run
+npx vitest run  # CI mode
 ```
 
-## Testabdeckung nach Modul
+## Test Coverage by Module
 
-### Getestet (Services & Utils)
+### Tested (Services & Utils)
 
-| Modul | Tests | Beschreibung |
-|-------|-------|--------------|
-| `state.js` | 61 | Zentrales State-Management, EventTarget |
-| `export.js` | 49 | Export-Formate (TXT, JSON, MD, PAGE-XML, TEI) |
-| `validation.js` | 40 | Validierungs-Engine, Regeln, LLM-Judge |
-| `llm.js` | 27 | LLM-Provider-Abstraktion, API-Calls |
-| `page-xml.js` | 26 | PAGE-XML-Parser |
-| `storage.js` | 23 | LocalStorage-Wrapper |
-| `textFormatting.js` | 50 | Marker, HTML-Escaping, Konfidenz |
+| Module | Tests | Description |
+|--------|-------|-------------|
+| `state.js` | 61 | Central state management, EventTarget |
+| `export.js` | 49 | Export formats (TXT, JSON, MD, PAGE-XML, TEI) |
+| `validation.js` | 40 | Validation engine, rules, LLM-Judge |
+| `llm.js` | 27 | LLM provider abstraction, API calls |
+| `page-xml.js` | 26 | PAGE-XML parser |
+| `storage.js` | 23 | LocalStorage wrapper |
+| `textFormatting.js` | 50 | Markers, HTML escaping, confidence |
 
-**Gesamt: 276 Tests**
+**Total: 276 Tests**
 
-### Nicht getestet (UI-Komponenten)
+### Not Tested (UI Components)
 
-| Modul | Zeilen | Begründung |
-|-------|--------|------------|
-| `dialogs.js` | ~1200 | DOM-intensiv, hoher Aufwand, geringer Nutzen |
-| `editor.js` | ~700 | Komplexe DOM-Manipulation |
-| `viewer.js` | ~600 | OpenSeadragon-Integration, externes Dependency |
-| `upload.js` | ~500 | File API, Drag&Drop |
-| `transcription.js` | ~700 | UI + LLM kombiniert |
-| `validation.js` (Component) | ~700 | UI-Rendering |
+| Module | Lines | Rationale |
+|--------|-------|-----------|
+| `dialogs.js` | ~1200 | DOM-intensive, high effort, low value |
+| `editor.js` | ~700 | Complex DOM manipulation |
+| `viewer.js` | ~600 | OpenSeadragon integration, external dependency |
+| `upload.js` | ~500 | File API, Drag & Drop |
+| `transcription.js` | ~700 | UI + LLM combined |
+| `validation.js` (Component) | ~700 | UI rendering |
 
-## Teststrategie
+## Testing Strategy
 
-### Was wir testen
+### What We Test
 
-1. **Pure Functions** - Keine Seiteneffekte, deterministisch
+1. **Pure Functions** - No side effects, deterministic
    - `textFormatting.js`: `escapeHtml()`, `applyMarkers()`, etc.
 
-2. **Business-Logik** - Kernfunktionalität
-   - `state.js`: State-Transitions, Event-Dispatching
-   - `validation.js`: Regelbasierte Validierung
-   - `export.js`: Format-Konvertierung
+2. **Business Logic** - Core functionality
+   - `state.js`: State transitions, event dispatching
+   - `validation.js`: Rule-based validation
+   - `export.js`: Format conversion
 
-3. **Parser** - Datenverarbeitung
-   - `page-xml.js`: XML-Parsing
-   - `llm.js`: Response-Parsing
+3. **Parsers** - Data processing
+   - `page-xml.js`: XML parsing
+   - `llm.js`: Response parsing
 
-### Was wir nicht testen
+### What We Don't Test
 
-1. **UI-Komponenten** - DOM-Manipulation mit vielen Seiteneffekten
-   - Hoher Aufwand für fragile Tests
-   - Besser durch manuelle Tests abgedeckt
+1. **UI Components** - DOM manipulation with many side effects
+   - High effort for fragile tests
+   - Better covered by manual testing
 
-2. **Externe Abhängigkeiten** - OpenSeadragon, File API
-   - Würden Mocks erfordern
-   - Integration besser manuell prüfen
+2. **External Dependencies** - OpenSeadragon, File API
+   - Would require mocks
+   - Integration better tested manually
 
-3. **Visuelle Aspekte** - CSS, Layout
-   - Keine visuelle Regression-Tests
+3. **Visual Aspects** - CSS, Layout
+   - No visual regression tests
 
-4. **Triviale Wrapper** - DOM-Utilities wie `getById()`, `show()`, `hide()`
-   - Testen nur Browser-APIs, nicht eigene Logik
-   - Kein Mehrwert gegenüber manuellem Testen
+4. **Trivial Wrappers** - DOM utilities like `getById()`, `show()`, `hide()`
+   - Only test browser APIs, not our own logic
+   - No value over manual testing
 
-## Testmuster
+## Test Patterns
 
-### Service-Tests
+### Service Tests
 
 ```javascript
-// Beispiel: llm.test.js
+// Example: llm.test.js
 describe('LLMService', () => {
   let service;
 
@@ -94,10 +94,10 @@ describe('LLMService', () => {
 });
 ```
 
-### Pure-Function-Tests
+### Pure Function Tests
 
 ```javascript
-// Beispiel: textFormatting.test.js
+// Example: textFormatting.test.js
 describe('escapeHtml', () => {
   it('should escape angle brackets', () => {
     expect(escapeHtml('<script>')).toBe('&lt;script&gt;');
@@ -109,28 +109,28 @@ describe('escapeHtml', () => {
 });
 ```
 
-## Bekannte Einschränkungen
+## Known Limitations
 
-### Globale Regex mit /g Flag
+### Global Regex with /g Flag
 
-JavaScript Regex mit globalem Flag haben `lastIndex`-State. Bei mehrfachen `test()`-Aufrufen muss `lastIndex` zurückgesetzt werden:
+JavaScript regex with global flag have `lastIndex` state. With multiple `test()` calls, `lastIndex` must be reset:
 
 ```javascript
-// Problem: lastIndex wird nicht zurückgesetzt
+// Problem: lastIndex not reset
 const PATTERN = /\[\?\]/g;
 PATTERN.test('[?]'); // true
 PATTERN.test('[?]'); // false (!)
 
-// Lösung: lastIndex vor test() zurücksetzen
+// Solution: reset lastIndex before test()
 PATTERN.lastIndex = 0;
 PATTERN.test('[?]'); // true
 ```
 
-Dieser Bug wurde in `textFormatting.js` gefunden und behoben.
+This bug was found and fixed in `textFormatting.js`.
 
 ## CI/CD
 
-Tests laufen bei jedem Push via GitHub Actions (falls konfiguriert):
+Tests run on every push via GitHub Actions (if configured):
 
 ```yaml
 - name: Run tests
@@ -140,20 +140,20 @@ Tests laufen bei jedem Push via GitHub Actions (falls konfiguriert):
     npm test
 ```
 
-## Neue Tests hinzufügen
+## Adding New Tests
 
-1. Datei in `docs/tests/` erstellen: `modulname.test.js`
+1. Create file in `docs/tests/`: `modulename.test.js`
 2. Vitest imports:
    ```javascript
    import { describe, it, expect, beforeEach } from 'vitest';
    ```
-3. Module importieren:
+3. Import modules:
    ```javascript
    import { functionToTest } from '../js/path/to/module.js';
    ```
-4. Tests schreiben mit `describe`/`it`/`expect`
+4. Write tests with `describe`/`it`/`expect`
 
-## Verwandte Dokumente
+## Related Documents
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Modulstruktur
-- [SECURITY.md](SECURITY.md) - Sicherheitstests (XSS)
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Module structure
+- [SECURITY.md](SECURITY.md) - Security tests (XSS)
