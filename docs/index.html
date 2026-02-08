@@ -608,7 +608,10 @@
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" id="testApiConnection">Verbindung testen</button>
+            <div class="test-connection-group">
+                <button type="button" class="btn btn-secondary" id="testApiConnection">Verbindung testen</button>
+                <span id="testConnectionStatus" class="test-status" hidden></span>
+            </div>
             <div class="dialog-actions">
                 <button type="button" class="btn btn-secondary" data-close-dialog>Abbrechen</button>
                 <button type="button" class="btn btn-primary" id="saveApiKeys">Speichern</button>
