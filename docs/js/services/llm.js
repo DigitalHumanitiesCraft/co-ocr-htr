@@ -10,11 +10,11 @@
 // Timeouts
 // ============================================
 
-/** Timeout for cloud LLM API calls (60 seconds) */
-const CLOUD_TIMEOUT_MS = 60_000;
+/** Timeout for cloud LLM API calls (120 seconds -- image transcription can be slow) */
+const CLOUD_TIMEOUT_MS = 120_000;
 
-/** Timeout for local Ollama calls (120 seconds -- local inference is slower) */
-const OLLAMA_TIMEOUT_MS = 120_000;
+/** Timeout for local Ollama calls (180 seconds -- local inference is slower) */
+const OLLAMA_TIMEOUT_MS = 180_000;
 
 // ============================================
 // Prompts
