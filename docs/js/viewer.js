@@ -492,6 +492,9 @@ export async function loadIIIFManifest(manifestUrl) {
         // Hide loading state
         if (loadingState) loadingState.hidden = true;
 
+        // Ensure project exists for IIIF manifest
+        await appState.ensureProject(manifest.label || 'IIIF Document');
+
         // Update state
         appState.setPages(pages);
 
@@ -614,7 +617,9 @@ function showViewer(filename) {
     addClass('viewerEmptyState', 'hidden');
     show('osd-viewer');
     show('headerDocInfo');
-    if (filename) setText('headerFilename', filename);
+    // Prefer project name over filename for header display
+    const projectName = appState.data.project?.name;
+    setText('headerFilename', projectName || filename || '');
 }
 
 function showEmptyState() {

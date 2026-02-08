@@ -95,8 +95,18 @@ async function initApp() {
         }
     });
 
-    // Clean up any legacy stored API keys from previous versions
-    storage.clearAllApiKeys();
+    // Load persistently saved API keys from IndexedDB (if user opted in)
+    try {
+        const savedKeys = await storage.loadAllApiKeys();
+        for (const [provider, apiKey] of Object.entries(savedKeys)) {
+            if (apiKey) {
+                llmService.setApiKey(provider, apiKey);
+                console.log(`coOCR/HTR: Loaded persistent ${provider} API key`);
+            }
+        }
+    } catch {
+        // IndexedDB not available or empty -- no problem
+    }
 
     // Try to load local config file (for local development)
     const _hasLocalConfig = await loadLocalConfig();
@@ -131,12 +141,7 @@ async function initApp() {
 
     // Dialogs are auto-initialized via module import
 
-    // Restore session if available
-    const session = storage.loadSession();
-    if (session) {
-        console.log('coOCR/HTR: Restoring session...');
-        // Session restoration handled by state module
-    }
+    // Session restoration handled by checkForProjects() below
 
     // Global error handler for unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
@@ -171,57 +176,266 @@ async function initApp() {
     // Initialize guided workflow features
     initGuidedWorkflow();
 
-    // Check for saved session and offer to restore
-    await checkSavedSession();
+    // Wire up project management buttons
+    initProjectButtons();
+
+    // Check for saved projects and offer to restore
+    await checkForProjects();
 
     console.log('coOCR/HTR: Initialized');
 }
 
 /**
- * Check if there's a saved session and offer to restore it
+ * Check for saved projects and offer to restore
  */
-async function checkSavedSession() {
-    const savedSession = appState.hasSavedSession();
-    if (!savedSession) return;
+async function checkForProjects() {
+    const activeProjectId = storage.getActiveProjectId();
+    let projects;
+    try {
+        projects = await storage.listProjects();
+    } catch {
+        // IndexedDB unavailable -- fresh start
+        return;
+    }
 
-    // Format timestamp - show relative for recent, absolute for older
-    const date = new Date(savedSession.timestamp);
-    const timeDisplay = formatSessionTime(date);
+    if (projects.length === 0) return;
 
-    // Build structured HTML content
-    const messageHtml = `
-        <div class="session-info">
-            <div class="session-info-row">
-                <span class="session-label">Gespeichert:</span>
-                <span class="session-value">${timeDisplay}</span>
+    // If there's an active project, offer to resume it
+    if (activeProjectId) {
+        const activeProject = projects.find(p => p.id === activeProjectId);
+        if (activeProject) {
+            const timeDisplay = formatSessionTime(new Date(activeProject.updatedAt));
+            const messageHtml = `
+                <div class="session-info">
+                    <div class="session-info-row">
+                        <span class="session-label">Projekt:</span>
+                        <span class="session-value session-filename">${escapeHtml(activeProject.name)}</span>
+                    </div>
+                    <div class="session-info-row">
+                        <span class="session-label">Gespeichert:</span>
+                        <span class="session-value">${timeDisplay}</span>
+                    </div>
+                    ${activeProject.filename ? `<div class="session-info-row">
+                        <span class="session-label">Dokument:</span>
+                        <span class="session-value">${escapeHtml(activeProject.filename)}</span>
+                    </div>` : ''}
+                    <div class="session-info-row">
+                        <span class="session-label">Seiten:</span>
+                        <span class="session-value">${activeProject.pageCount || 0}</span>
+                    </div>
+                    <div class="session-info-row">
+                        <span class="session-label">Status:</span>
+                        <span class="session-value ${activeProject.hasTranscription ? 'status-success' : 'status-neutral'}">
+                            ${activeProject.hasTranscription ? 'Mit Transkription' : 'Ohne Transkription'}
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            const shouldRestore = await dialogManager.showConfirm(
+                'Projekt fortsetzen?',
+                messageHtml,
+                'Fortsetzen',
+                projects.length > 1 ? 'Projekte anzeigen' : 'Neu starten',
+                { icon: 'restore', html: true }
+            );
+
+            if (shouldRestore) {
+                await appState.restoreSession(activeProjectId);
+                dialogManager.showToast('Projekt wiederhergestellt', 'success');
+                updateProjectDisplay();
+                return;
+            }
+
+            // If multiple projects exist, show the project list
+            if (projects.length > 1) {
+                await showProjectListDialog(projects);
+                return;
+            }
+
+            // Single project, user chose "Neu starten" -- clear and start fresh
+            storage.clearActiveProjectId();
+            return;
+        }
+    }
+
+    // No active project but projects exist -- show project list
+    await showProjectListDialog(projects);
+}
+
+/**
+ * Show the project list dialog
+ * @param {Array} projects
+ */
+async function showProjectListDialog(projects) {
+    return new Promise((resolve) => {
+        const dialog = document.createElement('dialog');
+        dialog.className = 'confirm-dialog glass-panel';
+        dialog.style.maxWidth = '480px';
+        dialog.style.width = '90vw';
+
+        const projectCards = projects.map(p => {
+            const time = formatSessionTime(new Date(p.updatedAt));
+            const name = p.name || p.filename || 'Unbenannt';
+            return `
+                <div class="project-card" data-project-id="${escapeHtml(p.id)}" tabindex="0">
+                    <div class="project-card-header">
+                        <span class="project-card-name">${escapeHtml(name)}</span>
+                        <div class="project-card-actions">
+                            <button class="project-rename-btn icon-btn" data-rename="${escapeHtml(p.id)}" title="Umbenennen">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
+                            </button>
+                            <button class="project-delete-btn icon-btn" data-delete="${escapeHtml(p.id)}" title="Loeschen">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="project-card-meta">
+                        ${p.filename ? `<span>${escapeHtml(p.filename)}</span>` : ''}
+                        <span>${p.pageCount || 0} Seite${(p.pageCount || 0) === 1 ? '' : 'n'}</span>
+                        <span>${time}</span>
+                        <span class="${p.hasTranscription ? 'status-success' : 'status-neutral'}">${p.hasTranscription ? 'Transkribiert' : 'Ohne Transkription'}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        dialog.innerHTML = `
+            <div class="dialog-header">
+                <h3>Projekte</h3>
             </div>
-            <div class="session-info-row">
-                <span class="session-label">Dokument:</span>
-                <span class="session-value session-filename">${escapeHtml(savedSession.filename)}</span>
+            <div class="dialog-body" style="max-height: 50vh; overflow-y: auto;">
+                <div class="project-list">
+                    ${projectCards}
+                </div>
             </div>
-            <div class="session-info-row">
-                <span class="session-label">Status:</span>
-                <span class="session-value ${savedSession.hasTranscription ? 'status-success' : 'status-neutral'}">
-                    ${savedSession.hasTranscription ? 'Mit Transkription' : 'Ohne Transkription'}
-                </span>
+            <div class="dialog-actions">
+                <button class="btn btn-ghost" data-action="new">Neues Projekt</button>
+                <button class="btn btn-ghost" data-action="cancel">Abbrechen</button>
             </div>
-        </div>
-    `;
+        `;
 
-    // Show confirmation dialog with icon
-    const shouldRestore = await dialogManager.showConfirm(
-        'Letzte Sitzung fortsetzen?',
-        messageHtml,
-        'Fortsetzen',
-        'Neu starten',
-        { icon: 'restore', html: true }
-    );
+        // Handle project card click (load project)
+        dialog.addEventListener('click', async (e) => {
+            const card = e.target.closest('.project-card');
+            const renameBtn = e.target.closest('.project-rename-btn');
+            const deleteBtn = e.target.closest('.project-delete-btn');
 
-    if (shouldRestore) {
-        appState.restoreSession();
-        dialogManager.showToast('Sitzung wiederhergestellt', 'success');
-    } else {
-        appState.clearSession();
+            if (deleteBtn) {
+                e.stopPropagation();
+                const projectId = deleteBtn.dataset.delete;
+                // eslint-disable-next-line no-alert
+                if (confirm('Projekt endgueltig loeschen? Alle Daten gehen verloren.')) {
+                    await storage.deleteProject(projectId);
+                    deleteBtn.closest('.project-card').remove();
+                    // If no more projects, close dialog
+                    if (dialog.querySelectorAll('.project-card').length === 0) {
+                        dialog.close();
+                        dialog.remove();
+                        resolve();
+                    }
+                }
+                return;
+            }
+
+            if (renameBtn) {
+                e.stopPropagation();
+                const projectId = renameBtn.dataset.rename;
+                // eslint-disable-next-line no-alert
+                const newName = prompt('Neuer Projektname:');
+                if (newName?.trim()) {
+                    await storage.renameProject(projectId, newName.trim());
+                    const nameEl = renameBtn.closest('.project-card').querySelector('.project-card-name');
+                    if (nameEl) nameEl.textContent = newName.trim();
+                }
+                return;
+            }
+
+            if (card && !renameBtn && !deleteBtn) {
+                const projectId = card.dataset.projectId;
+                dialog.close();
+                dialog.remove();
+                await appState.restoreSession(projectId);
+                dialogManager.showToast('Projekt geladen', 'success');
+                updateProjectDisplay();
+                resolve();
+                return;
+            }
+
+            const action = e.target.dataset?.action;
+            if (action === 'new' || action === 'cancel') {
+                dialog.close();
+                dialog.remove();
+                resolve();
+            }
+        });
+
+        // Handle escape
+        dialog.addEventListener('cancel', (e) => {
+            e.preventDefault();
+            dialog.close();
+            dialog.remove();
+            resolve();
+        });
+
+        document.body.appendChild(dialog);
+        dialog.showModal();
+    });
+}
+
+/**
+ * Update project name display in header
+ */
+function updateProjectDisplay() {
+    const headerDocInfo = document.getElementById('headerDocInfo');
+    const headerFilename = document.getElementById('headerFilename');
+    if (headerDocInfo && headerFilename && appState.data.project.name) {
+        headerFilename.textContent = appState.data.project.name;
+        headerDocInfo.hidden = false;
+    }
+}
+
+// Listen for project changes to update header display
+appState.addEventListener('projectChanged', () => updateProjectDisplay());
+
+/**
+ * Open the project list dialog (callable from UI buttons)
+ */
+async function openProjectList() {
+    // Flush pending session data so project metadata is current
+    await appState.saveSessionNow();
+
+    let projects;
+    try {
+        projects = await storage.listProjects();
+    } catch {
+        dialogManager.showToast('Projekte konnten nicht geladen werden', 'error');
+        return;
+    }
+
+    if (projects.length === 0) {
+        dialogManager.showToast('Noch keine Projekte vorhanden', 'info');
+        return;
+    }
+
+    await showProjectListDialog(projects);
+}
+
+// Wire up project list buttons after DOM is ready
+function initProjectButtons() {
+    const btnProjects = document.getElementById('btnProjects');
+    if (btnProjects) {
+        btnProjects.addEventListener('click', () => openProjectList());
+    }
+
+    const headerDocInfo = document.getElementById('headerDocInfo');
+    if (headerDocInfo) {
+        headerDocInfo.addEventListener('click', () => openProjectList());
     }
 }
 

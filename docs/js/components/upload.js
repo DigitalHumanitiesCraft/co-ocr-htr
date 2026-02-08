@@ -308,7 +308,9 @@ class UploadManager {
 
                 // Get image dimensions
                 const img = new Image();
-                img.onload = () => {
+                img.onload = async () => {
+                    // Ensure a project exists (auto-creates from filename)
+                    await appState.ensureProject(file.name);
                     appState.setDocument(file, dataUrl);
                     appState.setImageDimensions(img.width, img.height);
 
@@ -416,6 +418,9 @@ class UploadManager {
                 height: page.height,
                 label: `Page ${page.order}`
             }));
+
+            // Ensure project exists for METS upload
+            await appState.ensureProject(metsData.metadata?.title || file.name);
 
             // Set pages in state
             appState.setPages(pages);

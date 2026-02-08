@@ -4,14 +4,44 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock storage module
+// Mock storage module with all new async methods
 vi.mock('../js/services/storage.js', () => ({
   storage: {
+    // Settings (sync, localStorage)
     loadSettings: vi.fn(() => ({ autoSave: false })),
     saveSettings: vi.fn(),
-    loadSession: vi.fn(() => null),
-    saveSession: vi.fn(),
-    clearSession: vi.fn()
+
+    // Active Project (sync, localStorage)
+    getActiveProjectId: vi.fn(() => null),
+    setActiveProjectId: vi.fn(),
+    clearActiveProjectId: vi.fn(),
+
+    // Projects (async, IndexedDB)
+    listProjects: vi.fn(async () => []),
+    createProject: vi.fn(async (project) => project),
+    getProject: vi.fn(async () => undefined),
+    updateProject: vi.fn(async (id, updates) => ({ id, ...updates })),
+    deleteProject: vi.fn(async () => {}),
+    renameProject: vi.fn(async () => {}),
+
+    // Sessions (async, IndexedDB)
+    saveSession: vi.fn(async () => {}),
+    loadSession: vi.fn(async () => null),
+    clearSession: vi.fn(async () => {}),
+
+    // Images (async, IndexedDB)
+    saveImage: vi.fn(async () => {}),
+    saveImages: vi.fn(async () => {}),
+    loadImage: vi.fn(async () => null),
+    loadAllImages: vi.fn(async () => ({})),
+    deleteImages: vi.fn(async () => {}),
+
+    // API Keys (async, IndexedDB)
+    saveApiKey: vi.fn(async () => {}),
+    loadApiKey: vi.fn(async () => null),
+    loadAllApiKeys: vi.fn(async () => ({})),
+    deleteApiKey: vi.fn(async () => {}),
+    deleteAllApiKeys: vi.fn(async () => {})
   }
 }));
 
@@ -31,6 +61,7 @@ describe('AppState', () => {
     appState = module.appState;
 
     // Reset state manually
+    appState.data.project = { id: null, name: '' };
     appState.data.document = {
       id: null,
       filename: '',
@@ -83,6 +114,7 @@ describe('AppState', () => {
       expect(state).toHaveProperty('validation');
       expect(state).toHaveProperty('ui');
       expect(state).toHaveProperty('pages');
+      expect(state).toHaveProperty('project');
     });
 
     it('should have default zoom of 100', () => {
@@ -91,6 +123,54 @@ describe('AppState', () => {
 
     it('should have no selected line initially', () => {
       expect(appState.selectedLine).toBeNull();
+    });
+
+    it('should have no active project initially', () => {
+      expect(appState.data.project.id).toBeNull();
+    });
+  });
+
+  describe('Project Management', () => {
+    it('should create a project', async () => {
+      const project = await appState.createProject('Test Project');
+
+      expect(project.id).toBeTruthy();
+      expect(project.name).toBe('Test Project');
+      expect(storage.createProject).toHaveBeenCalled();
+      expect(storage.setActiveProjectId).toHaveBeenCalledWith(project.id);
+      expect(appState.data.project.id).toBe(project.id);
+      expect(appState.data.project.name).toBe('Test Project');
+    });
+
+    it('should emit projectChanged on create', async () => {
+      const listener = vi.fn();
+      appState.addEventListener('projectChanged', listener);
+
+      await appState.createProject('Test');
+
+      expect(listener).toHaveBeenCalled();
+      expect(listener.mock.calls[0][0].detail.name).toBe('Test');
+    });
+
+    it('should ensure project creates one if none active', async () => {
+      const projectId = await appState.ensureProject('test.jpg');
+
+      expect(projectId).toBeTruthy();
+      expect(storage.createProject).toHaveBeenCalled();
+      expect(appState.data.project.id).toBe(projectId);
+    });
+
+    it('should save current and create new project when one is already active', async () => {
+      appState.data.project.id = 'existing-id';
+      appState.data.project.name = 'Old Project';
+
+      const projectId = await appState.ensureProject('test.jpg');
+
+      // Should create a new project, not return the existing one
+      expect(projectId).not.toBe('existing-id');
+      expect(storage.createProject).toHaveBeenCalled();
+      expect(storage.saveSession).toHaveBeenCalled(); // saved the old project
+      expect(appState.data.project.name).toBe('test.jpg');
     });
   });
 
@@ -151,6 +231,19 @@ describe('AppState', () => {
 
       const state = appState.getState();
       expect(state.image.url).toBe(dataUrl);
+    });
+
+    it('should fire-and-forget save image to IDB when project active', () => {
+      appState.data.project.id = 'proj-1';
+
+      const mockFile = { name: 'test.jpg', type: 'image/jpeg' };
+      appState.setDocument(mockFile, 'data:image/jpeg;base64,abc');
+
+      expect(storage.saveImage).toHaveBeenCalledWith(
+        'proj-1',
+        expect.any(String),
+        'data:image/jpeg;base64,abc'
+      );
     });
   });
 
@@ -256,6 +349,19 @@ describe('AppState', () => {
       const state = appState.getState();
       expect(state.transcription.segments).toHaveLength(1);
       expect(state.transcription.segments[0].text).toBe('Page 1 text');
+    });
+
+    it('should fire-and-forget save page images to IDB when project active', () => {
+      appState.data.project.id = 'proj-1';
+
+      appState.setPages(mockPages);
+
+      expect(storage.saveImages).toHaveBeenCalledWith(
+        'proj-1',
+        expect.arrayContaining([
+          expect.objectContaining({ pageId: expect.any(String), dataUrl: 'data:1' })
+        ])
+      );
     });
   });
 
@@ -581,34 +687,61 @@ describe('AppState', () => {
   });
 
   describe('Session Management', () => {
-    it('should save session manually', () => {
-      appState.saveSessionNow();
+    it('should save session manually', async () => {
+      appState.data.project.id = 'proj-1';
+      await appState.saveSessionNow();
 
-      expect(storage.saveSession).toHaveBeenCalled();
+      expect(storage.saveSession).toHaveBeenCalledWith('proj-1', expect.any(Object));
     });
 
-    it('should emit sessionSaved event', () => {
+    it('should emit sessionSaved event', async () => {
+      appState.data.project.id = 'proj-1';
       const listener = vi.fn();
       appState.addEventListener('sessionSaved', listener);
 
-      appState.saveSessionNow();
+      await appState.saveSessionNow();
 
       expect(listener).toHaveBeenCalled();
     });
 
-    it('should clear session', () => {
-      appState.clearSession();
+    it('should not save session if no project active', async () => {
+      await appState.saveSessionNow();
 
-      expect(storage.clearSession).toHaveBeenCalled();
+      expect(storage.saveSession).not.toHaveBeenCalled();
     });
 
-    it('should emit sessionCleared event', () => {
+    it('should clear session', async () => {
+      appState.data.project.id = 'proj-1';
+      await appState.clearSession();
+
+      expect(storage.clearSession).toHaveBeenCalledWith('proj-1');
+    });
+
+    it('should emit sessionCleared event', async () => {
       const listener = vi.fn();
       appState.addEventListener('sessionCleared', listener);
 
-      appState.clearSession();
+      await appState.clearSession();
 
       expect(listener).toHaveBeenCalled();
+    });
+
+    it('should strip image dataUrls from session data', async () => {
+      appState.data.project.id = 'proj-1';
+      appState.data.document = {
+        id: 'doc1',
+        filename: 'test.jpg',
+        mimeType: 'image/jpeg',
+        dataUrl: 'data:image/jpeg;base64,HUGE_IMAGE',
+        width: 100,
+        height: 100
+      };
+
+      await appState.saveSessionNow();
+
+      const savedData = storage.saveSession.mock.calls[0][1];
+      expect(savedData.document.dataUrl).toBeUndefined();
+      expect(savedData.document.filename).toBe('test.jpg');
     });
   });
 
