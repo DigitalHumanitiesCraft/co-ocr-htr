@@ -7,6 +7,16 @@
  */
 
 // ============================================
+// Timeouts
+// ============================================
+
+/** Timeout for cloud LLM API calls (60 seconds) */
+const CLOUD_TIMEOUT_MS = 60_000;
+
+/** Timeout for local Ollama calls (120 seconds -- local inference is slower) */
+const OLLAMA_TIMEOUT_MS = 120_000;
+
+// ============================================
 // Prompts
 // ============================================
 
@@ -343,7 +353,7 @@ class LLMService {
     // Check for other Ollama models that can do text analysis
     // (llama, mistral, etc. - anything that's not OCR-specific)
     if (this.activeProvider === 'ollama') {
-      const ollamaTextModels = ['llama3.2', 'llama3', 'mistral', 'phi3', 'qwen2'];
+      const _ollamaTextModels = ['llama3.2', 'llama3', 'mistral', 'phi3', 'qwen2'];
       // We can't check if these are installed, but we can suggest them
       return {
         provider: 'ollama',
@@ -579,7 +589,7 @@ class LLMService {
         requestBody.generationConfig.thinking_config = {
           thinking_level: options.thinkingLevel || 'low'
         };
-      } catch (e) {
+      } catch (_e) {
         console.warn('[Gemini] thinking_config not supported, skipping');
       }
     }
@@ -591,7 +601,8 @@ class LLMService {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -627,7 +638,8 @@ class LLMService {
         messages: [{ role: 'user', content }],
         max_tokens: 4096,
         temperature: 0.1
-      })
+      }),
+      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -665,7 +677,8 @@ class LLMService {
         model,
         max_tokens: 4096,
         messages: [{ role: 'user', content }]
-      })
+      }),
+      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -710,7 +723,8 @@ class LLMService {
       const response = await fetch(`${ollamaUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS)
       });
 
       if (!response.ok) {
@@ -740,7 +754,8 @@ class LLMService {
     const response = await fetch(`${ollamaUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -826,7 +841,7 @@ class LLMService {
       if (line.startsWith('|') && !line.match(/^\|[-\s|]+\|$/)) {
         // This is likely the header
         const headers = line.split('|').slice(1, -1).map(h => h.trim());
-        return headers.map((label, index) => ({
+        return headers.map((label, _index) => ({
           id: label.toLowerCase().replace(/\s+/g, '_'),
           label,
           width: 'auto'
@@ -865,8 +880,8 @@ class LLMService {
           raw
         };
       }
-    } catch {
-      // If JSON parsing fails, try to extract confidence from text
+    } catch (e) {
+      console.warn('[LLM] JSON parse failed in validation response:', e.message);
     }
 
     // Fallback: extract confidence from text

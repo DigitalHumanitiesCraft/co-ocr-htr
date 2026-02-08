@@ -230,6 +230,7 @@ class TranscriptionManager {
                 raw: result.raw
             });
 
+            this.setLoading(false);
             this.showEditorLoading(false);
             dialogManager.showToast(
                 `Transkription abgeschlossen (${result.provider})`,

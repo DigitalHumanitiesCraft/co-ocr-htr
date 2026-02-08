@@ -10,6 +10,7 @@
  */
 
 import { appState } from '../state.js';
+import { URL_REVOKE_DELAY } from '../utils/constants.js';
 
 /**
  * Export Service
@@ -515,7 +516,7 @@ ${bodyLines.join('\n')}
         document.body.removeChild(link);
 
         // Clean up
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        setTimeout(() => URL.revokeObjectURL(url), URL_REVOKE_DELAY);
     }
 
     /**

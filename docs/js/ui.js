@@ -18,7 +18,7 @@ function initValidation() {
             valCard.style.backgroundColor = 'var(--bg-tertiary)';
             setTimeout(() => {
                 valCard.style.transition = 'background-color 0.2s';
-                valCard.style.backgroundColor = '#30363d';
+                valCard.style.backgroundColor = '';
                 setTimeout(() => valCard.style.backgroundColor = '', 300);
             }, 10);
         }
@@ -34,6 +34,5 @@ function initValidation() {
 }
 
 function initDialogs() {
-    // Placeholder for real implementations in next steps
-    window.alert = (msg) => console.log('Alert:', msg); // Override annoying alerts for dev
+    // Dialog initialization handled by components/dialogs.js
 }

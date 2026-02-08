@@ -9,9 +9,9 @@ import { storage } from '../services/storage.js';
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 import { loadIIIFManifest } from '../viewer.js';
-import { getById, select, selectAll, show, hide, focusDelayed } from '../utils/dom.js';
+import { getById, select, selectAll, show, hide } from '../utils/dom.js';
 import { escapeHtml } from '../utils/textFormatting.js';
-import { IIIF_CONTEXT_V3, IIIF_VERSION, TOAST_DURATION_DEFAULT, TOAST_ANIMATION_DURATION, PAGE_RELOAD_DELAY, DIALOG_FOCUS_DELAY, DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
+import { DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
 
 // Model-to-provider mapping for simplified UI
 const MODEL_PROVIDER_MAP = {
@@ -51,6 +51,10 @@ class DialogManager {
      * Initialize all dialogs
      */
     init() {
+        // Guard against double-initialization (would accumulate listeners)
+        if (this._initialized) return;
+        this._initialized = true;
+
         // Cache dialog elements
         this.dialogs.apiKey = getById('apiKeyDialog');
         this.dialogs.export = getById('exportDialog');
@@ -325,7 +329,7 @@ class DialogManager {
     updateApiKeyHint(provider) {
         const apiKeyInput = getById('llmApiKey');
         const apiKeyLink = getById('apiKeyLink');
-        const apiKeyHint = getById('apiKeyHint');
+        const _apiKeyHint = getById('apiKeyHint');
 
         if (apiKeyInput) {
             apiKeyInput.placeholder = API_KEY_PLACEHOLDERS[provider] || 'API-Key';
@@ -662,6 +666,7 @@ class DialogManager {
         const clearSessionBtn = dialog.querySelector('#btnClearSession');
         if (clearSessionBtn) {
             clearSessionBtn.addEventListener('click', () => {
+                // eslint-disable-next-line no-alert
                 if (confirm('Clear current session? This will remove all unsaved transcription data.')) {
                     storage.clearSession();
                     appState.clearSession();
@@ -676,6 +681,7 @@ class DialogManager {
         const resetBtn = dialog.querySelector('#btnResetSettings');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
+                // eslint-disable-next-line no-alert
                 if (confirm('Reset all settings to defaults?')) {
                     this.resetSettings();
                     this.showToast('Settings reset to defaults', 'success');

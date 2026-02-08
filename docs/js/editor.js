@@ -7,6 +7,7 @@
  */
 import { appState } from './state.js';
 import { getById } from './utils/dom.js';
+import { escapeHtml } from './utils/textFormatting.js';
 
 // History for undo/redo
 const history = {
@@ -34,7 +35,7 @@ let lineNumbers = null;
 let isNormalizedView = false;
 
 // Current text direction
-let isRTL = false;
+let _isRTL = false;
 
 /**
  * Detect if text is predominantly RTL (Arabic, Hebrew, etc.)
@@ -61,7 +62,7 @@ function detectRTL(text) {
  * @param {boolean} rtl - Whether to apply RTL
  */
 function applyRTLDirection(rtl) {
-    isRTL = rtl;
+    _isRTL = rtl;
 
     if (textarea) {
         textarea.dir = rtl ? 'rtl' : 'ltr';
@@ -496,8 +497,8 @@ function updateDiffDisplay(normalized = false) {
     const maxLen = Math.max(origLines.length, currLines.length);
 
     for (let i = 0; i < maxLen; i++) {
-        let origLine = origLines[i] ?? '';
-        let currLine = currLines[i] ?? '';
+        const origLine = origLines[i] ?? '';
+        const currLine = currLines[i] ?? '';
 
         // Normalize if requested (trim leading whitespace)
         const displayOrig = normalized ? origLine.trimStart() : origLine;
@@ -552,15 +553,6 @@ function renderWordDiff(origLine, currLine) {
     }
 
     return result || '&nbsp;';
-}
-
-/**
- * Escape HTML special characters
- */
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 // ============ Line Numbers ============

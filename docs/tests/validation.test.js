@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ValidationEngine, VALIDATION_RULES, RULE_CATEGORIES } from '../js/services/validation.js';
+import { ValidationEngine, RULE_CATEGORIES } from '../js/services/validation.js';
 
 // Mock LLM service
 vi.mock('../js/services/llm.js', () => ({
