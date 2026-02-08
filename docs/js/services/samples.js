@@ -114,6 +114,9 @@ class SamplesService {
         // Get image dimensions
         const dimensions = await this.getImageDimensions(dataUrl);
 
+        // Ensure project exists (auto-creates from sample name)
+        await appState.ensureProject(sample.name || file.name);
+
         // Set document state
         appState.setDocument(file, dataUrl);
         appState.setImageDimensions(dimensions.width, dimensions.height);
@@ -205,6 +208,9 @@ class SamplesService {
         if (pages.length === 0) {
             throw new Error('No pages could be loaded');
         }
+
+        // Ensure project exists for multi-page sample
+        await appState.ensureProject(sample.name || 'Multi-page Sample');
 
         // Set pages in state
         appState.setPages(pages);

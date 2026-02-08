@@ -187,6 +187,7 @@ export function stripMarkers(text) {
  */
 export function escapeHtml(text) {
     if (!text) return '';
+    if (typeof text !== 'string') text = String(text);
 
     const htmlEscapes = {
         '&': '&amp;',

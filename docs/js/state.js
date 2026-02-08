@@ -21,6 +21,12 @@ class AppState extends EventTarget {
     super();
 
     this.data = {
+      // Active project
+      project: {
+        id: null,
+        name: ''
+      },
+
       // Document info (current page)
       document: {
         id: null,
@@ -145,13 +151,56 @@ class AppState extends EventTarget {
   // ============================================
 
   /**
+   * Reset document/transcription state for a fresh project.
+   * Preserves UI settings but clears all document data.
+   */
+  _resetState() {
+    if (this._autoSaveTimer) {
+      clearTimeout(this._autoSaveTimer);
+      this._autoSaveTimer = null;
+    }
+    this.data.project = { id: null, name: '' };
+    this.data.document = { id: null, filename: '', mimeType: '', dataUrl: '', width: 0, height: 0 };
+    this.data.pages = [];
+    this.data.currentPageIndex = 0;
+    this.data.pageTranscriptions = {};
+    this.data.image = { url: '', width: 0, height: 0 };
+    this.data.regions = [];
+    this.data.transcription = { id: null, provider: '', model: '', raw: '', segments: [], columns: [], lines: [] };
+    this.data.validation = { status: 'idle', rules: [], llmJudge: null };
+    this.data.corrections = [];
+    this.data.batchTranscriptions = [];
+    this.data.batchValidations = [];
+    this.data.context = null;
+    this.data.meta = { createdAt: null, updatedAt: null };
+  }
+
+  /**
+   * Ensure a project exists. Auto-creates one from filename if needed.
+   * Called before document upload to guarantee project context for IDB saves.
+   * @param {string} filename - Used as project name if auto-creating
+   * @returns {Promise<string>} The project ID
+   */
+  async ensureProject(filename) {
+    // If a project is already active, save it and create a new one
+    if (this.data.project.id) {
+      await this._saveSession();
+      this._resetState();
+    }
+    const project = await this.createProject(filename || 'Neues Projekt');
+    return project.id;
+  }
+
+  /**
    * Set document from uploaded file
    * @param {File} file - The uploaded file
    * @param {string} dataUrl - Base64 data URL
    */
   setDocument(file, dataUrl) {
+    const docId = generateId();
+
     this.data.document = {
-      id: generateId(),
+      id: docId,
       filename: file.name,
       mimeType: file.type,
       dataUrl: dataUrl,
@@ -201,6 +250,14 @@ class AppState extends EventTarget {
       mimeType: file.type
     });
     this._emit('imageChanged', { url: dataUrl });
+
+    // Save image to IndexedDB (fire-and-forget)
+    if (this.data.project.id && dataUrl) {
+      storage.saveImage(this.data.project.id, docId, dataUrl).catch(err =>
+        console.warn('[State] Failed to save image to IDB:', err.message)
+      );
+    }
+
     this._scheduleAutoSave();
   }
 
@@ -252,6 +309,18 @@ class AppState extends EventTarget {
       count: this.data.pages.length,
       pages: this.data.pages.map(p => ({ id: p.id, filename: p.filename }))
     });
+
+    // Save all page images to IndexedDB (fire-and-forget)
+    if (this.data.project.id) {
+      const imagesToSave = this.data.pages
+        .filter(p => p.dataUrl)
+        .map(p => ({ pageId: p.id, dataUrl: p.dataUrl }));
+      if (imagesToSave.length > 0) {
+        storage.saveImages(this.data.project.id, imagesToSave).catch(err =>
+          console.warn('[State] Failed to save page images to IDB:', err.message)
+        );
+      }
+    }
   }
 
   /**
@@ -773,7 +842,50 @@ class AppState extends EventTarget {
   }
 
   // ============================================
-  // Session Management
+  // Project Management
+  // ============================================
+
+  /**
+   * Create a new project and set it as active
+   * @param {string} name - Project name
+   * @returns {Promise<object>} The created project
+   */
+  async createProject(name) {
+    const id = generateId();
+    const now = new Date().toISOString();
+    const project = {
+      id,
+      name,
+      filename: '',
+      pageCount: 0,
+      hasTranscription: false,
+      createdAt: now,
+      updatedAt: now
+    };
+    await storage.createProject(project);
+    storage.setActiveProjectId(id);
+    this.data.project = { id, name };
+    this._emit('projectChanged', { id, name });
+    return project;
+  }
+
+  /**
+   * Switch to a different project (saves current, loads new)
+   * @param {string} projectId
+   */
+  async switchProject(projectId) {
+    // Save current project if active
+    if (this.data.project.id) {
+      await this._saveSession();
+    }
+
+    // Load new project
+    await this.restoreSession(projectId);
+    storage.setActiveProjectId(projectId);
+  }
+
+  // ============================================
+  // Session Management (async -- IndexedDB)
   // ============================================
 
   _scheduleAutoSave() {
@@ -785,88 +897,139 @@ class AppState extends EventTarget {
     }
 
     this._autoSaveTimer = setTimeout(() => {
-      this._saveSession();
+      this._saveSession().catch(err =>
+        console.warn('[State] Auto-save failed:', err.message)
+      );
     }, this._autoSaveDelay);
   }
 
-  _saveSession() {
+  async _saveSession() {
+    const projectId = this.data.project.id;
+    if (!projectId) return;
+
     // Save current page data before session save
     this._saveCurrentPageTranscription();
     this._saveCurrentPageValidation();
 
-    storage.saveSession({
-      document: this.data.document,
-      transcription: this.data.transcription,
-      validation: this.data.validation,
-      corrections: this.data.corrections,
-      regions: this.data.regions,
-      meta: this.data.meta,
-      // Multi-page data
-      pages: this.data.pages,
-      currentPageIndex: this.data.currentPageIndex,
-      pageTranscriptions: this.data.pageTranscriptions,
-      batchTranscriptions: this.data.batchTranscriptions,
-      batchValidations: this.data.batchValidations
-    });
-    this._emit('sessionSaved');
-  }
+    // Session data -- images are stored separately in IDB images store
+    const { dataUrl: _docImg, ...documentWithoutImage } = this.data.document;
+    const pagesWithoutImages = this.data.pages.map(({ dataUrl: _pageImg, ...rest }) => rest);
 
-  /**
-   * Check if a saved session exists
-   * @returns {object|null} Session info (timestamp, filename) or null
-   */
-  hasSavedSession() {
-    const session = storage.loadSession();
-    if (session?.data?.document?.filename) {
-      return {
-        timestamp: session.timestamp,
-        filename: session.data.document.filename,
-        hasTranscription: session.data.transcription?.segments?.length > 0 ||
-          session.data.transcription?.raw?.trim().length > 0
-      };
+    try {
+      await storage.saveSession(projectId, {
+        document: documentWithoutImage,
+        transcription: this.data.transcription,
+        validation: this.data.validation,
+        corrections: this.data.corrections,
+        regions: this.data.regions,
+        context: this.data.context || null,
+        meta: this.data.meta,
+        pages: pagesWithoutImages,
+        currentPageIndex: this.data.currentPageIndex,
+        pageTranscriptions: this.data.pageTranscriptions,
+        batchTranscriptions: this.data.batchTranscriptions,
+        batchValidations: this.data.batchValidations
+      });
+
+      // Update project metadata
+      const hasTranscription = this.data.transcription?.segments?.length > 0 ||
+        this.data.transcription?.raw?.trim().length > 0 ||
+        Object.keys(this.data.pageTranscriptions).length > 0;
+
+      await storage.updateProject(projectId, {
+        filename: this.data.document.filename || this.data.pages[0]?.filename || '',
+        pageCount: Math.max(1, this.data.pages.length),
+        hasTranscription
+      });
+
+      this._emit('sessionSaved');
+    } catch (error) {
+      console.warn('[State] Save session failed:', error.message);
     }
-    return null;
   }
 
   /**
-   * Restore session from storage (called after user confirmation)
+   * Restore session from IndexedDB for a project
+   * @param {string} projectId
+   * @returns {Promise<boolean>} true if restored
    */
-  restoreSession() {
-    const session = storage.loadSession();
-    if (session?.data) {
+  async restoreSession(projectId) {
+    const project = await storage.getProject(projectId);
+    if (!project) return false;
+
+    const session = await storage.loadSession(projectId);
+
+    // Set project info
+    this.data.project = { id: project.id, name: project.name };
+    storage.setActiveProjectId(projectId);
+
+    if (session) {
       // Restore data
-      if (session.data.document) this.data.document = session.data.document;
-      if (session.data.transcription) this.data.transcription = session.data.transcription;
-      if (session.data.validation) this.data.validation = session.data.validation;
-      if (session.data.corrections) this.data.corrections = session.data.corrections;
-      if (session.data.regions) this.data.regions = session.data.regions;
-      if (session.data.meta) this.data.meta = session.data.meta;
+      if (session.document) this.data.document = { ...this.data.document, ...session.document };
+      if (session.transcription) this.data.transcription = session.transcription;
+      if (session.validation) this.data.validation = session.validation;
+      if (session.corrections) this.data.corrections = session.corrections;
+      if (session.regions) this.data.regions = session.regions;
+      if (session.context !== undefined) this.data.context = session.context;
+      if (session.meta) this.data.meta = session.meta;
 
       // Restore multi-page data
-      if (session.data.pages) this.data.pages = session.data.pages;
-      if (session.data.currentPageIndex !== undefined) this.data.currentPageIndex = session.data.currentPageIndex;
-      if (session.data.pageTranscriptions) this.data.pageTranscriptions = session.data.pageTranscriptions;
-      if (session.data.batchTranscriptions) this.data.batchTranscriptions = session.data.batchTranscriptions;
-      if (session.data.batchValidations) this.data.batchValidations = session.data.batchValidations;
-
-      // Update legacy image
-      if (session.data.document?.dataUrl) {
-        this.data.image.url = session.data.document.dataUrl;
-      }
-
-      this._emit('sessionRestored', { timestamp: session.timestamp });
-      this._emit('documentLoaded', { filename: session.data.document.filename });
-      return true;
+      if (session.pages) this.data.pages = session.pages;
+      if (session.currentPageIndex !== undefined) this.data.currentPageIndex = session.currentPageIndex;
+      if (session.pageTranscriptions) this.data.pageTranscriptions = session.pageTranscriptions;
+      if (session.batchTranscriptions) this.data.batchTranscriptions = session.batchTranscriptions;
+      if (session.batchValidations) this.data.batchValidations = session.batchValidations;
     }
-    return false;
+
+    // Restore images from IDB
+    const images = await storage.loadAllImages(projectId);
+    if (Object.keys(images).length > 0) {
+      // Restore single-doc image
+      if (this.data.document.id && images[this.data.document.id]) {
+        this.data.document.dataUrl = images[this.data.document.id];
+        this.data.image.url = this.data.document.dataUrl;
+      }
+      // Restore page images
+      for (const page of this.data.pages) {
+        if (images[page.id]) {
+          page.dataUrl = images[page.id];
+        }
+      }
+      // If on a specific page, update current doc/image
+      const currentPage = this.data.pages[this.data.currentPageIndex];
+      if (currentPage?.dataUrl) {
+        this.data.document.dataUrl = currentPage.dataUrl;
+        this.data.image.url = currentPage.dataUrl;
+      }
+    }
+
+    this._emit('projectChanged', { id: project.id, name: project.name });
+    this._emit('sessionRestored', { projectId });
+    if (this.data.document.filename) {
+      this._emit('documentLoaded', { filename: this.data.document.filename });
+    }
+    if (this.data.document.dataUrl) {
+      this._emit('imageChanged', { url: this.data.document.dataUrl });
+    }
+    if (this.data.pages.length > 0) {
+      this._emit('pagesLoaded', {
+        count: this.data.pages.length,
+        pages: this.data.pages.map(p => ({ id: p.id, filename: p.filename }))
+      });
+    }
+
+    return true;
   }
 
-  saveSessionNow() {
-    this._saveSession();
+  async saveSessionNow() {
+    await this._saveSession();
   }
 
-  clearSession() {
-    storage.clearSession();
+  async clearSession() {
+    const projectId = this.data.project.id;
+    if (projectId) {
+      await storage.clearSession(projectId);
+    }
     this._emit('sessionCleared');
   }
 

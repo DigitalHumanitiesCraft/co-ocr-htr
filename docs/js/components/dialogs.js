@@ -672,17 +672,44 @@ class DialogManager {
             saveBtn.addEventListener('click', () => this.saveSettings());
         }
 
-        // Clear session button
+        // Delete project button (was "Clear Session")
         const clearSessionBtn = dialog.querySelector('#btnClearSession');
         if (clearSessionBtn) {
-            clearSessionBtn.addEventListener('click', () => {
+            clearSessionBtn.addEventListener('click', async () => {
+                const projectId = appState.data.project.id;
+                if (!projectId) {
+                    this.showToast('Kein aktives Projekt vorhanden', 'warning');
+                    return;
+                }
+                const projectName = appState.data.project.name || 'Aktuelles Projekt';
                 // eslint-disable-next-line no-alert
-                if (confirm('Clear current session? This will remove all unsaved transcription data.')) {
-                    storage.clearSession();
-                    appState.clearSession();
-                    this.showToast('Session cleared', 'success');
-                    // Reload page to reset state
-                    setTimeout(() => location.reload(), 500);
+                if (confirm(`Projekt "${projectName}" loeschen? Alle Daten (Bilder, Transkriptionen) werden entfernt.`)) {
+                    try {
+                        await storage.deleteProject(projectId);
+                        storage.clearActiveProjectId();
+                        this.showToast('Projekt geloescht', 'success');
+                        setTimeout(() => location.reload(), 500);
+                    } catch (err) {
+                        console.error('[Settings] Delete project failed:', err);
+                        this.showToast('Fehler beim Loeschen', 'error');
+                    }
+                }
+            });
+        }
+
+        // Delete all saved API keys button
+        const deleteApiKeysBtn = dialog.querySelector('#btnDeleteApiKeys');
+        if (deleteApiKeysBtn) {
+            deleteApiKeysBtn.addEventListener('click', async () => {
+                // eslint-disable-next-line no-alert
+                if (confirm('Alle gespeicherten API-Keys loeschen?')) {
+                    try {
+                        await storage.deleteAllApiKeys();
+                        this.showToast('Gespeicherte API-Keys geloescht', 'success');
+                    } catch (err) {
+                        console.error('[Settings] Delete API keys failed:', err);
+                        this.showToast('Fehler beim Loeschen', 'error');
+                    }
                 }
             });
         }
@@ -895,9 +922,10 @@ class DialogManager {
 
 
     /**
-     * Load saved settings into form fields (API keys are NOT loaded - memory only)
+     * Load saved settings into form fields.
+     * Persistent API keys are loaded from IndexedDB (if user opted in).
      */
-    loadSavedApiKeys() {
+    async loadSavedApiKeys() {
         const settings = storage.loadSettings() || {};
 
         // Load Ollama endpoint
@@ -927,8 +955,17 @@ class DialogManager {
             }
         }
 
-        // NOTE: API keys are intentionally NOT loaded from storage.
-        // Users must re-enter keys each session for security.
+        // Load persistent API keys from IndexedDB (if previously saved)
+        try {
+            const savedKeys = await storage.loadAllApiKeys();
+            for (const [provider, apiKey] of Object.entries(savedKeys)) {
+                if (apiKey) {
+                    llmService.setApiKey(provider, apiKey);
+                }
+            }
+        } catch (err) {
+            console.warn('[Dialogs] Failed to load persistent API keys:', err);
+        }
 
         // Update model indicator with saved model
         const provider = this.getProviderFromModel(savedModel);
@@ -936,15 +973,17 @@ class DialogManager {
     }
 
     /**
-     * Save API configuration (API keys stored in memory only, NOT persisted)
+     * Save API configuration
+     * API keys stored in memory; optionally persisted to IndexedDB if user opts in.
      */
-    saveApiKeys() {
+    async saveApiKeys() {
         const settings = storage.loadSettings() || {};
 
         const modelSelect = getById('llmModel');
         const customModelInput = getById('llmModelCustom');
         const apiKeyInput = getById('llmApiKey');
         const endpointInput = getById('ollamaEndpoint');
+        const persistCheckbox = getById('apiKeyPersist');
 
         // Get model (custom or from select)
         let model = modelSelect?.value;
@@ -967,9 +1006,19 @@ class DialogManager {
         llmService.setProvider(provider);
         llmService.setModel(actualModel); // Set model for active provider (single argument)
 
-        // Store API key in MEMORY ONLY (for non-Ollama providers)
+        // Store API key in memory (for non-Ollama providers)
         if (provider !== 'ollama' && apiKeyInput?.value) {
-            llmService.setApiKey(provider, apiKeyInput.value);
+            const apiKey = apiKeyInput.value.trim();
+            llmService.setApiKey(provider, apiKey);
+
+            // Optionally persist to IndexedDB
+            if (persistCheckbox?.checked && apiKey) {
+                try {
+                    await storage.saveApiKey(provider, apiKey);
+                } catch (err) {
+                    console.warn('[Dialogs] Failed to persist API key:', err);
+                }
+            }
         }
 
         // Save Ollama endpoint
@@ -983,7 +1032,10 @@ class DialogManager {
         // Update model indicator in UI
         this.updateModelIndicator(model, provider);
 
-        this.showToast('Konfiguration gespeichert (API-Key nur fuer diese Sitzung)', 'success');
+        const persistMsg = persistCheckbox?.checked
+            ? 'Konfiguration gespeichert (API-Key dauerhaft gespeichert)'
+            : 'Konfiguration gespeichert (API-Key nur fuer diese Sitzung)';
+        this.showToast(persistMsg, 'success');
         this.closeDialog('apiKey');
     }
 

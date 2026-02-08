@@ -173,3 +173,24 @@ export const DOCUMENT_TYPES = {
 
 /** JPEG quality for canvas export (0.0 - 1.0) */
 export const JPEG_QUALITY = 0.9;
+
+// =============================================================================
+// INDEXEDDB CONSTANTS
+// =============================================================================
+
+/** IndexedDB database name */
+export const IDB_NAME = 'coocr-htr';
+
+/** IndexedDB schema version */
+export const IDB_VERSION = 1;
+
+/** IndexedDB object store names */
+export const IDB_STORES = {
+  PROJECTS: 'projects',
+  SESSIONS: 'sessions',
+  IMAGES: 'images',
+  API_KEYS: 'apiKeys'
+};
+
+/** localStorage key for active project ID (synchronous access at startup) */
+export const ACTIVE_PROJECT_KEY = 'coocr:activeProjectId';

@@ -144,6 +144,28 @@ body:has(.wip-banner:not([hidden])) .app-container {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font: inherit;
+  color: var(--text-primary);
+}
+
+.header-doc-info:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-secondary);
+}
+
+.header-doc-info .dropdown-caret {
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.header-doc-info:hover .dropdown-caret {
+  opacity: 1;
 }
 
 /* ==========================================================================
