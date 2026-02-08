@@ -22,8 +22,8 @@ export const DIALOG_FOCUS_DELAY = 50;
 /** Page reload delay after clear session in milliseconds */
 export const PAGE_RELOAD_DELAY = 500;
 
-/** URL revoke delay for downloads in milliseconds */
-export const URL_REVOKE_DELAY = 100;
+/** URL revoke delay for downloads in milliseconds (long enough for browser to start download) */
+export const URL_REVOKE_DELAY = 60_000;
 
 /** Validation menu close delay in milliseconds */
 export const MENU_CLOSE_DELAY = 150;

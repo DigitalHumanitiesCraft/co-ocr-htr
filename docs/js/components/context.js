@@ -21,8 +21,6 @@ class ContextManager {
 
         // Bind custom document type toggle
         this.bindCustomDocTypeToggle();
-
-        console.log('[Context] Initialized');
     }
 
     /**

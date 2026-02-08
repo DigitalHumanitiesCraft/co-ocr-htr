@@ -3,7 +3,7 @@
  * IIIF-compatible image viewer with SVG overlay for regions
  */
 import { appState } from './state.js';
-import { getById, show, hide, setText, setDisabled, addClass, removeClass, createSVGElement, selectAll, select } from './utils/dom.js';
+import { getById, show, hide, setText, setDisabled, addClass, removeClass, selectAll, select } from './utils/dom.js';
 import { IIIF_CONTEXT_V3, IIIF_VERSION } from './utils/constants.js';
 
 let viewer = null;
@@ -11,10 +11,10 @@ let svgOverlay = null;
 
 export function initViewer() {
     const container = document.getElementById('osd-viewer');
-    const zoomLabel = document.getElementById('zoomLabel');
-    const emptyState = document.getElementById('viewerEmptyState');
-    const headerDocInfo = document.getElementById('headerDocInfo');
-    const headerFilename = document.getElementById('headerFilename');
+    const _zoomLabel = document.getElementById('zoomLabel');
+    const _emptyState = document.getElementById('viewerEmptyState');
+    const _headerDocInfo = document.getElementById('headerDocInfo');
+    const _headerFilename = document.getElementById('headerFilename');
 
     if (!container) {
         console.error('[Viewer] OSD container not found');
@@ -446,7 +446,9 @@ export async function loadIIIFManifest(manifestUrl) {
         // Update loading text
         if (loadingText) loadingText.textContent = 'Lade Manifest-Daten...';
 
-        const response = await fetch(manifestUrl);
+        const response = await fetch(manifestUrl, {
+            signal: AbortSignal.timeout(30_000)
+        });
         const manifest = await response.json();
 
         // Detect manifest version

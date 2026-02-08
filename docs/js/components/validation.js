@@ -18,8 +18,7 @@ import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
 import { batchProgress } from './batch-progress.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
-import { MENU_CLOSE_DELAY } from '../utils/constants.js';
-import { getConfidenceLabel, getStatusClass } from '../utils/textFormatting.js';
+import { escapeHtml } from '../utils/textFormatting.js';
 
 /**
  * Validation Panel Manager
@@ -79,7 +78,7 @@ class ValidationPanel {
                                   state.transcription?.segments?.length > 0;
 
         // Get the main panel container
-        const panelContent = this.panel;
+        // panelContent reference unused - using this.panel directly
 
         if (!hasDocument) {
             // No document: hide all content, show minimal state
@@ -381,7 +380,7 @@ class ValidationPanel {
      * Run validation on current transcription
      * @param {boolean} llmOnly - Only run LLM validation (skip rules)
      */
-    async runValidation(llmOnly = false) {
+    async runValidation(_llmOnly = false) {
         if (this.isValidating) return;
 
         const state = appState.getState();
@@ -753,7 +752,7 @@ class ValidationPanel {
                 <div class="validation-item fallback-notice">
                     <span class="status-dot status-info"></span>
                     <span class="item-label">Fallback</span>
-                    <span class="item-value text-xs">${llmResult.fallbackUsed.name}</span>
+                    <span class="item-value text-xs">${escapeHtml(llmResult.fallbackUsed.name)}</span>
                 </div>
             `;
         }
@@ -772,7 +771,7 @@ class ValidationPanel {
                         Analyse anzeigen
                     </summary>
                     <div class="ai-reasoning-container">
-                        <p class="ai-reasoning">${llmResult.reasoning}</p>
+                        <p class="ai-reasoning">${escapeHtml(llmResult.reasoning)}</p>
                     </div>
                 </details>
             `;
@@ -793,25 +792,18 @@ class ValidationPanel {
             description: ''
         };
 
-        // Map color to status class
-        const statusClass = {
-            warning: 'status-warning',
-            error: 'status-error',
-            info: 'status-info'
-        }[typeInfo.color] || 'status-warning';
-
         // Build issue HTML
         return `
             <div class="validation-issue issue-${typeInfo.color}" ${issue.line ? `data-line="${issue.line}"` : ''}>
                 <div class="issue-header">
-                    <span class="issue-type-badge badge-${typeInfo.color}" title="${typeInfo.description || ''}">${typeInfo.name}</span>
+                    <span class="issue-type-badge badge-${typeInfo.color}" title="${escapeHtml(typeInfo.description || '')}">${escapeHtml(typeInfo.name)}</span>
                     ${issue.line ? `<span class="issue-line">Zeile ${issue.line}</span>` : ''}
                 </div>
                 <div class="issue-content">
-                    <span class="issue-text">${issue.text || ''}</span>
-                    ${issue.suggestion ? `<span class="issue-suggestion">→ ${issue.suggestion}</span>` : ''}
+                    <span class="issue-text">${escapeHtml(issue.text || '')}</span>
+                    ${issue.suggestion ? `<span class="issue-suggestion">&rarr; ${escapeHtml(issue.suggestion)}</span>` : ''}
                 </div>
-                ${issue.explanation ? `<p class="issue-explanation">${issue.explanation}</p>` : ''}
+                ${issue.explanation ? `<p class="issue-explanation">${escapeHtml(issue.explanation)}</p>` : ''}
             </div>
         `;
     }

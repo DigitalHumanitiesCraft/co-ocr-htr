@@ -19,7 +19,6 @@ import { storage } from '../js/services/storage.js';
 
 // We need to import after mocking
 // Create a fresh AppState instance for each test
-let AppState;
 let appState;
 
 describe('AppState', () => {

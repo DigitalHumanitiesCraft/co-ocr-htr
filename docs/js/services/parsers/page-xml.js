@@ -273,12 +273,14 @@ class PageXMLParser {
         const minY = Math.min(...coords.map(c => c.y));
         const maxY = Math.max(...coords.map(c => c.y));
 
-        // Convert to percentages
+        // Convert to percentages (guard against zero dimensions)
+        const w = pageDimensions.width || 1;
+        const h = pageDimensions.height || 1;
         return {
-            x: (minX / pageDimensions.width) * 100,
-            y: (minY / pageDimensions.height) * 100,
-            width: ((maxX - minX) / pageDimensions.width) * 100,
-            height: ((maxY - minY) / pageDimensions.height) * 100
+            x: (minX / w) * 100,
+            y: (minY / h) * 100,
+            width: ((maxX - minX) / w) * 100,
+            height: ((maxY - minY) / h) * 100
         };
     }
 
@@ -433,7 +435,7 @@ export const pageXMLParser = new PageXMLParser();
  */
 function initPageXMLHandler() {
     document.addEventListener('pageXMLLoaded', (event) => {
-        const { filename, content } = event.detail;
+        const { filename: _filename, content } = event.detail;
 
         try {
             const parsed = pageXMLParser.parse(content);

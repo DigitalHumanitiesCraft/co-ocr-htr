@@ -10,14 +10,17 @@ import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
 import { dialogManager } from './components/dialogs.js';
 import { uploadManager } from './components/upload.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
 import { transcriptionManager } from './components/transcription.js';
 import { validationPanel } from './components/validation.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
 import { contextManager } from './components/context.js';
 
 // Services
 import { storage } from './services/storage.js';
 import { llmService } from './services/llm.js';
 import { exportService } from './services/export.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers pageXMLLoaded handler
 import { pageXMLParser } from './services/parsers/page-xml.js';
 import { samplesService } from './services/samples.js';
 import { appState } from './state.js';
@@ -60,7 +63,7 @@ async function loadLocalConfig() {
         }
 
         return true;
-    } catch (e) {
+    } catch (_e) {
         // config.local.js doesn't exist - this is normal for hosted version
         return false;
     }
@@ -90,7 +93,7 @@ async function initApp() {
     storage.clearAllApiKeys();
 
     // Try to load local config file (for local development)
-    const hasLocalConfig = await loadLocalConfig();
+    const _hasLocalConfig = await loadLocalConfig();
 
     // Configure Ollama
     if (settings?.ollamaEndpoint) {

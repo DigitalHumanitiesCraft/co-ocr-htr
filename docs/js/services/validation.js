@@ -7,7 +7,6 @@
  */
 
 import { llmService } from './llm.js';
-import { appState } from '../state.js';
 
 // ============================================
 // Rule Categories
@@ -112,7 +111,7 @@ const VALIDATION_RULES = [
         category: 'artifacts',
         description: 'Ungewoehnliche Zeichen (moegl. OCR-Artefakte)',
         // Exclude common chars: word chars, whitespace, punctuation, common accented chars
-        regex: /[^\w\s\.,;:!?\-\'\"\(\)\[\]\/\\\n\r\t°§†‡©®™€£¥¢äöüÄÖÜßàáâãåæçèéêëìíîïðñòóôõøùúûýÿœŒÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕØÙÚÛÝŸ]/g,
+        regex: /[^\w\s.,;:!?\-'"()\]{[/\\\n\r\t°§†‡©®™€£¥¢äöüÄÖÜßàáâãåæçèéêëìíîïðñòóôõøùúûýÿœŒÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕØÙÚÛÝŸ]/g,
         type: 'warning',
         messagePass: (count, matches) => {
             const uniqueChars = [...new Set(matches)].slice(0, 5).join(' ');
@@ -135,6 +134,7 @@ const VALIDATION_RULES = [
         name: 'Steuerzeichen',
         category: 'artifacts',
         description: 'Nicht-druckbare Zeichen (ausser Zeilenumbruch)',
+        // eslint-disable-next-line no-control-regex -- intentional: detecting control chars
         regex: /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,
         type: 'error',
         messagePass: (count) => `${count} nicht-druckbare(s) Zeichen gefunden`,
@@ -145,7 +145,7 @@ const VALIDATION_RULES = [
 /**
  * Custom validator: Count transcribed lines
  */
-function validateLineCount(text, segments) {
+function validateLineCount(text, _segments) {
     const lines = text ? text.split('\n').filter(l => l.trim().length > 0) : [];
     const count = lines.length;
 
@@ -160,7 +160,7 @@ function validateLineCount(text, segments) {
 /**
  * Custom validator: Count characters
  */
-function validateCharCount(text, segments) {
+function validateCharCount(text, _segments) {
     const count = text ? text.length : 0;
 
     return {

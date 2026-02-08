@@ -16,8 +16,6 @@ vi.mock('../js/services/storage.js', () => ({
   }
 }));
 
-import { storage } from '../js/services/storage.js';
-
 describe('LLMService', () => {
   let service;
 

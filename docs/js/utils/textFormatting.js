@@ -10,11 +10,11 @@
 // MARKER PATTERNS
 // =============================================================================
 
-/** Pattern for uncertain readings [?] */
-const UNCERTAIN_PATTERN = /\[\?\]/g;
+/** Pattern for uncertain readings [?] -- non-global for test(), global added inline for replace/match */
+const UNCERTAIN_PATTERN = /\[\?\]/;
 
-/** Pattern for illegible text [illegible] */
-const ILLEGIBLE_PATTERN = /\[illegible\]/g;
+/** Pattern for illegible text [illegible] -- non-global for test(), global added inline for replace/match */
+const ILLEGIBLE_PATTERN = /\[illegible\]/;
 
 // =============================================================================
 // MARKER HTML TEMPLATES
@@ -39,8 +39,8 @@ export function applyMarkers(text) {
     if (!text) return '';
 
     return text
-        .replace(UNCERTAIN_PATTERN, UNCERTAIN_MARKER_HTML)
-        .replace(ILLEGIBLE_PATTERN, ILLEGIBLE_MARKER_HTML);
+        .replace(new RegExp(UNCERTAIN_PATTERN.source, 'g'), UNCERTAIN_MARKER_HTML)
+        .replace(new RegExp(ILLEGIBLE_PATTERN.source, 'g'), ILLEGIBLE_MARKER_HTML);
 }
 
 /**
@@ -50,7 +50,6 @@ export function applyMarkers(text) {
  */
 export function hasUncertainMarker(text) {
     if (!text) return false;
-    UNCERTAIN_PATTERN.lastIndex = 0;
     return UNCERTAIN_PATTERN.test(text);
 }
 
@@ -61,7 +60,6 @@ export function hasUncertainMarker(text) {
  */
 export function hasIllegibleMarker(text) {
     if (!text) return false;
-    ILLEGIBLE_PATTERN.lastIndex = 0;
     return ILLEGIBLE_PATTERN.test(text);
 }
 
@@ -72,9 +70,6 @@ export function hasIllegibleMarker(text) {
  */
 export function hasAnyMarker(text) {
     if (!text) return false;
-    // Reset lastIndex for global patterns
-    UNCERTAIN_PATTERN.lastIndex = 0;
-    ILLEGIBLE_PATTERN.lastIndex = 0;
     return UNCERTAIN_PATTERN.test(text) || ILLEGIBLE_PATTERN.test(text);
 }
 
@@ -85,7 +80,7 @@ export function hasAnyMarker(text) {
  */
 export function countUncertainMarkers(text) {
     if (!text) return 0;
-    const matches = text.match(UNCERTAIN_PATTERN);
+    const matches = text.match(new RegExp(UNCERTAIN_PATTERN.source, 'g'));
     return matches ? matches.length : 0;
 }
 
@@ -96,7 +91,7 @@ export function countUncertainMarkers(text) {
  */
 export function countIllegibleMarkers(text) {
     if (!text) return 0;
-    const matches = text.match(ILLEGIBLE_PATTERN);
+    const matches = text.match(new RegExp(ILLEGIBLE_PATTERN.source, 'g'));
     return matches ? matches.length : 0;
 }
 
@@ -180,8 +175,8 @@ export function stripMarkers(text) {
     if (!text) return '';
 
     return text
-        .replace(UNCERTAIN_PATTERN, '')
-        .replace(ILLEGIBLE_PATTERN, '')
+        .replace(new RegExp(UNCERTAIN_PATTERN.source, 'g'), '')
+        .replace(new RegExp(ILLEGIBLE_PATTERN.source, 'g'), '')
         .trim();
 }
 

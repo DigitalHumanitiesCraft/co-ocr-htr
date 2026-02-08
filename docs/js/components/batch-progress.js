@@ -19,6 +19,7 @@ class BatchProgressPanel {
         if (!this.panel) {
             this.createPanel();
         }
+        this._contentBuilt = false;
         this.panel.hidden = false;
         this.update(0, total, operation);
     }
@@ -36,29 +37,44 @@ class BatchProgressPanel {
         const title = operation === 'transcription' ? 'Batch-Transkription' : 'Batch-Validierung';
         const isAborted = appState.data.batch.abortRequested;
 
-        this.panel.innerHTML = `
-            <div class="batch-progress-content">
-                <div class="batch-header">
-                    <span class="batch-title">${title}</span>
-                    <span class="batch-counter">${current} / ${total}</span>
+        // Build DOM only on first call; update targeted elements on subsequent calls
+        if (!this._contentBuilt) {
+            this.panel.innerHTML = `
+                <div class="batch-progress-content">
+                    <div class="batch-header">
+                        <span class="batch-title"></span>
+                        <span class="batch-counter"></span>
+                    </div>
+                    <div class="batch-progress-bar">
+                        <div class="batch-progress-fill"></div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm batch-abort-btn" id="batchAbortBtn">Abbrechen</button>
                 </div>
-                <div class="batch-progress-bar">
-                    <div class="batch-progress-fill" style="width: ${percent}%"></div>
-                </div>
-                <button class="btn btn-secondary btn-sm batch-abort-btn" id="batchAbortBtn" ${isAborted ? 'disabled' : ''}>
-                    ${isAborted ? 'Wird abgebrochen...' : 'Abbrechen'}
-                </button>
-            </div>
-        `;
+            `;
+            // Bind abort handler once
+            const abortBtn = this.panel.querySelector('#batchAbortBtn');
+            if (abortBtn) {
+                abortBtn.addEventListener('click', () => {
+                    appState.requestBatchAbort();
+                    abortBtn.disabled = true;
+                    abortBtn.textContent = 'Wird abgebrochen...';
+                });
+            }
+            this._contentBuilt = true;
+        }
 
-        // Bind abort handler
+        // Targeted DOM updates (no innerHTML rebuild, no listener re-binding)
+        const titleEl = this.panel.querySelector('.batch-title');
+        const counterEl = this.panel.querySelector('.batch-counter');
+        const fillEl = this.panel.querySelector('.batch-progress-fill');
         const abortBtn = this.panel.querySelector('#batchAbortBtn');
-        if (abortBtn && !isAborted) {
-            abortBtn.addEventListener('click', () => {
-                appState.requestBatchAbort();
-                abortBtn.disabled = true;
-                abortBtn.textContent = 'Wird abgebrochen...';
-            });
+
+        if (titleEl) titleEl.textContent = title;
+        if (counterEl) counterEl.textContent = `${current} / ${total}`;
+        if (fillEl) fillEl.style.width = `${percent}%`;
+        if (abortBtn) {
+            abortBtn.disabled = isAborted;
+            abortBtn.textContent = isAborted ? 'Wird abgebrochen...' : 'Abbrechen';
         }
     }
 

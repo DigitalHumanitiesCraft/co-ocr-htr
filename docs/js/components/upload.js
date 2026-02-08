@@ -30,6 +30,10 @@ class UploadManager {
      * Initialize upload functionality
      */
     init() {
+        // Guard against double-initialization (would accumulate listeners)
+        if (this._initialized) return;
+        this._initialized = true;
+
         this.createFileInput();
         this.bindEvents();
         this.setupDropZone();
@@ -101,7 +105,7 @@ class UploadManager {
 
         // Highlight drop zone when dragging over
         ['dragenter', 'dragover'].forEach(eventName => {
-            this.dropZone.addEventListener(eventName, (e) => {
+            this.dropZone.addEventListener(eventName, (_e) => {
                 if (!this.isDragging) {
                     this.isDragging = true;
                     this.showDropFeedback();
@@ -403,7 +407,7 @@ class UploadManager {
             }
 
             // Set pages in state for multi-page navigation
-            const pages = metsData.pages.map((page, index) => ({
+            const pages = metsData.pages.map((page, _index) => ({
                 id: page.id,
                 order: page.order,
                 image: page.image,
