@@ -15,6 +15,7 @@ import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
 import { contextManager } from './context.js';
 import { batchProgress } from './batch-progress.js';
+import { escapeHtml } from '../utils/textFormatting.js';
 
 /**
  * Transcription Manager
@@ -127,7 +128,7 @@ class TranscriptionManager {
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
-                    <span>Modell: <strong>${model}</strong> (${provider})</span>
+                    <span>Modell: <strong>${escapeHtml(model)}</strong> (${escapeHtml(provider)})</span>
                     <button type="button" class="btn-link" id="changeModelBtn">ändern</button>
                 </div>
             `;
@@ -147,7 +148,7 @@ class TranscriptionManager {
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    <span>API-Key für <strong>${provider}</strong> erforderlich</span>
+                    <span>API-Key für <strong>${escapeHtml(provider)}</strong> erforderlich</span>
                     <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">Konfigurieren</button>
                 </div>
             `;
@@ -309,17 +310,21 @@ class TranscriptionManager {
             img.crossOrigin = 'anonymous';
 
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
 
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
 
-                // Get base64 (without data URL prefix)
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                const base64 = dataUrl.split(',')[1];
-                resolve(base64);
+                    // Get base64 (without data URL prefix)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    const base64 = dataUrl.split(',')[1];
+                    resolve(base64);
+                } catch (err) {
+                    reject(new Error(`Canvas conversion failed: ${err.message}`));
+                }
             };
 
             img.onerror = () => {

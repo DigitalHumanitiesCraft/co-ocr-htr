@@ -38,6 +38,10 @@ class ValidationPanel {
      * Initialize validation panel
      */
     init() {
+        // Guard against double-initialization (auto-init + main.js)
+        if (this._initialized) return;
+        this._initialized = true;
+
         // Find panel elements
         this.panel = getById('validationContent');
         this.emptyState = getById('validationEmptyState');
@@ -726,6 +730,7 @@ class ValidationPanel {
         }
 
         const statusClass = {
+            confident: 'status-success',
             certain: 'status-success',
             likely: 'status-warning',
             uncertain: 'status-error'

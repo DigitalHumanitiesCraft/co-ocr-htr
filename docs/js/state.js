@@ -386,10 +386,13 @@ class AppState extends EventTarget {
     const page = this.data.pages[this.data.currentPageIndex];
     if (!page) return;
 
-    if (this.data.transcription.segments?.length > 0) {
+    const hasSegments = this.data.transcription.segments?.length > 0;
+    const hasRaw = this.data.transcription.raw?.trim().length > 0;
+    if (hasSegments || hasRaw) {
       this.data.pageTranscriptions[page.id] = {
         segments: this.data.transcription.segments,
         columns: this.data.transcription.columns,
+        raw: this.data.transcription.raw,
         provider: this.data.transcription.provider,
         model: this.data.transcription.model,
         regions: this.data.regions
@@ -461,12 +464,20 @@ class AppState extends EventTarget {
    * @param {object} data - Transcription data
    */
   setTranscription(data) {
+    const segments = data.segments || [];
+    const columns = data.columns || [];
+    // Derive raw from segments if not provided
+    const raw = data.raw || segments.map(s => s.text || '').join('\n') || '';
+
     this.data.transcription = {
       ...this.data.transcription,
       id: generateId(),
       provider: data.provider || '',
       model: data.model || '',
-      raw: data.raw || ''
+      raw,
+      segments,
+      columns,
+      lines: this._segmentsToLines(segments)
     };
 
     this.data.meta.updatedAt = new Date().toISOString();
@@ -810,7 +821,8 @@ class AppState extends EventTarget {
       return {
         timestamp: session.timestamp,
         filename: session.data.document.filename,
-        hasTranscription: session.data.transcription?.segments?.length > 0
+        hasTranscription: session.data.transcription?.segments?.length > 0 ||
+          session.data.transcription?.raw?.trim().length > 0
       };
     }
     return null;
