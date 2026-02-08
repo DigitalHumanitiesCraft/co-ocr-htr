@@ -397,7 +397,7 @@ async function initSamplesMenu() {
         e.stopPropagation();
         uploadMenu.classList.remove('visible');
         uploadDropdown?.classList.remove('open');
-        dialogManager.showDialog('iiifDialog');
+        dialogManager.openDialog('iiif');
     });
 
     // Prevent samples menu from closing when clicking inside it
