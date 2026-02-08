@@ -141,9 +141,48 @@
 
 ---
 
+## Codex Audit (Second Pass)
+
+Independent audit by GPT Codex found 8 additional issues. All verified and fixed.
+
+### CX-H1: `_saveCurrentPageTranscription` loses raw text [FIXED]
+- **File:** `state.js:389`
+- **Fix:** Save when `raw.trim().length > 0` (not just segments), include `raw` in `pageTranscriptions`
+
+### CX-H2: `setTranscription` discards segments/columns [FIXED]
+- **File:** `state.js:463`
+- **Fix:** Accept `segments`, `columns`, derive `raw` from segments if not provided
+
+### CX-M1: ValidationPanel double-init [FIXED]
+- **File:** `components/validation.js`
+- **Fix:** Added `_initialized` guard
+
+### CX-M2: `showDialog('iiifDialog')` does not exist [FIXED]
+- **File:** `main.js:400`
+- **Fix:** Changed to `openDialog('iiif')`
+
+### CX-M3: Canvas try/catch missing in `getImageBase64` [FIXED]
+- **File:** `components/transcription.js:311`
+- **Fix:** Wrapped canvas operations in try/catch, reject on failure
+
+### CX-M4: Model/provider unescaped in innerHTML [FIXED]
+- **File:** `components/transcription.js:124`
+- **Fix:** Added `escapeHtml()` on model and provider interpolations
+
+### CX-M5: Status mapping missing `confident` key [FIXED]
+- **File:** `components/validation.js:728`
+- **Fix:** Added `confident: 'status-success'` to statusClass map
+
+### CX-L1: `hasSavedSession` ignores raw-only transcriptions [FIXED]
+- **File:** `state.js:813`
+- **Fix:** Added `|| raw?.trim().length > 0` to hasTranscription check
+
+---
+
 ## Verification
 
 ```
 ESLint:  0 errors, 0 warnings
 Tests:   276 passed (7 test files)
+Audits:  Claude (29 findings) + Codex (8 findings) = 37 total, all fixed
 ```
