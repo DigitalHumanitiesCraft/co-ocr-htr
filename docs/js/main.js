@@ -31,11 +31,13 @@ import { escapeHtml } from './utils/textFormatting.js';
  * This file is gitignored and allows developers to pre-configure API keys
  */
 async function loadLocalConfig() {
-    try {
-        // Check if file exists before import to avoid 404 console noise
-        const check = await fetch('../config.local.js', { method: 'HEAD' });
-        if (!check.ok) return false;
+    // Only attempt on localhost -- avoids 404 console noise on deployed versions
+    const host = location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1' && host !== '[::1]') {
+        return false;
+    }
 
+    try {
         const module = await import('../config.local.js');
         const config = module.LOCAL_CONFIG;
 
