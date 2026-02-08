@@ -186,3 +186,42 @@ ESLint:  0 errors, 0 warnings
 Tests:   276 passed (7 test files)
 Audits:  Claude (29 findings) + Codex (8 findings) = 37 total, all fixed
 ```
+
+---
+
+## UI Testing (Automated -- Playwright MCP)
+
+**Date:** 2026-02-08
+**Method:** Automated browser testing via Playwright MCP (Chrome 145, headless)
+**Operator:** Claude (automated), HITL test by human reviewer pending
+
+### Results
+
+| # | Test | Status | Details |
+|---|------|--------|---------|
+| 1 | Page Load and Layout | PASS | Header, 3 panels (Viewer, Editor, Validation), workflow stepper, footer |
+| 2 | Demo Sample Loading | PASS | 8 samples listed, image loaded (2479x3508), 104 lines from PAGE-XML |
+| 3 | LLM Config Dialog | PASS | Security checkbox enables Save, model dropdown, custom model live provider detection (claude->Anthropic, gpt->OpenAI) |
+| 4 | Editor Interaction | PASS | Textarea editable, Ctrl+Z undo, Ctrl+Shift+Z redo, Strukturiert/Normalisiert tab switch |
+| 5 | Export | PASS | 5 formats (TXT, JSON, MD, PAGE-XML, TEI-XML), TXT download verified |
+| 6 | Dialogs and Viewer | PASS | Settings dialog opens/closes (Escape), Zoom In/Out/Fit functional |
+| 7 | Console Errors | PASS | Only 2 known/harmless messages (config.local.js 404 on localhost, apple-mobile-web-app-capable deprecation) |
+
+### Bugs Found and Fixed During Testing
+
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| "Verbindung testen" button no visible reaction | Toast hidden behind dialog top-layer | Inline status display next to button |
+| Connection test only checked key format (regex) | No real API calls for cloud providers | Real API calls for Gemini, OpenAI, Anthropic |
+| Custom model did not detect provider | `getProviderFromModel('custom')` returned 'gemini' always | Detect provider from custom input value + live update on input |
+| OpenAI CORS error on failed auth | OpenAI omits CORS headers on error responses | Graceful error message: "Verbindung fehlgeschlagen -- Key ungueltig oder kein Guthaben?" |
+
+### Not Tested (requires HITL)
+
+- [ ] Real LLM transcription (requires valid API key + credits)
+- [ ] IIIF manifest loading (requires external network)
+- [ ] Session restore after page reload
+- [ ] Keyboard shortcuts (visual verification needed)
+- [ ] Validation panel with real LLM-Judge results
+- [ ] Multi-page document navigation
+- [ ] File upload via drag-and-drop
