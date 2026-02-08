@@ -240,6 +240,11 @@ class DialogManager {
             modelSelect.addEventListener('change', updateUIForModel);
         }
 
+        // Custom model input -- update provider detection as user types
+        if (customModelInput) {
+            customModelInput.addEventListener('input', updateUIForModel);
+        }
+
         // Security acknowledgment checkbox
         if (securityCheckbox && saveBtn) {
             securityCheckbox.addEventListener('change', () => {
@@ -308,9 +313,14 @@ class DialogManager {
             return 'ollama';
         }
 
-        // For custom models, try to detect provider from model name
+        // For custom models, detect provider from the custom input field
         if (modelValue === 'custom') {
-            return 'gemini'; // Default for custom, will be updated when saving
+            const customInput = getById('llmModelCustom');
+            const customName = customInput?.value?.trim().toLowerCase() || '';
+            if (customName.includes('gpt') || customName.includes('openai') || customName.startsWith('o1') || customName.startsWith('o3') || customName.startsWith('o4')) return 'openai';
+            if (customName.includes('claude') || customName.includes('anthropic')) return 'anthropic';
+            if (customName.includes('ollama')) return 'ollama';
+            return 'gemini'; // Default
         }
 
         // Infer from model name patterns
@@ -1023,6 +1033,97 @@ class DialogManager {
 
 
     /**
+     * Test cloud API connection using the same endpoints/headers as llmService.
+     * Note: OpenAI blocks browser CORS -- only Gemini and Anthropic work from browser.
+     */
+    async _testCloudConnection(provider, apiKey) {
+        const timeout = AbortSignal.timeout(15000);
+
+        try {
+            if (provider === 'gemini') {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=1`;
+                const res = await fetch(url, { signal: timeout });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API-Key gueltig, Verbindung OK', 'success');
+
+            } else if (provider === 'openai') {
+                const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [{ role: 'user', content: 'Hi' }],
+                        max_tokens: 1
+                    }),
+                    signal: timeout
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API-Key gueltig, Verbindung OK', 'success');
+
+            } else if (provider === 'anthropic') {
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-haiku-4-5-20251001',
+                        max_tokens: 1,
+                        messages: [{ role: 'user', content: 'Hi' }]
+                    }),
+                    signal: timeout
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API-Key gueltig, Verbindung OK', 'success');
+
+            } else {
+                this._showTestStatus('Unbekannter Provider', 'warning');
+            }
+        } catch (error) {
+            // TypeError = network/CORS failure (fetch never got a response)
+            // OpenAI returns no CORS headers on error responses (401/403),
+            // so auth failures appear as CORS errors in the browser
+            if (error instanceof TypeError) {
+                throw new Error(`Verbindung fehlgeschlagen -- Key ungueltig oder kein Guthaben?`, { cause: error });
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Show inline status next to test button (visible inside dialog top-layer)
+     */
+    _showTestStatus(message, type = 'info') {
+        const statusEl = getById('testConnectionStatus');
+        if (!statusEl) return;
+
+        statusEl.textContent = message;
+        statusEl.className = `test-status test-${type}`;
+        statusEl.hidden = false;
+
+        // Auto-hide after 5s
+        clearTimeout(this._testStatusTimer);
+        this._testStatusTimer = setTimeout(() => {
+            statusEl.hidden = true;
+        }, 5000);
+    }
+
+    /**
      * Test API connection for current provider
      */
     async testConnection() {
@@ -1049,7 +1150,7 @@ class DialogManager {
 
                 const data = await response.json();
                 const models = data.models?.map(m => m.name) || [];
-                this.showToast(`Verbunden! ${models.length} Modelle gefunden.`, 'success');
+                this._showTestStatus(`Verbunden! ${models.length} Modelle gefunden.`, 'success');
 
                 // Auto-populate model dropdown with available models
                 this.populateOllamaModels(models);
@@ -1057,21 +1158,11 @@ class DialogManager {
                 const keyInput = getById('llmApiKey');
                 if (!keyInput?.value) throw new Error('API-Key erforderlich');
 
-                const keyFormats = {
-                    gemini: /^AIza/,
-                    openai: /^sk-/,
-                    anthropic: /^sk-ant-/
-                };
-
-                const pattern = keyFormats[provider];
-                if (pattern && !pattern.test(keyInput.value)) {
-                    this.showToast('Key-Format sieht falsch aus', 'warning');
-                } else {
-                    this.showToast('Key-Format gültig. Speichern zum Testen.', 'success');
-                }
+                const apiKey = keyInput.value.trim();
+                await this._testCloudConnection(provider, apiKey);
             }
         } catch (error) {
-            this.showToast(`Fehler: ${error.message}`, 'error');
+            this._showTestStatus(error.message, 'error');
         } finally {
             testBtn.textContent = originalText;
             testBtn.disabled = false;

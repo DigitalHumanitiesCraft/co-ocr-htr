@@ -123,6 +123,29 @@ dialog[open] {
   margin-left: auto;
 }
 
+.test-connection-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.test-status {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.test-status.test-success {
+  color: var(--success);
+}
+
+.test-status.test-warning {
+  color: var(--warning);
+}
+
+.test-status.test-error {
+  color: var(--error);
+}
+
 /* Confirm Dialog (smaller, centered) */
 .confirm-dialog {
   width: 420px;
