@@ -235,6 +235,10 @@ class LLMService {
     this.providers = PROVIDERS;
     this.activeProvider = 'gemini';
     this.activeModel = null;
+
+    // Separate validation provider (null = automatic fallback)
+    this.validationProvider = null;
+    this.validationModel = null;
   }
 
   // ============================================
@@ -347,6 +351,51 @@ class LLMService {
   }
 
   /**
+   * Set explicit validation provider (separate from transcription provider)
+   * @param {string} provider - Provider name
+   * @param {string} model - Model name (optional, defaults to provider's default)
+   */
+  setValidationProvider(provider, model = null) {
+    if (!this.providers[provider]) {
+      throw new Error(`Unknown validation provider: ${provider}`);
+    }
+    this.validationProvider = provider;
+    this.validationModel = model;
+    console.log(`[LLM] setValidationProvider: ${provider} (${model || 'default'})`);
+  }
+
+  /**
+   * Get current validation provider configuration
+   * @returns {object|null} { provider, model, name } or null if not configured
+   */
+  getValidationProvider() {
+    if (!this.validationProvider) return null;
+    const config = this.providers[this.validationProvider];
+    return {
+      provider: this.validationProvider,
+      model: this.validationModel || config.defaultModel,
+      name: config.name
+    };
+  }
+
+  /**
+   * Clear explicit validation provider
+   */
+  clearValidationProvider() {
+    this.validationProvider = null;
+    this.validationModel = null;
+    console.log('[LLM] clearValidationProvider');
+  }
+
+  /**
+   * Check if validation provider is explicitly configured
+   * @returns {boolean}
+   */
+  hasValidationProviderConfigured() {
+    return this.validationProvider !== null;
+  }
+
+  /**
    * Find a fallback provider for validation when using OCR-only models
    * Returns provider info or null if none available
    */
@@ -452,7 +501,7 @@ class LLMService {
   /**
    * Validate transcription using LLM judge
    * @param {string} text - Transcription text to validate
-   * @param {string} perspective - Validation perspective
+   * @param {object} options - Validation options
    * @returns {Promise<object>} Validation result
    */
   async validate(text, options = {}) {
@@ -463,7 +512,13 @@ class LLMService {
 
     const { customPrompt = '' } = options;
 
-    // Check if current model is OCR-only and needs fallback
+    // PRIORITY 1: Explicit validation provider
+    if (this.validationProvider) {
+      console.log(`[LLM] validate() using explicit provider: ${this.validationProvider}`);
+      return await this._validateWithExplicitProvider(text, customPrompt);
+    }
+
+    // PRIORITY 2: Automatic fallback for OCR-only
     if (this.isOcrOnlyModel()) {
       const fallback = this.getValidationFallback();
       if (fallback) {
@@ -472,13 +527,14 @@ class LLMService {
       } else {
         throw new Error(
           `The current model (${this.getCurrentModel()}) is a pure OCR model and cannot perform text validation. ` +
-          `Please configure a cloud provider (Gemini, OpenAI, Anthropic) or install a language model like llama3.2 in Ollama.`
+          `Please configure a validation provider in LLM Configuration.`
         );
       }
     }
 
+    // PRIORITY 3: Current active provider (standard case)
     const config = this.getProviderConfig();
-    console.log(`[LLM] validate() provider=${this.activeProvider} customPrompt=${!!customPrompt}`);
+    console.log(`[LLM] validate() using active provider: ${this.activeProvider} customPrompt=${!!customPrompt}`);
 
     // Get API key from memory (not persisted for security)
     const apiKey = this.providers[this.activeProvider]?.apiKey;
@@ -520,6 +576,55 @@ class LLMService {
       console.error(`[LLM] validate() FAILED:`, error.message);
       throw this._handleError(error);
     }
+  }
+
+  /**
+   * Validate using explicitly configured validation provider
+   * @private
+   */
+  async _validateWithExplicitProvider(text, customPrompt) {
+    const provider = this.validationProvider;
+    const model = this.validationModel || this.providers[provider].defaultModel;
+    const apiKey = this.providers[provider].apiKey;
+
+    if (!apiKey && this.providers[provider].authType !== 'none') {
+      throw new Error(
+        `Validation provider ${this.providers[provider].name} requires an API key. ` +
+        `Please configure it in LLM Configuration.`
+      );
+    }
+
+    const prompt = buildValidationPrompt(text, customPrompt);
+
+    let response;
+    switch (provider) {
+      case 'gemini':
+        response = await this._callGemini(apiKey, model, prompt, null, {
+          useThinking: true,
+          thinkingLevel: 'high'
+        });
+        break;
+      case 'openai':
+        response = await this._callOpenAI(apiKey, model, prompt);
+        break;
+      case 'anthropic':
+        response = await this._callAnthropic(apiKey, model, prompt);
+        break;
+      case 'ollama':
+        response = await this._callOllama(model, prompt);
+        break;
+      default:
+        throw new Error(`Validation provider ${provider} not supported`);
+    }
+
+    const result = this._parseValidationResponse(response);
+    result.validationProvider = {
+      provider,
+      model,
+      name: this.providers[provider].name,
+      explicit: true
+    };
+    return result;
   }
 
   /**

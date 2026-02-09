@@ -394,20 +394,29 @@ class StorageService {
    * Save an API key (user opted in to persistence)
    * @param {string} provider - 'gemini' | 'openai' | 'anthropic'
    * @param {string} apiKey
+   * @param {boolean} isValidationProvider - True if this is for validation provider
    */
-  async saveApiKey(provider, apiKey) {
+  async saveApiKey(provider, apiKey, isValidationProvider = false) {
+    const key = isValidationProvider ? `${provider}_validation` : provider;
     await this._withStore(IDB_STORES.API_KEYS, 'readwrite', (store) =>
-      store.put({ provider, apiKey, savedAt: new Date().toISOString() })
+      store.put({
+        provider: key,
+        apiKey,
+        savedAt: new Date().toISOString(),
+        isValidation: isValidationProvider
+      })
     );
   }
 
   /**
    * Load a single API key
    * @param {string} provider
+   * @param {boolean} isValidationProvider - True if this is for validation provider
    * @returns {Promise<string|null>}
    */
-  async loadApiKey(provider) {
-    const record = await this._withStore(IDB_STORES.API_KEYS, 'readonly', (store) => store.get(provider));
+  async loadApiKey(provider, isValidationProvider = false) {
+    const key = isValidationProvider ? `${provider}_validation` : provider;
+    const record = await this._withStore(IDB_STORES.API_KEYS, 'readonly', (store) => store.get(key));
     return record?.apiKey || null;
   }
 
@@ -445,6 +454,45 @@ class StorageService {
    */
   async deleteAllApiKeys() {
     await this._withStore(IDB_STORES.API_KEYS, 'readwrite', (store) => store.clear());
+  }
+
+  // ============================================
+  // Validation Provider Config (localStorage)
+  // ============================================
+
+  /**
+   * Load validation provider configuration
+   * @returns {Promise<object|null>} { provider, model } or null if not configured
+   */
+  async loadValidationProviderConfig() {
+    const settings = this.loadSettings();
+    if (!settings.validationProvider) return null;
+    return {
+      provider: settings.validationProvider,
+      model: settings.validationModel || null
+    };
+  }
+
+  /**
+   * Save validation provider configuration
+   * @param {string} provider - Provider name
+   * @param {string} model - Model name (optional)
+   */
+  saveValidationProviderConfig(provider, model = null) {
+    const settings = this.loadSettings();
+    settings.validationProvider = provider;
+    settings.validationModel = model;
+    this.saveSettings(settings);
+  }
+
+  /**
+   * Clear validation provider configuration
+   */
+  clearValidationProviderConfig() {
+    const settings = this.loadSettings();
+    delete settings.validationProvider;
+    delete settings.validationModel;
+    this.saveSettings(settings);
   }
 
   // ============================================

@@ -199,11 +199,16 @@ class DialogManager {
         const customModelInput = getById('llmModelCustom');
         const securityCheckbox = getById('securityAcknowledge');
         const saveBtn = select('#saveApiKeys', dialog);
+        const validationSection = getById('validationProviderSection');
+        const validationModelSelect = getById('validationModel');
+        const validationApiKeyWrapper = getById('validationApiKeyWrapper');
+        const validationApiKeyInput = getById('validationApiKey');
 
         // Update UI based on selected model
         const updateUIForModel = () => {
             const modelValue = modelSelect?.value || '';
             const provider = this.getProviderFromModel(modelValue);
+            const isOcrOnly = this._isModelOcrOnly(modelValue);
 
             // Update hidden provider field
             const providerInput = getById('llmProvider');
@@ -234,6 +239,16 @@ class DialogManager {
                 this.updateApiKeyHint(provider);
             }
 
+            // Show/hide validation section
+            if (validationSection) {
+                validationSection.hidden = !isOcrOnly;
+            }
+
+            // Auto-fill validation provider if same API key exists
+            if (isOcrOnly && validationModelSelect) {
+                this._autoFillValidationProvider();
+            }
+
             // Update save button state
             if (securityCheckbox && saveBtn) {
                 if (provider === 'ollama') {
@@ -246,6 +261,39 @@ class DialogManager {
             this.currentProvider = provider;
         };
 
+        // Update validation UI when validation model changes
+        const updateValidationUI = () => {
+            const validationModelValue = validationModelSelect?.value || '';
+            const validationProvider = this._getProviderFromValidationModel(validationModelValue);
+
+            // Show/hide validation API key wrapper (hidden for Ollama or empty selection)
+            if (validationApiKeyWrapper) {
+                validationApiKeyWrapper.hidden = !validationModelValue || validationProvider === 'ollama';
+
+                // Update placeholder and link
+                if (validationApiKeyInput && validationProvider && validationProvider !== 'ollama') {
+                    validationApiKeyInput.placeholder = API_KEY_PLACEHOLDERS[validationProvider] || 'API Key';
+
+                    // Auto-fill from memory if available
+                    const memoryKey = llmService.providers[validationProvider]?.apiKey;
+                    if (memoryKey && !validationApiKeyInput.value) {
+                        validationApiKeyInput.value = memoryKey;
+                    }
+                }
+
+                const validationApiKeyLink = getById('validationApiKeyLink');
+                if (validationApiKeyLink && API_KEY_URLS[validationProvider]) {
+                    validationApiKeyLink.href = API_KEY_URLS[validationProvider];
+                    const providerNames = {
+                        gemini: 'Google AI Studio',
+                        openai: 'OpenAI',
+                        anthropic: 'Anthropic'
+                    };
+                    validationApiKeyLink.textContent = providerNames[validationProvider] || validationProvider;
+                }
+            }
+        };
+
         // Model selection change
         if (modelSelect) {
             modelSelect.addEventListener('change', updateUIForModel);
@@ -254,6 +302,11 @@ class DialogManager {
         // Custom model input -- update provider detection as user types
         if (customModelInput) {
             customModelInput.addEventListener('input', updateUIForModel);
+        }
+
+        // Validation model selection change
+        if (validationModelSelect) {
+            validationModelSelect.addEventListener('change', updateValidationUI);
         }
 
         // Security acknowledgment checkbox
@@ -270,7 +323,7 @@ class DialogManager {
 
         // Save button click handler
         if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveApiKeys());
+            saveBtn.addEventListener('click', () => this.saveApiKeysWithValidation());
         }
 
         // Test connection button
@@ -344,6 +397,62 @@ class DialogManager {
 
         // Default to gemini
         return 'gemini';
+    }
+
+    /**
+     * Check if model is OCR-only (cannot do validation)
+     */
+    _isModelOcrOnly(model) {
+        return model.includes('deepseek-ocr') ||
+               model.includes('mistral-ocr') ||
+               model === 'mistral-ocr-latest' ||
+               (model.startsWith('ollama:') && model.includes('deepseek'));
+    }
+
+    /**
+     * Get provider from validation model value
+     */
+    _getProviderFromValidationModel(validationModel) {
+        if (!validationModel) return null;
+
+        const dataProvider = document.querySelector(
+            `#validationModel option[value="${validationModel}"]`
+        )?.dataset?.provider;
+
+        if (dataProvider) return dataProvider;
+
+        // Fallback detection
+        if (validationModel.includes('gemini')) return 'gemini';
+        if (validationModel.includes('gpt') || validationModel.includes('openai')) return 'openai';
+        if (validationModel.includes('claude')) return 'anthropic';
+        if (validationModel.startsWith('ollama:')) return 'ollama';
+
+        return null;
+    }
+
+    /**
+     * Auto-fill validation provider if same API key exists
+     */
+    _autoFillValidationProvider() {
+        const validationModelSelect = getById('validationModel');
+        if (!validationModelSelect || validationModelSelect.value) return; // Already selected
+
+        // Check which cloud providers have API keys configured
+        const providers = ['gemini', 'openai', 'anthropic'];
+        for (const provider of providers) {
+            if (llmService.providers[provider]?.apiKey) {
+                // Pre-select first option of this provider
+                const option = validationModelSelect.querySelector(
+                    `option[data-provider="${provider}"]`
+                );
+                if (option) {
+                    validationModelSelect.value = option.value;
+                    validationModelSelect.dispatchEvent(new Event('change'));
+                    console.log(`[Dialogs] Auto-filled validation provider: ${provider}`);
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -1051,23 +1160,49 @@ class DialogManager {
             console.warn('[Dialogs] Failed to load persistent API keys:', err);
         }
 
+        // Load validation provider configuration
+        const validationConfig = await storage.loadValidationProviderConfig();
+        if (validationConfig) {
+            llmService.setValidationProvider(
+                validationConfig.provider,
+                validationConfig.model
+            );
+
+            // Load validation API key from IndexedDB if persisted
+            try {
+                const validationApiKey = await storage.loadApiKey(validationConfig.provider, true);
+                if (validationApiKey) {
+                    llmService.setApiKey(validationConfig.provider, validationApiKey);
+                    console.log(`[Dialogs] Loaded validation API key for ${validationConfig.provider}`);
+                }
+            } catch (err) {
+                console.warn('[Dialogs] Failed to load validation API key:', err);
+            }
+        }
+
         // Update model indicator with saved model
-        const provider = this.getProviderFromModel(savedModel);
-        this.updateModelIndicator(savedModel, provider);
+        this.updateModelIndicatorWithValidation();
     }
 
     /**
-     * Save API configuration
+     * Save API configuration with validation provider support
      * API keys stored in memory; optionally persisted to IndexedDB if user opts in.
      */
-    async saveApiKeys() {
+    async saveApiKeysWithValidation() {
         const settings = storage.loadSettings() || {};
 
+        // Get transcription config
         const modelSelect = getById('llmModel');
         const customModelInput = getById('llmModelCustom');
         const apiKeyInput = getById('llmApiKey');
         const endpointInput = getById('ollamaEndpoint');
         const persistCheckbox = getById('apiKeyPersist');
+
+        // Get validation config
+        const validationSection = getById('validationProviderSection');
+        const validationModelSelect = getById('validationModel');
+        const validationApiKeyInput = getById('validationApiKey');
+        const validationPersistCheckbox = getById('validationApiKeyPersist');
 
         // Get model (custom or from select)
         let model = modelSelect?.value;
@@ -1084,7 +1219,7 @@ class DialogManager {
             actualModel = model.substring(7); // Remove "ollama:" prefix
         }
 
-        // Save model and provider
+        // Save transcription provider
         settings.activeModel = model;
         settings.activeProvider = provider;
         llmService.setProvider(provider);
@@ -1098,7 +1233,7 @@ class DialogManager {
             // Optionally persist to IndexedDB
             if (persistCheckbox?.checked && apiKey) {
                 try {
-                    await storage.saveApiKey(provider, apiKey);
+                    await storage.saveApiKey(provider, apiKey, false);
                 } catch (err) {
                     console.warn('[Dialogs] Failed to persist API key:', err);
                 }
@@ -1111,15 +1246,47 @@ class DialogManager {
             llmService.setEndpoint(provider, endpointInput.value);
         }
 
+        // Save validation provider (if OCR-only model and validation provider selected)
+        const isOcrOnly = this._isModelOcrOnly(model);
+        if (isOcrOnly && !validationSection?.hidden && validationModelSelect?.value) {
+            const validationModel = validationModelSelect.value;
+            const validationProvider = this._getProviderFromValidationModel(validationModel);
+
+            let actualValidationModel = validationModel;
+            if (validationModel.startsWith('ollama:')) {
+                actualValidationModel = validationModel.substring(7);
+            }
+
+            // Set in llmService
+            llmService.setValidationProvider(validationProvider, actualValidationModel);
+
+            // Save to storage
+            storage.saveValidationProviderConfig(validationProvider, actualValidationModel);
+
+            // Save validation API key
+            if (validationProvider !== 'ollama' && validationApiKeyInput?.value) {
+                const validationApiKey = validationApiKeyInput.value.trim();
+                llmService.setApiKey(validationProvider, validationApiKey);
+
+                if (validationPersistCheckbox?.checked) {
+                    await storage.saveApiKey(validationProvider, validationApiKey, true);
+                }
+            }
+
+            console.log(`[Dialogs] Validation provider configured: ${validationProvider} (${actualValidationModel})`);
+        } else {
+            // Clear validation provider if not OCR-only or no validation provider selected
+            llmService.clearValidationProvider();
+            storage.clearValidationProviderConfig();
+            console.log('[Dialogs] Validation provider cleared');
+        }
+
         storage.saveSettings(settings);
 
-        // Update model indicator in UI
-        this.updateModelIndicator(model, provider);
+        // Update model indicator
+        this.updateModelIndicatorWithValidation();
 
-        const persistMsg = persistCheckbox?.checked
-            ? 'Configuration saved (API key stored permanently)'
-            : 'Configuration saved (API key for this session only)';
-        this.showToast(persistMsg, 'success');
+        this.showToast('Configuration saved', 'success');
         this.closeDialog('apiKey');
     }
 
@@ -1165,6 +1332,28 @@ class DialogManager {
 
         textEl.textContent = displayName;
         indicator.title = `Model: ${model} (${provider})`;
+    }
+
+    /**
+     * Update model indicator with validation provider badge
+     */
+    updateModelIndicatorWithValidation() {
+        const currentModel = llmService.getCurrentModel();
+        const currentProvider = llmService.getProviderConfig();
+        const validationProvider = llmService.getValidationProvider();
+
+        // Update base model indicator
+        this.updateModelIndicator(currentModel, currentProvider.name || this.currentProvider);
+
+        // Show validation provider badge if configured
+        const textEl = getById('modelIndicatorText');
+        if (!textEl) return;
+
+        if (validationProvider) {
+            textEl.textContent = `${textEl.textContent} | Validation: ${validationProvider.name}`;
+        } else if (llmService.isOcrOnlyModel()) {
+            textEl.textContent = `${textEl.textContent} | Validation: Auto-fallback`;
+        }
     }
 
 
