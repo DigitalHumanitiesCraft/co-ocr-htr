@@ -25,6 +25,8 @@ import { pageXMLParser } from './services/parsers/page-xml.js';
 import { samplesService } from './services/samples.js';
 import { appState } from './state.js';
 import { escapeHtml } from './utils/textFormatting.js';
+// Side-effect import: initializes tooltip positioning
+import './utils/tooltips.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -216,33 +218,33 @@ async function checkForProjects() {
                         <span class="session-value">${timeDisplay}</span>
                     </div>
                     ${activeProject.filename ? `<div class="session-info-row">
-                        <span class="session-label">Dokument:</span>
+                        <span class="session-label">Document:</span>
                         <span class="session-value">${escapeHtml(activeProject.filename)}</span>
                     </div>` : ''}
                     <div class="session-info-row">
-                        <span class="session-label">Seiten:</span>
+                        <span class="session-label">Pages:</span>
                         <span class="session-value">${activeProject.pageCount || 0}</span>
                     </div>
                     <div class="session-info-row">
                         <span class="session-label">Status:</span>
                         <span class="session-value ${activeProject.hasTranscription ? 'status-success' : 'status-neutral'}">
-                            ${activeProject.hasTranscription ? 'Mit Transkription' : 'Ohne Transkription'}
+                            ${activeProject.hasTranscription ? 'With transcription' : 'Without transcription'}
                         </span>
                     </div>
                 </div>
             `;
 
             const shouldRestore = await dialogManager.showConfirm(
-                'Projekt fortsetzen?',
+                'Continue project?',
                 messageHtml,
-                'Fortsetzen',
-                projects.length > 1 ? 'Projekte anzeigen' : 'Neu starten',
+                'Continue',
+                projects.length > 1 ? 'Show projects' : 'Start new',
                 { icon: 'restore', html: true }
             );
 
             if (shouldRestore) {
                 await appState.restoreSession(activeProjectId);
-                dialogManager.showToast('Projekt wiederhergestellt', 'success');
+                dialogManager.showToast('Project restored', 'success');
                 updateProjectDisplay();
                 return;
             }
@@ -268,14 +270,14 @@ async function checkForProjects() {
  */
 async function createNewProject() {
     const name = await dialogManager.showPrompt(
-        'Neues Projekt erstellen',
-        'Bitte gib einen Namen für das neue Projekt ein:',
-        'Neues Projekt',
-        'Erstellen',
-        'Abbrechen',
+        'Create New Project',
+        'Please enter a name for the new project:',
+        'New Project',
+        'Create',
+        'Cancel',
         {
             icon: 'question',
-            hint: 'Der Name kann später geändert werden',
+            hint: 'The name can be changed later',
             maxLength: 100,
             validate: (value) => value.length > 0 && value.length <= 100
         }
@@ -285,11 +287,11 @@ async function createNewProject() {
 
     try {
         await appState.createProject(name);
-        dialogManager.showToast(`Projekt "${name}" erstellt`, 'success');
+        dialogManager.showToast(`Project "${name}" created`, 'success');
         updateProjectDisplay();
     } catch (error) {
         console.error('[Main] Create project failed:', error);
-        dialogManager.showToast('Projekt konnte nicht erstellt werden', 'error');
+        dialogManager.showToast('Project could not be created', 'error');
     }
 }
 
@@ -306,18 +308,18 @@ async function showProjectListDialog(projects) {
 
         const projectCards = projects.map(p => {
             const time = formatSessionTime(new Date(p.updatedAt));
-            const name = p.name || p.filename || 'Unbenannt';
+            const name = p.name || p.filename || 'Unnamed';
             return `
                 <div class="project-card" data-project-id="${escapeHtml(p.id)}" tabindex="0">
                     <div class="project-card-header">
                         <span class="project-card-name">${escapeHtml(name)}</span>
                         <div class="project-card-actions">
-                            <button class="project-rename-btn icon-btn" data-rename="${escapeHtml(p.id)}" title="Umbenennen">
+                            <button class="project-rename-btn icon-btn" data-rename="${escapeHtml(p.id)}" title="Rename">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                     <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                 </svg>
                             </button>
-                            <button class="project-delete-btn icon-btn" data-delete="${escapeHtml(p.id)}" title="Loeschen">
+                            <button class="project-delete-btn icon-btn" data-delete="${escapeHtml(p.id)}" title="Delete">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                     <polyline points="3 6 5 6 21 6"></polyline>
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -327,9 +329,9 @@ async function showProjectListDialog(projects) {
                     </div>
                     <div class="project-card-meta">
                         ${p.filename ? `<span>${escapeHtml(p.filename)}</span>` : ''}
-                        <span>${p.pageCount || 0} Seite${(p.pageCount || 0) === 1 ? '' : 'n'}</span>
+                        <span>${p.pageCount || 0} page${(p.pageCount || 0) === 1 ? '' : 's'}</span>
                         <span>${time}</span>
-                        <span class="${p.hasTranscription ? 'status-success' : 'status-neutral'}">${p.hasTranscription ? 'Transkribiert' : 'Ohne Transkription'}</span>
+                        <span class="${p.hasTranscription ? 'status-success' : 'status-neutral'}">${p.hasTranscription ? 'Transcribed' : 'Without transcription'}</span>
                     </div>
                 </div>
             `;
@@ -337,7 +339,7 @@ async function showProjectListDialog(projects) {
 
         dialog.innerHTML = `
             <div class="dialog-header">
-                <h3>Projekte</h3>
+                <h3>Projects</h3>
             </div>
             <div class="dialog-body" style="max-height: 50vh; overflow-y: auto;">
                 <div class="project-list">
@@ -345,8 +347,8 @@ async function showProjectListDialog(projects) {
                 </div>
             </div>
             <div class="dialog-actions">
-                <button class="btn btn-ghost" data-action="new">Neues Projekt</button>
-                <button class="btn btn-ghost" data-action="cancel">Abbrechen</button>
+                <button class="btn btn-ghost" data-action="new">New Project</button>
+                <button class="btn btn-ghost" data-action="cancel">Cancel</button>
             </div>
         `;
 
@@ -360,13 +362,13 @@ async function showProjectListDialog(projects) {
                 e.stopPropagation();
                 const projectId = deleteBtn.dataset.delete;
                 const projectCard = deleteBtn.closest('.project-card');
-                const projectName = projectCard?.querySelector('.project-card-name')?.textContent || 'dieses Projekt';
+                const projectName = projectCard?.querySelector('.project-card-name')?.textContent || 'this project';
 
                 const confirmed = await dialogManager.showConfirm(
-                    'Projekt löschen?',
-                    `Möchtest du das Projekt "${escapeHtml(projectName)}" wirklich löschen? Alle Daten gehen verloren.`,
-                    'Löschen',
-                    'Abbrechen',
+                    'Delete project?',
+                    `Do you really want to delete the project "${escapeHtml(projectName)}"? All data will be lost.`,
+                    'Delete',
+                    'Cancel',
                     { icon: 'warning' }
                 );
 
@@ -390,11 +392,11 @@ async function showProjectListDialog(projects) {
                 const currentName = projectCard?.querySelector('.project-card-name')?.textContent || '';
 
                 const newName = await dialogManager.showPrompt(
-                    'Projekt umbenennen',
-                    'Bitte gib einen neuen Namen ein:',
+                    'Rename Project',
+                    'Please enter a new name:',
                     currentName,
-                    'Umbenennen',
-                    'Abbrechen',
+                    'Rename',
+                    'Cancel',
                     {
                         maxLength: 100,
                         validate: (value) => value.length > 0 && value.length <= 100
@@ -414,7 +416,7 @@ async function showProjectListDialog(projects) {
                 dialog.close();
                 dialog.remove();
                 await appState.restoreSession(projectId);
-                dialogManager.showToast('Projekt geladen', 'success');
+                dialogManager.showToast('Project loaded', 'success');
                 updateProjectDisplay();
                 resolve();
                 return;
@@ -472,12 +474,12 @@ async function openProjectList() {
     try {
         projects = await storage.listProjects();
     } catch {
-        dialogManager.showToast('Projekte konnten nicht geladen werden', 'error');
+        dialogManager.showToast('Projects could not be loaded', 'error');
         return;
     }
 
     if (projects.length === 0) {
-        dialogManager.showToast('Noch keine Projekte vorhanden', 'info');
+        dialogManager.showToast('No projects available yet', 'info');
         return;
     }
 
@@ -508,13 +510,13 @@ function formatSessionTime(date) {
     const diffDays = Math.floor(diffMs / 86400000);
 
     // Recent: relative time
-    if (diffMins < 1) return 'Gerade eben';
-    if (diffMins < 60) return `Vor ${diffMins} Minute${diffMins === 1 ? '' : 'n'}`;
-    if (diffHours < 24) return `Vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`;
-    if (diffDays < 7) return `Vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`;
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 
     // Older: show date
-    return date.toLocaleDateString('de-DE', {
+    return date.toLocaleDateString('en-US', {
         day: 'numeric',
         month: 'long',
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
@@ -582,11 +584,11 @@ function generateSampleTooltip(sample) {
 
     // Source
     if (sample.iiifManifest) {
-        details.push('<dt>Quelle</dt><dd>IIIF (extern)</dd>');
+        details.push('<dt>Source</dt><dd>IIIF (external)</dd>');
     } else if (sample.pageXml || (sample.pages && sample.pages.some(p => p.pageXml))) {
-        details.push('<dt>Daten</dt><dd>Mit Transkription</dd>');
+        details.push('<dt>Data</dt><dd>With transcription</dd>');
     } else {
-        details.push('<dt>Daten</dt><dd>Nur Bild</dd>');
+        details.push('<dt>Data</dt><dd>Image only</dd>');
     }
 
     return `<dl class="sample-info-tooltip">${details.join('')}</dl>`;

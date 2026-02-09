@@ -482,7 +482,7 @@ describe('ValidationEngine', () => {
 
       const markers = categories.find(c => c.id === 'markers');
       expect(markers).toBeDefined();
-      expect(markers.name).toBe('Transkriptions-Marker');
+      expect(markers.name).toBe('Transcription Markers');
       expect(markers.ruleCount).toBeGreaterThan(0);
     });
   });

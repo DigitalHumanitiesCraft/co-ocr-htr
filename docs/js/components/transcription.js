@@ -85,7 +85,7 @@ class TranscriptionManager {
         // Validate document is loaded
         const state = appState.getState();
         if (!state.document.dataUrl && state.image.url === 'assets/mock-document.jpg') {
-            dialogManager.showToast('Bitte zuerst ein Dokument laden', 'warning');
+            dialogManager.showToast('Please load a document first', 'warning');
             return;
         }
 
@@ -148,8 +148,8 @@ class TranscriptionManager {
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    <span>API-Key für <strong>${escapeHtml(provider)}</strong> erforderlich</span>
-                    <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">Konfigurieren</button>
+                    <span>API key for <strong>${escapeHtml(provider)}</strong> required</span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">Configure</button>
                 </div>
             `;
             // Bind configure button
@@ -176,7 +176,7 @@ class TranscriptionManager {
         if (!llmService.hasApiKey()) {
             const provider = llmService.activeProvider;
             if (provider !== 'ollama') {
-                dialogManager.showToast(`Bitte ${provider} API-Key konfigurieren`, 'warning');
+                dialogManager.showToast(`Please configure ${provider} API key`, 'warning');
                 this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
                 return;
@@ -234,7 +234,7 @@ class TranscriptionManager {
             this.setLoading(false);
             this.showEditorLoading(false);
             dialogManager.showToast(
-                `Transkription abgeschlossen (${result.provider})`,
+                `Transcription complete (${result.provider})`,
                 'success'
             );
 
@@ -243,15 +243,15 @@ class TranscriptionManager {
 
             // Handle specific error types
             if (error.type === 'auth') {
-                dialogManager.showToast('Ungültiger API-Key. Bitte Konfiguration prüfen.', 'error');
+                dialogManager.showToast('Invalid API key. Please check configuration.', 'error');
                 this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
             } else if (error.type === 'rate_limit') {
-                dialogManager.showToast('Rate-Limit erreicht. Bitte warten und erneut versuchen.', 'warning');
+                dialogManager.showToast('Rate limit reached. Please wait and try again.', 'warning');
             } else if (error.type === 'network') {
-                dialogManager.showToast('Netzwerkfehler. Bitte Verbindung prüfen.', 'error');
+                dialogManager.showToast('Network error. Please check connection.', 'error');
             } else {
-                dialogManager.showToast(`Transkription fehlgeschlagen: ${error.message}`, 'error');
+                dialogManager.showToast(`Transcription failed: ${error.message}`, 'error');
             }
 
             this.setLoading(false);
@@ -277,8 +277,8 @@ class TranscriptionManager {
                 overlay.innerHTML = `
                     <div class="loading-content">
                         <div class="loading-spinner-large"></div>
-                        <span>Transkription läuft...</span>
-                        <span class="loading-hint">Das kann einige Sekunden dauern</span>
+                        <span>Transcribing...</span>
+                        <span class="loading-hint">This may take a few seconds</span>
                     </div>
                 `;
                 editorPanel.style.position = 'relative';
@@ -403,11 +403,11 @@ class TranscriptionManager {
 
             // Update counts
             if (pageCountEl) {
-                pageCountEl.textContent = `Seite ${currentPage} von ${totalPages}`;
+                pageCountEl.textContent = `Page ${currentPage} of ${totalPages}`;
             }
 
             if (allPagesHintEl) {
-                allPagesHintEl.textContent = `${totalPages} Seiten, kann mehrere Minuten dauern`;
+                allPagesHintEl.textContent = `${totalPages} pages, may take several minutes`;
             }
 
             if (batchPageCountEl) {
@@ -453,7 +453,7 @@ class TranscriptionManager {
         const pages = state.pages || [];
 
         if (pages.length === 0) {
-            dialogManager.showToast('Keine Seiten zum Transkribieren', 'warning');
+            dialogManager.showToast('No pages to transcribe', 'warning');
             return;
         }
 
@@ -520,13 +520,13 @@ class TranscriptionManager {
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
-                    dialogManager.showToast('API-Key ungültig. Batch abgebrochen.', 'error');
+                    dialogManager.showToast('Invalid API key. Batch aborted.', 'error');
                     break;
                 }
 
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
-                    dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
+                    dialogManager.showToast('Rate limit reached. Waiting 30 seconds...', 'warning');
                     await this._delay(30000);
                 }
             }
@@ -583,8 +583,8 @@ class TranscriptionManager {
         overlay.innerHTML = `
             <div class="loading-content">
                 <div class="loading-spinner-large"></div>
-                <span>Transkription läuft...</span>
-                <span class="loading-hint">Seite ${current} von ${total} (${percent}%)</span>
+                <span>Transcribing...</span>
+                <span class="loading-hint">Page ${current} of ${total} (${percent}%)</span>
                 ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
                 <div class="batch-progress-bar">
                     <div class="batch-progress-fill" style="width: ${percent}%"></div>

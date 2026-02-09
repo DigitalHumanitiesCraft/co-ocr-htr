@@ -437,14 +437,14 @@ export async function loadIIIFManifest(manifestUrl) {
     if (loadingState) {
         if (emptyState) emptyState.hidden = true;
         loadingState.hidden = false;
-        if (loadingTitle) loadingTitle.textContent = 'IIIF-Manifest wird geladen...';
-        if (loadingText) loadingText.textContent = 'Verbinde mit Repository';
+        if (loadingTitle) loadingTitle.textContent = 'Loading IIIF manifest...';
+        if (loadingText) loadingText.textContent = 'Connecting to repository';
         if (loadingProgress) loadingProgress.hidden = true;
     }
 
     try {
         // Update loading text
-        if (loadingText) loadingText.textContent = 'Lade Manifest-Daten...';
+        if (loadingText) loadingText.textContent = 'Loading manifest data...';
 
         const response = await fetch(manifestUrl, {
             signal: AbortSignal.timeout(30_000)
@@ -464,15 +464,15 @@ export async function loadIIIFManifest(manifestUrl) {
         }
 
         // Update loading progress
-        if (loadingText) loadingText.textContent = `Verarbeite ${canvases.length} Seiten...`;
+        if (loadingText) loadingText.textContent = `Processing ${canvases.length} pages...`;
         if (loadingProgress) loadingProgress.hidden = false;
-        if (loadingProgressText) loadingProgressText.textContent = `0 / ${canvases.length} Seiten`;
+        if (loadingProgressText) loadingProgressText.textContent = `0 / ${canvases.length} pages`;
 
         // Build pages for multi-page support
         const pages = canvases.map((canvas, index) => {
             // Update progress
             if (loadingProgressText) {
-                loadingProgressText.textContent = `${index + 1} / ${canvases.length} Seiten`;
+                loadingProgressText.textContent = `${index + 1} / ${canvases.length} pages`;
             }
 
             const imageUrl = version === IIIF_VERSION.V3

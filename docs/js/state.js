@@ -187,7 +187,7 @@ class AppState extends EventTarget {
       await this._saveSession();
       this._resetState();
     }
-    const project = await this.createProject(filename || 'Neues Projekt');
+    const project = await this.createProject(filename || 'New Project');
     return project.id;
   }
 

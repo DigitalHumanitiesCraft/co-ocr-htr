@@ -178,7 +178,7 @@ class ValidationPanel {
                                   state.transcription?.segments?.length > 0;
 
         if (!hasTranscription) {
-            dialogManager.showToast('Bitte zuerst transkribieren', 'warning');
+            dialogManager.showToast('Please transcribe first', 'warning');
             return;
         }
 
@@ -219,11 +219,11 @@ class ValidationPanel {
 
             // Update counts
             if (pageCountEl) {
-                pageCountEl.textContent = `Seite ${currentPage} von ${totalPages}`;
+                pageCountEl.textContent = `Page ${currentPage} of ${totalPages}`;
             }
 
             if (allPagesHintEl) {
-                allPagesHintEl.textContent = `${totalPages} Seiten, kann mehrere Minuten dauern`;
+                allPagesHintEl.textContent = `${totalPages} pages, may take several minutes`;
             }
 
             if (batchPageCountEl) {
@@ -261,12 +261,12 @@ class ValidationPanel {
         const hasApiKey = llmService.hasApiKey();
 
         if (hasApiKey) {
-            llmModeHint.textContent = 'API-Call pro Seite';
+            llmModeHint.textContent = 'API call per page';
             if (llmModeItem) llmModeItem.classList.remove('disabled');
             if (enableLLMCheckbox) enableLLMCheckbox.disabled = false;
             if (customPromptDetails) customPromptDetails.style.display = '';
         } else {
-            llmModeHint.textContent = 'API-Key erforderlich';
+            llmModeHint.textContent = 'API key required';
             if (llmModeItem) llmModeItem.classList.add('disabled');
             if (enableLLMCheckbox) {
                 enableLLMCheckbox.checked = false;
@@ -418,11 +418,11 @@ class ValidationPanel {
             this.hideLoading();
             this.render(results);
 
-            dialogManager.showToast('Validierung abgeschlossen', 'success');
+            dialogManager.showToast('Validation complete', 'success');
 
         } catch (error) {
             console.error('Validation error:', error);
-            dialogManager.showToast(`Validierung fehlgeschlagen: ${error.message}`, 'error');
+            dialogManager.showToast(`Validation failed: ${error.message}`, 'error');
             appState.setValidationStatus('error');
             this.hideLoading();
             this.showValidationHint();
@@ -441,7 +441,7 @@ class ValidationPanel {
         const batchTranscriptions = state.batchTranscriptions || [];
 
         if (pages.length === 0) {
-            dialogManager.showToast('Keine Seiten zum Validieren', 'warning');
+            dialogManager.showToast('No pages to validate', 'warning');
             return;
         }
 
@@ -452,7 +452,7 @@ class ValidationPanel {
         });
 
         if (pagesWithTranscription.length === 0) {
-            dialogManager.showToast('Keine Transkriptionen vorhanden. Bitte erst alle Seiten transkribieren.', 'warning');
+            dialogManager.showToast('No transcriptions available. Please transcribe all pages first.', 'warning');
             return;
         }
 
@@ -491,7 +491,7 @@ class ValidationPanel {
                     pageId: page.id,
                     pageIndex: i,
                     success: false,
-                    error: 'Keine Transkription vorhanden'
+                    error: 'No transcription available'
                 });
                 continue;
             }
@@ -534,13 +534,13 @@ class ValidationPanel {
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
-                    dialogManager.showToast('API-Key ungültig. Batch abgebrochen.', 'error');
+                    dialogManager.showToast('Invalid API key. Batch aborted.', 'error');
                     break;
                 }
 
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
-                    dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
+                    dialogManager.showToast('Rate limit reached. Waiting 30 seconds...', 'warning');
                     await this._delay(30000);
                 }
             }
@@ -600,8 +600,8 @@ class ValidationPanel {
         overlay.innerHTML = `
             <div class="loading-content">
                 <div class="loading-spinner"></div>
-                <span>Validierung läuft...</span>
-                <span class="loading-hint">Seite ${current} von ${total} (${percent}%)</span>
+                <span>Validating...</span>
+                <span class="loading-hint">Page ${current} of ${total} (${percent}%)</span>
                 ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
                 <div class="batch-progress-bar">
                     <div class="batch-progress-fill" style="width: ${percent}%"></div>
@@ -658,7 +658,7 @@ class ValidationPanel {
             overlay.innerHTML = `
                 <div class="loading-content">
                     <div class="loading-spinner"></div>
-                    <span>Validierung läuft...</span>
+                    <span>Validating...</span>
                 </div>
             `;
             this.panel.style.position = 'relative';
@@ -724,9 +724,9 @@ class ValidationPanel {
         if (!llmResult) {
             const hasApiKey = llmService.hasApiKey();
             if (!hasApiKey) {
-                return `<p class="text-muted text-xs">API-Key fuer KI-Analyse konfigurieren</p>`;
+                return `<p class="text-muted text-xs">Configure API key for AI analysis</p>`;
             }
-            return `<p class="text-muted text-xs">Validierung starten fuer KI-Analyse</p>`;
+            return `<p class="text-muted text-xs">Start validation for AI analysis</p>`;
         }
 
         const statusClass = {
@@ -737,10 +737,10 @@ class ValidationPanel {
         }[llmResult.confidence] || 'status-warning';
 
         const confidenceLabel = {
-            confident: 'Hohe Konfidenz',
-            likely: 'Mittlere Konfidenz',
-            uncertain: 'Niedrige Konfidenz'
-        }[llmResult.confidence] || 'Unbekannt';
+            confident: 'High confidence',
+            likely: 'Medium confidence',
+            uncertain: 'Low confidence'
+        }[llmResult.confidence] || 'Unknown';
 
         // Compact summary line
         let html = `

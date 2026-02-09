@@ -21,10 +21,10 @@ const ILLEGIBLE_PATTERN = /\[illegible\]/;
 // =============================================================================
 
 /** HTML for uncertain marker */
-const UNCERTAIN_MARKER_HTML = '<span class="marker-uncertain" title="Unsicher">[?]</span>';
+const UNCERTAIN_MARKER_HTML = '<span class="marker-uncertain" title="Uncertain">[?]</span>';
 
 /** HTML for illegible marker */
-const ILLEGIBLE_MARKER_HTML = '<span class="marker-illegible" title="Unleserlich">...</span>';
+const ILLEGIBLE_MARKER_HTML = '<span class="marker-illegible" title="Illegible">...</span>';
 
 // =============================================================================
 // PUBLIC API

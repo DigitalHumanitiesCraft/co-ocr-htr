@@ -150,8 +150,8 @@ function renderEditor(transcription) {
     if (!text) {
         container.innerHTML = `
             <div class="editor-empty-state">
-                <p>Keine Transkription vorhanden.</p>
-                <p class="text-secondary">Lade ein Dokument und klicke auf "Transcribe".</p>
+                <p>No transcription available.</p>
+                <p class="text-secondary">Load a document and click "Transcribe".</p>
             </div>
         `;
         textarea = null;
@@ -166,23 +166,23 @@ function renderEditor(transcription) {
     container.innerHTML = `
         <div class="editor-toolbar-secondary">
             <div class="view-mode-toggle">
-                <button class="view-mode-btn active" id="viewStructured" title="Strukturierte Ansicht (Original-Formatierung)">
+                <button class="view-mode-btn active" id="viewStructured" title="Structured View (Original Formatting)">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 10H3M21 6H3M21 14H3M21 18H10"/>
                     </svg>
-                    <span>Strukturiert</span>
+                    <span>Structured</span>
                 </button>
-                <button class="view-mode-btn" id="viewNormalized" title="Normalisierte Ansicht (linksbündig)">
+                <button class="view-mode-btn" id="viewNormalized" title="Normalized View (left-aligned)">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 6H3M21 10H3M21 14H3M21 18H3"/>
                     </svg>
-                    <span>Normalisiert</span>
+                    <span>Normalized</span>
                 </button>
             </div>
             <div class="editor-toolbar-right">
-                <label class="checkbox-wrapper" title="Zeigt Änderungen gegenüber dem Original (nur Ansicht, nicht editierbar)">
+                <label class="checkbox-wrapper" title="Shows changes compared to original (view only, not editable)">
                     <input type="checkbox" id="showChanges">
-                    <span>Diff-Ansicht</span>
+                    <span>Diff View</span>
                 </label>
                 <span class="change-stats" id="changeStats"></span>
             </div>
@@ -194,11 +194,11 @@ function renderEditor(transcription) {
                     id="transcriptionText"
                     class="editor-textarea"
                     spellcheck="false"
-                    placeholder="Transkription wird hier angezeigt..."
+                    placeholder="Transcription will be displayed here..."
                 ></textarea>
             </div>
             <div id="diffDisplay" class="diff-display" style="display: none;">
-                <div class="diff-readonly-hint">Nur Ansicht - zum Bearbeiten Diff-Ansicht deaktivieren</div>
+                <div class="diff-readonly-hint">Read-only - disable diff view to edit</div>
             </div>
         </div>
     `;

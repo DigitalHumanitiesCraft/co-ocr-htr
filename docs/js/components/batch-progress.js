@@ -34,7 +34,7 @@ class BatchProgressPanel {
         if (!this.panel) return;
 
         const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-        const title = operation === 'transcription' ? 'Batch-Transkription' : 'Batch-Validierung';
+        const title = operation === 'transcription' ? 'Batch Transcription' : 'Batch Validation';
         const isAborted = appState.data.batch.abortRequested;
 
         // Build DOM only on first call; update targeted elements on subsequent calls
@@ -48,7 +48,7 @@ class BatchProgressPanel {
                     <div class="batch-progress-bar">
                         <div class="batch-progress-fill"></div>
                     </div>
-                    <button class="btn btn-secondary btn-sm batch-abort-btn" id="batchAbortBtn">Abbrechen</button>
+                    <button class="btn btn-secondary btn-sm batch-abort-btn" id="batchAbortBtn">Cancel</button>
                 </div>
             `;
             // Bind abort handler once
@@ -57,7 +57,7 @@ class BatchProgressPanel {
                 abortBtn.addEventListener('click', () => {
                     appState.requestBatchAbort();
                     abortBtn.disabled = true;
-                    abortBtn.textContent = 'Wird abgebrochen...';
+                    abortBtn.textContent = 'Canceling...';
                 });
             }
             this._contentBuilt = true;
@@ -74,7 +74,7 @@ class BatchProgressPanel {
         if (fillEl) fillEl.style.width = `${percent}%`;
         if (abortBtn) {
             abortBtn.disabled = isAborted;
-            abortBtn.textContent = isAborted ? 'Wird abgebrochen...' : 'Abbrechen';
+            abortBtn.textContent = isAborted ? 'Canceling...' : 'Cancel';
         }
     }
 
@@ -88,10 +88,10 @@ class BatchProgressPanel {
         if (!this.panel) return;
 
         const statusText = aborted
-            ? `Abgebrochen: ${success} erfolgreich, ${errors} fehlgeschlagen`
+            ? `Cancelled: ${success} successful, ${errors} failed`
             : errors > 0
-                ? `${success} erfolgreich, ${errors} fehlgeschlagen`
-                : `${success} Seiten erfolgreich`;
+                ? `${success} successful, ${errors} failed`
+                : `${success} pages successful`;
 
         const statusClass = aborted || errors > 0 ? 'batch-status-warning' : 'batch-status-success';
 
