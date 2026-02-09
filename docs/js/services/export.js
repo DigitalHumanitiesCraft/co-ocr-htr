@@ -559,6 +559,9 @@ ${bodyLines.join('\n')}
         // Load JSZip dynamically (only when needed)
         await this._loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
 
+        // Flush current page to pageTranscriptions before export
+        await appState.saveSessionNow();
+
         const state = appState.getState();
         const pages = state.pages || [];
         const pageTranscriptions = state.pageTranscriptions || {};

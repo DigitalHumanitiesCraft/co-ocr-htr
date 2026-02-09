@@ -1,0 +1,13 @@
+**HIGH**
+[HIGH] docs/js/state.js:460 -- `_saveCurrentPageTranscription()` speichert nur bei `hasSegments || hasRaw`; wenn Nutzer Text komplett leert, bleibt alte `pageTranscriptions[page.id]` stehen und kommt beim Seitenwechsel/Restore zurueck. Fix: im `else` explizit `delete this.data.pageTranscriptions[page.id]` (oder leeren Eintrag speichern).  
+[HIGH] docs/js/main.js:289 -- `createNewProject()` ruft nur `appState.createProject(name)` auf; aktueller Dokument-/Transkriptionszustand bleibt aktiv und kann per Autosave dem neuen Projekt zugeordnet werden. Fix: vor Projektwechsel save+reset (z.B. neuer `startNewProject()`-Pfad) statt nur `createProject()`.  
+[HIGH] docs/js/state.js:966 -- `restoreSession()` setzt bei `session === undefined` keinen Dokumentzustand zurueck; beim Wechsel auf ein Projekt ohne Session bleiben Daten des vorherigen Projekts sichtbar/speicherbar. Fix: vor Restore dokumentbezogenen State resetten oder im `else` auf leeren Projektzustand setzen.  
+[HIGH] docs/js/services/parsers/page-xml.js:447 -- PAGE-XML-Import schreibt `raw: content` (gesamtes XML) in `transcription.raw`; Editor/Validation arbeiten danach auf XML statt Transkripttext. Fix: `raw` aus `parsed.segments` erzeugen (oder `raw` weglassen, damit `setTranscription()` aus Segmenten ableitet).
+
+**MEDIUM**
+[MEDIUM] docs/js/services/export.js:564 -- `exportAllPagesZip()` nutzt nur `pageTranscriptions`/`batchValidations` und flushed die aktuelle In-Memory-Seite nicht; frische Edits/Validation der aktiven Seite fehlen im ZIP. Fix: vor Export aktuelle Seite in per-page Store persistieren (z.B. `saveSessionNow()`/expliziter Flush) oder aktive Seite direkt aus `state.transcription/state.validation` mergen.  
+[MEDIUM] docs/js/components/upload.js:311 -- `img.onload = async () => { await appState.ensureProject(...) ... }` hat kein `try/catch` mit `reject`; bei Fehler bleibt Promise haengen und Loading-State kann stehen bleiben. Fix: `img.onload` intern mit `try/catch` kapseln und bei Fehler `reject(error)` aufrufen.  
+[MEDIUM] docs/js/state.js:946 -- `_saveSession()` schluckt Fehler (nur `console.warn`), dadurch bekommen Aufrufer wie `saveSessionNow()` keinen Fehlschlag mit und laufen weiter trotz fehlendem Persist. Fix: Fehler nach Logging weiterwerfen oder booleschen Erfolg zurueckgeben und am Call-Site behandeln.
+
+**LOW**
+[LOW] docs/js/services/parsers/page-xml.js:238 -- `findDirectChildren()` kann namespacede Kinder doppelt pushen (beide `if`-Zweige treffen), wodurch bei Word-Fallback Woerter doppelt werden. Fix: zweiten Check als `else if` formulieren oder deduplizieren.

@@ -238,9 +238,8 @@ class PageXMLParser {
         for (const child of parent.children) {
             if (child.localName === localName || child.tagName === localName) {
                 result.push(child);
-            }
-            // Handle namespaced elements
-            if (child.tagName.endsWith(':' + localName)) {
+            } else if (child.tagName.endsWith(':' + localName)) {
+                // Handle namespaced elements (only if not already matched above)
                 result.push(child);
             }
         }
@@ -440,11 +439,14 @@ function initPageXMLHandler() {
         try {
             const parsed = pageXMLParser.parse(content);
 
+            // Generate raw transcription text from segments (not XML content)
+            const rawText = parsed.segments.map(seg => seg.text).join('\n');
+
             // Update state with parsed data
             appState.setTranscription({
                 provider: 'page-xml',
                 model: 'import',
-                raw: content,
+                raw: rawText,
                 segments: parsed.segments,
                 columns: [] // Will be auto-detected
             });
