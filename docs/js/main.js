@@ -264,6 +264,36 @@ async function checkForProjects() {
 }
 
 /**
+ * Create a new project with user input
+ */
+async function createNewProject() {
+    const name = await dialogManager.showPrompt(
+        'Neues Projekt erstellen',
+        'Bitte gib einen Namen für das neue Projekt ein:',
+        'Neues Projekt',
+        'Erstellen',
+        'Abbrechen',
+        {
+            icon: 'question',
+            hint: 'Der Name kann später geändert werden',
+            maxLength: 100,
+            validate: (value) => value.length > 0 && value.length <= 100
+        }
+    );
+
+    if (!name) return; // User cancelled
+
+    try {
+        await appState.createProject(name);
+        dialogManager.showToast(`Projekt "${name}" erstellt`, 'success');
+        updateProjectDisplay();
+    } catch (error) {
+        console.error('[Main] Create project failed:', error);
+        dialogManager.showToast('Projekt konnte nicht erstellt werden', 'error');
+    }
+}
+
+/**
  * Show the project list dialog
  * @param {Array} projects
  */
@@ -329,10 +359,20 @@ async function showProjectListDialog(projects) {
             if (deleteBtn) {
                 e.stopPropagation();
                 const projectId = deleteBtn.dataset.delete;
-                // eslint-disable-next-line no-alert
-                if (confirm('Projekt endgueltig loeschen? Alle Daten gehen verloren.')) {
+                const projectCard = deleteBtn.closest('.project-card');
+                const projectName = projectCard?.querySelector('.project-card-name')?.textContent || 'dieses Projekt';
+
+                const confirmed = await dialogManager.showConfirm(
+                    'Projekt löschen?',
+                    `Möchtest du das Projekt "${escapeHtml(projectName)}" wirklich löschen? Alle Daten gehen verloren.`,
+                    'Löschen',
+                    'Abbrechen',
+                    { icon: 'warning' }
+                );
+
+                if (confirmed) {
                     await storage.deleteProject(projectId);
-                    deleteBtn.closest('.project-card').remove();
+                    projectCard.remove();
                     // If no more projects, close dialog
                     if (dialog.querySelectorAll('.project-card').length === 0) {
                         dialog.close();
@@ -346,12 +386,25 @@ async function showProjectListDialog(projects) {
             if (renameBtn) {
                 e.stopPropagation();
                 const projectId = renameBtn.dataset.rename;
-                // eslint-disable-next-line no-alert
-                const newName = prompt('Neuer Projektname:');
-                if (newName?.trim()) {
-                    await storage.renameProject(projectId, newName.trim());
-                    const nameEl = renameBtn.closest('.project-card').querySelector('.project-card-name');
-                    if (nameEl) nameEl.textContent = newName.trim();
+                const projectCard = renameBtn.closest('.project-card');
+                const currentName = projectCard?.querySelector('.project-card-name')?.textContent || '';
+
+                const newName = await dialogManager.showPrompt(
+                    'Projekt umbenennen',
+                    'Bitte gib einen neuen Namen ein:',
+                    currentName,
+                    'Umbenennen',
+                    'Abbrechen',
+                    {
+                        maxLength: 100,
+                        validate: (value) => value.length > 0 && value.length <= 100
+                    }
+                );
+
+                if (newName) {
+                    await storage.renameProject(projectId, newName);
+                    const nameEl = projectCard?.querySelector('.project-card-name');
+                    if (nameEl) nameEl.textContent = newName;
                 }
                 return;
             }
@@ -368,7 +421,12 @@ async function showProjectListDialog(projects) {
             }
 
             const action = e.target.dataset?.action;
-            if (action === 'new' || action === 'cancel') {
+            if (action === 'new') {
+                dialog.close();
+                dialog.remove();
+                await createNewProject();
+                resolve();
+            } else if (action === 'cancel') {
                 dialog.close();
                 dialog.remove();
                 resolve();

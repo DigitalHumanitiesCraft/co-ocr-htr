@@ -1851,3 +1851,71 @@ kbd {
   background: rgba(90, 138, 90, 0.15);
   border: 1px solid var(--confident);
 }
+
+/* ============================================
+   Storage Quota Display
+   ============================================ */
+.storage-quota-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quota-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.quota-bar-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: var(--radius-full);
+  width: 0%;
+}
+
+.quota-bar-fill[data-level="warning"] {
+  background: var(--warning);
+}
+
+.quota-bar-fill[data-level="critical"] {
+  background: var(--error);
+}
+
+.quota-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  gap: var(--space-2);
+}
+
+.quota-text {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.quota-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.btn-link:hover {
+  color: var(--accent-hover);
+}

@@ -448,6 +448,66 @@ class StorageService {
   }
 
   // ============================================
+  // Storage Quota Management
+  // ============================================
+
+  /**
+   * Get storage quota information using StorageManager API
+   * @returns {Promise<object>} { usage, quota, percentUsed, available, supported, usageMB, quotaMB, availableMB }
+   */
+  async getQuotaInfo() {
+    if (!navigator.storage || !navigator.storage.estimate) {
+      return {
+        usage: 0,
+        quota: 0,
+        percentUsed: 0,
+        available: 0,
+        supported: false
+      };
+    }
+
+    try {
+      const estimate = await navigator.storage.estimate();
+      const usage = estimate.usage || 0;
+      const quota = estimate.quota || 0;
+      const percentUsed = quota > 0 ? Math.round((usage / quota) * 100) : 0;
+
+      return {
+        usage,
+        quota,
+        percentUsed,
+        available: quota - usage,
+        supported: true,
+        usageMB: (usage / 1024 / 1024).toFixed(2),
+        quotaMB: (quota / 1024 / 1024).toFixed(2),
+        availableMB: ((quota - usage) / 1024 / 1024).toFixed(2)
+      };
+    } catch (error) {
+      console.warn('[Storage] Quota estimate failed:', error);
+      return {
+        usage: 0,
+        quota: 0,
+        percentUsed: 0,
+        available: 0,
+        supported: false
+      };
+    }
+  }
+
+  /**
+   * Check if there's enough quota available before a save operation
+   * @param {number} estimatedSize - Estimated size in bytes
+   * @returns {Promise<boolean>} True if enough space available
+   */
+  async checkQuotaBeforeSave(estimatedSize) {
+    const quota = await this.getQuotaInfo();
+    if (!quota.supported) return true; // Can't check, allow operation
+
+    const safetyMargin = 10 * 1024 * 1024; // 10MB safety margin
+    return quota.available > (estimatedSize + safetyMargin);
+  }
+
+  // ============================================
   // Utility
   // ============================================
 
