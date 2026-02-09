@@ -11,6 +11,13 @@ describe('Validation Provider Configuration', () => {
     llmService.clearValidationProvider();
     llmService.setProvider('gemini');
     llmService.setModel('gemini-3-flash-preview');
+    llmService.validationApiKeys = {};
+
+    // Reset API keys for deterministic tests
+    llmService.providers.gemini.apiKey = null;
+    llmService.providers.openai.apiKey = null;
+    llmService.providers.anthropic.apiKey = null;
+    llmService.providers.mistral.apiKey = null;
   });
 
   describe('setValidationProvider', () => {
@@ -123,6 +130,30 @@ describe('Validation Provider Configuration', () => {
       const result = await llmService.validate('test text');
       expect(result.validationProvider).toBeUndefined(); // Should use active provider directly
       expect(llmService._callGemini).toHaveBeenCalled();
+    });
+
+    test('should fall back to main provider key when validation-specific key is missing', async () => {
+      // Set OCR-only transcription model + explicit validation provider
+      llmService.setProvider('mistral');
+      llmService.setModel('mistral-ocr-latest');
+      llmService.setValidationProvider('gemini', 'gemini-3-flash-preview');
+
+      // Only main key configured, no validation-specific key
+      llmService.setApiKey('gemini', 'main-key');
+
+      llmService._callGemini = vi.fn().mockResolvedValue('{"confidence": "confident", "summary": "Looks good", "issues": []}');
+
+      const result = await llmService.validate('test text');
+
+      expect(result.validationProvider.provider).toBe('gemini');
+      expect(result.validationProvider.explicit).toBe(true);
+      expect(llmService._callGemini).toHaveBeenCalledWith(
+        'main-key',
+        'gemini-3-flash-preview',
+        expect.any(String),
+        null,
+        expect.objectContaining({ useThinking: true, thinkingLevel: 'high' })
+      );
     });
   });
 
