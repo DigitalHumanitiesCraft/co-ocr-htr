@@ -1306,13 +1306,16 @@ class DialogManager {
 
                 if (validationPersistCheckbox?.checked) {
                     await storage.saveApiKey(validationProvider, validationApiKey, true);
-                } else {
-                    // Delete persisted validation key if persist checkbox unchecked
-                    try {
-                        await storage.deleteApiKey(validationProvider, true);
-                    } catch (err) {
-                        console.warn('[Dialogs] Failed to delete persisted validation key:', err);
-                    }
+                }
+            }
+
+            // Delete persisted validation key if persist checkbox unchecked
+            // (runs independently of input value to clean up old persisted keys)
+            if (validationProvider !== 'ollama' && !validationPersistCheckbox?.checked) {
+                try {
+                    await storage.deleteApiKey(validationProvider, true);
+                } catch (err) {
+                    console.warn('[Dialogs] Failed to delete persisted validation key:', err);
                 }
             }
 

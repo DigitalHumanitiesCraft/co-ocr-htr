@@ -617,7 +617,8 @@ class LLMService {
     const provider = this.validationProvider;
     const model = this.validationModel || this.providers[provider].defaultModel;
     // Use separate validation API key to prevent overwriting transcription key
-    const apiKey = this.getValidationApiKey(provider);
+    // Fall back to main provider key if validation-specific key not set (for convenience)
+    const apiKey = this.getValidationApiKey(provider) || this.providers[provider].apiKey;
 
     if (!apiKey && this.providers[provider].authType !== 'none') {
       throw new Error(
