@@ -551,7 +551,12 @@ class TranscriptionManager {
         batchProgress.showComplete(successCount, errorCount, status === 'aborted');
 
         // Trigger session save for persistence
-        appState.saveSessionNow();
+        try {
+            await appState.saveSessionNow();
+        } catch (error) {
+            console.warn('[Transcription] Failed to save batch session:', error.message);
+            dialogManager.showToast('Batch complete, but saving failed', 'warning');
+        }
     }
 
     /**

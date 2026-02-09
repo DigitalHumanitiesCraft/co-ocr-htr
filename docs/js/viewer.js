@@ -214,7 +214,16 @@ function setupStateListeners() {
     // Document loaded
     appState.addEventListener('documentLoaded', (e) => {
         console.log('[Viewer] Document loaded:', e.detail.filename);
-        showViewer(e.detail.filename);
+        const state = appState.getState();
+        const hasDocument = state.pages?.length > 0 ||
+            state.document?.dataUrl ||
+            (state.image?.url && state.image.url !== 'assets/mock-document.jpg');
+
+        if (hasDocument) {
+            showViewer(e.detail.filename);
+        } else {
+            showEmptyState();
+        }
         updatePageNavigation();
     });
 
