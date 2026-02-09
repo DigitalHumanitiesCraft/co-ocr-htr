@@ -89,13 +89,21 @@ class DialogManager {
             });
         });
 
-        // Close on backdrop click
+        // Close on backdrop click (only if mousedown also happened on backdrop)
         Object.values(this.dialogs).forEach(dialog => {
             if (!dialog) return;
+            let mouseDownTarget = null;
+
+            dialog.addEventListener('mousedown', (e) => {
+                mouseDownTarget = e.target;
+            });
+
             dialog.addEventListener('click', (e) => {
-                if (e.target === dialog) {
+                // Only close if both mousedown and click happened on the backdrop
+                if (e.target === dialog && mouseDownTarget === dialog) {
                     this.closeDialog(dialog);
                 }
+                mouseDownTarget = null; // Reset for next interaction
             });
         });
 
@@ -1545,13 +1553,21 @@ class DialogManager {
                 }
             });
 
-            // Handle backdrop click
+            // Handle backdrop click (only if mousedown also happened on backdrop)
+            let mouseDownTarget = null;
+
+            dialog.addEventListener('mousedown', (e) => {
+                mouseDownTarget = e.target;
+            });
+
             dialog.addEventListener('click', (e) => {
-                if (e.target === dialog) {
+                // Only close if both mousedown and click happened on the backdrop
+                if (e.target === dialog && mouseDownTarget === dialog) {
                     dialog.close();
                     dialog.remove();
                     resolve(false);
                 }
+                mouseDownTarget = null; // Reset for next interaction
             });
 
             // Handle escape key
