@@ -567,7 +567,12 @@ class ValidationPanel {
         batchProgress.showComplete(successCount, errorCount, status === 'aborted');
 
         // Trigger session save for persistence
-        appState.saveSessionNow();
+        try {
+            await appState.saveSessionNow();
+        } catch (error) {
+            console.warn('[Validation] Failed to save batch session:', error.message);
+            dialogManager.showToast('Validation complete, but saving failed', 'warning');
+        }
 
         appState.setValidationStatus('complete');
     }

@@ -286,11 +286,8 @@ async function createNewProject() {
     if (!name) return; // User cancelled
 
     try {
-        // Save current project state before switching
-        await appState.saveSessionNow();
-
-        // Create and switch to new project
-        await appState.createProject(name);
+        // Start a truly fresh project context (save + reset + create)
+        await appState.ensureProject(name);
 
         dialogManager.showToast(`Project "${name}" created`, 'success');
         updateProjectDisplay();
@@ -473,7 +470,12 @@ appState.addEventListener('projectChanged', () => updateProjectDisplay());
  */
 async function openProjectList() {
     // Flush pending session data so project metadata is current
-    await appState.saveSessionNow();
+    try {
+        await appState.saveSessionNow();
+    } catch (error) {
+        console.warn('[Main] Could not save session before opening project list:', error);
+        dialogManager.showToast('Latest changes could not be saved before opening projects', 'warning');
+    }
 
     let projects;
     try {

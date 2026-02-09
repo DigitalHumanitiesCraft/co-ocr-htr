@@ -985,18 +985,28 @@ class AppState extends EventTarget {
       if (session.batchValidations) this.data.batchValidations = session.batchValidations;
     } else {
       // Reset to empty state when no session exists (prevents stale data from previous project)
-      this.data.document = { id: null, filename: '', dataUrl: null, iiifManifestUrl: null };
-      this.data.transcription = { segments: [], columns: [], raw: '', provider: null, model: null };
-      this.data.validation = { status: 'pending', results: null };
+      this.data.document = { id: null, filename: '', mimeType: '', dataUrl: '', width: 0, height: 0 };
+      this.data.image = { url: '', width: 0, height: 0 };
+      this.data.transcription = { id: null, provider: '', model: '', raw: '', segments: [], columns: [], lines: [] };
+      this.data.validation = { status: 'idle', rules: [], llmJudge: null };
       this.data.corrections = [];
       this.data.regions = [];
-      this.data.context = '';
-      this.data.meta = {};
+      this.data.context = null;
+      this.data.meta = { createdAt: null, updatedAt: null };
       this.data.pages = [];
       this.data.currentPageIndex = 0;
       this.data.pageTranscriptions = {};
-      this.data.batchTranscriptions = {};
-      this.data.batchValidations = {};
+      this.data.batchTranscriptions = [];
+      this.data.batchValidations = [];
+      this.data.batch = {
+        operation: null,
+        status: 'idle',
+        currentIndex: 0,
+        total: 0,
+        successCount: 0,
+        errorCount: 0,
+        abortRequested: false
+      };
     }
 
     // Restore images from IDB
@@ -1023,9 +1033,10 @@ class AppState extends EventTarget {
 
     this._emit('projectChanged', { id: project.id, name: project.name });
     this._emit('sessionRestored', { projectId });
-    if (this.data.document.filename) {
-      this._emit('documentLoaded', { filename: this.data.document.filename });
-    }
+    this._emit('documentLoaded', {
+      filename: this.data.document.filename || '',
+      mimeType: this.data.document.mimeType || ''
+    });
     if (this.data.document.dataUrl) {
       this._emit('imageChanged', { url: this.data.document.dataUrl });
     }
