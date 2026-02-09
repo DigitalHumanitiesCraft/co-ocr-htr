@@ -286,7 +286,12 @@ async function createNewProject() {
     if (!name) return; // User cancelled
 
     try {
+        // Save current project state before switching
+        await appState.saveSessionNow();
+
+        // Create and switch to new project
         await appState.createProject(name);
+
         dialogManager.showToast(`Project "${name}" created`, 'success');
         updateProjectDisplay();
     } catch (error) {

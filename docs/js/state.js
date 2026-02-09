@@ -466,6 +466,9 @@ class AppState extends EventTarget {
         model: this.data.transcription.model,
         regions: this.data.regions
       };
+    } else {
+      // Delete empty transcriptions to prevent stale data on page switch
+      delete this.data.pageTranscriptions[page.id];
     }
   }
 
@@ -944,7 +947,8 @@ class AppState extends EventTarget {
 
       this._emit('sessionSaved');
     } catch (error) {
-      console.warn('[State] Save session failed:', error.message);
+      console.error('[State] Save session failed:', error.message);
+      throw error; // Re-throw to let callers handle the error
     }
   }
 
@@ -979,6 +983,20 @@ class AppState extends EventTarget {
       if (session.pageTranscriptions) this.data.pageTranscriptions = session.pageTranscriptions;
       if (session.batchTranscriptions) this.data.batchTranscriptions = session.batchTranscriptions;
       if (session.batchValidations) this.data.batchValidations = session.batchValidations;
+    } else {
+      // Reset to empty state when no session exists (prevents stale data from previous project)
+      this.data.document = { id: null, filename: '', dataUrl: null, iiifManifestUrl: null };
+      this.data.transcription = { segments: [], columns: [], raw: '', provider: null, model: null };
+      this.data.validation = { status: 'pending', results: null };
+      this.data.corrections = [];
+      this.data.regions = [];
+      this.data.context = '';
+      this.data.meta = {};
+      this.data.pages = [];
+      this.data.currentPageIndex = 0;
+      this.data.pageTranscriptions = {};
+      this.data.batchTranscriptions = {};
+      this.data.batchValidations = {};
     }
 
     // Restore images from IDB

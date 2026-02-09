@@ -309,16 +309,20 @@ class UploadManager {
                 // Get image dimensions
                 const img = new Image();
                 img.onload = async () => {
-                    // Ensure a project exists (auto-creates from filename)
-                    await appState.ensureProject(file.name);
-                    appState.setDocument(file, dataUrl);
-                    appState.setImageDimensions(img.width, img.height);
+                    try {
+                        // Ensure a project exists (auto-creates from filename)
+                        await appState.ensureProject(file.name);
+                        appState.setDocument(file, dataUrl);
+                        appState.setImageDimensions(img.width, img.height);
 
-                    // Hide demo indicator when user uploads their own file
-                    this.hideDemoIndicator();
+                        // Hide demo indicator when user uploads their own file
+                        this.hideDemoIndicator();
 
-                    dialogManager.showToast(`Loaded: ${file.name}`, 'success');
-                    resolve();
+                        dialogManager.showToast(`Loaded: ${file.name}`, 'success');
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
                 };
                 img.onerror = () => {
                     reject(new Error('Failed to load image'));
