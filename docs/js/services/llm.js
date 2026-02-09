@@ -196,6 +196,19 @@ const PROVIDERS = {
     apiKeyUrl: 'https://console.anthropic.com/settings/keys',
     apiKeyPlaceholder: 'sk-ant-...'
   },
+  mistral: {
+    name: 'Mistral',
+    endpoint: 'https://api.mistral.ai/v1/ocr',
+    defaultModel: 'mistral-ocr-latest',
+    models: [
+      { id: 'mistral-ocr-latest', name: 'Mistral OCR (Recommended)', recommended: true },
+      { id: 'custom', name: 'Custom model...', hint: 'Any Mistral OCR model ID' }
+    ],
+    authType: 'bearer',
+    supportsVision: true,
+    apiKeyUrl: 'https://console.mistral.ai/api-keys',
+    apiKeyPlaceholder: 'mi-...'
+  },
   ollama: {
     name: 'Ollama (local)',
     endpoint: 'http://localhost:11434/api/generate',
@@ -322,13 +335,15 @@ class LLMService {
 
   /**
    * Check if current model is OCR-only (cannot do text validation)
-   * OCR-only models like DeepSeek-OCR are optimized for image-to-text
+   * OCR-only models like DeepSeek-OCR and Mistral OCR are optimized for image-to-text
    * but cannot analyze/validate text without an image
    */
   isOcrOnlyModel() {
     const model = this.getCurrentModel();
-    // DeepSeek-OCR is specifically an OCR model, not a general LLM
-    return model.includes('deepseek-ocr');
+    // DeepSeek-OCR and Mistral OCR are specifically OCR models, not general LLMs
+    return model.includes('deepseek-ocr') ||
+           model.includes('mistral-ocr') ||
+           this.activeProvider === 'mistral';
   }
 
   /**
@@ -407,6 +422,9 @@ class LLMService {
           break;
         case 'anthropic':
           response = await this._callAnthropic(apiKey, model, prompt, imageBase64);
+          break;
+        case 'mistral':
+          response = await this._callMistral(apiKey, model, imageBase64);
           break;
         case 'ollama':
           response = await this._callOllama(model, prompt, imageBase64);
@@ -688,6 +706,57 @@ class LLMService {
 
     const data = await response.json();
     return data.content?.[0]?.text || '';
+  }
+
+  /**
+   * Call Mistral OCR API
+   * @param {string} apiKey - Mistral API key
+   * @param {string} model - Model ID (e.g., 'mistral-ocr-latest')
+   * @param {string} imageBase64 - Base64-encoded image (without data URL prefix)
+   * @returns {Promise<string>} Extracted text
+   */
+  async _callMistral(apiKey, model, imageBase64) {
+    console.log(`[Mistral] OCR API call model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
+
+    if (!imageBase64) {
+      throw new Error('Mistral OCR requires an image');
+    }
+
+    // Convert base64 to data URL format required by Mistral
+    const dataUrl = `data:image/jpeg;base64,${imageBase64}`;
+
+    const requestBody = {
+      model,
+      document: {
+        type: 'image_url',
+        image_url: dataUrl
+      }
+      // Optional: table_format, extract_header, extract_footer, include_image_base64
+    };
+
+    const response = await fetch('https://api.mistral.ai/v1/ocr', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Mistral] API error: ${response.status}`, errorText);
+      throw new Error(`Mistral OCR API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log(`[Mistral] Response OK, pages=${data.pages?.length || 0}`);
+
+    // Extract text from first page's markdown
+    const text = data.pages?.[0]?.markdown || '';
+    console.log(`[Mistral] Extracted text length=${text.length} chars`);
+    return text;
   }
 
   async _callOllama(model, prompt, imageBase64 = null) {

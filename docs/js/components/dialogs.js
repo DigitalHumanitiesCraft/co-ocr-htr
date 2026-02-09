@@ -17,6 +17,7 @@ import { DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
 const MODEL_PROVIDER_MAP = {
     'gemini-3-flash-preview': 'gemini',
     'gemini-3-pro-preview': 'gemini',
+    'mistral-ocr-latest': 'mistral',
     'ollama:deepseek-ocr': 'ollama',
     'ollama:llava': 'ollama',
     'ollama:llama3.2-vision': 'ollama'
@@ -26,14 +27,16 @@ const MODEL_PROVIDER_MAP = {
 const API_KEY_URLS = {
     gemini: 'https://aistudio.google.com/apikey',
     openai: 'https://platform.openai.com/api-keys',
-    anthropic: 'https://console.anthropic.com/settings/keys'
+    anthropic: 'https://console.anthropic.com/settings/keys',
+    mistral: 'https://console.mistral.ai/api-keys'
 };
 
 // API key placeholders by provider
 const API_KEY_PLACEHOLDERS = {
     gemini: 'AIza...',
     openai: 'sk-...',
-    anthropic: 'sk-ant-...'
+    anthropic: 'sk-ant-...',
+    mistral: 'mi-...'
 };
 
 /**
@@ -319,6 +322,7 @@ class DialogManager {
             const customName = customInput?.value?.trim().toLowerCase() || '';
             if (customName.includes('gpt') || customName.includes('openai') || customName.startsWith('o1') || customName.startsWith('o3') || customName.startsWith('o4')) return 'openai';
             if (customName.includes('claude') || customName.includes('anthropic')) return 'anthropic';
+            if (customName.includes('mistral')) return 'mistral';
             if (customName.includes('ollama')) return 'ollama';
             return 'gemini'; // Default
         }
@@ -328,6 +332,7 @@ class DialogManager {
         if (lower.includes('gemini')) return 'gemini';
         if (lower.includes('gpt') || lower.includes('openai')) return 'openai';
         if (lower.includes('claude') || lower.includes('anthropic')) return 'anthropic';
+        if (lower.includes('mistral')) return 'mistral';
 
         // Default to gemini
         return 'gemini';
