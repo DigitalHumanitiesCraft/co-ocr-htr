@@ -445,8 +445,14 @@ class StorageService {
    * Delete a single API key
    * @param {string} provider
    */
-  async deleteApiKey(provider) {
-    await this._withStore(IDB_STORES.API_KEYS, 'readwrite', (store) => store.delete(provider));
+  /**
+   * Delete an API key
+   * @param {string} provider - Provider name
+   * @param {boolean} isValidationProvider - True if this is for validation provider
+   */
+  async deleteApiKey(provider, isValidationProvider = false) {
+    const key = isValidationProvider ? `${provider}_validation` : provider;
+    await this._withStore(IDB_STORES.API_KEYS, 'readwrite', (store) => store.delete(key));
   }
 
   /**

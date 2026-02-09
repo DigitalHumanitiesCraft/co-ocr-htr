@@ -207,8 +207,12 @@ class DialogManager {
         // Update UI based on selected model
         const updateUIForModel = () => {
             const modelValue = modelSelect?.value || '';
-            const provider = this.getProviderFromModel(modelValue);
-            const isOcrOnly = this._isModelOcrOnly(modelValue);
+            // Resolve effective model (use custom input value if "custom" selected)
+            const effectiveModel = modelValue === 'custom' && customModelInput?.value
+                ? customModelInput.value.trim()
+                : modelValue;
+            const provider = this.getProviderFromModel(effectiveModel);
+            const isOcrOnly = this._isModelOcrOnly(effectiveModel);
 
             // Update hidden provider field
             const providerInput = getById('llmProvider');
@@ -432,10 +436,17 @@ class DialogManager {
 
     /**
      * Auto-fill validation provider if same API key exists
+     * Skips if explicit validation config already loaded from settings
      */
     _autoFillValidationProvider() {
         const validationModelSelect = getById('validationModel');
         if (!validationModelSelect || validationModelSelect.value) return; // Already selected
+
+        // Skip auto-fill if explicit validation config exists (to prevent overriding saved config)
+        if (llmService.hasValidationProviderConfigured && llmService.hasValidationProviderConfigured()) {
+            console.log('[Dialogs] Skip auto-fill - explicit validation config exists');
+            return;
+        }
 
         // Check which cloud providers have API keys configured
         const providers = ['gemini', 'openai', 'anthropic'];
@@ -1152,6 +1163,10 @@ class DialogManager {
         try {
             const savedKeys = await storage.loadAllApiKeys();
             for (const [provider, apiKey] of Object.entries(savedKeys)) {
+                // Skip validation keys - they're loaded separately via validation config path
+                if (provider.endsWith('_validation')) {
+                    continue;
+                }
                 if (apiKey) {
                     llmService.setApiKey(provider, apiKey);
                 }
@@ -1168,11 +1183,31 @@ class DialogManager {
                 validationConfig.model
             );
 
+            // Set validation model select to saved value (before auto-fill runs)
+            const validationModelSelect = getById('validationModel');
+            if (validationModelSelect) {
+                // Find matching option by provider and model
+                const modelValue = validationConfig.provider === 'ollama'
+                    ? `ollama:${validationConfig.model}`
+                    : validationConfig.model;
+
+                const matchingOption = Array.from(validationModelSelect.options).find(
+                    opt => opt.value === modelValue
+                );
+
+                if (matchingOption) {
+                    validationModelSelect.value = modelValue;
+                    // Trigger change event to update validation UI
+                    validationModelSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
             // Load validation API key from IndexedDB if persisted
             try {
                 const validationApiKey = await storage.loadApiKey(validationConfig.provider, true);
                 if (validationApiKey) {
-                    llmService.setApiKey(validationConfig.provider, validationApiKey);
+                    // Use separate validation API key storage to prevent overwriting transcription key
+                    llmService.setValidationApiKey(validationConfig.provider, validationApiKey);
                     console.log(`[Dialogs] Loaded validation API key for ${validationConfig.provider}`);
                 }
             } catch (err) {
@@ -1266,10 +1301,18 @@ class DialogManager {
             // Save validation API key
             if (validationProvider !== 'ollama' && validationApiKeyInput?.value) {
                 const validationApiKey = validationApiKeyInput.value.trim();
-                llmService.setApiKey(validationProvider, validationApiKey);
+                // Use separate validation API key storage to prevent overwriting transcription key
+                llmService.setValidationApiKey(validationProvider, validationApiKey);
 
                 if (validationPersistCheckbox?.checked) {
                     await storage.saveApiKey(validationProvider, validationApiKey, true);
+                } else {
+                    // Delete persisted validation key if persist checkbox unchecked
+                    try {
+                        await storage.deleteApiKey(validationProvider, true);
+                    } catch (err) {
+                        console.warn('[Dialogs] Failed to delete persisted validation key:', err);
+                    }
                 }
             }
 
@@ -1339,11 +1382,10 @@ class DialogManager {
      */
     updateModelIndicatorWithValidation() {
         const currentModel = llmService.getCurrentModel();
-        const currentProvider = llmService.getProviderConfig();
         const validationProvider = llmService.getValidationProvider();
 
-        // Update base model indicator
-        this.updateModelIndicator(currentModel, currentProvider.name || this.currentProvider);
+        // Update base model indicator (use provider ID, not display name)
+        this.updateModelIndicator(currentModel, llmService.activeProvider || this.currentProvider);
 
         // Show validation provider badge if configured
         const textEl = getById('modelIndicatorText');
@@ -1407,6 +1449,30 @@ class DialogManager {
                         model: 'claude-haiku-4-5-20251001',
                         max_tokens: 1,
                         messages: [{ role: 'user', content: 'Hi' }]
+                    }),
+                    signal: timeout
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API key valid, connection OK', 'success');
+
+            } else if (provider === 'mistral') {
+                // Test Mistral OCR API with minimal 1x1 pixel image
+                const minimalImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+                const res = await fetch('https://api.mistral.ai/v1/ocr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'mistral-ocr-latest',
+                        document: {
+                            type: 'image_url',
+                            image_url: minimalImage
+                        }
                     }),
                     signal: timeout
                 });

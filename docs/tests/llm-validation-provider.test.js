@@ -60,9 +60,9 @@ describe('Validation Provider Configuration', () => {
       llmService.setProvider('mistral');
       llmService.setModel('mistral-ocr-latest');
 
-      // Set explicit validation provider
+      // Set explicit validation provider with separate API key storage
       llmService.setValidationProvider('gemini', 'gemini-3-flash-preview');
-      llmService.setApiKey('gemini', 'test-key');
+      llmService.setValidationApiKey('gemini', 'test-validation-key');
 
       // Mock _callGemini to avoid real API call
       llmService._callGemini = vi.fn().mockResolvedValue('{"confidence": "confident", "summary": "Looks good", "issues": []}');

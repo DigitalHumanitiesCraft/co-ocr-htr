@@ -239,6 +239,10 @@ class LLMService {
     // Separate validation provider (null = automatic fallback)
     this.validationProvider = null;
     this.validationModel = null;
+
+    // Separate in-memory API key storage for validation provider
+    // (prevents overwriting transcription key when same provider used for both)
+    this.validationApiKeys = {};
   }
 
   // ============================================
@@ -286,6 +290,28 @@ class LLMService {
     }
     // Store in memory for immediate use (storage handles persistence)
     this.providers[provider].apiKey = apiKey;
+  }
+
+  /**
+   * Set validation API key for a specific provider
+   * Stored separately to prevent overwriting transcription key when same provider used
+   * @param {string} provider - Provider name
+   * @param {string} apiKey - API key
+   */
+  setValidationApiKey(provider, apiKey) {
+    if (!this.providers[provider]) {
+      throw new Error(`Unknown validation provider: ${provider}`);
+    }
+    this.validationApiKeys[provider] = apiKey;
+  }
+
+  /**
+   * Get validation API key for a specific provider
+   * @param {string} provider - Provider name
+   * @returns {string|null} API key or null if not set
+   */
+  getValidationApiKey(provider) {
+    return this.validationApiKeys[provider] || null;
   }
 
   /**
@@ -515,7 +541,12 @@ class LLMService {
     // PRIORITY 1: Explicit validation provider
     if (this.validationProvider) {
       console.log(`[LLM] validate() using explicit provider: ${this.validationProvider}`);
-      return await this._validateWithExplicitProvider(text, customPrompt);
+      try {
+        return await this._validateWithExplicitProvider(text, customPrompt);
+      } catch (error) {
+        console.error(`[LLM] validate() explicit provider FAILED:`, error.message);
+        throw this._handleError(error);
+      }
     }
 
     // PRIORITY 2: Automatic fallback for OCR-only
@@ -585,7 +616,8 @@ class LLMService {
   async _validateWithExplicitProvider(text, customPrompt) {
     const provider = this.validationProvider;
     const model = this.validationModel || this.providers[provider].defaultModel;
-    const apiKey = this.providers[provider].apiKey;
+    // Use separate validation API key to prevent overwriting transcription key
+    const apiKey = this.getValidationApiKey(provider);
 
     if (!apiKey && this.providers[provider].authType !== 'none') {
       throw new Error(
