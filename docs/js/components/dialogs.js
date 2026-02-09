@@ -342,7 +342,7 @@ class DialogManager {
         const _apiKeyHint = getById('apiKeyHint');
 
         if (apiKeyInput) {
-            apiKeyInput.placeholder = API_KEY_PLACEHOLDERS[provider] || 'API-Key';
+            apiKeyInput.placeholder = API_KEY_PLACEHOLDERS[provider] || 'API Key';
             // Load key from memory if available
             const memoryKey = llmService.providers[provider]?.apiKey;
             if (memoryKey) {
@@ -393,7 +393,7 @@ class DialogManager {
 
             show(scopeSection);
             if (scopeHint) {
-                scopeHint.textContent = `${transcribedCount} von ${pageCount} Seiten haben Transkriptionen`;
+                scopeHint.textContent = `${transcribedCount} of ${pageCount} pages have transcriptions`;
             }
         } else {
             hide(scopeSection);
@@ -678,15 +678,15 @@ class DialogManager {
             clearSessionBtn.addEventListener('click', async () => {
                 const projectId = appState.data.project.id;
                 if (!projectId) {
-                    this.showToast('Kein aktives Projekt vorhanden', 'warning');
+                    this.showToast('No active project available', 'warning');
                     return;
                 }
-                const projectName = appState.data.project.name || 'Aktuelles Projekt';
+                const projectName = appState.data.project.name || 'Current Project';
                 const confirmed = await this.showConfirm(
-                    'Projekt löschen?',
-                    `Möchtest du das Projekt "${projectName}" wirklich löschen? Alle Daten (Bilder, Transkriptionen) werden entfernt.`,
-                    'Löschen',
-                    'Abbrechen',
+                    'Delete project?',
+                    `Do you really want to delete the project "${projectName}"? All data (images, transcriptions) will be removed.`,
+                    'Delete',
+                    'Cancel',
                     { icon: 'warning' }
                 );
 
@@ -694,11 +694,11 @@ class DialogManager {
                     try {
                         await storage.deleteProject(projectId);
                         storage.clearActiveProjectId();
-                        this.showToast('Projekt geloescht', 'success');
+                        this.showToast('Project deleted', 'success');
                         setTimeout(() => location.reload(), 500);
                     } catch (err) {
                         console.error('[Settings] Delete project failed:', err);
-                        this.showToast('Fehler beim Loeschen', 'error');
+                        this.showToast('Error during deletion', 'error');
                     }
                 }
             });
@@ -709,20 +709,20 @@ class DialogManager {
         if (deleteApiKeysBtn) {
             deleteApiKeysBtn.addEventListener('click', async () => {
                 const confirmed = await this.showConfirm(
-                    'API-Keys löschen?',
-                    'Möchtest du alle gespeicherten API-Keys wirklich löschen?',
-                    'Löschen',
-                    'Abbrechen',
+                    'Delete API keys?',
+                    'Do you really want to delete all stored API keys?',
+                    'Delete',
+                    'Cancel',
                     { icon: 'warning' }
                 );
 
                 if (confirmed) {
                     try {
                         await storage.deleteAllApiKeys();
-                        this.showToast('Gespeicherte API-Keys geloescht', 'success');
+                        this.showToast('Stored API keys deleted', 'success');
                     } catch (err) {
                         console.error('[Settings] Delete API keys failed:', err);
-                        this.showToast('Fehler beim Loeschen', 'error');
+                        this.showToast('Error during deletion', 'error');
                     }
                 }
             });
@@ -733,16 +733,16 @@ class DialogManager {
         if (resetBtn) {
             resetBtn.addEventListener('click', async () => {
                 const confirmed = await this.showConfirm(
-                    'Einstellungen zurücksetzen?',
-                    'Möchtest du wirklich alle Einstellungen auf die Standardwerte zurücksetzen?',
-                    'Zurücksetzen',
-                    'Abbrechen',
+                    'Reset settings?',
+                    'Do you really want to reset all settings to default values?',
+                    'Reset',
+                    'Cancel',
                     { icon: 'question' }
                 );
 
                 if (confirmed) {
                     this.resetSettings();
-                    this.showToast('Einstellungen zurückgesetzt', 'success');
+                    this.showToast('Settings reset', 'success');
                 }
             });
         }
@@ -779,13 +779,13 @@ class DialogManager {
         const quota = await storage.getQuotaInfo();
 
         if (!quota.supported) {
-            quotaText.textContent = 'Nicht verfügbar in diesem Browser';
+            quotaText.textContent = 'Not available in this browser';
             quotaBarFill.style.width = '0%';
             quotaBarFill.removeAttribute('data-level');
             return;
         }
 
-        quotaText.textContent = `${quota.usageMB} MB von ${quota.quotaMB} MB verwendet (${quota.percentUsed}%)`;
+        quotaText.textContent = `${quota.usageMB} MB of ${quota.quotaMB} MB used (${quota.percentUsed}%)`;
         quotaBarFill.style.width = `${quota.percentUsed}%`;
 
         // Color coding
@@ -1104,8 +1104,8 @@ class DialogManager {
         this.updateModelIndicator(model, provider);
 
         const persistMsg = persistCheckbox?.checked
-            ? 'Konfiguration gespeichert (API-Key dauerhaft gespeichert)'
-            : 'Konfiguration gespeichert (API-Key nur fuer diese Sitzung)';
+            ? 'Configuration saved (API key stored permanently)'
+            : 'Configuration saved (API key for this session only)';
         this.showToast(persistMsg, 'success');
         this.closeDialog('apiKey');
     }
@@ -1170,7 +1170,7 @@ class DialogManager {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
                 }
-                this._showTestStatus('API-Key gueltig, Verbindung OK', 'success');
+                this._showTestStatus('API key valid, connection OK', 'success');
 
             } else if (provider === 'openai') {
                 const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1190,7 +1190,7 @@ class DialogManager {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
                 }
-                this._showTestStatus('API-Key gueltig, Verbindung OK', 'success');
+                this._showTestStatus('API key valid, connection OK', 'success');
 
             } else if (provider === 'anthropic') {
                 const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1212,17 +1212,17 @@ class DialogManager {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
                 }
-                this._showTestStatus('API-Key gueltig, Verbindung OK', 'success');
+                this._showTestStatus('API key valid, connection OK', 'success');
 
             } else {
-                this._showTestStatus('Unbekannter Provider', 'warning');
+                this._showTestStatus('Unknown provider', 'warning');
             }
         } catch (error) {
             // TypeError = network/CORS failure (fetch never got a response)
             // OpenAI returns no CORS headers on error responses (401/403),
             // so auth failures appear as CORS errors in the browser
             if (error instanceof TypeError) {
-                throw new Error(`Verbindung fehlgeschlagen -- Key ungueltig oder kein Guthaben?`, { cause: error });
+                throw new Error(`Connection failed -- Invalid key or no credit?`, { cause: error });
             }
             throw error;
         }
@@ -1262,14 +1262,14 @@ class DialogManager {
 
             if (provider === 'ollama') {
                 const endpoint = getById('ollamaEndpoint')?.value;
-                if (!endpoint) throw new Error('Server-URL erforderlich');
+                if (!endpoint) throw new Error('Server URL required');
 
                 const response = await fetch(`${endpoint}/api/tags`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(5000)
                 });
 
-                if (!response.ok) throw new Error('Verbindung fehlgeschlagen');
+                if (!response.ok) throw new Error('Connection failed');
 
                 const data = await response.json();
                 const models = data.models?.map(m => m.name) || [];
@@ -1279,7 +1279,7 @@ class DialogManager {
                 this.populateOllamaModels(models);
             } else {
                 const keyInput = getById('llmApiKey');
-                if (!keyInput?.value) throw new Error('API-Key erforderlich');
+                if (!keyInput?.value) throw new Error('API key required');
 
                 const apiKey = keyInput.value.trim();
                 await this._testCloudConnection(provider, apiKey);
@@ -1348,7 +1348,7 @@ class DialogManager {
         if (!endpoint || !refreshBtn) return;
 
         const originalText = refreshBtn.textContent;
-        refreshBtn.textContent = 'Lade...';
+        refreshBtn.textContent = 'Loading...';
         refreshBtn.disabled = true;
 
         try {
@@ -1356,19 +1356,19 @@ class DialogManager {
                 signal: AbortSignal.timeout(5000)
             });
 
-            if (!response.ok) throw new Error('Verbindung fehlgeschlagen');
+            if (!response.ok) throw new Error('Connection failed');
 
             const data = await response.json();
             const models = data.models?.map(m => m.name) || [];
 
             if (models.length === 0) {
-                this.showToast('Keine Modelle gefunden. Installiere mit: ollama pull llava', 'warning');
+                this.showToast('No models found. Install with: ollama pull llava', 'warning');
             } else {
                 this.populateOllamaModels(models);
-                this.showToast(`${models.length} Modelle gefunden`, 'success');
+                this.showToast(`${models.length} models found`, 'success');
             }
         } catch (error) {
-            this.showToast(`Fehler: ${error.message}`, 'error');
+            this.showToast(`Error: ${error.message}`, 'error');
         } finally {
             refreshBtn.textContent = originalText;
             refreshBtn.disabled = false;
@@ -1491,7 +1491,7 @@ class DialogManager {
      * @param {object} options - Additional options (icon, html)
      * @returns {Promise<boolean>} - True if confirmed, false if cancelled
      */
-    showConfirm(title, message, confirmText = 'OK', cancelText = 'Abbrechen', options = {}) {
+    showConfirm(title, message, confirmText = 'OK', cancelText = 'Cancel', options = {}) {
         return new Promise((resolve) => {
             // Icon options
             const icons = {
@@ -1572,7 +1572,7 @@ class DialogManager {
      * @param {object} options - Additional options (icon, hint, maxLength, validate)
      * @returns {Promise<string|null>} - Input value if confirmed, null if cancelled
      */
-    showPrompt(title, message, defaultValue = '', confirmText = 'OK', cancelText = 'Abbrechen', options = {}) {
+    showPrompt(title, message, defaultValue = '', confirmText = 'OK', cancelText = 'Cancel', options = {}) {
         return new Promise((resolve) => {
             // Icon options (reuse from showConfirm)
             const icons = {

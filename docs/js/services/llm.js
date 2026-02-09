@@ -158,9 +158,9 @@ const PROVIDERS = {
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
     defaultModel: 'gemini-3-flash-preview',
     models: [
-      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (schnell)', recommended: true },
-      { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (beste Qualität)' },
-      { id: 'custom', name: 'Eigenes Modell...', hint: 'Beliebige Gemini-Modell-ID' }
+      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (fast)', recommended: true },
+      { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (best quality)' },
+      { id: 'custom', name: 'Custom model...', hint: 'Any Gemini model ID' }
     ],
     authType: 'query',
     supportsVision: true,
@@ -172,9 +172,9 @@ const PROVIDERS = {
     endpoint: 'https://api.openai.com/v1/chat/completions',
     defaultModel: 'gpt-5.2',
     models: [
-      { id: 'gpt-5.2', name: 'GPT-5.2 (Empfohlen)', recommended: true },
-      { id: 'gpt-5.2-mini', name: 'GPT-5.2 Mini (schneller)' },
-      { id: 'custom', name: 'Eigenes Modell...', hint: 'Beliebige OpenAI-Modell-ID' }
+      { id: 'gpt-5.2', name: 'GPT-5.2 (Recommended)', recommended: true },
+      { id: 'gpt-5.2-mini', name: 'GPT-5.2 Mini (faster)' },
+      { id: 'custom', name: 'Custom model...', hint: 'Any OpenAI model ID' }
     ],
     authType: 'bearer',
     supportsVision: true,
@@ -186,10 +186,10 @@ const PROVIDERS = {
     endpoint: 'https://api.anthropic.com/v1/messages',
     defaultModel: 'claude-sonnet-4-5-20250514',
     models: [
-      { id: 'claude-sonnet-4-5-20250514', name: 'Claude 4.5 Sonnet (Empfohlen)', recommended: true },
-      { id: 'claude-haiku-4-5-20250514', name: 'Claude 4.5 Haiku (schneller)' },
-      { id: 'claude-opus-4-5-20250514', name: 'Claude 4.5 Opus (beste Qualität)' },
-      { id: 'custom', name: 'Eigenes Modell...', hint: 'z.B. claude-3-opus-*' }
+      { id: 'claude-sonnet-4-5-20250514', name: 'Claude 4.5 Sonnet (Recommended)', recommended: true },
+      { id: 'claude-haiku-4-5-20250514', name: 'Claude 4.5 Haiku (faster)' },
+      { id: 'claude-opus-4-5-20250514', name: 'Claude 4.5 Opus (best quality)' },
+      { id: 'custom', name: 'Custom model...', hint: 'e.g. claude-3-opus-*' }
     ],
     authType: 'header',
     supportsVision: true,
@@ -197,14 +197,14 @@ const PROVIDERS = {
     apiKeyPlaceholder: 'sk-ant-...'
   },
   ollama: {
-    name: 'Ollama (lokal)',
+    name: 'Ollama (local)',
     endpoint: 'http://localhost:11434/api/generate',
     defaultModel: 'deepseek-ocr',
     models: [
-      { id: 'deepseek-ocr', name: 'DeepSeek-OCR (Empfohlen)', recommended: true },
+      { id: 'deepseek-ocr', name: 'DeepSeek-OCR (Recommended)', recommended: true },
       { id: 'llava', name: 'LLaVA' },
       { id: 'llama3.2-vision', name: 'Llama 3.2 Vision' },
-      { id: 'custom', name: 'Eigenes Modell...', hint: 'ollama list zeigt installierte Modelle' }
+      { id: 'custom', name: 'Custom model...', hint: 'ollama list shows installed models' }
     ],
     authType: 'none',
     supportsVision: true,
@@ -453,8 +453,8 @@ class LLMService {
         return this._validateWithFallback(text, customPrompt, fallback);
       } else {
         throw new Error(
-          `Das aktuelle Modell (${this.getCurrentModel()}) ist ein reines OCR-Modell und kann keine Textvalidierung durchführen. ` +
-          `Bitte konfigurieren Sie einen Cloud-Provider (Gemini, OpenAI, Anthropic) oder installieren Sie ein Sprachmodell wie llama3.2 in Ollama.`
+          `The current model (${this.getCurrentModel()}) is a pure OCR model and cannot perform text validation. ` +
+          `Please configure a cloud provider (Gemini, OpenAI, Anthropic) or install a language model like llama3.2 in Ollama.`
         );
       }
     }
