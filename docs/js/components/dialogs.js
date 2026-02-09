@@ -682,8 +682,15 @@ class DialogManager {
                     return;
                 }
                 const projectName = appState.data.project.name || 'Aktuelles Projekt';
-                // eslint-disable-next-line no-alert
-                if (confirm(`Projekt "${projectName}" loeschen? Alle Daten (Bilder, Transkriptionen) werden entfernt.`)) {
+                const confirmed = await this.showConfirm(
+                    'Projekt löschen?',
+                    `Möchtest du das Projekt "${projectName}" wirklich löschen? Alle Daten (Bilder, Transkriptionen) werden entfernt.`,
+                    'Löschen',
+                    'Abbrechen',
+                    { icon: 'warning' }
+                );
+
+                if (confirmed) {
                     try {
                         await storage.deleteProject(projectId);
                         storage.clearActiveProjectId();
@@ -701,8 +708,15 @@ class DialogManager {
         const deleteApiKeysBtn = dialog.querySelector('#btnDeleteApiKeys');
         if (deleteApiKeysBtn) {
             deleteApiKeysBtn.addEventListener('click', async () => {
-                // eslint-disable-next-line no-alert
-                if (confirm('Alle gespeicherten API-Keys loeschen?')) {
+                const confirmed = await this.showConfirm(
+                    'API-Keys löschen?',
+                    'Möchtest du alle gespeicherten API-Keys wirklich löschen?',
+                    'Löschen',
+                    'Abbrechen',
+                    { icon: 'warning' }
+                );
+
+                if (confirmed) {
                     try {
                         await storage.deleteAllApiKeys();
                         this.showToast('Gespeicherte API-Keys geloescht', 'success');
@@ -717,13 +731,70 @@ class DialogManager {
         // Reset settings button
         const resetBtn = dialog.querySelector('#btnResetSettings');
         if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                // eslint-disable-next-line no-alert
-                if (confirm('Reset all settings to defaults?')) {
+            resetBtn.addEventListener('click', async () => {
+                const confirmed = await this.showConfirm(
+                    'Einstellungen zurücksetzen?',
+                    'Möchtest du wirklich alle Einstellungen auf die Standardwerte zurücksetzen?',
+                    'Zurücksetzen',
+                    'Abbrechen',
+                    { icon: 'question' }
+                );
+
+                if (confirmed) {
                     this.resetSettings();
-                    this.showToast('Settings reset to defaults', 'success');
+                    this.showToast('Einstellungen zurückgesetzt', 'success');
                 }
             });
+        }
+
+        // Quota refresh button
+        const btnRefreshQuota = dialog.querySelector('#btnRefreshQuota');
+        if (btnRefreshQuota) {
+            btnRefreshQuota.addEventListener('click', async () => {
+                await this.updateQuotaDisplay();
+            });
+        }
+
+        // Update quota on settings dialog open
+        const settingsBtn = document.querySelector('[data-open-dialog="settings"]');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', async () => {
+                // Delay to allow dialog to open first
+                setTimeout(async () => {
+                    await this.updateQuotaDisplay();
+                }, 100);
+            });
+        }
+    }
+
+    /**
+     * Update the storage quota display in the settings dialog
+     */
+    async updateQuotaDisplay() {
+        const quotaText = document.getElementById('quotaText');
+        const quotaBarFill = document.getElementById('quotaBarFill');
+
+        if (!quotaText || !quotaBarFill) return;
+
+        const quota = await storage.getQuotaInfo();
+
+        if (!quota.supported) {
+            quotaText.textContent = 'Nicht verfügbar in diesem Browser';
+            quotaBarFill.style.width = '0%';
+            quotaBarFill.removeAttribute('data-level');
+            return;
+        }
+
+        quotaText.textContent = `${quota.usageMB} MB von ${quota.quotaMB} MB verwendet (${quota.percentUsed}%)`;
+        quotaBarFill.style.width = `${quota.percentUsed}%`;
+
+        // Color coding
+        if (quota.percentUsed > 90) {
+            quotaBarFill.setAttribute('data-level', 'critical');
+        } else if (quota.percentUsed > 70) {
+            quotaBarFill.setAttribute('data-level', 'warning');
+        } else {
+            quotaBarFill.removeAttribute('data-level');
         }
     }
 
@@ -1488,6 +1559,108 @@ class DialogManager {
 
             document.body.appendChild(dialog);
             dialog.showModal();
+        });
+    }
+
+    /**
+     * Show a prompt dialog for user input
+     * @param {string} title - Dialog title
+     * @param {string} message - Dialog message
+     * @param {string} defaultValue - Default input value
+     * @param {string} confirmText - Confirm button text
+     * @param {string} cancelText - Cancel button text
+     * @param {object} options - Additional options (icon, hint, maxLength, validate)
+     * @returns {Promise<string|null>} - Input value if confirmed, null if cancelled
+     */
+    showPrompt(title, message, defaultValue = '', confirmText = 'OK', cancelText = 'Abbrechen', options = {}) {
+        return new Promise((resolve) => {
+            // Icon options (reuse from showConfirm)
+            const icons = {
+                restore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>',
+                warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+                info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+                question: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+            };
+
+            const iconHtml = options.icon && icons[options.icon]
+                ? `<span class="dialog-icon dialog-icon-${options.icon}">${icons[options.icon]}</span>`
+                : '';
+
+            const dialog = document.createElement('dialog');
+            dialog.className = 'confirm-dialog glass-panel';
+
+            dialog.innerHTML = `
+                <div class="dialog-header">
+                    ${iconHtml}
+                    <h3>${escapeHtml(title)}</h3>
+                </div>
+                <div class="dialog-body">
+                    <p>${escapeHtml(message)}</p>
+                    <div class="input-wrapper">
+                        <input type="text" class="prompt-input" value="${escapeHtml(defaultValue)}"
+                               maxlength="${options.maxLength || 100}" autocomplete="off">
+                        ${options.hint ? `<span class="input-hint">${escapeHtml(options.hint)}</span>` : ''}
+                    </div>
+                </div>
+                <div class="dialog-actions">
+                    <button class="btn btn-ghost" data-action="cancel">${escapeHtml(cancelText)}</button>
+                    <button class="btn btn-primary" data-action="confirm">${escapeHtml(confirmText)}</button>
+                </div>
+            `;
+
+            const input = dialog.querySelector('.prompt-input');
+            const confirmBtn = dialog.querySelector('[data-action="confirm"]');
+
+            // Validierung
+            const validate = () => {
+                const value = input.value.trim();
+                const isValid = options.validate ? options.validate(value) : value.length > 0;
+                confirmBtn.disabled = !isValid;
+                return isValid;
+            };
+
+            input.addEventListener('input', validate);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && validate()) {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(input.value.trim());
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    dialog.close();
+                    dialog.remove();
+                    resolve(null);
+                }
+            });
+
+            dialog.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                if (action === 'confirm' && validate()) {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(input.value.trim());
+                } else if (action === 'cancel') {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(null);
+                }
+            });
+
+            dialog.addEventListener('cancel', (e) => {
+                e.preventDefault();
+                dialog.close();
+                dialog.remove();
+                resolve(null);
+            });
+
+            document.body.appendChild(dialog);
+            dialog.showModal();
+
+            // Auto-focus + select
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 50);
         });
     }
 }
