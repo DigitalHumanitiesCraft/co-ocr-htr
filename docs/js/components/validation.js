@@ -146,7 +146,11 @@ class ValidationPanel {
         appState.addEventListener('documentLoaded', () => {
             this.updateVisibility();
             this.clearValidation();
-            this.updateValidateButton(false);
+            // Check if transcription exists (e.g., from loaded project with existing transcription)
+            const state = appState.getState();
+            const hasTranscription = (state.transcription?.raw && state.transcription.raw.trim().length > 0) ||
+                                    (state.transcription?.segments?.length > 0);
+            this.updateValidateButton(hasTranscription);
         });
 
         // Listen for page changes (multi-page support) - load saved validation or clear
