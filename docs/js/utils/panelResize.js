@@ -16,8 +16,14 @@ let handles;
 let panels;
 /** @type {number[]} current ratios [0..1] summing to 1 */
 let ratios;
+const TWO_COLUMN_BREAKPOINT = 1200;
+let twoColumnMql;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+function isTwoColumnMode() {
+    return window.matchMedia(`(max-width: ${TWO_COLUMN_BREAKPOINT}px)`).matches;
+}
 
 function loadRatios() {
     try {
@@ -39,13 +45,18 @@ function saveRatios() {
 }
 
 function applyRatios() {
+    if (isTwoColumnMode()) {
+        container.style.removeProperty('grid-template-columns');
+        return;
+    }
+
     container.style.gridTemplateColumns =
         ratios.map(r => `${r}fr`).join(' ');
     positionHandles();
 }
 
 function positionHandles() {
-    if (!panels.length) return;
+    if (!panels.length || isTwoColumnMode()) return;
     for (const handle of handles) {
         const leftIdx = Number(handle.dataset.leftCol) - 1;
         const leftPanel = panels[leftIdx];
@@ -59,6 +70,8 @@ function positionHandles() {
 // ── Drag ─────────────────────────────────────────────────────────────────────
 
 function startDrag(handle, startX) {
+    if (isTwoColumnMode()) return;
+
     const leftIdx = Number(handle.dataset.leftCol) - 1;
     const rightIdx = Number(handle.dataset.rightCol) - 1;
     const containerWidth = container.getBoundingClientRect().width;
@@ -69,7 +82,10 @@ function startDrag(handle, startX) {
     document.body.classList.add('panel-resizing');
 
     function onMove(e) {
-        const dx = (e.clientX || e.touches?.[0]?.clientX || startX) - startX;
+        if (e.touches && e.cancelable) e.preventDefault();
+
+        const pointerX = e.clientX ?? e.touches?.[0]?.clientX ?? startX;
+        const dx = pointerX - startX;
         const dRatio = dx / containerWidth;
 
         let newLeft = startRatios[leftIdx] + dRatio;
@@ -107,6 +123,7 @@ function startDrag(handle, startX) {
         document.removeEventListener('mouseup', onEnd);
         document.removeEventListener('touchmove', onMove);
         document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
         if (rafId) cancelAnimationFrame(rafId);
         applyRatios();
         saveRatios();
@@ -117,11 +134,14 @@ function startDrag(handle, startX) {
     document.addEventListener('mouseup', onEnd);
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
 }
 
 // ── Keyboard ─────────────────────────────────────────────────────────────────
 
 function onKeydown(e) {
+    if (isTwoColumnMode()) return;
+
     const handle = e.target;
     if (!handle.classList.contains('panel-resize-handle')) return;
 
@@ -154,6 +174,8 @@ function onKeydown(e) {
 // ── Double-click reset ───────────────────────────────────────────────────────
 
 function onDblClick() {
+    if (isTwoColumnMode()) return;
+
     ratios = [...DEFAULT_PANEL_RATIOS];
     applyRatios();
     saveRatios();
@@ -194,6 +216,15 @@ export function initPanelResize() {
 
     // Reposition handles on window resize
     window.addEventListener('resize', positionHandles);
+
+    // Keep JS-driven columns aligned with the CSS 1200px breakpoint
+    twoColumnMql = window.matchMedia(`(max-width: ${TWO_COLUMN_BREAKPOINT}px)`);
+    const onBreakpointChange = () => applyRatios();
+    if (typeof twoColumnMql.addEventListener === 'function') {
+        twoColumnMql.addEventListener('change', onBreakpointChange);
+    } else {
+        twoColumnMql.addListener(onBreakpointChange);
+    }
 
     // Initial positioning after layout settles
     requestAnimationFrame(positionHandles);

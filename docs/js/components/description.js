@@ -112,10 +112,17 @@ class DescriptionManager {
         if (collapseBtn) {
             collapseBtn.addEventListener('click', () => {
                 if (this.descriptionPanel) {
-                    this.descriptionPanel.open = !this.descriptionPanel.open;
+                    const isOpening = !this.descriptionPanel.open;
+                    this.descriptionPanel.open = isOpening;
                     // Show/hide resize handle based on open state
                     if (this.resizeHandle) {
-                        this.resizeHandle.hidden = !this.descriptionPanel.open;
+                        this.resizeHandle.hidden = !isOpening;
+                    }
+                    if (!isOpening) {
+                        this.descriptionPanel.style.height = '';
+                        if (this.editorContainer) {
+                            this.editorContainer.style.height = '';
+                        }
                     }
                 }
             });
@@ -131,6 +138,7 @@ class DescriptionManager {
                 e.preventDefault();
                 this._startVerticalDrag(e.touches[0].clientY);
             }, { passive: false });
+            this.resizeHandle.addEventListener('keydown', (e) => this._handleVerticalResizeKeydown(e));
         }
 
         // Save custom prompt on change (debounced, flushable)
@@ -543,6 +551,7 @@ class DescriptionManager {
     hideDescriptionPanel() {
         if (this.descriptionPanel) {
             this.descriptionPanel.hidden = true;
+            this.descriptionPanel.open = false;
         }
         if (this.resizeHandle) {
             this.resizeHandle.hidden = true;
@@ -550,6 +559,9 @@ class DescriptionManager {
         // Clear any persisted height so next show starts fresh
         if (this.descriptionPanel) {
             this.descriptionPanel.style.height = '';
+        }
+        if (this.editorContainer) {
+            this.editorContainer.style.height = '';
         }
     }
 
@@ -710,11 +722,57 @@ class DescriptionManager {
     }
 
     /**
+     * Handle keyboard resize for vertical pane separator
+     * @param {KeyboardEvent} e
+     */
+    _handleVerticalResizeKeydown(e) {
+        if (!this.descriptionPanel || !this.editorContainer) return;
+        if (this.descriptionPanel.hidden || !this.descriptionPanel.open) return;
+
+        const step = e.shiftKey ? 50 : 10;
+        let deltaY;
+        if (e.key === 'ArrowUp') deltaY = -step;
+        else if (e.key === 'ArrowDown') deltaY = step;
+        else return;
+
+        e.preventDefault();
+        this._resizeVerticalBy(deltaY);
+    }
+
+    /**
+     * Apply a vertical resize delta while keeping both panes above minimum height
+     * @param {number} deltaY
+     */
+    _resizeVerticalBy(deltaY) {
+        if (!this.descriptionPanel || !this.editorContainer) return;
+
+        const MIN_HEIGHT = 80;
+        const descRect = this.descriptionPanel.getBoundingClientRect();
+        const editorRect = this.editorContainer.getBoundingClientRect();
+
+        let newDescH = descRect.height + deltaY;
+        let newEditorH = editorRect.height - deltaY;
+
+        if (newDescH < MIN_HEIGHT) {
+            newEditorH += newDescH - MIN_HEIGHT;
+            newDescH = MIN_HEIGHT;
+        }
+        if (newEditorH < MIN_HEIGHT) {
+            newDescH += newEditorH - MIN_HEIGHT;
+            newEditorH = MIN_HEIGHT;
+        }
+        if (newDescH < MIN_HEIGHT || newEditorH < MIN_HEIGHT) return;
+
+        this.descriptionPanel.style.height = `${newDescH}px`;
+        this.editorContainer.style.height = `${newEditorH}px`;
+    }
+
+    /**
      * Start vertical drag between description panel and editor
      * @param {number} startY - Starting clientY position
      */
     _startVerticalDrag(startY) {
-        if (!this.descriptionPanel || !this.editorContainer) return;
+        if (!this.descriptionPanel || !this.editorContainer || !this.resizeHandle) return;
 
         const MIN_HEIGHT = 80; // px minimum for either pane
         const startDescH = this.descriptionPanel.getBoundingClientRect().height;
@@ -725,6 +783,8 @@ class DescriptionManager {
         document.body.classList.add('pane-resizing-vertical');
 
         const onMove = (e) => {
+            if (e.touches && e.cancelable) e.preventDefault();
+
             const clientY = e.clientY ?? e.touches?.[0]?.clientY ?? startY;
             const dy = clientY - startY;
 
@@ -756,6 +816,7 @@ class DescriptionManager {
             document.removeEventListener('mouseup', onEnd);
             document.removeEventListener('touchmove', onMove);
             document.removeEventListener('touchend', onEnd);
+            document.removeEventListener('touchcancel', onEnd);
             if (rafId) cancelAnimationFrame(rafId);
         };
 
@@ -763,6 +824,7 @@ class DescriptionManager {
         document.addEventListener('mouseup', onEnd);
         document.addEventListener('touchmove', onMove, { passive: false });
         document.addEventListener('touchend', onEnd);
+        document.addEventListener('touchcancel', onEnd);
     }
 
     /**
