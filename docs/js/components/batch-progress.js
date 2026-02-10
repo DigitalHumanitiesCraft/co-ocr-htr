@@ -34,7 +34,8 @@ class BatchProgressPanel {
         if (!this.panel) return;
 
         const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-        const title = operation === 'transcription' ? 'Batch Transcription' : 'Batch Validation';
+        const titleMap = { transcription: 'Batch Transcription', description: 'Batch Description', validation: 'Batch Validation' };
+        const title = titleMap[operation] || 'Batch Validation';
         const isAborted = appState.data.batch.abortRequested;
 
         // Build DOM only on first call; update targeted elements on subsequent calls
