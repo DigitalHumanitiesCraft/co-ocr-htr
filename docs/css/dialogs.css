@@ -12,7 +12,7 @@ dialog {
   border: none;
   padding: 0;
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: calc(100dvh - (var(--space-3) * 2));
   margin: auto;
   position: fixed;
   top: 50%;
@@ -37,6 +37,30 @@ dialog[open] {
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Keep dialogs below browser chrome on smaller/shorter viewports */
+@media (max-height: 900px) {
+  dialog {
+    top: var(--space-3);
+    top: max(var(--space-3), env(safe-area-inset-top));
+    transform: translate(-50%, 0);
+  }
+
+  dialog[open] {
+    animation: dialogOpenTop 0.2s ease-out;
+  }
+}
+
+@keyframes dialogOpenTop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
   }
 }
 
