@@ -423,12 +423,11 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3);
-  cursor: pointer;
+  cursor: default;
   list-style: none;
   font-weight: 500;
   color: var(--text-primary);
   background: var(--bg-tertiary);
-  transition: background-color 0.2s;
 }
 
 .description-summary::-webkit-details-marker {
@@ -436,7 +435,7 @@
 }
 
 .description-summary:hover {
-  background: var(--bg-muted);
+  background: var(--bg-tertiary);
 }
 
 .description-summary svg {
@@ -452,6 +451,33 @@
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: 500;
+}
+
+.description-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.description-collapse-btn:hover {
+  color: var(--accent-primary);
+  background: var(--surface-active);
+}
+
+.description-collapse-btn svg {
+  transition: transform var(--transition-fast);
+}
+
+/* Rotate chevron down when collapsed */
+.description-panel:not([open]) .description-collapse-btn svg {
+  transform: rotate(180deg);
 }
 
 .description-content {
