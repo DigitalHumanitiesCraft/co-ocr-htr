@@ -520,6 +520,19 @@ body:has(.wip-banner:not([hidden])) .app-container {
   .panel-header .model-indicator-sep {
     display: none;
   }
+  .panel-header .model-indicator {
+    width: 26px;
+    height: 26px;
+    min-height: 26px;
+    padding: 0;
+    gap: 0;
+    flex: 0 0 26px;
+    justify-content: center;
+  }
+  .panel-header .model-indicator-label {
+    font-size: 10px;
+    line-height: 1;
+  }
   .panel-header {
     padding: 0 var(--space-2);
   }
