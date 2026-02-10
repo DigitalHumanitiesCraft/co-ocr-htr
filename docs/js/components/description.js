@@ -105,11 +105,12 @@ class DescriptionManager {
             copyBtn.addEventListener('click', () => this.copyDescription());
         }
 
-        // Save custom prompt on change (debounced)
+        // Save custom prompt on change (debounced, flushable)
         if (this.descriptionTextarea) {
-            this.descriptionTextarea.addEventListener('input', this._debounce(() => {
+            this._debouncedSaveRaw = this._debounce(() => {
                 appState.setDescriptionRaw(this.descriptionTextarea.value);
-            }, 500));
+            }, 500);
+            this.descriptionTextarea.addEventListener('input', this._debouncedSaveRaw);
         }
 
         // Save custom prompt on blur
@@ -129,6 +130,8 @@ class DescriptionManager {
         });
 
         appState.addEventListener('pageChanged', () => {
+            // Flush pending debounced edits before page switch loads new data
+            if (this._debouncedSaveRaw) this._debouncedSaveRaw.flush();
             this.updateDescriptionDisplay();
         });
     }
@@ -384,6 +387,7 @@ class DescriptionManager {
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
                     dialogManager.showToast('Invalid API key. Batch aborted.', 'error');
+                    appState.requestBatchAbort();
                     break;
                 }
 
@@ -663,14 +667,28 @@ class DescriptionManager {
     }
 
     /**
-     * Debounce helper
+     * Debounce helper with flush support
      */
     _debounce(fn, delay) {
         let timeoutId;
-        return (...args) => {
+        let pendingArgs;
+        const debounced = (...args) => {
+            pendingArgs = args;
             clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => fn(...args), delay);
+            timeoutId = setTimeout(() => {
+                pendingArgs = null;
+                fn(...args);
+            }, delay);
         };
+        debounced.flush = () => {
+            if (pendingArgs !== null && pendingArgs !== undefined) {
+                clearTimeout(timeoutId);
+                const args = pendingArgs;
+                pendingArgs = null;
+                fn(...args);
+            }
+        };
+        return debounced;
     }
 
     /**

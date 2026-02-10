@@ -558,31 +558,19 @@ class LLMService {
    * @returns {Promise<object>} Description result
    */
   async describe(imageBase64, options = {}) {
-    const originalProvider = this.activeProvider;
-    const originalModel = this.activeModel;
+    // Use local variables only -- no global provider mutation.
+    // This avoids race conditions if transcribe() runs concurrently.
+    const apiKey = this.providers.gemini?.apiKey;
+    if (!apiKey) {
+      throw new Error('Gemini API key required for image description. Please configure it in LLM settings.');
+    }
+
+    const model = this.providers.gemini.defaultModel || 'gemini-3-pro-preview';
+    const prompt = buildDescriptionPrompt(options.customPrompt);
+
+    console.log(`[LLM] describe() using Gemini model=${model} customPrompt=${!!options.customPrompt}`);
 
     try {
-      // ENFORCE GEMINI ONLY
-      if (this.activeProvider !== 'gemini') {
-        this.activeProvider = 'gemini';
-        this.activeModel = null;
-      }
-
-      // Validate Gemini API key
-      const apiKey = this.providers.gemini?.apiKey;
-      if (!apiKey) {
-        throw new Error('Gemini API key required for image description. Please configure it in LLM settings.');
-      }
-
-      // Use custom prompt or default
-      const prompt = buildDescriptionPrompt(options.customPrompt);
-
-      // Prefer Gemini Pro for better visual analysis
-      const model = this.activeModel || this.providers.gemini.defaultModel || 'gemini-3-pro-preview';
-
-      console.log(`[LLM] describe() using Gemini model=${model} customPrompt=${!!options.customPrompt}`);
-
-      // Call Gemini API
       const response = await this._callGemini(apiKey, model, prompt, imageBase64);
 
       console.log(`[LLM] describe() OK, length=${response.length} chars`);
@@ -596,12 +584,6 @@ class LLMService {
     } catch (error) {
       console.error(`[LLM] describe() FAILED:`, error.message);
       throw this._handleError(error);
-    } finally {
-      // Restore original provider
-      if (originalProvider !== 'gemini') {
-        this.activeProvider = originalProvider;
-        this.activeModel = originalModel;
-      }
     }
   }
 
