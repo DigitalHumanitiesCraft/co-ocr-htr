@@ -105,6 +105,16 @@ class DescriptionManager {
             copyBtn.addEventListener('click', () => this.copyDescription());
         }
 
+        // Collapse/expand description panel
+        const collapseBtn = document.getElementById('descriptionCollapseBtn');
+        if (collapseBtn) {
+            collapseBtn.addEventListener('click', () => {
+                if (this.descriptionPanel) {
+                    this.descriptionPanel.open = !this.descriptionPanel.open;
+                }
+            });
+        }
+
         // Save custom prompt on change (debounced, flushable)
         if (this.descriptionTextarea) {
             this._debouncedSaveRaw = this._debounce(() => {
