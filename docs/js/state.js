@@ -350,8 +350,9 @@ class AppState extends EventTarget {
     if (index < 0 || index >= this.data.pages.length) return;
     if (index === this.data.currentPageIndex) return;
 
-    // Save current page transcription and validation
+    // Save current page transcription, description, and validation
     this._saveCurrentPageTranscription();
+    this._saveCurrentPageDescription();
     this._saveCurrentPageValidation();
 
     // Load new page
@@ -508,6 +509,29 @@ class AppState extends EventTarget {
       // Delete empty transcriptions to prevent stale data on page switch
       delete this.data.pageTranscriptions[page.id];
     }
+  }
+
+  /**
+   * Internal: Save current page description to pageDescriptions
+   */
+  _saveCurrentPageDescription() {
+    const page = this.data.pages[this.data.currentPageIndex];
+    if (!page) return;
+
+    const hasRaw = this.data.description.raw?.trim().length > 0;
+    if (hasRaw) {
+      this.data.pageDescriptions[page.id] = {
+        id: this.data.description.id,
+        provider: this.data.description.provider,
+        model: this.data.description.model,
+        customPrompt: this.data.description.customPrompt,
+        raw: this.data.description.raw,
+        timestamp: this.data.description.timestamp
+      };
+    }
+    // Note: Unlike transcriptions, we do NOT delete existing pageDescriptions
+    // when description.raw is empty. The user may have cleared the current
+    // description view without intending to delete a previously saved one.
   }
 
   /**
@@ -1027,6 +1051,7 @@ class AppState extends EventTarget {
 
     // Save current page data before session save
     this._saveCurrentPageTranscription();
+    this._saveCurrentPageDescription();
     this._saveCurrentPageValidation();
 
     // Session data -- images are stored separately in IDB images store
