@@ -200,7 +200,7 @@ class ExportService {
             lines.push('');
             if (state.description.customPrompt) {
                 lines.push('**Analysis Prompt:**');
-                lines.push(`> ${state.description.customPrompt}`);
+                lines.push(state.description.customPrompt.split('\n').map(l => `> ${l}`).join('\n'));
                 lines.push('');
             }
             lines.push(state.description.raw);

@@ -129,9 +129,14 @@ class DescriptionManager {
             this.showDescriptionPanel();
         });
 
-        appState.addEventListener('pageChanged', () => {
-            // Flush pending debounced edits before page switch loads new data
+        // Flush pending debounced edits BEFORE the page snapshot is taken.
+        // beforePageChange fires synchronously in goToPage() before
+        // _saveCurrentPageDescription() and _loadPage().
+        appState.addEventListener('beforePageChange', () => {
             if (this._debouncedSaveRaw) this._debouncedSaveRaw.flush();
+        });
+
+        appState.addEventListener('pageChanged', () => {
             this.updateDescriptionDisplay();
         });
     }
