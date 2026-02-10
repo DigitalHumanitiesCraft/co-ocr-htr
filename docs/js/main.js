@@ -170,6 +170,7 @@ async function initApp() {
                 includeMetadata
             });
             dialogManager.showToast(`Exported as ${result.filename}`, 'success');
+            updateWorkflowStep(5, 'completed');
         } catch (error) {
             console.error('Export error:', error);
             dialogManager.showToast(`Export failed: ${error.message}`, 'error');
@@ -761,8 +762,7 @@ function initGuidedWorkflow() {
 
     appState.addEventListener('transcriptionComplete', () => {
         updateWorkflowStep(2, 'completed');
-        updateWorkflowStep(3, 'completed');
-        updateWorkflowStep(4, 'active');
+        updateWorkflowStep(3, 'active');
         // Hide editor hint when transcription available
         const editorHint = document.getElementById('editorHint');
         if (editorHint) editorHint.classList.add('hidden');
@@ -770,6 +770,8 @@ function initGuidedWorkflow() {
 
     appState.addEventListener('descriptionComplete', (event) => {
         console.log('[Main] Description complete:', event.detail.provider);
+        updateWorkflowStep(3, 'completed');
+        updateWorkflowStep(4, 'active');
     });
 
     // Also hide hints when document is loaded (for demo with pre-loaded transcription)
@@ -780,8 +782,17 @@ function initGuidedWorkflow() {
             const editorHint = document.getElementById('editorHint');
             if (editorHint) editorHint.classList.add('hidden');
             updateWorkflowStep(2, 'completed');
-            updateWorkflowStep(3, 'completed');
-            updateWorkflowStep(4, 'active');
+            if (state.description?.raw) {
+                updateWorkflowStep(3, 'completed');
+                if (state.validation?.status === 'complete') {
+                    updateWorkflowStep(4, 'completed');
+                    updateWorkflowStep(5, 'active');
+                } else {
+                    updateWorkflowStep(4, 'active');
+                }
+            } else {
+                updateWorkflowStep(3, 'active');
+            }
         }
     });
 
@@ -793,10 +804,12 @@ function initGuidedWorkflow() {
         if (validationHint) validationHint.classList.add('hidden');
     });
 
-    // Track edits for step 5
+    // Keep export step visible as the current action after edits
     appState.addEventListener('segmentUpdated', () => {
-        updateWorkflowStep(5, 'completed');
-        updateWorkflowStep(6, 'active');
+        const validateStep = document.querySelector('.workflow-step[data-step="4"]');
+        if (validateStep?.classList.contains('completed')) {
+            updateWorkflowStep(5, 'active');
+        }
     });
 }
 

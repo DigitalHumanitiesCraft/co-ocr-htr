@@ -313,9 +313,21 @@ body:has(.wip-banner:not([hidden])) .app-container {
   background: var(--surface-active);
 }
 
+.workflow-step-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
 .workflow-step.active .workflow-step-number {
   background: var(--accent-primary);
   color: white;
+}
+
+.workflow-step.active .workflow-step-icon,
+.workflow-step.completed .workflow-step-icon {
+  opacity: 1;
 }
 
 .workflow-step.completed .workflow-step-number {

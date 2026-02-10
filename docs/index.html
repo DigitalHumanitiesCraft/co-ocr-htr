@@ -342,7 +342,7 @@
         <!-- MIDDLE PANEL: EDITOR -->
         <section class="panel glass-panel panel-col-2">
             <div class="panel-header">
-                <span>Transcription</span>
+                <span>Description / Transcription</span>
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
                         <div class="info-tooltip-title">How does it work?</div>
@@ -546,21 +546,46 @@
             <div class="workflow-stepper" id="workflowStepper">
                 <div class="workflow-step active" data-step="1">
                     <span class="workflow-step-number">I</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
                     <span>Load</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="2">
                     <span class="workflow-step-number">II</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                        <path d="m15 5 4 4"></path>
+                    </svg>
                     <span>Transcribe</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="3">
                     <span class="workflow-step-number">III</span>
-                    <span>Validate</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <span>Describe</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="4">
                     <span class="workflow-step-number">IV</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                    </svg>
+                    <span>Validate</span>
+                </div>
+                <span class="workflow-step-arrow">→</span>
+                <div class="workflow-step" data-step="5">
+                    <span class="workflow-step-number">V</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
                     <span>Export</span>
                 </div>
             </div>
@@ -1256,6 +1281,7 @@
                 <ol class="help-steps">
                     <li><strong>Load</strong> – Upload an image or load a demo document</li>
                     <li><strong>Transcribe</strong> – Click "Transcribe" to process with AI</li>
+                    <li><strong>Describe</strong> – Generate an image description for initials and iconography</li>
                     <li><strong>Validate</strong> – Review rule-based and AI suggestions</li>
                     <li><strong>Export</strong> – Download as TXT, JSON, or Markdown</li>
                 </ol>
