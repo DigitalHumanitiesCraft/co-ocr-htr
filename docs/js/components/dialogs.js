@@ -1385,20 +1385,9 @@ class DialogManager {
      */
     updateModelIndicatorWithValidation() {
         const currentModel = llmService.getCurrentModel();
-        const validationProvider = llmService.getValidationProvider();
 
-        // Update base model indicator (use provider ID, not display name)
+        // Update base model indicator -- only show the transcription model
         this.updateModelIndicator(currentModel, llmService.activeProvider || this.currentProvider);
-
-        // Show validation provider badge if configured
-        const textEl = getById('modelIndicatorText');
-        if (!textEl) return;
-
-        if (validationProvider) {
-            textEl.textContent = `${textEl.textContent} | Validation: ${validationProvider.name}`;
-        } else if (llmService.isOcrOnlyModel()) {
-            textEl.textContent = `${textEl.textContent} | Validation: Auto-fallback`;
-        }
     }
 
 
