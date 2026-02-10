@@ -407,11 +407,53 @@
    ============================================ */
 
 .description-panel {
-  margin-bottom: var(--space-4);
   border: 1px solid var(--border-muted);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
   overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Vertical Pane Resize Handle
+   ============================================ */
+
+.pane-resize-handle-vertical {
+  height: 8px;
+  cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.pane-resize-handle-vertical::after {
+  content: '';
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--border-default);
+  transition: all var(--transition-fast);
+}
+
+.pane-resize-handle-vertical:hover::after,
+.pane-resize-handle-vertical.dragging::after {
+  width: 48px;
+  background: var(--accent-primary);
+}
+
+body.pane-resizing-vertical {
+  cursor: row-resize !important;
+  user-select: none !important;
+}
+body.pane-resizing-vertical * {
+  cursor: row-resize !important;
+  pointer-events: none !important;
+}
+body.pane-resizing-vertical .pane-resize-handle-vertical {
+  pointer-events: auto !important;
 }
 
 .description-panel[open] {

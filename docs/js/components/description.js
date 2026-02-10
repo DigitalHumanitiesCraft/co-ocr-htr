@@ -62,6 +62,8 @@ class DescriptionManager {
         this.descriptionPanel = document.getElementById('descriptionPanel');
         this.descriptionTextarea = document.getElementById('descriptionTextarea');
         this.promptTextarea = document.getElementById('descriptionPrompt');
+        this.resizeHandle = document.getElementById('descriptionResizeHandle');
+        this.editorContainer = document.getElementById('editorContent');
 
         if (!this.describeBtn) {
             console.warn('[Description] Describe button not found');
@@ -111,8 +113,24 @@ class DescriptionManager {
             collapseBtn.addEventListener('click', () => {
                 if (this.descriptionPanel) {
                     this.descriptionPanel.open = !this.descriptionPanel.open;
+                    // Show/hide resize handle based on open state
+                    if (this.resizeHandle) {
+                        this.resizeHandle.hidden = !this.descriptionPanel.open;
+                    }
                 }
             });
+        }
+
+        // Vertical resize handle between description and editor
+        if (this.resizeHandle) {
+            this.resizeHandle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this._startVerticalDrag(e.clientY);
+            });
+            this.resizeHandle.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this._startVerticalDrag(e.touches[0].clientY);
+            }, { passive: false });
         }
 
         // Save custom prompt on change (debounced, flushable)
@@ -511,9 +529,12 @@ class DescriptionManager {
             badgeEl.textContent = description.model;
         }
 
-        // Show panel
+        // Show panel and resize handle
         this.descriptionPanel.hidden = false;
         this.descriptionPanel.open = true;
+        if (this.resizeHandle) {
+            this.resizeHandle.hidden = false;
+        }
     }
 
     /**
@@ -522,6 +543,13 @@ class DescriptionManager {
     hideDescriptionPanel() {
         if (this.descriptionPanel) {
             this.descriptionPanel.hidden = true;
+        }
+        if (this.resizeHandle) {
+            this.resizeHandle.hidden = true;
+        }
+        // Clear any persisted height so next show starts fresh
+        if (this.descriptionPanel) {
+            this.descriptionPanel.style.height = '';
         }
     }
 
@@ -679,6 +707,62 @@ class DescriptionManager {
     _isGeminiConfigured() {
         const geminiKey = llmService.providers.gemini?.apiKey;
         return !!geminiKey;
+    }
+
+    /**
+     * Start vertical drag between description panel and editor
+     * @param {number} startY - Starting clientY position
+     */
+    _startVerticalDrag(startY) {
+        if (!this.descriptionPanel || !this.editorContainer) return;
+
+        const MIN_HEIGHT = 80; // px minimum for either pane
+        const startDescH = this.descriptionPanel.getBoundingClientRect().height;
+        const startEditorH = this.editorContainer.getBoundingClientRect().height;
+        let rafId = null;
+
+        this.resizeHandle.classList.add('dragging');
+        document.body.classList.add('pane-resizing-vertical');
+
+        const onMove = (e) => {
+            const clientY = e.clientY ?? e.touches?.[0]?.clientY ?? startY;
+            const dy = clientY - startY;
+
+            let newDescH = startDescH + dy;
+            let newEditorH = startEditorH - dy;
+
+            // Enforce minimum heights
+            if (newDescH < MIN_HEIGHT) {
+                newEditorH += newDescH - MIN_HEIGHT;
+                newDescH = MIN_HEIGHT;
+            }
+            if (newEditorH < MIN_HEIGHT) {
+                newDescH += newEditorH - MIN_HEIGHT;
+                newEditorH = MIN_HEIGHT;
+            }
+            if (newDescH < MIN_HEIGHT || newEditorH < MIN_HEIGHT) return;
+
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                this.descriptionPanel.style.height = `${newDescH}px`;
+                this.editorContainer.style.height = `${newEditorH}px`;
+            });
+        };
+
+        const onEnd = () => {
+            this.resizeHandle.classList.remove('dragging');
+            document.body.classList.remove('pane-resizing-vertical');
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+            if (rafId) cancelAnimationFrame(rafId);
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
     }
 
     /**
