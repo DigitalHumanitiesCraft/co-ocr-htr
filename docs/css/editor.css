@@ -366,79 +366,37 @@
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
-  background: var(--surface-subtle);
-  border: 1px solid var(--border-subtle);
+  background: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
   border-radius: var(--radius-md);
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: white;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .model-indicator:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-default);
+  background: var(--accent-hover-dark, #3a6a8a);
+  border-color: var(--accent-hover-dark, #3a6a8a);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
 
-.model-indicator-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  color: var(--text-tertiary);
+.model-indicator-label {
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.model-indicator-icon svg {
-  width: 100%;
-  height: 100%;
+.model-indicator-sep {
+  opacity: 0.5;
 }
 
 .model-indicator-text {
   font-weight: 500;
   white-space: nowrap;
-  max-width: 120px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Provider-specific colors */
-.model-indicator[data-provider="ollama"] {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: rgba(16, 185, 129, 0.08);
-}
-
-.model-indicator[data-provider="ollama"] .model-indicator-icon {
-  color: #10b981;
-}
-
-.model-indicator[data-provider="gemini"] {
-  border-color: rgba(59, 130, 246, 0.3);
-  background: rgba(59, 130, 246, 0.08);
-}
-
-.model-indicator[data-provider="gemini"] .model-indicator-icon {
-  color: #3b82f6;
-}
-
-.model-indicator[data-provider="openai"] {
-  border-color: rgba(139, 92, 246, 0.3);
-  background: rgba(139, 92, 246, 0.08);
-}
-
-.model-indicator[data-provider="openai"] .model-indicator-icon {
-  color: #8b5cf6;
-}
-
-.model-indicator[data-provider="anthropic"] {
-  border-color: rgba(245, 158, 11, 0.3);
-  background: rgba(245, 158, 11, 0.08);
-}
-
-.model-indicator[data-provider="anthropic"] .model-indicator-icon {
-  color: #f59e0b;
 }
 
 /* ============================================
