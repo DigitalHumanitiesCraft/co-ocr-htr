@@ -194,3 +194,16 @@ export const IDB_STORES = {
 
 /** localStorage key for active project ID (synchronous access at startup) */
 export const ACTIVE_PROJECT_KEY = 'coocr:activeProjectId';
+
+// =============================================================================
+// PANEL RESIZE CONSTANTS
+// =============================================================================
+
+/** Minimum panel width in pixels during resize */
+export const MIN_PANEL_WIDTH = 200;
+
+/** Default panel width ratios (viewer, editor, validation) -- must sum to 1.0 */
+export const DEFAULT_PANEL_RATIOS = [0.4, 0.35, 0.25];
+
+/** localStorage key for persisted panel ratios */
+export const PANEL_RATIOS_KEY = 'coocr_panelRatios';

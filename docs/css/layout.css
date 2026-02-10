@@ -179,6 +179,12 @@ body:has(.wip-banner:not([hidden])) .app-container {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
+}
+
+/* Named container for the crowded editor panel (needs earlier breakpoint) */
+.panel-col-2 {
+  container-name: editor;
 }
 
 .glass-panel {
@@ -482,6 +488,116 @@ body:has(.wip-banner:not([hidden])) .app-container {
 }
 
 /* ==========================================================================
+   PANEL CONTAINER QUERIES (responsive headers when panels are narrow)
+   ========================================================================== */
+
+/* Editor panel (crowded header): switch to icon-only early to prevent overflow.
+   Named query so it only applies to .panel-col-2 (container-name: editor). */
+@container editor (max-width: 750px) {
+  .panel-header .btn-text,
+  .panel-header .btn-label {
+    display: none;
+  }
+  .panel-header .btn {
+    padding: var(--space-1);
+  }
+  .panel-header .btn > svg.mr-1 {
+    margin-right: 0;
+  }
+  .panel-header .model-indicator-text {
+    display: none;
+  }
+  .panel-header {
+    padding: 0 var(--space-2);
+  }
+  .panel-header .info-tooltip {
+    display: none;
+  }
+}
+
+/* All panels: generic icon-only fallback when truly narrow */
+@container (max-width: 400px) {
+  .panel-header .btn-text,
+  .panel-header .btn-label {
+    display: none;
+  }
+  .panel-header .btn {
+    padding: var(--space-1);
+  }
+  .panel-header .btn > svg.mr-1 {
+    margin-right: 0;
+  }
+  .panel-header .info-tooltip {
+    display: none;
+  }
+  .panel-header {
+    padding: 0 var(--space-2);
+  }
+  .panel-header .divider-vertical {
+    display: none;
+  }
+  .panel-header .flex-center {
+    gap: 2px;
+  }
+}
+
+/* ==========================================================================
+   PANEL RESIZE HANDLES
+   ========================================================================== */
+
+.app-container {
+  position: relative;
+}
+
+.panel-resize-handle {
+  position: absolute;
+  top: 56px;
+  bottom: 36px;
+  width: 12px;
+  margin-left: -6px;
+  cursor: col-resize;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Visual grip indicator */
+.panel-resize-handle::after {
+  content: '';
+  width: 2px;
+  height: 32px;
+  border-radius: 1px;
+  background: var(--border-default);
+  transition: all var(--transition-fast);
+}
+
+.panel-resize-handle:hover::after,
+.panel-resize-handle.dragging::after {
+  height: 48px;
+  background: var(--accent-primary);
+}
+
+.panel-resize-handle.dragging::after {
+  height: 100%;
+}
+
+/* Cursor override during drag */
+body.panel-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+body.panel-resizing * {
+  cursor: col-resize !important;
+  pointer-events: none !important;
+}
+body.panel-resizing .panel-resize-handle {
+  pointer-events: auto !important;
+}
+
+/* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 
@@ -492,6 +608,11 @@ body:has(.wip-banner:not([hidden])) .app-container {
 
   /* Hide validation panel on smaller screens */
   .panel:nth-child(4) {
+    display: none;
+  }
+
+  /* Hide resize handles in 2-column mode */
+  .panel-resize-handle {
     display: none;
   }
 }
