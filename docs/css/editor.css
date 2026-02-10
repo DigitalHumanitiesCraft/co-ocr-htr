@@ -368,7 +368,7 @@
   padding: var(--space-1) var(--space-2);
   background: var(--accent-primary);
   border: 1px solid var(--accent-primary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   color: white;
   cursor: pointer;
