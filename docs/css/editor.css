@@ -365,11 +365,14 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1);
+  min-height: 32px;
+  box-sizing: border-box;
   background: var(--accent-primary);
   border: 1px solid var(--accent-primary);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
+  line-height: normal;
   color: white;
   cursor: pointer;
   transition: all var(--transition-fast);
