@@ -504,7 +504,8 @@ body:has(.wip-banner:not([hidden])) .app-container {
   .panel-header .btn > svg.mr-1 {
     margin-right: 0;
   }
-  .panel-header .model-indicator-text {
+  .panel-header .model-indicator-text,
+  .panel-header .model-indicator-sep {
     display: none;
   }
   .panel-header {
