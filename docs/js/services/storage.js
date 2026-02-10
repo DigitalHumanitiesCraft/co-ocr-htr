@@ -148,6 +148,26 @@ class StorageService {
   }
 
   // ============================================
+  // Description Prompts (localStorage -- synchronous)
+  // ============================================
+
+  /**
+   * Save custom description prompt
+   * @param {string} prompt - Custom prompt text
+   */
+  saveDescriptionPrompt(prompt) {
+    localStorage.setItem(`${this.prefix}descriptionPrompt`, prompt);
+  }
+
+  /**
+   * Load saved description prompt
+   * @returns {string} Saved prompt or empty string
+   */
+  loadDescriptionPrompt() {
+    return localStorage.getItem(`${this.prefix}descriptionPrompt`) || '';
+  }
+
+  // ============================================
   // Active Project (localStorage -- synchronous)
   // ============================================
 

@@ -367,6 +367,19 @@
                             </svg>
                         </span>
                     </button>
+                    <button class="btn btn-secondary btn-sm" id="btnDescribe" title="Describe illuminated initials with Gemini">
+                        <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <span class="btn-text">Describe</span>
+                        <span class="btn-spinner" hidden>
+                            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
+                            </svg>
+                        </span>
+                    </button>
                     <button class="btn btn-primary btn-sm" id="btnExport" title="Export transcription">
                         <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -403,6 +416,25 @@
                 <button class="panel-hint-dismiss" data-dismiss-hint="editor">×</button>
             </div>
             <div class="panel-content editor-container" id="editorContent">
+                <!-- Description Panel (collapsible) -->
+                <details class="description-panel" id="descriptionPanel" hidden>
+                    <summary class="description-summary">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <span>Image Description</span>
+                        <span class="description-summary-badge" id="descriptionModelBadge">Gemini Pro</span>
+                    </summary>
+                    <div class="description-content">
+                        <textarea id="descriptionTextarea" rows="12" placeholder="Description will appear here..."></textarea>
+                        <div class="description-footer">
+                            <span class="description-timestamp" id="descriptionTimestamp"></span>
+                            <button type="button" class="btn-link btn-sm" id="copyDescription">Copy</button>
+                        </div>
+                    </div>
+                </details>
                 <!-- Content injected by JS -->
             </div>
         </section>
@@ -806,6 +838,65 @@
                     <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
                 </svg>
                 Transcribe
+            </button>
+        </div>
+    </dialog>
+
+    <!-- Describe Dialog -->
+    <dialog id="describeDialog" class="dialog dialog-lg">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Describe Illuminated Initials</h2>
+            <button class="dialog-close" data-close-dialog aria-label="Close">
+                <svg class="icon-md"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <!-- Custom Prompt Section -->
+            <div class="description-prompt-section">
+                <label for="descriptionPrompt">Analysis Prompt</label>
+                <textarea id="descriptionPrompt" rows="8" placeholder="Enter custom prompt or use default..."></textarea>
+                <button type="button" class="btn-link btn-sm" id="loadDefaultPrompt">
+                    Load Default Prompt
+                </button>
+            </div>
+
+            <!-- Model Info (Gemini only) -->
+            <div class="description-model-info">
+                <span>Using <strong id="descriptionModelName">Gemini 3 Pro</strong> for image analysis</span>
+                <button type="button" class="btn-link" id="changeDescriptionModel">change</button>
+            </div>
+
+            <!-- Page Selection (multi-page) -->
+            <div class="description-page-selection" id="descriptionPageSelection" hidden>
+                <div class="page-selection-header">
+                    <span class="page-selection-title">Describe Pages</span>
+                    <span class="page-selection-count" id="descriptionPageCount"></span>
+                </div>
+                <div class="page-selection-options">
+                    <label class="page-selection-option">
+                        <input type="radio" name="descriptionPageSelection" value="current" checked>
+                        <span class="option-label">Current page only</span>
+                        <span class="option-hint">Fast, recommended</span>
+                    </label>
+                    <label class="page-selection-option">
+                        <input type="radio" name="descriptionPageSelection" value="all">
+                        <span class="option-label">All pages</span>
+                        <span class="option-hint" id="descriptionAllPagesHint"><!-- Filled by JS --></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+            <button type="button" class="btn btn-primary" id="startDescription">
+                <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Describe
             </button>
         </div>
     </dialog>

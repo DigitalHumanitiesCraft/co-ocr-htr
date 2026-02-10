@@ -139,6 +139,16 @@ class ExportService {
             }
         };
 
+        // Include description if present
+        if (state.description?.raw) {
+            data.description = {
+                raw: state.description.raw,
+                customPrompt: state.description.customPrompt || '',
+                model: state.description.model || '',
+                timestamp: state.description.timestamp || null
+            };
+        }
+
         if (includeValidation && state.validation) {
             data.validation = {
                 status: state.validation.status,
@@ -179,6 +189,23 @@ class ExportService {
         // Provider info
         if (state.transcription.provider) {
             lines.push(`*Transcribed with ${state.transcription.provider} (${state.transcription.model || 'default'})*`);
+            lines.push('');
+        }
+
+        // Description section (if present)
+        if (state.description?.raw) {
+            lines.push('## Image Description');
+            lines.push('');
+            lines.push(`*Generated with ${state.description.model || 'Gemini'}*`);
+            lines.push('');
+            if (state.description.customPrompt) {
+                lines.push('**Analysis Prompt:**');
+                lines.push(`> ${state.description.customPrompt}`);
+                lines.push('');
+            }
+            lines.push(state.description.raw);
+            lines.push('');
+            lines.push('---');
             lines.push('');
         }
 

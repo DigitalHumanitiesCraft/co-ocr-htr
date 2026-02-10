@@ -68,6 +68,33 @@ Begin directly with the first line of the document.`;
 }
 
 /**
+ * Default description prompt for illuminated initials analysis
+ */
+const DESCRIPTION_PROMPT_BASE = `You are an expert in medieval manuscript studies and art history.
+
+Task: Analyze and describe the illuminated initials and decorative elements in this manuscript page.
+
+Focus on:
+1. Historiated Initials: Letter forms containing biblical scenes or narrative imagery
+2. Decorative Elements: Colors (gold, lapis, vermillion), borders, flourishes
+3. Iconography: Biblical scenes, saints, symbols, gestures
+4. Style & Period: Artistic style indicators (Romanesque, Gothic, Renaissance)
+5. Technical Details: Gilding techniques, pigments, marginalia
+
+Format your response with clear sections for initials, iconography, artistic style, and technical observations.
+
+Be specific, scholarly, and note uncertainties. Use Latin terms where appropriate.`;
+
+/**
+ * Build description prompt - uses default or custom prompt
+ * @param {string} customPrompt - Optional custom prompt from user
+ * @returns {string} The complete description prompt
+ */
+function buildDescriptionPrompt(customPrompt = '') {
+    return customPrompt.trim() || DESCRIPTION_PROMPT_BASE;
+}
+
+/**
  * Issue types for structured validation results
  * Labels kept in German for UI display consistency
  */
@@ -517,6 +544,64 @@ class LLMService {
     } catch (error) {
       console.error(`[LLM] transcribe() FAILED:`, error.message);
       throw this._handleError(error);
+    }
+  }
+
+  // ============================================
+  // Description (Illuminated Initials Analysis)
+  // ============================================
+
+  /**
+   * Describe illuminated initials using Gemini (enforces Gemini-only for vision analysis)
+   * @param {string} imageBase64 - Base64 encoded image (without data URL prefix)
+   * @param {object} options - Description options
+   * @returns {Promise<object>} Description result
+   */
+  async describe(imageBase64, options = {}) {
+    const originalProvider = this.activeProvider;
+    const originalModel = this.activeModel;
+
+    try {
+      // ENFORCE GEMINI ONLY
+      if (this.activeProvider !== 'gemini') {
+        this.activeProvider = 'gemini';
+        this.activeModel = null;
+      }
+
+      // Validate Gemini API key
+      const apiKey = this.providers.gemini?.apiKey;
+      if (!apiKey) {
+        throw new Error('Gemini API key required for image description. Please configure it in LLM settings.');
+      }
+
+      // Use custom prompt or default
+      const prompt = buildDescriptionPrompt(options.customPrompt);
+
+      // Prefer Gemini Pro for better visual analysis
+      const model = this.activeModel || this.providers.gemini.defaultModel || 'gemini-3-pro-preview';
+
+      console.log(`[LLM] describe() using Gemini model=${model} customPrompt=${!!options.customPrompt}`);
+
+      // Call Gemini API
+      const response = await this._callGemini(apiKey, model, prompt, imageBase64);
+
+      console.log(`[LLM] describe() OK, length=${response.length} chars`);
+      return {
+        provider: 'gemini',
+        model,
+        raw: response,
+        customPrompt: options.customPrompt || ''
+      };
+
+    } catch (error) {
+      console.error(`[LLM] describe() FAILED:`, error.message);
+      throw this._handleError(error);
+    } finally {
+      // Restore original provider
+      if (originalProvider !== 'gemini') {
+        this.activeProvider = originalProvider;
+        this.activeModel = originalModel;
+      }
     }
   }
 
@@ -1169,4 +1254,4 @@ class LLMError extends Error {
 
 // Export singleton instance and classes
 export const llmService = new LLMService();
-export { LLMService, LLMError, PROVIDERS, TRANSCRIPTION_PROMPT_BASE, ISSUE_TYPES };
+export { LLMService, LLMError, PROVIDERS, TRANSCRIPTION_PROMPT_BASE, DESCRIPTION_PROMPT_BASE, ISSUE_TYPES };

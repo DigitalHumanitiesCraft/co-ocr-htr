@@ -65,6 +65,22 @@ class AppState extends EventTarget {
         lines: []           // Markdown table lines (generated from segments)
       },
 
+      // Description data (illuminated initials analysis, current page)
+      description: {
+        id: null,
+        provider: 'gemini', // Always 'gemini' for descriptions
+        model: '',          // e.g., 'gemini-3-pro-preview'
+        customPrompt: '',   // User's custom analysis prompt
+        raw: '',            // LLM response text
+        timestamp: null     // ISO timestamp
+      },
+
+      // Per-page descriptions: { [pageId]: {...}, ... }
+      pageDescriptions: {},
+
+      // Batch descriptions (all pages)
+      batchDescriptions: [],  // Array of description results per page
+
       // Validation state
       validation: {
         status: 'idle',     // idle | running | complete | error
@@ -81,7 +97,7 @@ class AppState extends EventTarget {
 
       // Batch operation state
       batch: {
-        operation: null,      // 'transcription' | 'validation' | null
+        operation: null,      // 'transcription' | 'validation' | 'description' | null
         status: 'idle',       // 'idle' | 'running' | 'complete' | 'aborted'
         currentIndex: 0,
         total: 0,
@@ -167,6 +183,9 @@ class AppState extends EventTarget {
     this.data.image = { url: '', width: 0, height: 0 };
     this.data.regions = [];
     this.data.transcription = { id: null, provider: '', model: '', raw: '', segments: [], columns: [], lines: [] };
+    this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
+    this.data.pageDescriptions = {};
+    this.data.batchDescriptions = [];
     this.data.validation = { status: 'idle', rules: [], llmJudge: null };
     this.data.corrections = [];
     this.data.batchTranscriptions = [];
@@ -439,6 +458,25 @@ class AppState extends EventTarget {
       };
     }
 
+    // Load description for this page if exists
+    const savedDescription = this.data.pageDescriptions[page.id];
+    if (savedDescription) {
+      this.data.description = {
+        ...this.data.description,
+        ...savedDescription
+      };
+    } else {
+      // Reset description for new page
+      this.data.description = {
+        id: null,
+        provider: 'gemini',
+        model: '',
+        customPrompt: '',
+        raw: '',
+        timestamp: null
+      };
+    }
+
     this._emit('pageChanged', {
       index,
       pageId: page.id,
@@ -610,6 +648,83 @@ class AppState extends EventTarget {
       successful: results.filter(r => r.success).length
     });
     this._scheduleAutoSave();
+  }
+
+  // ============================================
+  // Description (Illuminated Initials Analysis)
+  // ============================================
+
+  /**
+   * Set description data from LLM response
+   * @param {object} data - Description data
+   */
+  setDescription(data) {
+    this.data.description = {
+      ...this.data.description,
+      id: generateId(),
+      provider: 'gemini',
+      model: data.model || '',
+      customPrompt: data.customPrompt || '',
+      raw: data.raw || '',
+      timestamp: new Date().toISOString()
+    };
+
+    this.data.meta.updatedAt = new Date().toISOString();
+
+    this._emit('descriptionComplete', {
+      provider: 'gemini',
+      model: data.model
+    });
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Update raw description text (from user edits)
+   * @param {string} text - The updated description text
+   */
+  setDescriptionRaw(text) {
+    this.data.description.raw = text;
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Set batch descriptions for all pages
+   * @param {Array} results - Array of description results per page
+   */
+  setBatchDescriptions(results) {
+    // Store in simple array for easy access
+    this.data.batchDescriptions = results;
+
+    // Also store in per-page lookup
+    for (const result of results) {
+      if (result.success && result.description) {
+        this.data.pageDescriptions[result.pageId] = {
+          ...result.description,
+          id: generateId(),
+          timestamp: new Date().toISOString()
+        };
+      }
+    }
+
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('batchDescriptionComplete', {
+      total: results.length,
+      successful: results.filter(r => r.success).length
+    });
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Get description for a specific page (or current page if not specified)
+   * @param {string} pageId - Optional page ID (defaults to current page)
+   * @returns {object|null} Description or null
+   */
+  getDescription(pageId = null) {
+    if (pageId) {
+      return this.data.pageDescriptions[pageId] || null;
+    }
+    return this.data.description;
   }
 
   // ============================================
@@ -922,6 +1037,9 @@ class AppState extends EventTarget {
       await storage.saveSession(projectId, {
         document: documentWithoutImage,
         transcription: this.data.transcription,
+        description: this.data.description,
+        pageDescriptions: this.data.pageDescriptions,
+        batchDescriptions: this.data.batchDescriptions,
         validation: this.data.validation,
         corrections: this.data.corrections,
         regions: this.data.regions,
@@ -971,6 +1089,7 @@ class AppState extends EventTarget {
       // Restore data
       if (session.document) this.data.document = { ...this.data.document, ...session.document };
       if (session.transcription) this.data.transcription = session.transcription;
+      if (session.description) this.data.description = session.description;
       if (session.validation) this.data.validation = session.validation;
       if (session.corrections) this.data.corrections = session.corrections;
       if (session.regions) this.data.regions = session.regions;
@@ -981,13 +1100,18 @@ class AppState extends EventTarget {
       if (session.pages) this.data.pages = session.pages;
       if (session.currentPageIndex !== undefined) this.data.currentPageIndex = session.currentPageIndex;
       if (session.pageTranscriptions) this.data.pageTranscriptions = session.pageTranscriptions;
+      if (session.pageDescriptions) this.data.pageDescriptions = session.pageDescriptions;
       if (session.batchTranscriptions) this.data.batchTranscriptions = session.batchTranscriptions;
+      if (session.batchDescriptions) this.data.batchDescriptions = session.batchDescriptions;
       if (session.batchValidations) this.data.batchValidations = session.batchValidations;
     } else {
       // Reset to empty state when no session exists (prevents stale data from previous project)
       this.data.document = { id: null, filename: '', mimeType: '', dataUrl: '', width: 0, height: 0 };
       this.data.image = { url: '', width: 0, height: 0 };
       this.data.transcription = { id: null, provider: '', model: '', raw: '', segments: [], columns: [], lines: [] };
+      this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
+      this.data.pageDescriptions = {};
+      this.data.batchDescriptions = [];
       this.data.validation = { status: 'idle', rules: [], llmJudge: null };
       this.data.corrections = [];
       this.data.regions = [];

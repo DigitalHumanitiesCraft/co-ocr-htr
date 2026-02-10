@@ -355,11 +355,8 @@ body:has(.wip-banner:not([hidden])) .app-container {
 }
 
 .info-tooltip-content {
-  position: absolute;
-  /* Default: open downward */
-  top: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
+  /* Position will be set dynamically via JavaScript */
   width: 260px;
   padding: var(--space-3);
   background: var(--bg-secondary);
@@ -378,8 +375,9 @@ body:has(.wip-banner:not([hidden])) .app-container {
   text-align: left;
 }
 
-/* Arrow pointing up (tooltip opens downward) */
-.info-tooltip-content::before {
+/* Arrow pointing up (tooltip opens downward) - default */
+.info-tooltip-content::before,
+.info-tooltip-content[data-position="below"]::before {
   content: '';
   position: absolute;
   bottom: 100%;
@@ -390,7 +388,8 @@ body:has(.wip-banner:not([hidden])) .app-container {
 }
 
 /* Border arrow */
-.info-tooltip-content::after {
+.info-tooltip-content::after,
+.info-tooltip-content[data-position="below"]::after {
   content: '';
   position: absolute;
   bottom: 100%;
@@ -399,6 +398,21 @@ body:has(.wip-banner:not([hidden])) .app-container {
   border: 9px solid transparent;
   border-bottom-color: var(--border-default);
   z-index: -1;
+}
+
+/* Arrow pointing down (tooltip opens upward) */
+.info-tooltip-content[data-position="above"]::before {
+  bottom: auto;
+  top: 100%;
+  border-bottom-color: transparent;
+  border-top-color: var(--bg-secondary);
+}
+
+.info-tooltip-content[data-position="above"]::after {
+  bottom: auto;
+  top: 100%;
+  border-bottom-color: transparent;
+  border-top-color: var(--border-default);
 }
 
 .info-tooltip:hover .info-tooltip-content {
@@ -413,51 +427,8 @@ body:has(.wip-banner:not([hidden])) .app-container {
   font-size: var(--text-sm);
 }
 
-/* Variant: Tooltip opens upward (use class .tooltip-up on parent) */
-.info-tooltip.tooltip-up .info-tooltip-content {
-  top: auto;
-  bottom: calc(100% + 10px);
-}
-
-.info-tooltip.tooltip-up .info-tooltip-content::before {
-  bottom: auto;
-  top: 100%;
-  border-bottom-color: transparent;
-  border-top-color: var(--bg-secondary);
-}
-
-.info-tooltip.tooltip-up .info-tooltip-content::after {
-  bottom: auto;
-  top: 100%;
-  border-bottom-color: transparent;
-  border-top-color: var(--border-default);
-}
-
-/* Variant: Tooltip aligns left (use class .tooltip-left) */
-.info-tooltip.tooltip-left .info-tooltip-content {
-  left: 0;
-  transform: none;
-}
-
-.info-tooltip.tooltip-left .info-tooltip-content::before,
-.info-tooltip.tooltip-left .info-tooltip-content::after {
-  left: 16px;
-  transform: none;
-}
-
-/* Variant: Tooltip aligns right (use class .tooltip-right) */
-.info-tooltip.tooltip-right .info-tooltip-content {
-  left: auto;
-  right: 0;
-  transform: none;
-}
-
-.info-tooltip.tooltip-right .info-tooltip-content::before,
-.info-tooltip.tooltip-right .info-tooltip-content::after {
-  left: auto;
-  right: 16px;
-  transform: none;
-}
+/* Note: Tooltip positioning is now handled dynamically via JavaScript (tooltips.js)
+   to prevent clipping by parent containers with overflow: hidden */
 
 /* ==========================================================================
    DEMO INDICATOR

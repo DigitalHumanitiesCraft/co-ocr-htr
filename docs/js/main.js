@@ -12,6 +12,8 @@ import { dialogManager } from './components/dialogs.js';
 import { uploadManager } from './components/upload.js';
 // eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
 import { transcriptionManager } from './components/transcription.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
+import { descriptionManager } from './components/description.js';
 import { validationPanel } from './components/validation.js';
 // eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
 import { contextManager } from './components/context.js';
@@ -762,6 +764,10 @@ function initGuidedWorkflow() {
         // Hide editor hint when transcription available
         const editorHint = document.getElementById('editorHint');
         if (editorHint) editorHint.classList.add('hidden');
+    });
+
+    appState.addEventListener('descriptionComplete', (event) => {
+        console.log('[Main] Description complete:', event.detail.provider);
     });
 
     // Also hide hints when document is loaded (for demo with pre-loaded transcription)
