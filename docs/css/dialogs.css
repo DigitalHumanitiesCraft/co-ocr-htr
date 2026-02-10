@@ -1985,3 +1985,62 @@ kbd {
   margin-bottom: 0.25rem;
   font-weight: 600;
 }
+
+/* ============================================
+   Description Dialog Styles
+   ============================================ */
+
+.description-prompt-section {
+  margin-bottom: var(--space-4);
+}
+
+.description-prompt-section label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.description-prompt-section textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.description-prompt-section textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.description-model-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.description-model-info strong {
+  color: var(--accent-primary);
+}
+
+.description-page-selection {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+}

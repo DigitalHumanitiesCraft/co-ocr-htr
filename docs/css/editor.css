@@ -440,3 +440,93 @@
 .model-indicator[data-provider="anthropic"] .model-indicator-icon {
   color: #f59e0b;
 }
+
+/* ============================================
+   Description Panel Styles
+   ============================================ */
+
+.description-panel {
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.description-panel[open] {
+  border-color: var(--accent-primary);
+}
+
+.description-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  transition: background-color 0.2s;
+}
+
+.description-summary::-webkit-details-marker {
+  display: none;
+}
+
+.description-summary:hover {
+  background: var(--bg-muted);
+}
+
+.description-summary svg {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.description-summary-badge {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-2);
+  background: var(--accent-muted);
+  color: var(--accent-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.description-content {
+  padding: var(--space-4);
+}
+
+#descriptionTextarea {
+  width: 100%;
+  min-height: 240px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  resize: vertical;
+}
+
+#descriptionTextarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.description-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-muted);
+}
+
+.description-timestamp {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
