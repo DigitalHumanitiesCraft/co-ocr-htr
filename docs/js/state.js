@@ -350,6 +350,10 @@ class AppState extends EventTarget {
     if (index < 0 || index >= this.data.pages.length) return;
     if (index === this.data.currentPageIndex) return;
 
+    // Allow components to flush pending state (e.g. debounced textarea edits)
+    // before we snapshot the current page. dispatchEvent is synchronous.
+    this.dispatchEvent(new CustomEvent('beforePageChange'));
+
     // Save current page transcription, description, and validation
     this._saveCurrentPageTranscription();
     this._saveCurrentPageDescription();

@@ -305,6 +305,39 @@ describe('Description Feature', () => {
       expect(appState.data.description.id).toBeNull();
     });
 
+    it('should fire beforePageChange synchronously before saving page state', () => {
+      // Regression: debounced edits flushed in pageChanged wrote to WRONG page
+      // because _saveCurrentPageDescription had already run and _loadPage had
+      // overwritten this.data.description.  The fix dispatches beforePageChange
+      // before any save/load so listeners can flush into the correct page state.
+      appState.data.pages = [
+        { id: 'pa', filename: 'a.jpg', dataUrl: 'data:image/jpeg;base64,a', width: 100, height: 100 },
+        { id: 'pb', filename: 'b.jpg', dataUrl: 'data:image/jpeg;base64,b', width: 100, height: 100 }
+      ];
+      appState.data.currentPageIndex = 0;
+      appState.data.description = {
+        id: 'da', provider: 'gemini', model: 'g', raw: 'original A', customPrompt: '', timestamp: null
+      };
+      appState.data.pageDescriptions = {};
+
+      // Simulate a debounced edit that hasn't flushed yet:
+      // The beforePageChange listener writes 'edited A' into description.raw.
+      const handler = () => {
+        appState.data.description.raw = 'edited A';
+      };
+      appState.addEventListener('beforePageChange', handler);
+
+      // Switch to page B
+      appState.goToPage(1);
+
+      // After the switch, page A's stored description should be 'edited A'
+      // (flushed before _saveCurrentPageDescription) and page B should be empty.
+      expect(appState.data.pageDescriptions['pa'].raw).toBe('edited A');
+      expect(appState.data.description.raw).toBe('');
+
+      appState.removeEventListener('beforePageChange', handler);
+    });
+
     // --- Session save includes descriptions ---
 
     it('should include description in session save', async () => {
