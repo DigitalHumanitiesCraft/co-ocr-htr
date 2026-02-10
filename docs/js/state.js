@@ -1199,6 +1199,12 @@ class AppState extends EventTarget {
         pages: this.data.pages.map(p => ({ id: p.id, filename: p.filename }))
       });
     }
+    if (this.data.description?.raw) {
+      this._emit('descriptionComplete', {
+        provider: this.data.description.provider,
+        model: this.data.description.model
+      });
+    }
 
     return true;
   }
