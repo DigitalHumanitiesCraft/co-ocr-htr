@@ -1377,7 +1377,7 @@ class DialogManager {
         }
 
         textEl.textContent = displayName;
-        indicator.title = `Model: ${model} (${provider})`;
+        indicator.title = 'LLM Configuration';
     }
 
     /**
