@@ -826,6 +826,74 @@
                         </div>
                     </div>
 
+                    <!-- Script Type and Century -->
+                    <div class="input-row">
+                        <div class="input-wrapper">
+                            <label for="contextScriptType">Script Type</label>
+                            <select id="contextScriptType">
+                                <option value="">-- Select --</option>
+                                <option value="textura">Textura (Gothic Bookhand)</option>
+                                <option value="cursiva">Cursiva (Gothic Cursive)</option>
+                                <option value="bastarda">Bastarda (Hybrid)</option>
+                                <option value="humanistica">Humanistica</option>
+                                <option value="carolingian">Caroline Minuscule</option>
+                                <option value="uncial">Uncial / Half-Uncial</option>
+                                <option value="insular">Insular Script</option>
+                                <option value="kurrent">Kurrent / Suetterlin</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                            <input type="text" id="contextScriptTypeCustom" class="custom-input" placeholder="Enter script type..." style="display: none;">
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="contextCentury">Century</label>
+                            <input type="text" id="contextCentury" placeholder="e.g. 14, 15th">
+                        </div>
+                    </div>
+
+                    <!-- Region and Text Type -->
+                    <div class="input-row">
+                        <div class="input-wrapper">
+                            <label for="contextRegion">Region</label>
+                            <select id="contextRegion">
+                                <option value="">-- Select --</option>
+                                <option value="german">German-speaking</option>
+                                <option value="french">French-speaking</option>
+                                <option value="english">English-speaking</option>
+                                <option value="italian">Italian-speaking</option>
+                                <option value="spanish">Spanish-speaking</option>
+                                <option value="dutch">Dutch-speaking</option>
+                                <option value="scandinavian">Scandinavian</option>
+                                <option value="bohemian">Bohemian / Czech</option>
+                                <option value="polish">Polish</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                            <input type="text" id="contextRegionCustom" class="custom-input" placeholder="Enter region..." style="display: none;">
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="contextTextType">Text Type</label>
+                            <select id="contextTextType">
+                                <option value="">-- Select --</option>
+                                <option value="liturgical">Liturgical</option>
+                                <option value="legal">Legal / Charter</option>
+                                <option value="chronicle">Chronicle / Historiographic</option>
+                                <option value="scientific">Scientific / Academic</option>
+                                <option value="literary">Literary</option>
+                                <option value="administrative">Administrative</option>
+                                <option value="theological">Theological</option>
+                                <option value="medical">Medical</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                            <input type="text" id="contextTextTypeCustom" class="custom-input" placeholder="Enter text type..." style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Known Text -->
+                    <div class="input-wrapper">
+                        <label for="contextKnownText">Known Source Text</label>
+                        <input type="text" id="contextKnownText" placeholder="e.g. Psalter, Sachsenspiegel, Vulgate">
+                        <span class="input-hint">If the source text is known, name it here for better correction proposals.</span>
+                    </div>
+
                     <!-- Context Information -->
                     <div class="input-wrapper">
                         <label for="contextDescription">Context Information</label>
@@ -993,6 +1061,24 @@
                         <textarea id="customValidationPrompt" class="custom-prompt-textarea" rows="6" placeholder="Analyze the following text for transcription errors...&#10;&#10;{text}&#10;&#10;Respond in JSON format with confidence, issues and summary."></textarea>
                     </div>
                 </details>
+            </div>
+
+            <!-- Post-Processing Stage Toggles (only visible when pipeline feature flag is ON) -->
+            <div class="validate-options-section" id="stageTogglesSection" hidden>
+                <h4 class="validate-section-title">Post-Processing Stages</h4>
+                <p class="validate-section-hint">Select which review stages to run</p>
+                <div class="validate-checkbox-group">
+                    <label class="validate-checkbox-option">
+                        <input type="checkbox" id="enableStage2" checked>
+                        <span class="checkbox-label">Paleographic Review</span>
+                        <span class="checkbox-hint">Minim disambiguation, letter confusion, abbreviation signs</span>
+                    </label>
+                    <label class="validate-checkbox-option">
+                        <input type="checkbox" id="enableStage3" checked>
+                        <span class="checkbox-label">Philological Review</span>
+                        <span class="checkbox-hint">Morphology, syntax, formulaic patterns, lexical plausibility</span>
+                    </label>
+                </div>
             </div>
 
             <!-- Page Selection for Multi-Page -->

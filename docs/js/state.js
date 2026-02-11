@@ -88,7 +88,8 @@ class AppState extends EventTarget {
         llmJudge: null,     // LLM Review result
         summary: null,      // Validation summary (totalIssues, etc.)
         timestamp: null,    // ISO timestamp of last validation
-        customPrompt: ''    // User-defined expert validation prompt
+        customPrompt: '',   // User-defined expert validation prompt
+        pipeline: null      // Post-processing pipeline metadata (stage2/stage3 status, duration)
       },
 
       // Corrections made by user
@@ -189,7 +190,7 @@ class AppState extends EventTarget {
     this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
     this.data.pageDescriptions = {};
     this.data.batchDescriptions = [];
-    this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '' };
+    this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '', pipeline: null };
     this.data.corrections = [];
     this.data.batchTranscriptions = [];
     this.data.batchValidations = [];
@@ -262,7 +263,8 @@ class AppState extends EventTarget {
       llmJudge: null,
       summary: null,
       timestamp: null,
-      customPrompt: ''
+      customPrompt: '',
+      pipeline: null
     };
     this.data.corrections = [];
 
@@ -454,13 +456,20 @@ class AppState extends EventTarget {
     // Load validation for this page if exists
     const savedValidation = this.data.batchValidations.find(v => v.pageIndex === index);
     if (savedValidation?.success && savedValidation?.validation) {
+      const normalizedPipeline = this._normalizePipelineMetadata(savedValidation.validation.pipeline || null);
       this.data.validation = {
         status: 'complete',
         rules: savedValidation.validation.rules || [],
-        llmJudge: savedValidation.validation.llmJudge || null,
+        llmJudge: savedValidation.validation.llmJudge
+          ? {
+            ...savedValidation.validation.llmJudge,
+            pipeline: normalizedPipeline
+          }
+          : null,
         summary: savedValidation.validation.summary || null,
         timestamp: savedValidation.validation.timestamp || null,
-        customPrompt: savedValidation.validation.customPrompt || ''
+        customPrompt: savedValidation.validation.customPrompt || '',
+        pipeline: normalizedPipeline
       };
     } else {
       // Reset validation for page without results
@@ -470,7 +479,8 @@ class AppState extends EventTarget {
         llmJudge: null,
         summary: null,
         timestamp: null,
-        customPrompt: ''
+        customPrompt: '',
+        pipeline: null
       };
     }
 
@@ -572,7 +582,8 @@ class AppState extends EventTarget {
         llmJudge: this.data.validation.llmJudge,
         summary: this.data.validation.summary,
         timestamp: this.data.validation.timestamp,
-        customPrompt: this.data.validation.customPrompt
+        customPrompt: this.data.validation.customPrompt,
+        pipeline: this.data.validation.pipeline
       }
     };
 
@@ -861,6 +872,13 @@ class AppState extends EventTarget {
       period: context.period || '',
       language: context.language || '',
       description: context.description || '',
+      // Extended structured context fields (PPV1-101)
+      scriptType: context.scriptType || '',
+      century: context.century || '',
+      region: context.region || '',
+      languages: Array.isArray(context.languages) ? context.languages : [],
+      textType: context.textType || '',
+      knownText: context.knownText || '',
       timestamp: new Date().toISOString()
     };
     this.data.meta.updatedAt = new Date().toISOString();
@@ -976,6 +994,43 @@ class AppState extends EventTarget {
     this.data.transcription.lines = this._segmentsToLines(this.data.transcription.segments);
   }
 
+  /**
+   * Normalize pipeline metadata into canonical object schema.
+   * Supports legacy string schema for backward compatibility.
+   * @private
+   * @param {object|null} pipeline
+   * @returns {object|null}
+   */
+  _normalizePipelineMetadata(pipeline) {
+    if (!pipeline || typeof pipeline !== 'object') return null;
+
+    const normalizeStage = (stage) => {
+      if (typeof stage === 'string') {
+        return { status: stage };
+      }
+      if (stage && typeof stage === 'object' && typeof stage.status === 'string') {
+        const normalized = { status: stage.status };
+        if (typeof stage.duration === 'number' && Number.isFinite(stage.duration)) {
+          normalized.duration = stage.duration;
+        }
+        if (typeof stage.reason === 'string' && stage.reason.trim()) {
+          normalized.reason = stage.reason;
+        }
+        return normalized;
+      }
+      return { status: 'skipped' };
+    };
+
+    const normalized = {
+      stage2: normalizeStage(pipeline.stage2),
+      stage3: normalizeStage(pipeline.stage3)
+    };
+    if (typeof pipeline.duration === 'number' && Number.isFinite(pipeline.duration)) {
+      normalized.duration = pipeline.duration;
+    }
+    return normalized;
+  }
+
   // ============================================
   // Validation
   // ============================================
@@ -986,11 +1041,20 @@ class AppState extends EventTarget {
   }
 
   setValidationResults(results) {
+    const normalizedPipeline = this._normalizePipelineMetadata(results.llmJudge?.pipeline || null);
+    const normalizedLlmJudge = results.llmJudge
+      ? {
+        ...results.llmJudge,
+        pipeline: normalizedPipeline
+      }
+      : null;
+
     this.data.validation.rules = results.rules || [];
-    this.data.validation.llmJudge = results.llmJudge || null;
+    this.data.validation.llmJudge = normalizedLlmJudge;
     this.data.validation.summary = results.summary || null;
     this.data.validation.timestamp = results.timestamp || new Date().toISOString();
     this.data.validation.customPrompt = results.customPrompt || this.data.validation.customPrompt || '';
+    this.data.validation.pipeline = normalizedPipeline;
     this.data.validation.status = 'complete';
     this.data.meta.updatedAt = new Date().toISOString();
     this._emit('validationComplete', results);
@@ -1179,6 +1243,7 @@ class AppState extends EventTarget {
           summary: null,
           timestamp: null,
           customPrompt: '',
+          pipeline: null,
           ...session.validation
         };
       }
@@ -1203,7 +1268,7 @@ class AppState extends EventTarget {
       this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
       this.data.pageDescriptions = {};
       this.data.batchDescriptions = [];
-      this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '' };
+      this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '', pipeline: null };
       this.data.corrections = [];
       this.data.regions = [];
       this.data.context = null;

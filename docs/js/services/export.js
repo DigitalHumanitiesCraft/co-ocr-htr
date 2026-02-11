@@ -21,6 +21,21 @@ class ExportService {
     }
 
     /**
+     * Resolve pipeline stage status across legacy and canonical schemas.
+     * Legacy: stage = 'success' | 'error' | 'skipped'
+     * Canonical: stage = { status: 'success' | 'error' | 'skipped', ... }
+     * @param {string|object|null|undefined} stage
+     * @returns {string}
+     */
+    resolvePipelineStageStatus(stage) {
+        if (typeof stage === 'string') return stage;
+        if (stage && typeof stage === 'object' && typeof stage.status === 'string') {
+            return stage.status;
+        }
+        return '';
+    }
+
+    /**
      * Export transcription in specified format
      * @param {string} format - Export format (txt, json, md)
      * @param {object} options - Export options
@@ -157,7 +172,8 @@ class ExportService {
                 llmJudge: state.validation.llmJudge,
                 summary: state.validation.summary || null,
                 timestamp: state.validation.timestamp || null,
-                customPrompt: state.validation.customPrompt || ''
+                customPrompt: state.validation.customPrompt || '',
+                pipeline: state.validation.pipeline || null
             };
         }
 
@@ -235,6 +251,19 @@ class ExportService {
         if (includeValidation && state.validation?.rules?.length > 0) {
             lines.push('## Validation Notes');
             lines.push('');
+
+            // Show pipeline info if post-processing was used
+            if (state.validation.pipeline) {
+                const stage2Status = this.resolvePipelineStageStatus(state.validation.pipeline.stage2);
+                const stage3Status = this.resolvePipelineStageStatus(state.validation.pipeline.stage3);
+                const stages = [];
+                if (stage2Status === 'success') stages.push('Paleographic');
+                if (stage3Status === 'success') stages.push('Philological');
+                if (stages.length > 0) {
+                    lines.push(`**Pipeline:** ${stages.join(' + ')} review`);
+                    lines.push('');
+                }
+            }
 
             // Show custom validation prompt if present
             if (state.validation.customPrompt) {

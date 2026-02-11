@@ -89,7 +89,8 @@ describe('AppState', () => {
       llmJudge: null,
       summary: null,
       timestamp: null,
-      customPrompt: ''
+      customPrompt: '',
+      pipeline: null
     };
     appState.data.corrections = [];
     appState.data.batchTranscriptions = [];
@@ -566,6 +567,100 @@ describe('AppState', () => {
       expect(new Date(state.validation.timestamp).toISOString()).toBe(state.validation.timestamp);
     });
 
+    it('should store pipeline metadata from llmJudge in validation results (PPV1-206)', () => {
+      const pipelineMeta = {
+        stage2: { status: 'success', duration: 1200 },
+        stage3: { status: 'success', duration: 800 }
+      };
+      const results = {
+        rules: [{ name: 'Test', type: 'warning' }],
+        llmJudge: {
+          confidence: 'likely',
+          reasoning: 'Found issues',
+          pipeline: pipelineMeta
+        }
+      };
+
+      appState.setValidationResults(results);
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toEqual(pipelineMeta);
+      expect(state.validation.pipeline.stage2.status).toBe('success');
+      expect(state.validation.pipeline.stage3.duration).toBe(800);
+    });
+
+    it('should set pipeline to null when llmJudge has no pipeline field', () => {
+      appState.setValidationResults({
+        rules: [],
+        llmJudge: { confidence: 'confident', reasoning: 'All good' }
+      });
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toBeNull();
+    });
+
+    it('should set pipeline to null when llmJudge is null', () => {
+      appState.setValidationResults({
+        rules: [{ name: 'Test', type: 'info' }],
+        llmJudge: null
+      });
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toBeNull();
+    });
+
+    it('should normalize legacy string pipeline schema to canonical object schema', () => {
+      appState.setValidationResults({
+        rules: [],
+        llmJudge: {
+          confidence: 'likely',
+          pipeline: {
+            stage2: 'success',
+            stage3: 'skipped',
+            duration: 1234
+          }
+        }
+      });
+
+      const state = appState.getState();
+      expect(state.validation.pipeline.stage2.status).toBe('success');
+      expect(state.validation.pipeline.stage3.status).toBe('skipped');
+      expect(state.validation.pipeline.duration).toBe(1234);
+      expect(state.validation.llmJudge.pipeline.stage2.status).toBe('success');
+    });
+
+    it('should persist pipeline metadata across page switch roundtrip (PPV1-206)', () => {
+      const mockPages = [
+        { id: 'p1', filename: 'page1.jpg', dataUrl: 'data:1' },
+        { id: 'p2', filename: 'page2.jpg', dataUrl: 'data:2' }
+      ];
+      appState.setPages(mockPages);
+
+      const pipelineMeta = {
+        stage2: { status: 'success', duration: 1500 },
+        stage3: { status: 'skipped', duration: 0, reason: 'timeout' }
+      };
+      appState.setValidationResults({
+        rules: [{ name: 'Paleo', type: 'warning' }],
+        llmJudge: { confidence: 'likely', pipeline: pipelineMeta },
+        summary: { totalIssues: 2 },
+        timestamp: '2026-02-11T14:00:00.000Z',
+        customPrompt: 'Check minims'
+      });
+
+      // Navigate away to page 2
+      appState.nextPage();
+
+      // Navigate back to page 1
+      appState.prevPage();
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toEqual(pipelineMeta);
+      expect(state.validation.pipeline.stage2.status).toBe('success');
+      expect(state.validation.pipeline.stage3.reason).toBe('timeout');
+      expect(state.validation.status).toBe('complete');
+    });
+
     it('should persist validation fields across page switch roundtrip', () => {
       const mockPages = [
         { id: 'p1', filename: 'page1.jpg', dataUrl: 'data:1' },
@@ -707,6 +802,44 @@ describe('AppState', () => {
       appState.clearDocumentContext();
 
       expect(appState.getDocumentContext()).toBeNull();
+    });
+
+    it('should store extended context fields (PPV1-101)', () => {
+      appState.setDocumentContext({
+        documentType: 'manuscript',
+        period: 'mid-14th century',
+        language: 'Latin',
+        description: 'Psalter fragment',
+        scriptType: 'textura',
+        century: '14',
+        region: 'german',
+        languages: ['latin', 'middle-high-german'],
+        textType: 'liturgical',
+        knownText: 'psalter'
+      });
+
+      const ctx = appState.getDocumentContext();
+      expect(ctx.scriptType).toBe('textura');
+      expect(ctx.century).toBe('14');
+      expect(ctx.region).toBe('german');
+      expect(ctx.languages).toEqual(['latin', 'middle-high-german']);
+      expect(ctx.textType).toBe('liturgical');
+      expect(ctx.knownText).toBe('psalter');
+      // Legacy fields still present
+      expect(ctx.documentType).toBe('manuscript');
+      expect(ctx.language).toBe('Latin');
+    });
+
+    it('should default extended fields to empty when not provided (backward compat)', () => {
+      appState.setDocumentContext({ documentType: 'Letter' });
+
+      const ctx = appState.getDocumentContext();
+      expect(ctx.scriptType).toBe('');
+      expect(ctx.century).toBe('');
+      expect(ctx.region).toBe('');
+      expect(ctx.languages).toEqual([]);
+      expect(ctx.textType).toBe('');
+      expect(ctx.knownText).toBe('');
     });
   });
 

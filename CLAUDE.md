@@ -29,9 +29,15 @@ cd docs && npx vitest
 
 # Run tests with UI
 cd docs && npm run test:ui
+
+# Run E2E tests (Playwright)
+cd docs && npx playwright test
+
+# Run E2E tests with headed browser
+cd docs && npx playwright test --headed
 ```
 
-Tests use Vitest with jsdom environment. Test files live in `docs/tests/`. No build step exists -- the app runs directly from `docs/` as ES6 modules.
+Tests use Vitest with jsdom environment. Test files live in `docs/tests/`. E2E tests use Playwright in `docs/tests/e2e/`. No build step exists -- the app runs directly from `docs/` as ES6 modules.
 
 ## Architecture
 
@@ -66,6 +72,7 @@ Multi-page documents store per-page transcriptions in `appState.data.pageTranscr
 | `validation.js` | `validationPanel` | Hybrid validation display, re-validation |
 | `dialogs.js` | `dialogManager` | Modal dialogs (API config, export, help) |
 | `context.js` | `contextManager` | Document context for enhanced transcription |
+| `description.js` | `descriptionPanel` | Illuminated initials visual description |
 | `batch-progress.js` | `batchProgress` | Batch operation progress panel |
 
 ### Services (`js/services/`)
@@ -76,6 +83,7 @@ Multi-page documents store per-page transcriptions in `appState.data.pageTranscr
 | `validation.js` | `validationEngine` | Deterministic rules + LLM-as-judge hybrid validation |
 | `storage.js` | `storage` | localStorage (settings/prompts) + IndexedDB (projects/sessions/images/apiKeys) |
 | `export.js` | `exportService` | Export to PAGE-XML, TEI-XML, TXT, JSON, Markdown, ZIP |
+| `postprocess.js` | `postprocessService` | HTR post-processing orchestrator (Stage 2 + 3 pipeline) |
 | `samples.js` | `samplesService` | Demo document loading |
 | `parsers/page-xml.js` | `pageXMLParser` | PAGE-XML import/export |
 | `parsers/mets-xml.js` | `metsXMLParser` | METS-XML multi-page import |
@@ -117,6 +125,7 @@ Design decisions are documented in `knowledge/`:
 | Technical architecture | [ARCHITECTURE.md](knowledge/ARCHITECTURE.md) |
 | Validation system | [VALIDATION.md](knowledge/VALIDATION.md) |
 | Data structures | [DATA-SCHEMA.md](knowledge/DATA-SCHEMA.md) |
+| HTR post-processing | [HTR-POSTPROCESSING.md](knowledge/HTR-POSTPROCESSING.md) |
 
 ## Key Concepts
 

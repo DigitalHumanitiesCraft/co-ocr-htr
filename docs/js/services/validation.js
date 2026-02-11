@@ -7,6 +7,8 @@
  */
 
 import { llmService } from './llm.js';
+import { runPostprocessing } from './postprocess.js';
+import { FEATURE_FLAGS } from '../utils/constants.js';
 
 // ============================================
 // Rule Categories
@@ -337,6 +339,41 @@ class ValidationEngine {
     }
 
     /**
+     * Run post-processing pipeline (Stage 2 + Stage 3) instead of single LLM Review.
+     * Falls back to single-call validateWithLLM if both stages fail.
+     * @param {string} text - Transcription text
+     * @param {object} options - Validation options
+     * @returns {Promise<object>} LLM validation result
+     */
+    async validateWithPostprocessing(text, options = {}) {
+        try {
+            const result = await runPostprocessing(text, {
+                contextDescription: options.contextDescription || '',
+                runStage2: options.runStage2 !== false,
+                runStage3: options.runStage3 !== false,
+                signal: options.signal || null
+            });
+
+            // If orchestrator signals both-stage fallback, use single-call review
+            if (result.fallbackUsed) {
+                console.log('[Validation] Postprocessing failed, falling back to single LLM Review');
+                return await this.validateWithLLM(text, options.customPrompt || '');
+            }
+
+            return {
+                confidence: result.confidence,
+                reasoning: result.reasoning,
+                issues: result.issues || [],
+                summary: result.summary || result.reasoning,
+                pipeline: result.pipeline
+            };
+        } catch (error) {
+            console.error('[Validation] Postprocessing error, falling back:', error.message);
+            return await this.validateWithLLM(text, options.customPrompt || '');
+        }
+    }
+
+    /**
      * Run complete validation (rules + LLM) with options
      * @param {string} text - Transcription text
      * @param {Array} segments - Parsed segments
@@ -369,7 +406,12 @@ class ValidationEngine {
         // Run LLM validation (if requested and API key available)
         let llmResult = null;
         if (includeLLM && llmService.hasApiKey()) {
-            llmResult = await this.validateWithLLM(text, customPrompt);
+            // PPV1-203: Use post-processing pipeline if feature flag is enabled
+            if (FEATURE_FLAGS.postprocessPipelineV1 && !customPrompt) {
+                llmResult = await this.validateWithPostprocessing(text, options);
+            } else {
+                llmResult = await this.validateWithLLM(text, customPrompt);
+            }
         }
 
         // Calculate summary

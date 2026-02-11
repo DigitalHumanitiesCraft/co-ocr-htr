@@ -66,6 +66,6 @@ export default [
 
     // Ignore non-source files
     {
-        ignores: ['node_modules/', 'config.local.js', 'sw.js'],
+        ignores: ['node_modules/', 'config.local.js', 'sw.js', 'tests/e2e/'],
     },
 ];

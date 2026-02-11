@@ -586,6 +586,37 @@
   color: var(--accent-primary);
 }
 
+/* Issue Stage Badge */
+.issue-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.issue-stage-badge.stage-paleographic {
+  background: rgba(106, 158, 142, 0.12);
+  color: var(--accent-primary);
+}
+
+.issue-stage-badge.stage-philological {
+  background: rgba(124, 92, 191, 0.12);
+  color: var(--ai-primary, #7c5cbf);
+}
+
+/* Pipeline notice */
+.validation-item.pipeline-notice {
+  background: rgba(var(--accent-primary-rgb, 106, 158, 142), 0.06);
+  margin: var(--space-1) calc(-1 * var(--space-2));
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border-bottom: none;
+}
+
 /* Issue Line Reference */
 .issue-line {
   font-size: var(--text-xs);

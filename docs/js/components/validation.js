@@ -14,11 +14,13 @@
 
 import { validationEngine } from '../services/validation.js';
 import { llmService, ISSUE_TYPES } from '../services/llm.js';
+import { FEATURE_FLAGS } from '../utils/constants.js';
 import { storage } from '../services/storage.js';
 import { appState } from '../state.js';
 import { applySuggestionAtLine } from '../editor.js';
 import { dialogManager } from './dialogs.js';
 import { batchProgress } from './batch-progress.js';
+import { contextManager } from './context.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
 import { escapeHtml } from '../utils/textFormatting.js';
 
@@ -202,6 +204,9 @@ class ValidationPanel {
         // Update LLM mode hint
         this.updateLLMModeHint();
 
+        // Show/hide stage toggles based on feature flag
+        this.updateStageTogglesVisibility();
+
         // Show dialog
         if (this.validateDialog) {
             this.validateDialog.showModal();
@@ -291,17 +296,37 @@ class ValidationPanel {
     }
 
     /**
+     * Show/hide stage toggles based on feature flag
+     */
+    updateStageTogglesVisibility() {
+        const section = getById('stageTogglesSection');
+        if (!section) return;
+        // Only show stage toggles when postprocessing pipeline is enabled
+        section.hidden = !FEATURE_FLAGS.postprocessPipelineV1;
+    }
+
+    /**
      * Get validation options from dialog checkboxes
      * @returns {object} Validation options
      */
     getValidationOptions() {
-        return {
+        const options = {
             checkMarkers: getById('checkMarkers')?.checked ?? true,
             checkStats: getById('checkStats')?.checked ?? true,
             checkArtifacts: getById('checkArtifacts')?.checked ?? true,
             includeLLM: getById('enableLLM')?.checked ?? true,
-            customPrompt: getById('customValidationPrompt')?.value?.trim() || ''
+            customPrompt: getById('customValidationPrompt')?.value?.trim() || '',
+            // Forward document context into LLM Review / postprocessing prompts.
+            contextDescription: contextManager.buildPromptContext() || ''
         };
+
+        // Include stage toggles when pipeline is active
+        if (FEATURE_FLAGS.postprocessPipelineV1) {
+            options.runStage2 = getById('enableStage2')?.checked ?? true;
+            options.runStage3 = getById('enableStage3')?.checked ?? true;
+        }
+
+        return options;
     }
 
     /**
@@ -786,14 +811,21 @@ class ValidationPanel {
         const statusClass = {
             confident: 'status-success',
             certain: 'status-success',
+            sure: 'status-success',
             likely: 'status-warning',
-            uncertain: 'status-error'
+            'check-worthy': 'status-warning',
+            uncertain: 'status-error',
+            problematic: 'status-error'
         }[llmResult.confidence] || 'status-warning';
 
         const confidenceLabel = {
             confident: 'High confidence',
+            certain: 'High confidence',
+            sure: 'High confidence',
             likely: 'Medium confidence',
-            uncertain: 'Low confidence'
+            'check-worthy': 'Medium confidence',
+            uncertain: 'Low confidence',
+            problematic: 'Low confidence'
         }[llmResult.confidence] || 'Unknown';
 
         // Compact summary line
@@ -804,6 +836,28 @@ class ValidationPanel {
                 <span class="item-value">${confidenceLabel}</span>
             </div>
         `;
+
+        // Show pipeline info if post-processing was used
+        if (llmResult.pipeline) {
+            const stage2Status = (typeof llmResult.pipeline.stage2 === 'string')
+                ? llmResult.pipeline.stage2
+                : llmResult.pipeline.stage2?.status;
+            const stage3Status = (typeof llmResult.pipeline.stage3 === 'string')
+                ? llmResult.pipeline.stage3
+                : llmResult.pipeline.stage3?.status;
+            const stages = [];
+            if (stage2Status === 'success') stages.push('Paleographic');
+            if (stage3Status === 'success') stages.push('Philological');
+            if (stages.length > 0) {
+                html += `
+                    <div class="validation-item pipeline-notice">
+                        <span class="status-dot status-info"></span>
+                        <span class="item-label">Pipeline</span>
+                        <span class="item-value text-xs">${stages.join(' + ')} review</span>
+                    </div>
+                `;
+            }
+        }
 
         // Show fallback notice if a different model was used for validation
         if (llmResult.fallbackUsed) {
@@ -882,6 +936,7 @@ class ValidationPanel {
             >
                 <div class="issue-header">
                     <span class="issue-type-badge badge-${typeInfo.color}" title="${escapeHtml(typeInfo.description || '')}">${escapeHtml(typeInfo.name)}</span>
+                    ${issue.stage ? `<span class="issue-stage-badge stage-${escapeHtml(issue.stage)}">${escapeHtml(issue.stage)}</span>` : ''}
                     ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
                 </div>
                 <div class="issue-content">
