@@ -2,8 +2,9 @@
  * LLM Service
  * Unified abstraction for multiple LLM providers with vision capabilities
  *
- * SECURITY NOTE: API keys are stored in memory only and are NOT persisted
- * to localStorage. Users must re-enter their keys each browser session.
+ * SECURITY NOTE: API keys are always used from in-memory runtime state.
+ * Optional persistence (if enabled by user) is handled outside this service
+ * via IndexedDB and restored into memory on startup.
  */
 
 // ============================================
@@ -369,7 +370,7 @@ class LLMService {
   }
 
   /**
-   * Check if API key is configured for current provider (memory only)
+   * Check if API key is configured for current provider (runtime memory state)
    */
   hasApiKey() {
     if (this.activeProvider === 'ollama') return true;

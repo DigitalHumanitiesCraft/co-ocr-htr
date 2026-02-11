@@ -168,6 +168,26 @@ class StorageService {
   }
 
   // ============================================
+  // Validation Prompts (localStorage -- synchronous)
+  // ============================================
+
+  /**
+   * Save custom validation prompt (Expert Prompt)
+   * @param {string} prompt - Custom prompt text
+   */
+  saveValidationPrompt(prompt) {
+    localStorage.setItem(`${this.prefix}validationPrompt`, prompt);
+  }
+
+  /**
+   * Load saved validation prompt (Expert Prompt)
+   * @returns {string} Saved prompt or empty string
+   */
+  loadValidationPrompt() {
+    return localStorage.getItem(`${this.prefix}validationPrompt`) || '';
+  }
+
+  // ============================================
   // Active Project (localStorage -- synchronous)
   // ============================================
 

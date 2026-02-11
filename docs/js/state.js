@@ -85,7 +85,10 @@ class AppState extends EventTarget {
       validation: {
         status: 'idle',     // idle | running | complete | error
         rules: [],          // Rule-based validation results
-        llmJudge: null      // LLM-judge validation result
+        llmJudge: null,     // LLM-judge validation result
+        summary: null,      // Validation summary (totalIssues, etc.)
+        timestamp: null,    // ISO timestamp of last validation
+        customPrompt: ''    // User-defined expert validation prompt
       },
 
       // Corrections made by user
@@ -186,7 +189,7 @@ class AppState extends EventTarget {
     this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
     this.data.pageDescriptions = {};
     this.data.batchDescriptions = [];
-    this.data.validation = { status: 'idle', rules: [], llmJudge: null };
+    this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '' };
     this.data.corrections = [];
     this.data.batchTranscriptions = [];
     this.data.batchValidations = [];
@@ -256,7 +259,10 @@ class AppState extends EventTarget {
     this.data.validation = {
       status: 'idle',
       rules: [],
-      llmJudge: null
+      llmJudge: null,
+      summary: null,
+      timestamp: null,
+      customPrompt: ''
     };
     this.data.corrections = [];
 
@@ -452,14 +458,19 @@ class AppState extends EventTarget {
         status: 'complete',
         rules: savedValidation.validation.rules || [],
         llmJudge: savedValidation.validation.llmJudge || null,
-        summary: savedValidation.validation.summary || null
+        summary: savedValidation.validation.summary || null,
+        timestamp: savedValidation.validation.timestamp || null,
+        customPrompt: savedValidation.validation.customPrompt || ''
       };
     } else {
       // Reset validation for page without results
       this.data.validation = {
         status: 'idle',
         rules: [],
-        llmJudge: null
+        llmJudge: null,
+        summary: null,
+        timestamp: null,
+        customPrompt: ''
       };
     }
 
@@ -559,7 +570,9 @@ class AppState extends EventTarget {
       validation: {
         rules: this.data.validation.rules,
         llmJudge: this.data.validation.llmJudge,
-        summary: this.data.validation.summary
+        summary: this.data.validation.summary,
+        timestamp: this.data.validation.timestamp,
+        customPrompt: this.data.validation.customPrompt
       }
     };
 
@@ -939,6 +952,9 @@ class AppState extends EventTarget {
   setValidationResults(results) {
     this.data.validation.rules = results.rules || [];
     this.data.validation.llmJudge = results.llmJudge || null;
+    this.data.validation.summary = results.summary || null;
+    this.data.validation.timestamp = results.timestamp || new Date().toISOString();
+    this.data.validation.customPrompt = results.customPrompt || this.data.validation.customPrompt || '';
     this.data.validation.status = 'complete';
     this.data.meta.updatedAt = new Date().toISOString();
     this._emit('validationComplete', results);
@@ -1119,7 +1135,17 @@ class AppState extends EventTarget {
       if (session.document) this.data.document = { ...this.data.document, ...session.document };
       if (session.transcription) this.data.transcription = session.transcription;
       if (session.description) this.data.description = session.description;
-      if (session.validation) this.data.validation = session.validation;
+      if (session.validation) {
+        this.data.validation = {
+          status: 'idle',
+          rules: [],
+          llmJudge: null,
+          summary: null,
+          timestamp: null,
+          customPrompt: '',
+          ...session.validation
+        };
+      }
       if (session.corrections) this.data.corrections = session.corrections;
       if (session.regions) this.data.regions = session.regions;
       if (session.context !== undefined) this.data.context = session.context;
@@ -1141,7 +1167,7 @@ class AppState extends EventTarget {
       this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
       this.data.pageDescriptions = {};
       this.data.batchDescriptions = [];
-      this.data.validation = { status: 'idle', rules: [], llmJudge: null };
+      this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '' };
       this.data.corrections = [];
       this.data.regions = [];
       this.data.context = null;
@@ -1203,6 +1229,13 @@ class AppState extends EventTarget {
       this._emit('descriptionComplete', {
         provider: this.data.description.provider,
         model: this.data.description.model
+      });
+    }
+    if (this.data.validation?.status === 'complete') {
+      this._emit('validationComplete', {
+        rules: this.data.validation.rules,
+        llmJudge: this.data.validation.llmJudge,
+        summary: this.data.validation.summary
       });
     }
 
