@@ -38,22 +38,30 @@ The central data structure contains document metadata, transcription content, va
 
 | Field | Type | Description |
 |-------|------|-------------|
-| id | UUID | Unique identifier |
-| timestamp | ISO 8601 | Creation time |
+| project | Object | Active project metadata (`id`, `name`) |
 | document | Object | Source file metadata |
+| pages | Array | Multi-page document metadata |
+| currentPageIndex | Number | Active page index (0-based) |
 | transcription | Object | OCR/HTR results |
+| description | Object | Image description data (current page) |
 | validation | Object | Quality assessment |
 | corrections | Array | Edit history |
+| batch | Object | Batch operation state (operation/status/progress) |
+| batchTranscriptions | Array | Batch transcription results per page |
+| batchValidations | Array | Batch validation results per page |
+| batchDescriptions | Array | Batch description results per page |
+| meta | Object | Session metadata (`createdAt`, `updatedAt`) |
 
 ### Document Object
 
 | Field | Type | Description |
 |-------|------|-------------|
+| id | String | Internal document/page identifier |
 | filename | String | Original file name |
 | mimeType | String | image/jpeg, image/png, image/tiff, application/pdf |
-| pages | Number | Total page count |
-| currentPage | Number | Active page (1-based) |
 | dataUrl | String (optional) | Base64 encoded image |
+| width | Number | Image width in pixels |
+| height | Number | Image height in pixels |
 
 ### Transcription Segment
 
@@ -71,18 +79,20 @@ Each line of transcribed text is stored as a segment:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| status | Enum | valid, uncertain, or invalid |
+| status | Enum | idle, running, complete, or error |
 | rules | Array | Results from rule-based validation |
 | llmJudge | Object (optional) | AI validation analysis |
+| summary | Object/null | Aggregated issue counts |
+| timestamp | ISO 8601/null | Validation timestamp |
+| customPrompt | String | User-defined expert prompt |
 
 ### Correction Entry
 
 | Field | Type | Description |
 |-------|------|-------------|
-| segmentIndex | Number | Which line was corrected |
+| lineNumber | Number | Which line was corrected |
 | original | String | Text before edit |
 | corrected | String | Text after edit |
-| reason | String | Why the change was made |
 | timestamp | ISO 8601 | When the edit occurred |
 
 ## Example: Account Book Entry
@@ -115,22 +125,25 @@ A typical tabular document (Rechnungsbuch 1842, page 15) demonstrates the data s
 
 ### LocalStorage
 
-Two keys store user preferences:
+Used for synchronous settings and prompt fallbacks:
 
 | Key | Content |
 |-----|---------|
-| coocr:settings | Theme, default model, auto-save/validate flags |
-| coocr:apikeys | Base64-obfuscated API keys per provider, Ollama endpoint URL |
+| coocr:settings | Theme, model preferences, workflow/UI settings |
+| coocr:descriptionPrompt | Last custom description prompt |
+| coocr:validationPrompt | Last custom validation prompt |
+| coocr:activeProjectId | Active project ID for startup restore |
 
 ### IndexedDB
 
-Three object stores for persistent data:
+Four object stores for persistent data:
 
 | Store | Key | Indexes | Content |
 |-------|-----|---------|---------|
-| documents | id | filename, createdAt, updatedAt | Source files |
-| transcriptions | id | documentId, pageNumber, version | OCR/HTR results |
-| sessions | id | lastAccessed | Work sessions |
+| projects | id | name, updatedAt | Project metadata |
+| sessions | projectId | (primary key) | Serialized project session |
+| images | id (`projectId_pageId`) | projectId | Page/document image data |
+| apiKeys | provider | (primary key) | Optional persisted API keys |
 
 ## Export Formats
 
@@ -140,9 +153,10 @@ Three object stores for persistent data:
 |--------|-----------|---------|----------|
 | Markdown | .md | Table with validation notes | Human-readable documentation |
 | JSON | .json | Complete transcription object | Data interchange, backup |
-| TSV | .tsv | Tab-separated values | Spreadsheet import |
+| TEI-XML | .tei.xml | TEI P5 minimal schema | Digital editions |
 | PAGE-XML | .xml | 2019-07-15 schema | Transkribus compatibility |
 | Plain Text | .txt | Lines only | Simple export |
+| ZIP (batch) | .zip | Per-page exports + manifest | Multi-page package export |
 
 ## Validation Rules Reference
 
@@ -153,8 +167,11 @@ Current generic rules (v2.0) - see [VALIDATION.md](VALIDATION.md) for details:
 | `uncertain_marker` | `[?]` | warning |
 | `illegible_marker` | `[illegible]`, `[...]` | warning |
 | `abbreviations` | `word[expansion]` | info |
-| `line_breaks` | Line count | info |
-| `special_chars` | Non-standard characters | info |
+| `line_count` | Line count | info |
+| `char_count` | Character count | info |
+| `special_chars` | Unusual characters | warning |
+| `double_spaces` | Multiple spaces | info |
+| `control_chars` | Non-printable characters | error |
 
 **Note:** Document-type-specific rules (date_format, currency, table_consistency) were removed in v2.0 to avoid false positives on different document types.
 
@@ -166,7 +183,7 @@ Current generic rules (v2.0) - see [VALIDATION.md](VALIDATION.md) for details:
 
 **Implementation:** [page-xml.js](../docs/js/services/parsers/page-xml.js)
 
-**Namespace:** `http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15`
+**Namespace:** `http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15`
 
 PAGE-XML is the standard format from tools like Transkribus and PyLaia. The parser extracts:
 - Page metadata (image filename, dimensions)

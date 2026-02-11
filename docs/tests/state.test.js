@@ -87,7 +87,9 @@ describe('AppState', () => {
       status: 'idle',
       rules: [],
       llmJudge: null,
-      perspective: 'paleographic'
+      summary: null,
+      timestamp: null,
+      customPrompt: ''
     };
     appState.data.corrections = [];
     appState.data.batchTranscriptions = [];
@@ -520,6 +522,78 @@ describe('AppState', () => {
 
       expect(listener).toHaveBeenCalled();
     });
+
+    it('should store summary, timestamp, and customPrompt in validation results', () => {
+      const results = {
+        rules: [{ name: 'Test', type: 'warning' }],
+        llmJudge: { confidence: 'likely' },
+        summary: { totalIssues: 3 },
+        timestamp: '2026-02-11T10:00:00.000Z',
+        customPrompt: 'Check for abbreviations'
+      };
+
+      appState.setValidationResults(results);
+
+      const state = appState.getState();
+      expect(state.validation.summary).toEqual({ totalIssues: 3 });
+      expect(state.validation.timestamp).toBe('2026-02-11T10:00:00.000Z');
+      expect(state.validation.customPrompt).toBe('Check for abbreviations');
+    });
+
+    it('should preserve customPrompt when not provided in results', () => {
+      // Set initial custom prompt
+      appState.data.validation.customPrompt = 'Existing prompt';
+
+      // Set results without customPrompt
+      appState.setValidationResults({
+        rules: [{ name: 'Test', type: 'info' }],
+        llmJudge: null
+      });
+
+      const state = appState.getState();
+      expect(state.validation.customPrompt).toBe('Existing prompt');
+    });
+
+    it('should auto-generate timestamp when not provided', () => {
+      appState.setValidationResults({
+        rules: [],
+        llmJudge: null
+      });
+
+      const state = appState.getState();
+      expect(state.validation.timestamp).toBeTruthy();
+      // Should be a valid ISO string
+      expect(new Date(state.validation.timestamp).toISOString()).toBe(state.validation.timestamp);
+    });
+
+    it('should persist validation fields across page switch roundtrip', () => {
+      const mockPages = [
+        { id: 'p1', filename: 'page1.jpg', dataUrl: 'data:1' },
+        { id: 'p2', filename: 'page2.jpg', dataUrl: 'data:2' }
+      ];
+      appState.setPages(mockPages);
+
+      // Set validation on page 1
+      appState.setValidationResults({
+        rules: [{ name: 'Rule1', type: 'warning' }],
+        llmJudge: { confidence: 'likely' },
+        summary: { totalIssues: 1 },
+        timestamp: '2026-02-11T12:00:00.000Z',
+        customPrompt: 'Expert prompt for page 1'
+      });
+
+      // Navigate away to page 2
+      appState.nextPage();
+
+      // Navigate back to page 1
+      appState.prevPage();
+
+      const state = appState.getState();
+      expect(state.validation.status).toBe('complete');
+      expect(state.validation.summary).toEqual({ totalIssues: 1 });
+      expect(state.validation.timestamp).toBe('2026-02-11T12:00:00.000Z');
+      expect(state.validation.customPrompt).toBe('Expert prompt for page 1');
+    });
   });
 
   describe('UI State', () => {
@@ -742,6 +816,97 @@ describe('AppState', () => {
       const savedData = storage.saveSession.mock.calls[0][1];
       expect(savedData.document.dataUrl).toBeUndefined();
       expect(savedData.document.filename).toBe('test.jpg');
+    });
+
+    it('should persist validation summary, timestamp, and customPrompt across session restore', async () => {
+      appState.data.project = { id: 'proj-1', name: 'Project 1' };
+      appState.data.validation = {
+        status: 'complete',
+        rules: [{ name: 'Test Rule', type: 'warning' }],
+        llmJudge: { confidence: 'likely', reasoning: 'Looks good' },
+        summary: { totalIssues: 1 },
+        timestamp: '2026-02-11T15:00:00.000Z',
+        customPrompt: 'Keep abbreviations'
+      };
+
+      await appState.saveSessionNow();
+      const savedSession = storage.saveSession.mock.calls[0][1];
+
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue(savedSession);
+
+      const restored = await appState.restoreSession('proj-1');
+      const state = appState.getState();
+
+      expect(restored).toBe(true);
+      expect(state.validation.summary).toEqual({ totalIssues: 1 });
+      expect(state.validation.timestamp).toBe('2026-02-11T15:00:00.000Z');
+      expect(state.validation.customPrompt).toBe('Keep abbreviations');
+    });
+
+    it('should merge missing validation fields from older sessions with schema defaults', async () => {
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Legacy Project' });
+      storage.loadSession.mockResolvedValue({
+        validation: {
+          status: 'complete',
+          rules: [{ name: 'Legacy Rule', type: 'warning' }],
+          llmJudge: { confidence: 'likely' }
+        }
+      });
+
+      const restored = await appState.restoreSession('proj-1');
+      const state = appState.getState();
+
+      expect(restored).toBe(true);
+      expect(state.validation.status).toBe('complete');
+      expect(state.validation.rules).toHaveLength(1);
+      expect(state.validation.summary).toBeNull();
+      expect(state.validation.timestamp).toBeNull();
+      expect(state.validation.customPrompt).toBe('');
+    });
+
+    it('should emit validationComplete on restore when validation status is complete', async () => {
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue({
+        validation: {
+          status: 'complete',
+          rules: [{ name: 'Rule1', type: 'info' }],
+          llmJudge: null,
+          summary: { totalIssues: 0 },
+          timestamp: '2026-02-11T12:00:00.000Z',
+          customPrompt: 'Check Latin'
+        }
+      });
+
+      const listener = vi.fn();
+      appState.addEventListener('validationComplete', listener);
+
+      await appState.restoreSession('proj-1');
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener.mock.calls[0][0].detail).toEqual({
+        rules: [{ name: 'Rule1', type: 'info' }],
+        llmJudge: null,
+        summary: { totalIssues: 0 }
+      });
+    });
+
+    it('should not emit validationComplete on restore when validation status is idle', async () => {
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue({
+        validation: {
+          status: 'idle',
+          rules: [],
+          llmJudge: null
+        }
+      });
+
+      const listener = vi.fn();
+      appState.addEventListener('validationComplete', listener);
+
+      await appState.restoreSession('proj-1');
+
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 

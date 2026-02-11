@@ -34,6 +34,7 @@ Stage 3: PHILOLOGIST LLM (Corrected Text -> Final Text)
 ```
 
 **Why separate stages?**
+
 - The Vision model's task is **visual**: extracting shapes from pixels
 - The Paleographer's task is **script-analytical**: resolving letterform ambiguities
 - The Philologist's task is **linguistic**: ensuring the text makes sense as Latin/vernacular
@@ -48,7 +49,7 @@ In Gothic Textura (13th--15th c.), the letters m, n, u, i are composed of identi
 
 **Critical insight from paleographic practice:** Expert paleographers do NOT count minims. That is a pedagogical technique for students, not how professionals read. An experienced paleographer reads the **anchor letters** (d, s, a, e, r, t, l -- any letter without minims) and instantly recognizes the word from Latin vocabulary knowledge. The minims are resolved holistically, not character by character.
 
-This maps directly to LLM strengths: **word-level pattern completion with linguistic knowledge**. When the Vision output contains `d_______s` with unclear minims in between, and the context is liturgical, the LLM's Latin vocabulary instantly yields *dominus* -- no counting needed.
+This maps directly to LLM strengths: **word-level pattern completion with linguistic knowledge**. When the Vision output contains `d_______s` with unclear minims in between, and the context is liturgical, the LLM's Latin vocabulary instantly yields *dominus* or _deus_ depending on the amount of minims -- no exakt counting needed.
 
 Solution: Anchor-letter recognition + Latin vocabulary matching + grammatical context. NOT mechanical minim counting (which is error-prone and computationally unnecessary for an LLM that knows Latin).
 
@@ -66,14 +67,14 @@ The recommended default is semi-diplomatic with round brackets: `d(omi)n(u)s`, `
 
 Both experts independently request the same metadata:
 
-| Field | Provided by | Used by |
-|-------|-------------|---------|
-| Script type | Paleographer/User | Vision + Paleographer |
-| Century | Paleographer/User | All 3 stages |
-| Region | Philologist/User | All 3 stages |
-| Text type | Philologist/User | Philologist + Paleographer |
-| Language(s) | Philologist/User | All 3 stages |
-| Known text | Philologist/User | Philologist |
+| Field       | Provided by       | Used by                    |
+| ----------- | ----------------- | -------------------------- |
+| Script type | Paleographer/User | Vision + Paleographer      |
+| Century     | Paleographer/User | All 3 stages               |
+| Region      | Philologist/User  | All 3 stages               |
+| Text type   | Philologist/User  | Philologist + Paleographer |
+| Language(s) | Philologist/User  | All 3 stages               |
+| Known text  | Philologist/User  | Philologist                |
 
 The existing Document Context panel must be extended with structured dropdowns for these fields.
 
@@ -95,34 +96,34 @@ The post-processing results map directly to the existing validation confidence t
 
 The single most devastating error category. In Gothic Textura, the letters i, u, n, m are all composed of identical vertical strokes.
 
-| True Reading | HTR Misreading | Cause |
-|---|---|---|
-| *minimum* | *mimmuui*, *mimiuum* | 10 minims, arbitrarily segmented |
-| *anima* | *auiina*, *amina* | n/u/ni interchange |
-| *dominum* | *domiuuui*, *dominuni* | final -num as minim sequence |
-| *communis* | garbled | 13 minims in sequence |
+| True Reading | HTR Misreading         | Cause                            |
+| ------------ | ---------------------- | -------------------------------- |
+| *minimum*    | *mimmuui*, *mimiuum*   | 10 minims, arbitrarily segmented |
+| *anima*      | *auiina*, *amina*      | n/u/ni interchange               |
+| *dominum*    | *domiuuui*, *dominuni* | final -num as minim sequence     |
+| *communis*   | garbled                | 13 minims in sequence            |
 
 #### Long-s and f Confusion
 
 Long s and f are nearly identical in many hands, differing only in whether the crossbar extends to the left.
 
-| True Reading | HTR Misreading |
-|---|---|
-| *sanctus* | *fanctus* |
-| *sicut* | *ficut* |
-| *fecit* | *secit* |
-| *satisfactio* | *fatisfactio* |
+| True Reading  | HTR Misreading |
+| ------------- | -------------- |
+| *sanctus*     | *fanctus*      |
+| *sicut*       | *ficut*        |
+| *fecit*       | *secit*        |
+| *satisfactio* | *fatisfactio*  |
 
 #### c/t Confusion
 
 Distinguished only by a minimal ascender on t.
 
 | True Reading | HTR Misreading |
-|---|---|
-| *dictum* | *diccum* |
-| *factum* | *faccum* |
-| *ecclesia* | *etclesia* |
-| *contractus* | *concraccus* |
+| ------------ | -------------- |
+| *dictum*     | *diccum*       |
+| *factum*     | *faccum*       |
+| *ecclesia*   | *etclesia*     |
+| *contractus* | *concraccus*   |
 
 #### Abbreviation Mark Errors
 
@@ -130,25 +131,26 @@ Medieval scribes used a rich abbreviation system that Vision LLMs handle poorly.
 
 **General suspension mark (macron/titulus):**
 
-| Manuscript Form | Correct Expansion | Typical HTR Output |
-|---|---|---|
-| dns with macron | *dominus* | *dns*, *dius*, *dms* |
-| ecclia with macron | *ecclesia* | *ecclia*, *ecelia* |
-| omes with macron | *omnes* | *omes*, *oines* |
-| eps with macron | *episcopus* | *eps*, *epis* |
+| Manuscript Form    | Correct Expansion | Typical HTR Output   |
+| ------------------ | ----------------- | -------------------- |
+| dns with macron    | *dominus*         | *dns*, *dius*, *dms* |
+| ecclia with macron | *ecclesia*        | *ecclia*, *ecelia*   |
+| omes with macron   | *omnes*           | *omes*, *oines*      |
+| eps with macron    | *episcopus*       | *eps*, *epis*        |
 
 **Special signs:**
 
-| Sign | Meaning | HTR Output |
-|---|---|---|
-| p with stroke | *per*, *par* | *p*, *pp*, garbage |
-| p with flourish | *pro* | *p*, *po* |
-| q with stroke | *quod* | *q*, *qd* |
-| Tironian et | *et* | *7*, *z*, *&*, *t* |
+| Sign            | Meaning      | HTR Output         |
+| --------------- | ------------ | ------------------ |
+| p with stroke   | *per*, *par* | *p*, *pp*, garbage |
+| p with flourish | *pro*        | *p*, *po*          |
+| q with stroke   | *quod*       | *q*, *qd*          |
+| Tironian et     | *et*         | *7*, *z*, *&*, *t* |
 
 #### Word Boundary Errors
 
 Medieval manuscripts frequently lack consistent word separation:
+
 - *inaduentu* for *in adventu*
 - *deecclesie* for *de ecclesie*
 - *idest* for *id est*
@@ -162,6 +164,7 @@ Flanking punctuation marks (punctus before and after numerals) are frequently mi
 #### Morphological Awareness
 
 Latin is inflected. A corrected reading must produce a morphologically valid form. The LLM should consider:
+
 - Noun declension patterns (5 declensions, with medieval deviations)
 - Verb conjugation (including medieval contracted forms)
 - Agreement (adjective-noun, subject-verb)
@@ -170,6 +173,7 @@ Latin is inflected. A corrected reading must produce a morphologically valid for
 #### Formula Recognition
 
 A vast proportion of medieval Latin texts follow formulaic patterns:
+
 - **Liturgical:** *In nomine Domini*, *Per omnia saecula saeculorum*, *Gloria Patri...*
 - **Charter:** *Notum sit omnibus tam presentibus quam futuris*, *Actum et datum*
 - **Legal:** *Nos igitur*, *Volumus et mandamus*, *Sub pena excommunicationis*
@@ -179,36 +183,36 @@ A vast proportion of medieval Latin texts follow formulaic patterns:
 
 Medieval Latin is not Classical Latin. The LLM must know which variations are legitimate:
 
-| Classical | Medieval Variant | Status |
-|---|---|---|
-| *ae* | *e* (monophthongization) | Legitimate, preserve |
-| *oe* | *e* | Legitimate, preserve |
-| *-ti-* before vowel | *-ci-* (*nacio* for *natio*) | Legitimate, preserve |
-| *h-* omission | *abere* for *habere* | Legitimate, preserve |
-| *nichil/nihil* | both forms | Both legitimate |
-| *michi/mihi* | both forms | Both legitimate |
-| double consonant variation | *littera/litera* | Both legitimate |
-| *y/i* interchange | *ymaginem/imaginem* | Both legitimate |
+| Classical                  | Medieval Variant             | Status               |
+| -------------------------- | ---------------------------- | -------------------- |
+| *ae*                       | *e* (monophthongization)     | Legitimate, preserve |
+| *oe*                       | *e*                          | Legitimate, preserve |
+| *-ti-* before vowel        | *-ci-* (*nacio* for *natio*) | Legitimate, preserve |
+| *h-* omission              | *abere* for *habere*         | Legitimate, preserve |
+| *nichil/nihil*             | both forms                   | Both legitimate      |
+| *michi/mihi*               | both forms                   | Both legitimate      |
+| double consonant variation | *littera/litera*             | Both legitimate      |
+| *y/i* interchange          | *ymaginem/imaginem*          | Both legitimate      |
 
 **Key principle:** Preserve what might be a feature of the scribe's Latin; correct what is clearly a transmission error.
 
 #### Abbreviation Handling: Three Modes
 
-| Mode | Convention | Use Case |
-|---|---|---|
-| **Silent expansion** | *dominus* | Full-text search, NLP, non-specialist reading |
-| **Marked expansion** (default) | *d(omi)n(u)s* | Scholarly transcription, best middle ground |
-| **Diplomatic** | *dns* with macron | Paleographic study |
+| Mode                           | Convention        | Use Case                                      |
+| ------------------------------ | ----------------- | --------------------------------------------- |
+| **Silent expansion**           | *dominus*         | Full-text search, NLP, non-specialist reading |
+| **Marked expansion** (default) | *d(omi)n(u)s*     | Scholarly transcription, best middle ground   |
+| **Diplomatic**                 | *dns* with macron | Paleographic study                            |
 
 #### Uncertain Readings Conventions
 
-| Situation | Convention | Example |
-|---|---|---|
-| Uncertain but plausible | Square brackets | *[sanctus]* |
+| Situation                   | Convention       | Example                 |
+| --------------------------- | ---------------- | ----------------------- |
+| Uncertain but plausible     | Square brackets  | *[sanctus]*             |
 | Illegible, estimated length | Dots in brackets | *[...]*, *[..........]* |
-| Illegible, unknown extent | Dashes | *[---]* |
-| Scribal deletion | Angle brackets | *<deleted text>* |
-| Hopeless corruption | Daggers | *+corrupted text+* |
+| Illegible, unknown extent   | Dashes           | *[---]*                 |
+| Scribal deletion            | Angle brackets   | *<deleted text>*        |
+| Hopeless corruption         | Daggers          | *+corrupted text+*      |
 
 #### Reference Knowledge for Cross-Checking
 
@@ -228,6 +232,7 @@ Medieval Latin is not Classical Latin. The LLM must know which variations are le
 The most difficult medieval script for automated recognition.
 
 **The Minim Problem ("Picket Fence"):**
+
 - Letters m, n, u, i constructed from identical vertical strokes
 - *minimi* = 10 identical strokes: ||||||||||
 - I-dots only become systematic in the 14th century, remain inconsistent
@@ -239,18 +244,18 @@ When opposing curves meet (de, do, be, bo, pe, po), Textura merges them into a s
 **Textura Confusion Matrix:**
 
 | True Letter | Likely Misread As |
-|---|---|
-| c | t, e |
-| e | c, o |
-| f | long-s |
-| long-s | f |
-| m | in, ni, mi |
-| n | u, ii |
-| u | n, ii |
-| round-r | z, 2, v |
-| round-d | cl, a |
-| t | c |
-| w | vv, uu |
+| ----------- | ----------------- |
+| c           | t, e              |
+| e           | c, o              |
+| f           | long-s            |
+| long-s      | f                 |
+| m           | in, ni, mi        |
+| n           | u, ii             |
+| u           | n, ii             |
+| round-r     | z, 2, v           |
+| round-d     | cl, a             |
+| t           | c                 |
+| w           | vv, uu            |
 
 #### Textualis and Bastarda (Hybrida)
 
@@ -259,26 +264,28 @@ When opposing curves meet (de, do, be, bo, pe, po), Textura merges them into a s
 **Regional Variants:**
 
 German Bastarda:
+
 - e written as two parallel strokes (like Kurrent e), confused with n or ii
 - Sharp angularity even in "looser" forms
 - z with descending tail, confused with 3
 - Early umlaut (superscript e over u) often read incorrectly or ignored
 
 French Batarde:
+
 - Pronounced looped ascenders on b, h, k, l -- may be read as separate letters (l with loop becomes "el")
 - v/b confusion more acute
 - Highly decorated capitals unrecognizable to models
 
 **Bastarda Additional Confusion Matrix:**
 
-| True Letter | Likely Misread As |
-|---|---|
-| a (single-compartment) | u, ci |
-| b | v (initial), l (with loops) |
-| h | b (with loops) |
-| l | b (ascender loops) |
-| looped ascender | e+letter, o+letter |
-| German e (two-stroke) | n, ii |
+| True Letter            | Likely Misread As           |
+| ---------------------- | --------------------------- |
+| a (single-compartment) | u, ci                       |
+| b                      | v (initial), l (with loops) |
+| h                      | b (with loops)              |
+| l                      | b (ascender loops)          |
+| looped ascender        | e+letter, o+letter          |
+| German e (two-stroke)  | n, ii                       |
 
 #### Caroline Minuscule (Why It Is Easier)
 
@@ -296,6 +303,7 @@ French Batarde:
 This is directly analogous to how humans read English despite ambiguous handwriting: we recognize the word shape, not each letter individually.
 
 **Strategy for LLM post-processing:**
+
 1. **Extract the anchor skeleton:** identify all non-minim letters in their positions
 2. **Match against Latin vocabulary:** the anchor pattern usually yields a unique or near-unique word
 3. **Use grammatical context:** case endings, verb forms, preposition governance disambiguate remaining candidates
@@ -304,25 +312,25 @@ This is directly analogous to how humans read English despite ambiguous handwrit
 
 **Examples of anchor-letter resolution:**
 
-| HTR Output | Anchors | Recognition | Resolved |
-|---|---|---|---|
-| *domiuuui* | d, o | d_______  → *dominum* | dominum |
-| *coiiimuiiis* | c, o, s | c_______s → *communis* | communis |
-| *tenipoie* | t, e, p, e | t___p___e → *tempore* | tempore |
-| *ecclefie* | e, c, c, l, e | eccl___e → *ecclesie* | ecclesie |
-| *aiiiiua* | a, a | a_____a → *anima* or *annua* | check context |
+| HTR Output    | Anchors       | Recognition                  | Resolved      |
+| ------------- | ------------- | ---------------------------- | ------------- |
+| *domiuuui*    | d, o          | d_______  → *dominum*        | dominum       |
+| *coiiimuiiis* | c, o, s       | c_______s → *communis*       | communis      |
+| *tenipoie*    | t, e, p, e    | t___p___e → *tempore*        | tempore       |
+| *ecclefie*    | e, c, c, l, e | eccl___e → *ecclesie*        | ecclesie      |
+| *aiiiiua*     | a, a          | a_____a → *anima* or *annua* | check context |
 
 #### Ligatures and Special Characters
 
-| Feature | Post-Processing Rule |
-|---|---|
-| ct-ligature | Do not read as separate strokes |
-| st-ligature | Do not insert space |
-| ae/oe as e-caudata | Expand to ae/oe or mark |
-| Tironian et | Replace with *et* |
-| con/com (9-shaped) | Expand to con- or com- |
-| -us abbreviation | Expand to -us |
-| -rum abbreviation | Expand to -rum |
+| Feature            | Post-Processing Rule            |
+| ------------------ | ------------------------------- |
+| ct-ligature        | Do not read as separate strokes |
+| st-ligature        | Do not insert space             |
+| ae/oe as e-caudata | Expand to ae/oe or mark         |
+| Tironian et        | Replace with *et*               |
+| con/com (9-shaped) | Expand to con- or com-          |
+| -us abbreviation   | Expand to -us                   |
+| -rum abbreviation  | Expand to -rum                  |
 
 ### Vision Model Guidance
 
@@ -331,6 +339,7 @@ This is directly analogous to how humans read English despite ambiguous handwrit
 **A. Script Type Declaration (highest impact):**
 
 Tell the Vision LLM exactly which script it is looking at. Example:
+
 ```
 This manuscript is written in Gothic Textura (Textualis Formata), a formal
 book script of the 14th century. Key features:
@@ -343,29 +352,34 @@ book script of the 14th century. Key features:
 ```
 
 **B. Mark Uncertain Characters (instead of confidence scores):**
+
 ```
 When unsure about a character, mark with [?]: "sacra[m?]entis"
 ```
 
 **C. Do NOT Expand Abbreviations:**
+
 ```
 Transcribe abbreviation marks as seen. Do NOT expand.
 Expansion requires linguistic knowledge and will be handled separately.
 ```
 
 **D. Damaged Passages:**
+
 ```
 Mark completely illegible characters with [...] for approximate count.
 Mark partially legible: d[?]minus. Do NOT guess at illegible words.
 ```
 
 **E. Preserve Line Structure:**
+
 ```
 Transcribe line by line. If a word is hyphenated across lines,
 transcribe parts on respective lines with a hyphen.
 ```
 
 **F. Visual Features:**
+
 ```
 Note: rubricated text, enlarged initials, marginal annotations,
 interlinear additions, deletions, hand changes.
@@ -593,18 +607,19 @@ Display corrections as word-level diff in the editor (reuse existing Suggesting 
 ### Phase 4: Confidence Integration
 
 Map post-processing results to the existing sure/check-worthy/problematic system:
+
 - Line-level confidence based on the worst segment
 - Uncertain readings `[bracketed]` shown with tooltip explaining alternatives
 - Apparatus section in export formats
 
 ### Dependencies
 
-| Phase | Depends On | Estimated Scope |
-|-------|-----------|----------------|
-| Phase 1 | Existing context.js | ~100 lines (dropdowns + storage) |
-| Phase 2 | Phase 1 | ~200 lines (prompt templates + selection logic) |
-| Phase 3 | Phase 2, existing llm.js | ~400 lines (pipeline orchestration) |
-| Phase 4 | Phase 3, existing validation.js | ~150 lines (confidence mapping) |
+| Phase   | Depends On                      | Estimated Scope                                 |
+| ------- | ------------------------------- | ----------------------------------------------- |
+| Phase 1 | Existing context.js             | ~100 lines (dropdowns + storage)                |
+| Phase 2 | Phase 1                         | ~200 lines (prompt templates + selection logic) |
+| Phase 3 | Phase 2, existing llm.js        | ~400 lines (pipeline orchestration)             |
+| Phase 4 | Phase 3, existing validation.js | ~150 lines (confidence mapping)                 |
 
 ---
 

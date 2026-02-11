@@ -489,4 +489,45 @@ describe('ExportService', () => {
       expect(result.format).toBe('tei-xml');
     });
   });
+
+  describe('Validation Persistence in Export', () => {
+    beforeEach(() => {
+      mockState.validation = {
+        status: 'complete',
+        rules: [
+          { name: 'Uncertainty Markers', type: 'warning', message: 'Found uncertain readings', lines: [2] }
+        ],
+        llmJudge: { confidence: 'likely', reasoning: 'Looks reasonable' },
+        summary: { totalIssues: 1 },
+        timestamp: '2026-02-11T10:00:00.000Z',
+        customPrompt: 'Check for Latin abbreviations'
+      };
+      appState.getState.mockReturnValue(mockState);
+    });
+
+    it('should include summary, timestamp, and customPrompt in JSON export', () => {
+      const result = service.export('json', { includeValidation: true });
+      const parsed = JSON.parse(result.content);
+
+      expect(parsed.validation.summary).toEqual({ totalIssues: 1 });
+      expect(parsed.validation.timestamp).toBe('2026-02-11T10:00:00.000Z');
+      expect(parsed.validation.customPrompt).toBe('Check for Latin abbreviations');
+    });
+
+    it('should show custom prompt as blockquote in Markdown export', () => {
+      const result = service.export('md', { includeValidation: true });
+
+      expect(result.content).toContain('**Expert Prompt:**');
+      expect(result.content).toContain('> Check for Latin abbreviations');
+    });
+
+    it('should not show expert prompt section when customPrompt is empty', () => {
+      mockState.validation.customPrompt = '';
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('md', { includeValidation: true });
+
+      expect(result.content).not.toContain('**Expert Prompt:**');
+    });
+  });
 });

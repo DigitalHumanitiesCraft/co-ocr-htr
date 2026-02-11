@@ -14,6 +14,7 @@
 
 import { validationEngine } from '../services/validation.js';
 import { llmService, ISSUE_TYPES } from '../services/llm.js';
+import { storage } from '../services/storage.js';
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
 import { batchProgress } from './batch-progress.js';
@@ -157,6 +158,12 @@ class ValidationPanel {
         appState.addEventListener('pageChanged', () => {
             this.updateVisibility();
             this.loadPageValidation();
+            this.restoreCustomPrompt();
+        });
+
+        // Restore custom prompt when session is loaded
+        appState.addEventListener('sessionRestored', () => {
+            this.restoreCustomPrompt();
         });
 
         // Listen for validation state changes
@@ -362,6 +369,22 @@ class ValidationPanel {
     }
 
     /**
+     * Restore custom prompt into textarea from state or localStorage
+     */
+    restoreCustomPrompt() {
+        const textarea = getById('customValidationPrompt');
+        if (!textarea) return;
+
+        const state = appState.getState();
+        // For validated pages, show exactly the per-page prompt (including explicit empty).
+        // Otherwise use the global fallback prompt for convenience.
+        const prompt = state.validation?.status === 'complete'
+            ? (state.validation.customPrompt || '')
+            : storage.loadValidationPrompt();
+        textarea.value = prompt || '';
+    }
+
+    /**
      * Show validation available hint in panel
      */
     showValidationHint() {
@@ -416,11 +439,18 @@ class ValidationPanel {
             }
 
             const results = await validationEngine.validate(text, segments, options);
+            const resultsWithPrompt = {
+                ...results,
+                customPrompt: options.customPrompt || ''
+            };
+            if (options.customPrompt) {
+                storage.saveValidationPrompt(options.customPrompt);
+            }
 
             // Update state
-            appState.setValidationResults(results);
+            appState.setValidationResults(resultsWithPrompt);
             this.hideLoading();
-            this.render(results);
+            this.render(resultsWithPrompt);
 
             dialogManager.showToast('Validation complete', 'success');
 
@@ -471,6 +501,11 @@ class ValidationPanel {
         // Get options from dialog checkboxes
         const options = this.getValidationOptions();
 
+        // Save custom prompt to localStorage
+        if (options.customPrompt) {
+            storage.saveValidationPrompt(options.customPrompt);
+        }
+
         // Override LLM option if no API key
         if (!llmService.hasApiKey()) {
             options.includeLLM = false;
@@ -510,12 +545,16 @@ class ValidationPanel {
 
                 // Run validation with options
                 const validationResult = await validationEngine.validate(text, segments, options);
+                const validationWithPrompt = {
+                    ...validationResult,
+                    customPrompt: options.customPrompt || ''
+                };
 
                 results.push({
                     pageId: page.id,
                     pageIndex: i,
                     success: true,
-                    validation: validationResult
+                    validation: validationWithPrompt
                 });
 
                 appState.updateBatchProgress(i, true);

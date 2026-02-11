@@ -153,7 +153,10 @@ class ExportService {
             data.validation = {
                 status: state.validation.status,
                 rules: state.validation.rules || [],
-                llmJudge: state.validation.llmJudge
+                llmJudge: state.validation.llmJudge,
+                summary: state.validation.summary || null,
+                timestamp: state.validation.timestamp || null,
+                customPrompt: state.validation.customPrompt || ''
             };
         }
 
@@ -230,6 +233,13 @@ class ExportService {
         if (includeValidation && state.validation?.rules?.length > 0) {
             lines.push('## Validation Notes');
             lines.push('');
+
+            // Show custom validation prompt if present
+            if (state.validation.customPrompt) {
+                lines.push('**Expert Prompt:**');
+                lines.push(state.validation.customPrompt.split('\n').map(l => `> ${l}`).join('\n'));
+                lines.push('');
+            }
 
             const issues = state.validation.rules.filter(r =>
                 r.type === 'warning' || r.type === 'error'

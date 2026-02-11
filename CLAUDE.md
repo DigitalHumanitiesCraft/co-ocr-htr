@@ -40,9 +40,9 @@ Tests use Vitest with jsdom environment. Test files live in `docs/tests/`. No bu
 `state.js` exports a singleton `appState` (extends `EventTarget`). All state mutations go through `appState` methods which dispatch custom events. Components subscribe via `addEventListener`:
 
 ```
-appState.setTranscription(data)  -->  dispatches 'transcriptionChanged'
-appState.setValidation(result)   -->  dispatches 'validationChanged'
-appState.selectLine(index)       -->  dispatches 'lineSelected'
+appState.setTranscription(data)      --> dispatches 'transcriptionComplete'
+appState.setValidationResults(data)  --> dispatches 'validationComplete'
+appState.setSelection(line)          --> dispatches 'selectionChanged'
 ```
 
 Multi-page documents store per-page transcriptions in `appState.data.pageTranscriptions[pageId]`. The `document` and `transcription` fields always reflect the **current page**.
@@ -73,8 +73,8 @@ Multi-page documents store per-page transcriptions in `appState.data.pageTranscr
 | Service | Singleton | Provides |
 |---------|-----------|----------|
 | `llm.js` | `llmService` | Multi-provider LLM abstraction (Gemini, OpenAI, Anthropic, Ollama) |
-| `validation.js` | `validationService` | Deterministic rules + LLM-as-judge hybrid validation |
-| `storage.js` | `storage` | LocalStorage wrapper for settings and session persistence |
+| `validation.js` | `validationEngine` | Deterministic rules + LLM-as-judge hybrid validation |
+| `storage.js` | `storage` | localStorage (settings/prompts) + IndexedDB (projects/sessions/images/apiKeys) |
 | `export.js` | `exportService` | Export to PAGE-XML, TEI-XML, TXT, JSON, Markdown, ZIP |
 | `samples.js` | `samplesService` | Demo document loading |
 | `parsers/page-xml.js` | `pageXMLParser` | PAGE-XML import/export |
@@ -91,9 +91,9 @@ Transcribe btn --> llmService.transcribe(image, provider)
                --> editor renders editable table
                --> viewer shows region overlays (if coordinates present)
 
-Validate btn --> validationService.validate(segments)
-             --> deterministic rules + LLM judge
-             --> appState.setValidation(results)
+Validate btn --> validationEngine.validate(text, segments, options)
+             --> deterministic rules + optional LLM judge
+             --> appState.setValidationResults(results)
              --> validation panel renders issues
 
 Export btn --> exportService.export(format)
