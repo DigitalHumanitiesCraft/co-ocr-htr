@@ -429,6 +429,9 @@ export function applySuggestionAtLine(params = {}) {
         return { status: 'ambiguous', message: 'Suggestion does not change the target line.' };
     }
 
+    // Ensure pre-change baseline exists in history (may be empty after session restore)
+    pushHistory();
+
     lines[lineIndex] = updatedLine;
     structuredText = lines.join('\n');
 
