@@ -642,9 +642,17 @@ class AppState extends EventTarget {
   /**
    * Update raw transcription text (from editor changes)
    * @param {string} text - The updated transcription text
+   * @param {object} [options] - Update options
+   * @param {boolean} [options.syncSegments=false] - Rebuild segments from raw text
    */
-  setTranscriptionRaw(text) {
+  setTranscriptionRaw(text, options = {}) {
+    const { syncSegments = false } = options;
     this.data.transcription.raw = text;
+
+    if (syncSegments) {
+      this._syncTranscriptionSegmentsFromRaw(text);
+    }
+
     this.data.meta.updatedAt = new Date().toISOString();
     this._scheduleAutoSave();
   }
@@ -938,6 +946,34 @@ class AppState extends EventTarget {
     }
 
     return lines;
+  }
+
+  /**
+   * Rebuild transcription segments from raw text to keep exports in sync.
+   * Keeps non-text metadata where possible (id/confidence/polygon/baseline).
+   * @private
+   * @param {string} text
+   */
+  _syncTranscriptionSegmentsFromRaw(text) {
+    const rawLines = (text || '').split('\n');
+    const previousSegments = this.data.transcription.segments || [];
+
+    this.data.transcription.segments = rawLines.map((lineText, index) => {
+      const previous = previousSegments[index] || {};
+      const next = {
+        lineNumber: index + 1,
+        text: lineText
+      };
+
+      if (previous.id) next.id = previous.id;
+      if (previous.confidence) next.confidence = previous.confidence;
+      if (previous.polygon) next.polygon = previous.polygon;
+      if (previous.baseline) next.baseline = previous.baseline;
+
+      return next;
+    });
+
+    this.data.transcription.lines = this._segmentsToLines(this.data.transcription.segments);
   }
 
   // ============================================
