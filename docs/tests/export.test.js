@@ -107,6 +107,18 @@ describe('ExportService', () => {
       expect(result.content).toContain('Müller');
       expect(result.content).toContain('5 Taler');
     });
+
+    it('should prefer raw-aligned text when segments are stale and unstructured', () => {
+      mockState.transcription.raw = 'Corrected line 1\nCorrected line 2';
+      mockState.transcription.segments = [
+        { lineNumber: 1, text: 'Old line 1' },
+        { lineNumber: 2, text: 'Old line 2' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('txt');
+      expect(result.content).toBe('Corrected line 1\nCorrected line 2');
+    });
   });
 
   describe('JSON Export', () => {

@@ -94,10 +94,11 @@ class ExportService {
      */
     exportTxt(state) {
         const lines = [];
+        const segments = this.getConsistentSegments(state.transcription);
 
         // Use segments if available, otherwise fall back to lines or raw
-        if (state.transcription.segments?.length > 0) {
-            state.transcription.segments.forEach(seg => {
+        if (segments.length > 0) {
+            segments.forEach(seg => {
                 if (seg.fields) {
                     // Structured fields
                     lines.push(Object.values(seg.fields).join('\t'));
@@ -134,7 +135,7 @@ class ExportService {
         const data = {
             transcription: {
                 raw: state.transcription.raw || '',
-                segments: state.transcription.segments || [],
+                segments: this.getConsistentSegments(state.transcription),
                 columns: state.transcription.columns || []
             }
         };
@@ -213,8 +214,9 @@ class ExportService {
         }
 
         // Transcription content
-        if (state.transcription.segments?.length > 0) {
-            lines.push(this.segmentsToMarkdownTable(state.transcription.segments, state.transcription.columns));
+        const segments = this.getConsistentSegments(state.transcription);
+        if (segments.length > 0) {
+            lines.push(this.segmentsToMarkdownTable(segments, state.transcription.columns));
         } else if (state.transcription.lines?.length > 0) {
             // Use raw lines (already markdown table)
             lines.push(...state.transcription.lines);
@@ -291,7 +293,7 @@ class ExportService {
     exportPageXml(state) {
         const timestamp = new Date().toISOString();
         const filename = state.document.filename || 'unknown';
-        const segments = state.transcription.segments || [];
+        const segments = this.getConsistentSegments(state.transcription);
         const regions = state.regions || [];
 
         // Try to get image dimensions from state
@@ -369,7 +371,7 @@ class ExportService {
      */
     exportTei(state) {
         const filename = state.document.filename || 'transcription';
-        const segments = state.transcription.segments || [];
+        const segments = this.getConsistentSegments(state.transcription);
         const timestamp = new Date().toISOString();
 
         // Build TEI body lines
@@ -475,6 +477,53 @@ ${bodyLines.join('\n')}
             uncertain: 0.5
         };
         return map[confidence] || null;
+    }
+
+    /**
+     * Ensure export uses text that reflects current raw editor content.
+     * Keeps structured field exports untouched when `fields` are present.
+     * @param {object} transcription
+     * @returns {Array}
+     */
+    getConsistentSegments(transcription = {}) {
+        const segments = transcription.segments || [];
+        const raw = transcription.raw || '';
+
+        if (!raw.trim()) {
+            return segments;
+        }
+
+        const rawLines = raw.split('\n');
+        const hasStructuredFields = segments.some(seg => seg.fields && Object.keys(seg.fields).length > 0);
+        if (hasStructuredFields) {
+            return segments;
+        }
+
+        // Build segments from raw when no segments exist.
+        if (segments.length === 0) {
+            return rawLines.map((line, index) => ({
+                lineNumber: index + 1,
+                text: line
+            }));
+        }
+
+        // Keep existing metadata, but update line text when out of sync.
+        const segmentTexts = segments.map(seg => seg.text || '');
+        const inSync = segmentTexts.length === rawLines.length &&
+            segmentTexts.every((text, index) => text === rawLines[index]);
+
+        if (inSync) {
+            return segments;
+        }
+
+        return rawLines.map((line, index) => {
+            const previous = segments[index] || {};
+            return {
+                ...previous,
+                lineNumber: index + 1,
+                text: line
+            };
+        });
     }
 
     /**

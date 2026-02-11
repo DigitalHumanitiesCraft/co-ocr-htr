@@ -242,7 +242,7 @@ function renderEditor(transcription) {
             } else {
                 structuredText = textarea.value;
             }
-            appState.setTranscriptionRaw(structuredText);
+            appState.setTranscriptionRaw(structuredText, { syncSegments: true });
             updateChangeStats();
             if (showChangesCheckbox?.checked) {
                 updateDiffDisplay(isNormalizedView);
@@ -342,6 +342,113 @@ export function getEditorText() {
     return textarea?.value || '';
 }
 
+/**
+ * Apply an LLM suggestion to a specific line in the editor.
+ * Conservative strategy:
+ * 1) Exact sourceText match in target line
+ * 2) Flexible whitespace-aware match in target line
+ * 3) Full-line replacement only if sourceText is missing and line is non-empty
+ *
+ * @param {object} params
+ * @param {number|string} params.line - 1-based line number
+ * @param {string} [params.sourceText] - Text to replace in the target line
+ * @param {string} params.suggestion - Suggested replacement text
+ * @returns {{status: 'applied' | 'ambiguous' | 'failed', message: string}}
+ */
+export function applySuggestionAtLine(params = {}) {
+    if (!textarea) {
+        return { status: 'failed', message: 'Editor is not ready.' };
+    }
+
+    const line = Number.parseInt(params.line, 10);
+    const sourceText = typeof params.sourceText === 'string' ? params.sourceText : '';
+    const suggestion = typeof params.suggestion === 'string' ? params.suggestion : '';
+
+    if (!Number.isInteger(line) || line <= 0) {
+        return { status: 'failed', message: 'Invalid line number.' };
+    }
+
+    if (!suggestion.trim()) {
+        return { status: 'failed', message: 'Suggestion is empty.' };
+    }
+
+    const lines = structuredText.split('\n');
+    const lineIndex = line - 1;
+
+    if (lineIndex < 0 || lineIndex >= lines.length) {
+        return { status: 'failed', message: 'Line is outside the current transcription.' };
+    }
+
+    const targetLine = lines[lineIndex] || '';
+    let updatedLine = null;
+
+    // Strategy 1: exact source-text match
+    const hasSource = sourceText.trim().length > 0;
+    if (hasSource && targetLine.includes(sourceText)) {
+        const exactMatchCount = countPlainMatches(targetLine, sourceText);
+        if (exactMatchCount !== 1) {
+            return { status: 'ambiguous', message: 'Source text matches multiple times in this line.' };
+        }
+        updatedLine = targetLine.replace(sourceText, suggestion);
+    }
+
+    // Strategy 2: flexible whitespace-aware source-text match
+    if (hasSource && updatedLine === null) {
+        const normalizedSource = normalizeWhitespace(sourceText);
+        const normalizedLine = normalizeWhitespace(targetLine);
+
+        if (normalizedSource && normalizedLine.includes(normalizedSource)) {
+            const flexiblePattern = new RegExp(
+                escapeRegExp(sourceText.trim()).replace(/\s+/g, '\\s+'),
+                'g'
+            );
+            const matchCount = countRegexMatches(targetLine, flexiblePattern);
+            if (matchCount === 1) {
+                updatedLine = targetLine.replace(flexiblePattern, suggestion);
+            } else {
+                return { status: 'ambiguous', message: 'Source text cannot be mapped uniquely in this line.' };
+            }
+        }
+    }
+
+    // Strategy 3: full-line fallback (only without source text)
+    if (!hasSource && updatedLine === null) {
+        if (!targetLine.trim()) {
+            return { status: 'ambiguous', message: 'Target line is empty.' };
+        }
+        updatedLine = suggestion;
+    }
+
+    if (updatedLine === null) {
+        return { status: 'ambiguous', message: 'Source text not found in the target line.' };
+    }
+
+    // No-op guard (avoid noisy history entries)
+    if (updatedLine === targetLine) {
+        highlightEditorLine(line);
+        return { status: 'ambiguous', message: 'Suggestion does not change the target line.' };
+    }
+
+    lines[lineIndex] = updatedLine;
+    structuredText = lines.join('\n');
+
+    // Keep current view mode, but persist structured text.
+    textarea.value = isNormalizedView ? normalizeText(structuredText) : structuredText;
+    appState.setTranscriptionRaw(structuredText, { syncSegments: true });
+    updateLineNumbers();
+    updateChangeStats();
+
+    const showChangesCheckbox = getById('showChanges');
+    if (showChangesCheckbox?.checked) {
+        updateDiffDisplay(isNormalizedView);
+    }
+
+    pushHistory();
+    highlightEditorLine(line);
+
+    return { status: 'applied', message: `Applied suggestion at line ${line}.` };
+}
+
 // ============ History (Undo/Redo) ============
 
 function clearHistory() {
@@ -384,7 +491,7 @@ function undo() {
     structuredText = history.stack[history.index];
     // Display according to current view mode
     textarea.value = isNormalizedView ? normalizeText(structuredText) : structuredText;
-    appState.setTranscriptionRaw(structuredText);
+    appState.setTranscriptionRaw(structuredText, { syncSegments: true });
     updateUndoRedoButtons();
     updateChangeStats();
     updateLineNumbers();
@@ -403,7 +510,7 @@ function redo() {
     structuredText = history.stack[history.index];
     // Display according to current view mode
     textarea.value = isNormalizedView ? normalizeText(structuredText) : structuredText;
-    appState.setTranscriptionRaw(structuredText);
+    appState.setTranscriptionRaw(structuredText, { syncSegments: true });
     updateUndoRedoButtons();
     updateChangeStats();
     updateLineNumbers();
@@ -603,7 +710,9 @@ function highlightEditorLine(lineNumber) {
         scrollToLine(lineNumber);
 
         // Also scroll line numbers panel if needed
-        targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        if (typeof targetElement.scrollIntoView === 'function') {
+            targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
     }
 }
 
@@ -687,4 +796,25 @@ function denormalizeText(normalizedText, originalStructured) {
         // No match found, return as-is
         return trimmed;
     }).join('\n');
+}
+
+function normalizeWhitespace(text) {
+    return (text || '').replace(/\s+/g, ' ').trim();
+}
+
+function escapeRegExp(text) {
+    return (text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function countPlainMatches(text, search) {
+    if (!search) return 0;
+    return text.split(search).length - 1;
+}
+
+function countRegexMatches(text, regex) {
+    if (!regex.global) {
+        return regex.test(text) ? 1 : 0;
+    }
+    const matches = text.match(regex);
+    return matches ? matches.length : 0;
 }

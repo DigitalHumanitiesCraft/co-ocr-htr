@@ -16,6 +16,7 @@ import { validationEngine } from '../services/validation.js';
 import { llmService, ISSUE_TYPES } from '../services/llm.js';
 import { storage } from '../services/storage.js';
 import { appState } from '../state.js';
+import { applySuggestionAtLine } from '../editor.js';
 import { dialogManager } from './dialogs.js';
 import { batchProgress } from './batch-progress.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
@@ -33,6 +34,8 @@ class ValidationPanel {
         this.isValidating = false;
         this.validateDialog = null;
         this.startValidationBtn = null;
+        this.llmIssueApplyState = new Map();
+        this.llmIssueStateSignature = '';
     }
 
     /**
@@ -734,6 +737,7 @@ class ValidationPanel {
 
         // Update visibility
         this.updateVisibility();
+        this.syncIssueApplyState(results.llmJudge);
 
         // Update issue badge
         const badge = getById('validationBadge');
@@ -752,6 +756,7 @@ class ValidationPanel {
 
         // Bind line click handlers
         this.bindLineClicks();
+        this.bindIssueActions();
     }
 
     /**
@@ -770,6 +775,7 @@ class ValidationPanel {
      */
     renderLLMCards(llmResult) {
         if (!llmResult) {
+            this.syncIssueApplyState(null);
             const hasApiKey = llmService.hasApiKey();
             if (!hasApiKey) {
                 return `<p class="text-muted text-xs">Configure API key for LLM Review</p>`;
@@ -812,7 +818,22 @@ class ValidationPanel {
 
         // Add issues with type badges
         if (llmResult.issues && llmResult.issues.length > 0) {
-            html += llmResult.issues.map(issue => this.renderIssueItem(issue)).join('');
+            const applicableCount = llmResult.issues.filter(issue => !!(issue?.suggestion || '').trim()).length;
+            if (applicableCount > 1) {
+                html += `
+                    <div class="llm-issues-toolbar">
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-sm llm-apply-all-btn"
+                            id="applyAllLlmIssuesBtn"
+                            title="Apply all suggestions with deterministic line matching"
+                        >
+                            Apply All (${applicableCount})
+                        </button>
+                    </div>
+                `;
+            }
+            html += llmResult.issues.map((issue, index) => this.renderIssueItem(issue, index)).join('');
         }
 
         // Show analysis toggle if reasoning exists
@@ -837,17 +858,28 @@ class ValidationPanel {
      * Render a single issue item with type badge
      * @param {object} issue - Issue from LLM validation
      */
-    renderIssueItem(issue) {
+    renderIssueItem(issue, index) {
         // Get issue type info from ISSUE_TYPES
         const typeInfo = ISSUE_TYPES[issue.type] || {
             name: issue.type || 'Note',
             color: 'warning',
             description: ''
         };
+        const applyState = this.llmIssueApplyState.get(index) || null;
+        const issueClass = applyState?.status ? ` ${applyState.status}` : '';
+        const sourceText = issue.text || '';
+        const suggestion = issue.suggestion || '';
+        const hasSuggestion = suggestion.trim().length > 0;
 
         // Build issue HTML
         return `
-            <div class="validation-issue issue-${typeInfo.color}" ${issue.line ? `data-line="${issue.line}"` : ''}>
+            <div
+                class="validation-issue issue-${typeInfo.color}${issueClass}"
+                ${issue.line ? `data-line="${issue.line}"` : ''}
+                data-issue-index="${index}"
+                data-source-text="${escapeHtml(sourceText)}"
+                data-suggestion="${escapeHtml(suggestion)}"
+            >
                 <div class="issue-header">
                     <span class="issue-type-badge badge-${typeInfo.color}" title="${escapeHtml(typeInfo.description || '')}">${escapeHtml(typeInfo.name)}</span>
                     ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
@@ -857,6 +889,19 @@ class ValidationPanel {
                     ${issue.suggestion ? `<span class="issue-suggestion">&rarr; ${escapeHtml(issue.suggestion)}</span>` : ''}
                 </div>
                 ${issue.explanation ? `<p class="issue-explanation">${escapeHtml(issue.explanation)}</p>` : ''}
+                ${hasSuggestion ? `
+                    <div class="issue-actions">
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-sm issue-apply-btn"
+                            data-issue-index="${index}"
+                            ${applyState?.status === 'applied' ? 'disabled' : ''}
+                        >
+                            Apply
+                        </button>
+                        ${applyState ? `<span class="issue-apply-status status-${applyState.status}">${escapeHtml(applyState.message || applyState.status)}</span>` : ''}
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -882,6 +927,185 @@ class ValidationPanel {
     }
 
     /**
+     * Keep per-issue apply status while the same LLM result is displayed.
+     * Reset the status map when a new LLM result arrives.
+     * @param {object|null} llmResult
+     */
+    syncIssueApplyState(llmResult) {
+        const signature = this.getIssueStateSignature(llmResult);
+        if (signature !== this.llmIssueStateSignature) {
+            this.llmIssueApplyState.clear();
+            this.llmIssueStateSignature = signature;
+        }
+    }
+
+    /**
+     * Build a stable signature for the current LLM issues.
+     * @param {object|null} llmResult
+     * @returns {string}
+     */
+    getIssueStateSignature(llmResult) {
+        if (!llmResult?.issues?.length) return '';
+        return llmResult.issues.map(issue => [
+            issue.line || '',
+            issue.type || '',
+            issue.text || '',
+            issue.suggestion || '',
+            issue.explanation || ''
+        ].join('|')).join('||');
+    }
+
+    /**
+     * Bind click handlers for LLM issue action buttons.
+     */
+    bindIssueActions() {
+        selectAll('.issue-apply-btn', this.panel).forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const issueIndex = Number.parseInt(btn.dataset.issueIndex, 10);
+                this.applyIssueCorrection(issueIndex);
+            });
+        });
+
+        const applyAllBtn = getById('applyAllLlmIssuesBtn');
+        if (applyAllBtn) {
+            applyAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.applyAllIssueCorrections();
+            });
+        }
+    }
+
+    /**
+     * Apply one LLM issue suggestion into the editor.
+     * @param {number} issueIndex
+     * @param {object} [options]
+     * @param {boolean} [options.silent=false]
+     * @returns {{status: 'applied'|'ambiguous'|'failed', message: string}}
+     */
+    applyIssueCorrection(issueIndex, options = {}) {
+        const { silent = false } = options;
+        const issue = appState.getState()?.validation?.llmJudge?.issues?.[issueIndex];
+        const issueElement = this.panel?.querySelector(`.validation-issue[data-issue-index="${issueIndex}"]`);
+
+        if (!issue) {
+            const result = { status: 'failed', message: 'Issue not found.' };
+            this.updateIssueApplyState(issueIndex, result, issueElement);
+            if (!silent) dialogManager.showToast(result.message, 'error');
+            return result;
+        }
+
+        const suggestion = (issue.suggestion || '').trim();
+        if (!suggestion) {
+            const result = { status: 'failed', message: 'No suggestion available for this issue.' };
+            this.updateIssueApplyState(issueIndex, result, issueElement);
+            if (!silent) dialogManager.showToast(result.message, 'warning');
+            return result;
+        }
+
+        const result = applySuggestionAtLine({
+            line: issue.line,
+            sourceText: issue.text || '',
+            suggestion
+        });
+
+        this.updateIssueApplyState(issueIndex, result, issueElement);
+
+        if (result.status !== 'failed' && issue.line && !Number.isNaN(Number(issue.line))) {
+            appState.setSelection(Number(issue.line));
+        }
+
+        if (!silent) {
+            const toastType = {
+                applied: 'success',
+                ambiguous: 'warning',
+                failed: 'error'
+            }[result.status] || 'warning';
+            dialogManager.showToast(result.message, toastType);
+        }
+
+        return result;
+    }
+
+    /**
+     * Apply all issues that include a textual suggestion.
+     */
+    applyAllIssueCorrections() {
+        const issues = appState.getState()?.validation?.llmJudge?.issues || [];
+        if (issues.length === 0) {
+            dialogManager.showToast('No LLM issues available.', 'warning');
+            return;
+        }
+
+        const summary = { applied: 0, ambiguous: 0, failed: 0 };
+        let multilineSkipped = 0;
+
+        // Apply from bottom to top to reduce line-shift side effects.
+        const sortedTargets = issues
+            .map((issue, index) => ({ issue, index }))
+            .filter(({ issue }) => !!(issue?.suggestion || '').trim())
+            .sort((a, b) => {
+                const aLine = Number.isFinite(Number(a.issue?.line)) ? Number(a.issue.line) : 0;
+                const bLine = Number.isFinite(Number(b.issue?.line)) ? Number(b.issue.line) : 0;
+                if (bLine !== aLine) return bLine - aLine;
+                return b.index - a.index;
+            });
+
+        sortedTargets.forEach(({ issue, index }) => {
+            const suggestion = issue?.suggestion || '';
+            if (suggestion.includes('\n')) {
+                multilineSkipped++;
+                const result = {
+                    status: 'failed',
+                    message: 'Multiline suggestion skipped in Apply All. Apply manually.'
+                };
+                const issueElement = this.panel?.querySelector(`.validation-issue[data-issue-index="${index}"]`);
+                this.updateIssueApplyState(index, result, issueElement);
+                summary.failed++;
+                return;
+            }
+
+            const result = this.applyIssueCorrection(index, { silent: true });
+            summary[result.status] = (summary[result.status] || 0) + 1;
+        });
+
+        const multilineInfo = multilineSkipped > 0
+            ? ` (${multilineSkipped} multiline skipped)`
+            : '';
+        const message = `Apply All finished: ${summary.applied} applied, ${summary.ambiguous} ambiguous, ${summary.failed} failed${multilineInfo}.`;
+
+        dialogManager.showToast(message, summary.failed > 0 ? 'warning' : 'success');
+    }
+
+    /**
+     * Store and render apply status on an issue item.
+     * @param {number} issueIndex
+     * @param {{status:string, message:string}} result
+     * @param {HTMLElement|null} issueElement
+     */
+    updateIssueApplyState(issueIndex, result, issueElement) {
+        this.llmIssueApplyState.set(issueIndex, result);
+        if (!issueElement) return;
+
+        issueElement.classList.remove('applied', 'ambiguous', 'failed');
+        issueElement.classList.add(result.status);
+
+        const statusEl = issueElement.querySelector('.issue-apply-status');
+        if (statusEl) {
+            statusEl.textContent = result.message;
+            statusEl.className = `issue-apply-status status-${result.status}`;
+        }
+
+        const applyBtn = issueElement.querySelector('.issue-apply-btn');
+        if (applyBtn) {
+            applyBtn.disabled = result.status === 'applied';
+        }
+    }
+
+    /**
      * Bind click handlers for line navigation
      * Handles legacy .validation-card, compact .validation-item, and new .validation-issue elements
      */
@@ -893,6 +1117,8 @@ class ValidationPanel {
             element.addEventListener('click', (e) => {
                 // Don't navigate if clicking on details toggle
                 if (e.target.classList.contains('details-toggle')) return;
+                if (e.target.closest('.issue-actions')) return;
+                if (e.target.closest('.llm-issues-toolbar')) return;
 
                 const line = parseInt(element.dataset.line, 10);
                 if (!isNaN(line)) {

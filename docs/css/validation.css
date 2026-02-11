@@ -538,6 +538,19 @@
   border-left-color: var(--accent-primary);
 }
 
+.validation-issue.applied {
+  border-left-color: var(--confident);
+  background: rgba(var(--confident-rgb, 90, 170, 110), 0.08);
+}
+
+.validation-issue.ambiguous {
+  border-left-color: var(--uncertain);
+}
+
+.validation-issue.failed {
+  border-left-color: var(--problematic);
+}
+
 /* Issue Header */
 .issue-header {
   display: flex;
@@ -605,6 +618,36 @@
   font-size: var(--text-xs);
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.llm-issues-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+.issue-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.issue-apply-status {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.issue-apply-status.status-applied {
+  color: var(--confident);
+}
+
+.issue-apply-status.status-ambiguous {
+  color: var(--uncertain);
+}
+
+.issue-apply-status.status-failed {
+  color: var(--problematic);
 }
 
 /* ==========================================================================
