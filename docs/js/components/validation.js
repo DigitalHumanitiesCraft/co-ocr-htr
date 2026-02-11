@@ -3,13 +3,13 @@
  *
  * Renders validation results in the right panel:
  * - Rule-based validation results (configurable categories)
- * - LLM-Judge results with optional custom prompt
+ * - LLM Review results with optional custom prompt
  * - Clickable line references for navigation
  *
  * Display Logic:
  * - Shows empty state when no transcription exists
  * - Shows validation results when transcription is available
- * - Both Rule-Based and AI sections always visible (compact)
+ * - Both Validation and LLM Review sections always visible (compact)
  */
 
 import { validationEngine } from '../services/validation.js';
@@ -47,7 +47,7 @@ class ValidationPanel {
         this.panel = getById('validationContent');
         this.emptyState = getById('validationEmptyState');
         this.ruleSection = getById('ruleBasedSection');
-        this.aiSection = getById('aiAssistantSection');
+        this.aiSection = getById('llmReviewSection');
 
         if (!this.panel) {
             console.warn('Validation panel not found');
@@ -389,7 +389,7 @@ class ValidationPanel {
      */
     showValidationHint() {
         setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" to run rule-based checks.</p>');
-        setHTML('aiAssistantContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" for AI-powered analysis.</p>');
+        setHTML('llmReviewContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" to run LLM Review.</p>');
     }
 
     /**
@@ -397,7 +397,7 @@ class ValidationPanel {
      */
     clearValidation() {
         setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Run transcription to see rule-based checks.</p>');
-        setHTML('aiAssistantContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Configure API key for AI-powered analysis.</p>');
+        setHTML('llmReviewContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Configure API key for LLM Review.</p>');
 
         // Update badge
         const badge = getById('validationBadge');
@@ -748,33 +748,33 @@ class ValidationPanel {
 
         // Render into separate sections
         setHTML('ruleBasedContent', this.renderRuleCards(results.rules));
-        setHTML('aiAssistantContent', this.renderLLMCards(results.llmJudge));
+        setHTML('llmReviewContent', this.renderLLMCards(results.llmJudge));
 
         // Bind line click handlers
         this.bindLineClicks();
     }
 
     /**
-     * Render rule-based validation cards (content only)
+     * Render Validation cards (content only)
      */
     renderRuleCards(rules) {
         if (!rules || rules.length === 0) {
-            return '<p class="text-secondary text-xs" style="padding: var(--space-2);">No rule-based issues found.</p>';
+            return '<p class="text-secondary text-xs" style="padding: var(--space-2);">No validation issues found.</p>';
         }
 
         return rules.map(rule => this.renderValidationCard(rule)).join('');
     }
 
     /**
-     * Render LLM-Judge validation cards - compact style with issue types
+     * Render LLM Review cards - compact style with issue types
      */
     renderLLMCards(llmResult) {
         if (!llmResult) {
             const hasApiKey = llmService.hasApiKey();
             if (!hasApiKey) {
-                return `<p class="text-muted text-xs">Configure API key for AI analysis</p>`;
+                return `<p class="text-muted text-xs">Configure API key for LLM Review</p>`;
             }
-            return `<p class="text-muted text-xs">Start validation for AI analysis</p>`;
+            return `<p class="text-muted text-xs">Run Validation to generate LLM Review</p>`;
         }
 
         const statusClass = {
@@ -794,7 +794,7 @@ class ValidationPanel {
         let html = `
             <div class="validation-item">
                 <span class="status-dot ${statusClass}"></span>
-                <span class="item-label">Konfidenz</span>
+                <span class="item-label">Confidence</span>
                 <span class="item-value">${confidenceLabel}</span>
             </div>
         `;
@@ -820,8 +820,8 @@ class ValidationPanel {
             html += `
                 <details class="ai-details">
                     <summary>
-                        <span class="ai-label">KI</span>
-                        Analyse anzeigen
+                        <span class="ai-label">LLM</span>
+                        Show rationale
                     </summary>
                     <div class="ai-reasoning-container">
                         <p class="ai-reasoning">${escapeHtml(llmResult.reasoning)}</p>
@@ -840,7 +840,7 @@ class ValidationPanel {
     renderIssueItem(issue) {
         // Get issue type info from ISSUE_TYPES
         const typeInfo = ISSUE_TYPES[issue.type] || {
-            name: issue.type || 'Hinweis',
+            name: issue.type || 'Note',
             color: 'warning',
             description: ''
         };
@@ -850,7 +850,7 @@ class ValidationPanel {
             <div class="validation-issue issue-${typeInfo.color}" ${issue.line ? `data-line="${issue.line}"` : ''}>
                 <div class="issue-header">
                     <span class="issue-type-badge badge-${typeInfo.color}" title="${escapeHtml(typeInfo.description || '')}">${escapeHtml(typeInfo.name)}</span>
-                    ${issue.line ? `<span class="issue-line">Zeile ${issue.line}</span>` : ''}
+                    ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
                 </div>
                 <div class="issue-content">
                     <span class="issue-text">${escapeHtml(issue.text || '')}</span>

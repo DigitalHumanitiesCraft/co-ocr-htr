@@ -593,7 +593,7 @@ class LLMService {
   // ============================================
 
   /**
-   * Validate transcription using LLM judge
+   * Review transcription using LLM Review
    * @param {string} text - Transcription text to validate
    * @param {object} options - Validation options
    * @returns {Promise<object>} Validation result

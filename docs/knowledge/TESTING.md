@@ -23,7 +23,7 @@ npx vitest run  # CI mode
 |--------|-------|-------------|
 | `state.js` | 76 | Central state management, EventTarget, persistence flows |
 | `export.js` | 52 | Export formats (TXT, JSON, MD, PAGE-XML, TEI, validation metadata) |
-| `validation.js` | 40 | Validation engine, rules, LLM-Judge |
+| `validation.js` | 40 | Validation engine, rules, LLM Review |
 | `llm.js` | 27 | LLM provider abstraction, API calls |
 | `llm-validation-provider.js` | 14 | Explicit validation provider priority/fallback logic |
 | `page-xml.js` | 26 | PAGE-XML parser |

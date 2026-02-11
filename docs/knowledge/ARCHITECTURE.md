@@ -174,7 +174,7 @@ Abstraction layer for multiple LLM providers with unified API.
 - `setProvider(name)` switches between Gemini, OpenAI, Anthropic, Ollama
 - `setApiKey(key)` configures authentication
 - `transcribe(image, options)` sends image to VLM for OCR/HTR
-- `validate(text, options)` requests LLM-Judge analysis (options: `{ customPrompt }`)
+- `validate(text, options)` requests LLM Review (options: `{ customPrompt }`)
 - `isOcrOnlyModel()` detects OCR-specific models (e.g., DeepSeek-OCR)
 - `getValidationFallback()` finds alternative provider for validation
 

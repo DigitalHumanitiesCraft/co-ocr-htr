@@ -2,8 +2,8 @@
  * Validation Service
  *
  * Implements hybrid validation:
- * 1. Rule-based: Deterministic regex patterns for known formats
- * 2. LLM-Judge: AI-based validation from different perspectives
+ * 1. Rule-based Validation: deterministic regex patterns and stats
+ * 2. LLM Review: probabilistic review for plausibility and OCR errors
  */
 
 import { llmService } from './llm.js';
@@ -303,7 +303,7 @@ class ValidationEngine {
     }
 
     /**
-     * Run LLM-Judge validation
+     * Run LLM Review
      * @param {string} text - Transcription text
      * @param {string} customPrompt - Optional custom validation prompt
      * @returns {Promise<object>} LLM validation result
