@@ -259,9 +259,9 @@ class ExportService {
 
             lines.push('');
 
-            // LLM-Judge assessment
+            // LLM Review
             if (state.validation.llmJudge) {
-                lines.push('### AI Assessment');
+                lines.push('### LLM Review');
                 lines.push('');
                 const confidence = {
                     certain: 'High Confidence',

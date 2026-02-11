@@ -85,7 +85,7 @@ class AppState extends EventTarget {
       validation: {
         status: 'idle',     // idle | running | complete | error
         rules: [],          // Rule-based validation results
-        llmJudge: null,     // LLM-judge validation result
+        llmJudge: null,     // LLM Review result
         summary: null,      // Validation summary (totalIssues, etc.)
         timestamp: null,    // ISO timestamp of last validation
         customPrompt: ''    // User-defined expert validation prompt

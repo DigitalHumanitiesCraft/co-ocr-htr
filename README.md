@@ -96,7 +96,7 @@ Key changes:
 Key changes:
 
 - Mistral OCR provider added (c005db4)
-- Explicit validation-provider configuration for OCR-only models (5ddce16)
+- Explicit validation provider configuration for OCR-only models (5ddce16)
 - Validation priority model: explicit provider > automatic fallback > active provider (5ddce16)
 - Regression hardening for dialog and validation edge cases (102be34, 38630e2, fca3853)
 
@@ -131,7 +131,7 @@ Baseline methodology and early system design come from the upstream project ([Di
 This fork extends that base with additional persistence, workflow, and UX capabilities.
 
 - **LLM providers**: Gemini, OpenAI, Anthropic, Ollama, Mistral OCR
-- **Hybrid validation**: deterministic rules + LLM-as-judge
+- **Hybrid validation**: deterministic Validation + LLM Review
 - **Import paths**: image upload, PAGE-XML, METS-XML, IIIF manifests
 - **Export formats**: TXT, JSON, Markdown, PAGE-XML, TEI-XML, ZIP (multi-page)
 - **Project persistence**: IndexedDB-backed projects/sessions/images with quota display

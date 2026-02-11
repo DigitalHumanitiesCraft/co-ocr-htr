@@ -81,7 +81,7 @@ Each line of transcribed text is stored as a segment:
 |-------|------|-------------|
 | status | Enum | idle, running, complete, or error |
 | rules | Array | Results from rule-based validation |
-| llmJudge | Object (optional) | AI validation analysis |
+| llmJudge | Object (optional) | LLM Review analysis |
 | summary | Object/null | Aggregated issue counts |
 | timestamp | ISO 8601/null | Validation timestamp |
 | customPrompt | String | User-defined expert prompt |
@@ -115,7 +115,7 @@ A typical tabular document (Rechnungsbuch 1842, page 15) demonstrates the data s
 - Date format check: passed (DD. Month pattern)
 - Currency format check: passed (Taler recognized)
 - Uncertain marker check: failed (line 4 has [?])
-- LLM-Judge: "The name could be Mueller or Moeller. The handwriting shows a ligature that allows both readings."
+- LLM Review: "The name could be Mueller or Moeller. The handwriting shows a ligature that allows both readings."
 
 **Correction History:** Line 2 was reviewed but marker retained as reading remains uncertain.
 

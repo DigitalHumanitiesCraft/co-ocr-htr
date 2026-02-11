@@ -107,7 +107,7 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 
 **Usage Pattern:**
 - AI section headers get a violet left-border accent
-- AI badges (small "KI" labels) use solid violet background with white text
+- AI badges (small "LLM" labels) use solid violet background with white text
 - AI reasoning blocks use violet-tinted backgrounds for clear identification
 - This color is NOT used for any other purpose (distinct from brand, accent, status)
 
@@ -332,18 +332,18 @@ The app container uses CSS Grid with three rows (header 56px, main content flexi
 
 | Section | Icon | Source | Characteristic |
 |---------|------|--------|----------------|
-| Rule-Based | (gear) | Deterministic rules | Always same result |
-| AI Analysis | (robot) + KI badge | LLM validation | May vary, context-dependent |
+| Validation | (gear) | Deterministic rules | Always same result |
+| LLM Review | (robot) + LLM badge | LLM Review | May vary, context-dependent |
 
 **Section Header:**
 ```
-RULE-BASED                    (11px, uppercase, tracking)
+VALIDATION                    (11px, uppercase, tracking)
 
-[KI] AI ASSISTANT             (with violet badge and left border)
+[LLM] LLM REVIEW              (with violet badge and left border)
 ```
 
 **AI Section Distinction:**
-- Purple/violet "KI" badge before section title
+- Purple/violet "LLM" badge before section title
 - 3px violet left border on section header
 - AI reasoning uses violet-tinted expandable container
 - Clear visual separation from rule-based (deterministic) results
@@ -617,7 +617,7 @@ docs/
 ### v2.2 (2026-02-03)
 - Added AI-generated content color system (violet/purple)
 - Introduced `--ai-primary`, `--ai-bg`, `--ai-border` tokens
-- AI section headers with "KI" badge and violet left border
+- AI section headers with "LLM" badge and violet left border
 - AI reasoning container with distinct violet-tinted styling
 - Updated Color Function Matrix with AI category
 - Clear visual distinction between rule-based and AI-generated content

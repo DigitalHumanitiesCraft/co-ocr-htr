@@ -455,7 +455,7 @@
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
                         <div class="info-tooltip-title">Hybrid Validation</div>
-                        Combines deterministic rules with LLM-Judge. Categories: confident / uncertain / problematic (no percentages).
+                        Combines deterministic validation with LLM Review. Categories: confident / uncertain / problematic (no percentages).
                     </div>
                 </span>
                 <div class="flex-center gap-2 ml-auto">
@@ -497,7 +497,7 @@
                     </p>
                 </div>
 
-                <!-- Rule-Based Section (hidden until content) -->
+                <!-- Validation Section (hidden until content) -->
                 <div class="validation-section" id="ruleBasedSection" hidden>
                     <div class="section-title">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -506,25 +506,25 @@
                                 d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
                             </path>
                         </svg>
-                        Rule-Based
+                        Validation
                     </div>
                     <div id="ruleBasedContent">
                         <!-- Content injected by JS -->
                     </div>
                 </div>
 
-                <!-- AI Assistant Section (hidden until content) -->
-                <div class="validation-section" id="aiAssistantSection" hidden>
-                    <div class="section-title section-title-ai">
-                        <span class="ai-badge">KI</span>
+                <!-- LLM Review Section (hidden until content) -->
+                <div class="validation-section" id="llmReviewSection" hidden>
+                    <div class="section-title section-title-llm">
+                        <span class="llm-badge">LLM</span>
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path
                                 d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z">
                             </path>
                         </svg>
-                        AI Assistant
+                        LLM Review
                     </div>
-                    <div id="aiAssistantContent">
+                    <div id="llmReviewContent">
                         <!-- Content injected by JS -->
                     </div>
                 </div>
@@ -955,7 +955,7 @@
         <div class="dialog-body">
             <!-- Rule-based Checks -->
             <div class="validate-options-section">
-                <h4 class="validate-section-title">Rule-based</h4>
+                <h4 class="validate-section-title">Validation</h4>
                 <p class="validate-section-hint">Local, fast checks without API calls</p>
                 <div class="validate-checkbox-group">
                     <label class="validate-checkbox-option">
@@ -976,20 +976,20 @@
                 </div>
             </div>
 
-            <!-- AI Analysis -->
+            <!-- LLM Review -->
             <div class="validate-options-section" id="llmModeItem">
                 <div class="validate-section-header">
-                    <h4 class="validate-section-title">AI Analysis</h4>
+                    <h4 class="validate-section-title">LLM Review</h4>
                     <label class="validate-toggle">
                         <input type="checkbox" id="enableLLM" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
-                <p class="validate-section-hint" id="llmModeHint">API-Call pro Seite</p>
+                <p class="validate-section-hint" id="llmModeHint">One API call per page</p>
                 <details class="custom-prompt-details">
                     <summary class="custom-prompt-toggle">Use custom prompt (optional)</summary>
                     <div class="custom-prompt-content">
-                        <p class="custom-prompt-hint">Overrides the default validation prompt. Use {text} as placeholder for the transcription.</p>
+                        <p class="custom-prompt-hint">Overrides the default LLM Review prompt. Use {text} as placeholder for the transcription.</p>
                         <textarea id="customValidationPrompt" class="custom-prompt-textarea" rows="6" placeholder="Analyze the following text for transcription errors...&#10;&#10;{text}&#10;&#10;Respond in JSON format with confidence, issues and summary."></textarea>
                     </div>
                 </details>
@@ -1021,7 +1021,7 @@
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                     <div class="batch-warning-text">
-                        <strong>Note:</strong> AI validation of all pages may take several minutes.
+                        <strong>Note:</strong> LLM Review for all pages may take several minutes.
                         For <span id="validateBatchPageCount">0</span> pages, multiple API calls will be made.
                     </div>
                 </div>
@@ -1282,7 +1282,7 @@
                     <li><strong>Load</strong> – Upload an image or load a demo document</li>
                     <li><strong>Transcribe</strong> – Click "Transcribe" to process with AI</li>
                     <li><strong>Describe</strong> – Generate an image description for initials and iconography</li>
-                    <li><strong>Validate</strong> – Review rule-based and AI suggestions</li>
+                    <li><strong>Validate</strong> – Review Validation and LLM Review results</li>
                     <li><strong>Export</strong> – Download as TXT, JSON, or Markdown</li>
                 </ol>
             </div>

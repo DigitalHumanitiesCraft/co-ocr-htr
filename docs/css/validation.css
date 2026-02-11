@@ -219,7 +219,7 @@
 }
 
 /* ==========================================================================
-   AI ANALYSIS SECTION
+   LLM REVIEW SECTION
    ========================================================================== */
 
 .ai-analysis-header {
@@ -396,7 +396,7 @@
 }
 
 /* ==========================================================================
-   AI ANALYSIS DETAILS (Distinct AI-generated content styling)
+   LLM REVIEW DETAILS (Distinct LLM-generated content styling)
    ========================================================================== */
 
 .ai-details {
@@ -475,13 +475,13 @@
    AI SECTION TITLE STYLING
    ========================================================================== */
 
-.section-title-ai {
+.section-title-llm {
   border-left: 3px solid var(--ai-primary, #7c5cbf);
   padding-left: var(--space-2);
   margin-left: calc(-1 * var(--space-2));
 }
 
-.ai-badge {
+.llm-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -497,7 +497,7 @@
 }
 
 /* ==========================================================================
-   ISSUE TYPE BADGES (KI-Issue Typologie)
+   ISSUE TYPE BADGES (LLM-Issue Typologie)
    ========================================================================== */
 
 .validation-issue {
