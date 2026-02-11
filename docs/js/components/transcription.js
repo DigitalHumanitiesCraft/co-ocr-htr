@@ -219,9 +219,10 @@ class TranscriptionManager {
             // Get context from expert (if provided)
             const contextDescription = contextManager.buildPromptContext();
 
-            // Call LLM service with context
+            // Call LLM service with context (including structured context for script hints)
             const result = await llmService.transcribe(base64, {
-                context: contextDescription
+                context: contextDescription,
+                structuredContext: appState.getDocumentContext()
             });
 
             // Update state with transcription
@@ -483,9 +484,10 @@ class TranscriptionManager {
                 // Get context
                 const contextDescription = contextManager.buildPromptContext();
 
-                // Call LLM service
+                // Call LLM service with context (including structured context for script hints)
                 const result = await llmService.transcribe(base64, {
-                    context: contextDescription
+                    context: contextDescription,
+                    structuredContext: appState.getDocumentContext()
                 });
 
                 // Store result for this page

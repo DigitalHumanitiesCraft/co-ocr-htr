@@ -172,6 +172,30 @@ describe('ExportService', () => {
       expect(result.content).toContain('Validation Notes');
       expect(result.content).toContain('Uncertainty Markers');
     });
+
+    it('should render pipeline notice for canonical object schema', () => {
+      mockState.validation.pipeline = {
+        stage2: { status: 'success', duration: 1200 },
+        stage3: { status: 'success', duration: 800 },
+        duration: 2000
+      };
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('md', { includeValidation: true });
+      expect(result.content).toContain('**Pipeline:** Paleographic + Philological review');
+    });
+
+    it('should render pipeline notice for legacy string schema', () => {
+      mockState.validation.pipeline = {
+        stage2: 'success',
+        stage3: 'success',
+        duration: 1800
+      };
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('md', { includeValidation: true });
+      expect(result.content).toContain('**Pipeline:** Paleographic + Philological review');
+    });
   });
 
   describe('PAGE-XML Export', () => {

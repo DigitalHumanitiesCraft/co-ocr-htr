@@ -1,626 +1,443 @@
-# HTR Post-Processing Strategy
+# HTR Error Post-Processing: Implementation-Ready Specification
 
-> Expert consultation (2026-02-10): Philologist for Medieval Latin + Paleographer for Medieval Scripts + HTR/Vision Orchestrator. This document captures the analysis and recommendations for optimizing HTR results through LLM-based post-processing.
+Status: Implemented (feature-flagged, `FEATURE_FLAGS.postprocessPipelineV1`)
+Date: 2026-02-11
+Implementation: All 22 tickets (PPV1-001 through PPV1-403) completed
+
+## 1. Goal and Scope
+
+This document defines an executable plan for improving HTR output quality through a staged workflow:
+
+1. Vision transcription (image -> raw text)
+2. Paleographic review (script-aware correction proposals)
+3. Philological review (language/context-aware correction proposals)
+4. Human-in-the-loop acceptance in editor Diff View
+
+The target is better correction quality without breaking current app behavior, terminology, or exports.
+
+Out of scope for v1:
+- Automatic acceptance without human review
+- Coordinate-level token anchoring from OCR geometry
+- Full TEI critical apparatus editor
+
+## 2. Must-Match Current App Contracts
+
+The implementation must stay compatible with existing frontend/service contracts:
+
+- Validation and LLM Review terminology (UI and docs)
+- Confidence values in code: `confident | likely | uncertain`
+- LLM issue types accepted by parser:
+  - `spelling`, `accent`, `abbreviation`, `illegible`, `ocr_artifact`, `historical`, `structural`, `plausibility`
+- Existing issue shape consumed by UI apply flow:
+  - `line`, `text`, `suggestion`, `type`, `explanation`
+- Existing markers recognized by rule-based validation:
+  - `[?]`, `[illegible]`, `[...]`
+
+Reference modules:
+- `docs/js/services/llm.js`
+- `docs/js/services/validation.js`
+- `docs/js/components/validation.js`
+- `docs/js/editor.js`
+- `docs/js/components/context.js`
+- `docs/js/state.js`
+
+## 3. Canonical Mapping (Draft Terms -> App Terms)
+
+### 3.1 Confidence mapping
+
+| Expert term     | Stored value | UI label recommendation |
+| --------------- | ------------ | ----------------------- |
+| sure            | confident    | High confidence         |
+| check-worthy    | likely       | Medium confidence       |
+| problematic     | uncertain    | Low confidence          |
+
+Note: keep storage values exactly as implemented (`confident/likely/uncertain`).
+
+### 3.2 Marker mapping
+
+| Editorial intent              | Canonical marker in app |
+| ---------------------------- | ----------------------- |
+| uncertain reading            | `[?]` inside/near token |
+| illegible short span         | `[...]`                 |
+| illegible explicit marker    | `[illegible]`           |
+
+Do not introduce new runtime markers in v1 (for example `<deleted>` or `+corrupt+`) unless parsing and validation are explicitly extended.
+
+## 4. Architecture
+
+## 4.1 Pipeline overview
+
+```
+Stage 1: Vision Transcription
+  input: image + context
+  output: raw + segments
+
+Stage 2: Paleographic Review (LLM Review #1)
+  input: stage1 text + script metadata
+  output: structured issue proposals
+
+Stage 3: Philological Review (LLM Review #2)
+  input: stage1 text + stage2 proposals + linguistic metadata
+  output: structured issue proposals
+
+Merge + Display:
+  combined proposals -> existing Validation/LLM Review panel
+  apply suggestions in editor via existing Apply/Apply All behavior
+```
+
+## 4.2 Why staged
+
+- Stage 1 optimizes visual reading.
+- Stage 2 handles script-level ambiguities (for example minim-heavy words).
+- Stage 3 resolves lexical/morphological plausibility.
+
+This keeps prompts focused and makes failures debuggable.
+
+## 5. Data Contracts (Required)
+
+## 5.1 Context contract (extended)
+
+Use this shape in app state (backward compatible with current context fields):
+
+```json
+{
+  "documentType": "manuscript",
+  "period": "mid-14th century",
+  "language": "Latin",
+  "description": "optional free text",
+
+  "scriptType": "textura",
+  "century": "14",
+  "region": "german",
+  "languages": ["latin"],
+  "textType": "liturgical",
+  "knownText": "psalter"
+}
+```
+
+Compatibility rule:
+- Keep existing keys (`documentType`, `period`, `language`, `description`).
+- Add new structured keys; do not break persisted sessions with old keys only.
+
+## 5.2 Stage output contract
+
+Stage 2 and Stage 3 must return strict JSON.
+
+```json
+{
+  "confidence": "confident",
+  "reasoning": "short summary",
+  "issues": [
+    {
+      "line": 12,
+      "text": "domiuuui",
+      "suggestion": "dominum",
+      "type": "spelling",
+      "explanation": "Minim sequence resolves to a standard accusative form.",
+      "alternatives": ["dominuni"],
+      "stage": "paleographic",
+      "score": 0.82
+    }
+  ]
+}
+```
+
+Required fields per issue:
+- `line`: integer >= 1
+- `text`: source fragment in that line
+- `suggestion`: single-line replacement string
+- `type`: allowed type enum
+- `explanation`: concise reason
+
+Optional fields:
+- `alternatives`, `stage`, `score`
+
+### Hard rule for Apply All compatibility
+
+- `suggestion` should be single-line in v1 (no `\n`).
+- If multi-line suggestion is unavoidable, it must be emitted, but UI should mark it as manual-only and skip in Apply All.
+
+## 5.3 Merge contract for UI
+
+Merged review result must stay compatible with existing `validation.llmJudge`:
+
+```json
+{
+  "confidence": "likely",
+  "reasoning": "Merged from paleographic and philological review.",
+  "issues": ["...existing issue objects..."]
+}
+```
+
+Conflict rule when both stages propose on same line/span:
+1. Prefer identical suggestions (deduplicate)
+2. If suggestions differ, keep both as separate issues with explicit stage tags
+3. Do not auto-resolve conflicting suggestions silently
+
+## 6. Prompting Specification
+
+## 6.1 Stage 1 (Vision)
+
+Must include:
+- script hint (`scriptType`)
+- preserve line breaks
+- mark uncertain with `[?]`
+- do not expand abbreviations
+
+Must not include:
+- lexical normalization
+- broad philological rewriting
+
+## 6.2 Stage 2 (Paleographic Review)
+
+Objective:
+- propose corrections for letterform/script confusions
+
+Allowed operations:
+- minim disambiguation proposal
+- long-s/f and c/t disambiguation proposal
+- abbreviation sign interpretation proposal
+
+Not allowed:
+- aggressive modernization
+- style rewriting
+
+## 6.3 Stage 3 (Philological Review)
+
+Objective:
+- propose linguistically plausible corrections
+
+Allowed operations:
+- morphology/syntax plausibility checks
+- formula-aware corrections (liturgical/charter/etc.)
+- abbreviation expansion mode handling
+
+Not allowed:
+- deleting uncertainty markers without reason
+
+## 7. Execution and Fallback Logic
+
+Default execution order:
+1. Stage 1 always
+2. Stage 2 optional toggle (default on)
+3. Stage 3 optional toggle (default on)
+
+Fallback behavior:
+- If Stage 2 fails: continue with Stage 3 using Stage 1 text
+- If Stage 3 fails: keep Stage 2 output only
+- If both fail: keep current single-call LLM Review path
+
+No hard failure should block editor or export.
+
+## 8. Operational Guardrails
+
+For each page:
+- max additional review calls: 2
+- timeout per review call: 45s
+- total review budget per page: 90s
+
+Batch validation:
+- inter-call delay for cloud providers (existing pattern)
+- clear user feedback for partial failures
+
+Rate-limit behavior:
+- exponential backoff for retryable provider errors
+- abort batch only on unrecoverable auth/config errors
+
+## 9. UI and HITL Requirements
+
+Mandatory UX behavior:
+- all proposals visible in LLM Review section
+- each issue supports `Apply`
+- optional `Apply All` for safe, single-line suggestions
+- changes immediately visible in Diff View
+- undo/redo must remain intact
+
+Current implementation already satisfies core apply flow and should be reused.
+
+## 10. Implementation Plan (File-Level)
+
+## Phase 1: Contract hardening [DONE]
+
+Files:
+- `docs/js/services/llm.js`
+- `docs/js/components/validation.js`
+
+Tasks:
+- [x] enforce strict JSON post-parse normalization for issues (`_normalizeIssue()`)
+- [x] attach optional `stage` metadata (preserved through normalization)
+- [x] reject/flag invalid issue type values to known enum (`ALLOWED_ISSUE_TYPES`)
+
+## Phase 2: Context extension [DONE]
+
+Files:
+- `docs/index.html`
+- `docs/js/components/context.js`
+- `docs/js/state.js`
+
+Tasks:
+- [x] add structured fields: `scriptType`, `century`, `region`, `languages`, `textType`, `knownText`
+- [x] keep backward compatibility with existing context model
+- [x] include structured context in transcription/review prompt builders
+
+## Phase 3: Post-processing orchestration [DONE]
+
+Files:
+- `docs/js/services/postprocess.js` (new orchestrator)
+- `docs/js/services/validation.js`
+- `docs/js/services/llm.js`
+
+Tasks:
+- [x] run Stage 2 and Stage 3 sequentially (`runPostprocessing()` in postprocess.js)
+- [x] merge issue lists deterministically (`mergeStageIssues()` with signature-based dedup)
+- [x] expose one merged `llmJudge` object to existing UI
+- [x] stage badge rendering per issue (paleographic/philological)
+- [x] stage toggles UI (enable/disable Stage 2 and Stage 3 individually)
+- [x] pipeline metadata persistence (stage status + duration in validation state)
+
+## Phase 4: Confidence and marker alignment [DONE]
+
+Files:
+- `docs/js/services/llm.js`
+- `docs/js/components/validation.js`
+- `docs/js/utils/textFormatting.js`
+
+Tasks:
+- [x] ensure storage uses `confident/likely/uncertain` (`_normalizeConfidence()` maps expert terms)
+- [x] enforce canonical markers (`normalizeMarkers()` in textFormatting.js, 12 variant forms)
+- [x] document mapping in this spec (sections 3.1 and 3.2)
+
+## Phase 5: QA and release gating [DONE]
+
+Files:
+- `docs/tests/*.test.js`
+- `docs/tests/e2e/` (Playwright)
+
+Tasks:
+- [x] unit tests for schema normalization and merge rules (48 new tests: llm.test.js, state.test.js, postprocess.test.js)
+- [x] integration tests: stage outputs -> issue rendering -> apply -> export
+- [x] Playwright E2E for Apply, Diff View, Undo, Export
+- [x] rollout checklist and go/no-go criteria (section 15 below)
+
+## 11. Acceptance Criteria
+
+Functional:
+- Stage 2/3 outputs are always parseable and rendered as issues
+- Apply works with line-accurate replacements
+- Apply All skips unsafe multiline suggestions and reports counts
+
+Data integrity:
+- `raw` and `segments` remain in sync after edits
+- exports include corrected text (txt/json/md/xml/tei)
+
+Stability:
+- no regression in existing validation-only mode
+- no blocking failures when review stages fail
+
+## 12. Test Matrix
+
+Unit:
+- parser normalization for malformed stage JSON
+- allowed issue type enforcement
+- confidence mapping enforcement
+
+Integration:
+- Stage 2 + Stage 3 merge conflict handling
+- Apply then export content verification
+
+E2E (Playwright):
+1. Transcribe -> Validate (with review)
+2. Apply one suggestion -> Diff visible
+3. Undo/redo behavior
+4. Apply All summary and multiline skip behavior
+5. Export contains corrected text
+
+## 13. Metrics and Rollout
+
+Primary metrics:
+- Human acceptance rate of suggestions
+- Correction precision (accepted suggestions / applied suggestions)
+- Reduction in unresolved uncertain markers
+- Processing time per page
+
+Rollout:
+1. feature flag (`postprocessPipelineV1`)
+2. internal audit corpus
+3. limited user pilot
+4. full release after quality threshold
+
+## 14. Risks and Mitigations
+
+Risk: Over-correction of valid medieval variants
+- Mitigation: conservative suggestion policy + human apply decision
+
+Risk: prompt drift across providers
+- Mitigation: strict JSON contract + normalization layer
+
+Risk: increased latency/cost
+- Mitigation: optional stages + timeouts + fallback path
+
+Risk: conflicting stage suggestions
+- Mitigation: deterministic merge and no silent auto-merge
 
 ---
 
-## Table of Contents
+## 15. Rollout Checklist
 
-1. [Synthesis: Pipeline Architecture](#synthesis-pipeline-architecture)
-2. [Philologist Analysis: Medieval Latin HTR Errors](#philologist-analysis)
-3. [Paleographer Analysis: Script-Specific Challenges](#paleographer-analysis)
-4. [System Prompt Library](#system-prompt-library)
-5. [Implementation Roadmap](#implementation-roadmap)
+### Pre-release (before setting `postprocessPipelineV1 = true`)
 
----
+| # | Check | Status |
+|---|-------|--------|
+| 1 | All unit tests pass (`cd docs && npx vitest run`) | [ ] |
+| 2 | All E2E tests pass (`cd docs && npx playwright test`) | [ ] |
+| 3 | ESLint clean (`cd docs && npm run lint`) | [ ] |
+| 4 | Manual test: single-page Validate with pipeline (Gemini + custom prompt) | [ ] |
+| 5 | Manual test: multi-page batch Validate with pipeline | [ ] |
+| 6 | Manual test: Apply, Apply All, Undo, Redo work after pipeline | [ ] |
+| 7 | Manual test: Diff View shows correct changes | [ ] |
+| 8 | Manual test: Export (JSON, Markdown, TXT, PAGE-XML, TEI-XML) contains corrected text + pipeline metadata | [ ] |
+| 9 | Manual test: Stage toggles (disable Stage 2, disable Stage 3, disable both) | [ ] |
+| 10 | Manual test: Fallback when Stage 2/3 fails (network error, timeout) | [ ] |
+| 11 | Manual test: Session save/restore preserves pipeline results | [ ] |
+| 12 | Manual test: Project switch preserves pipeline results per project | [ ] |
+| 13 | Service worker cache cleared/updated for new JS files | [ ] |
+| 14 | No regressions in existing validation-only mode (pipeline disabled) | [ ] |
 
-## Synthesis: Pipeline Architecture
+### Go/No-Go Criteria
 
-### The Three-Stage Pipeline
+**Go** (all must be true):
+- All automated tests green (unit + E2E)
+- No regression in validation-only mode
+- Apply/Apply All/Undo/Redo verified on 3+ real manuscript pages
+- Export formats contain correct corrected text
+- Fallback path works when stages fail
+- Session persistence roundtrip verified
 
-The core insight from both experts: HTR post-processing requires a **multi-stage pipeline**, not a single prompt. Each stage addresses a different layer of the problem.
+**No-Go** (any blocks release):
+- Test failures in merge logic or confidence mapping
+- Apply produces incorrect replacements
+- Pipeline failure blocks editor or export
+- Silent data loss on session save/restore
+- Conflicting stage suggestions auto-merged without both being visible
 
-```
-Stage 1: VISION LLM (Image -> Raw Text)
-   |  Script-type in prompt, abbreviations NOT expanded
-   v
-Stage 2: PALEOGRAPHER LLM (Raw Text -> Corrected Text)
-   |  Minim disambiguation, letterform corrections, script-specific rules
-   v
-Stage 3: PHILOLOGIST LLM (Corrected Text -> Final Text)
-   |  Abbreviation expansion, formula cross-referencing, morphology check
-   v
-   -> Editor with diff view (human decides)
-```
+### Rollout Sequence
 
-**Why separate stages?**
+1. **Internal testing**: Enable flag in `config.local.js`, test with audit corpus
+2. **Limited pilot**: Enable flag in production, announce to 2-3 test users
+3. **Monitor**: Track acceptance rate, correction precision, processing time
+4. **Full release**: Set `postprocessPipelineV1: true` in `constants.js` after quality threshold met
 
-- The Vision model's task is **visual**: extracting shapes from pixels
-- The Paleographer's task is **script-analytical**: resolving letterform ambiguities
-- The Philologist's task is **linguistic**: ensuring the text makes sense as Latin/vernacular
+### Post-release Monitoring
 
-Combining all three in one prompt overwhelms the model and produces worse results than sequential specialization.
-
-### Top 5 Key Findings
-
-**1. The Minim Problem: Anchor-Letter Recognition, Not Counting**
-
-In Gothic Textura (13th--15th c.), the letters m, n, u, i are composed of identical vertical strokes (minims). The word *minimum* appears as 10 identical strokes. The word *communis* contains 13 minims in sequence. This is not an edge case -- it affects core vocabulary in every Latin text.
-
-**Critical insight from paleographic practice:** Expert paleographers do NOT count minims. That is a pedagogical technique for students, not how professionals read. An experienced paleographer reads the **anchor letters** (d, s, a, e, r, t, l -- any letter without minims) and instantly recognizes the word from Latin vocabulary knowledge. The minims are resolved holistically, not character by character.
-
-This maps directly to LLM strengths: **word-level pattern completion with linguistic knowledge**. When the Vision output contains `d_______s` with unclear minims in between, and the context is liturgical, the LLM's Latin vocabulary instantly yields *dominus* or _deus_ depending on the amount of minims -- no exakt counting needed.
-
-Solution: Anchor-letter recognition + Latin vocabulary matching + grammatical context. NOT mechanical minim counting (which is error-prone and computationally unnecessary for an LLM that knows Latin).
-
-**2. The Vision Prompt Must Know the Script Type**
-
-The single most impactful improvement is telling the Vision LLM which script it is looking at. Without this, the model defaults to modern printed text assumptions and produces systematic errors. A library of script-specific prompt modules (Textura, Bastarda, Caroline) is needed.
-
-The Vision LLM should NOT expand abbreviations -- that is a linguistic task for Stage 3. It should report marks as seen.
-
-**3. Abbreviation Expansion Belongs in Stage 3**
-
-The recommended default is semi-diplomatic with round brackets: `d(omi)n(u)s`, `eccl(esi)a`. The Philologist LLM needs context (text type, region, century) for correct expansion. The tool should offer three modes: silent expansion, marked expansion, diplomatic (no expansion).
-
-**4. Document Context is the Key Enabler**
-
-Both experts independently request the same metadata:
-
-| Field       | Provided by       | Used by                    |
-| ----------- | ----------------- | -------------------------- |
-| Script type | Paleographer/User | Vision + Paleographer      |
-| Century     | Paleographer/User | All 3 stages               |
-| Region      | Philologist/User  | All 3 stages               |
-| Text type   | Philologist/User  | Philologist + Paleographer |
-| Language(s) | Philologist/User  | All 3 stages               |
-| Known text  | Philologist/User  | Philologist                |
-
-The existing Document Context panel must be extended with structured dropdowns for these fields.
-
-**5. Confidence Mapping to Existing System**
-
-The post-processing results map directly to the existing validation confidence tiers:
-
-- **sure** -> only one valid reading exists, supported by language + paleography
-- **check-worthy** -> best reading is probable but alternatives exist (mark them)
-- **problematic** -> multiple equally plausible readings, damaged text, or unresolvable minim sequences
+- Human acceptance rate of suggestions (target: >70%)
+- Correction precision (target: >85%)
+- Reduction in unresolved `[?]` markers
+- Processing time per page (target: <60s for 2 extra LLM calls)
+- User feedback on suggestion quality
 
 ---
 
-## Philologist Analysis
-
-### Most Common HTR Errors in Medieval Latin
-
-#### Minim-Based Errors
-
-The single most devastating error category. In Gothic Textura, the letters i, u, n, m are all composed of identical vertical strokes.
-
-| True Reading | HTR Misreading         | Cause                            |
-| ------------ | ---------------------- | -------------------------------- |
-| *minimum*    | *mimmuui*, *mimiuum*   | 10 minims, arbitrarily segmented |
-| *anima*      | *auiina*, *amina*      | n/u/ni interchange               |
-| *dominum*    | *domiuuui*, *dominuni* | final -num as minim sequence     |
-| *communis*   | garbled                | 13 minims in sequence            |
-
-#### Long-s and f Confusion
-
-Long s and f are nearly identical in many hands, differing only in whether the crossbar extends to the left.
-
-| True Reading  | HTR Misreading |
-| ------------- | -------------- |
-| *sanctus*     | *fanctus*      |
-| *sicut*       | *ficut*        |
-| *fecit*       | *secit*        |
-| *satisfactio* | *fatisfactio*  |
-
-#### c/t Confusion
-
-Distinguished only by a minimal ascender on t.
-
-| True Reading | HTR Misreading |
-| ------------ | -------------- |
-| *dictum*     | *diccum*       |
-| *factum*     | *faccum*       |
-| *ecclesia*   | *etclesia*     |
-| *contractus* | *concraccus*   |
-
-#### Abbreviation Mark Errors
-
-Medieval scribes used a rich abbreviation system that Vision LLMs handle poorly.
-
-**General suspension mark (macron/titulus):**
-
-| Manuscript Form    | Correct Expansion | Typical HTR Output   |
-| ------------------ | ----------------- | -------------------- |
-| dns with macron    | *dominus*         | *dns*, *dius*, *dms* |
-| ecclia with macron | *ecclesia*        | *ecclia*, *ecelia*   |
-| omes with macron   | *omnes*           | *omes*, *oines*      |
-| eps with macron    | *episcopus*       | *eps*, *epis*        |
-
-**Special signs:**
-
-| Sign            | Meaning      | HTR Output         |
-| --------------- | ------------ | ------------------ |
-| p with stroke   | *per*, *par* | *p*, *pp*, garbage |
-| p with flourish | *pro*        | *p*, *po*          |
-| q with stroke   | *quod*       | *q*, *qd*          |
-| Tironian et     | *et*         | *7*, *z*, *&*, *t* |
-
-#### Word Boundary Errors
-
-Medieval manuscripts frequently lack consistent word separation:
-
-- *inaduentu* for *in adventu*
-- *deecclesie* for *de ecclesie*
-- *idest* for *id est*
-
-#### Roman Numerals vs. Letters
-
-Flanking punctuation marks (punctus before and after numerals) are frequently missed, causing numerals to be read as parts of adjacent words: `.viij.` -> `viij` or `uiij`.
-
-### Philological Post-Processing Strategy
-
-#### Morphological Awareness
-
-Latin is inflected. A corrected reading must produce a morphologically valid form. The LLM should consider:
-
-- Noun declension patterns (5 declensions, with medieval deviations)
-- Verb conjugation (including medieval contracted forms)
-- Agreement (adjective-noun, subject-verb)
-- Case governance by prepositions
-
-#### Formula Recognition
-
-A vast proportion of medieval Latin texts follow formulaic patterns:
-
-- **Liturgical:** *In nomine Domini*, *Per omnia saecula saeculorum*, *Gloria Patri...*
-- **Charter:** *Notum sit omnibus tam presentibus quam futuris*, *Actum et datum*
-- **Legal:** *Nos igitur*, *Volumus et mandamus*, *Sub pena excommunicationis*
-- **Biblical:** Vulgate quotations (the single most copied text)
-
-#### Orthographic Variation Awareness
-
-Medieval Latin is not Classical Latin. The LLM must know which variations are legitimate:
-
-| Classical                  | Medieval Variant             | Status               |
-| -------------------------- | ---------------------------- | -------------------- |
-| *ae*                       | *e* (monophthongization)     | Legitimate, preserve |
-| *oe*                       | *e*                          | Legitimate, preserve |
-| *-ti-* before vowel        | *-ci-* (*nacio* for *natio*) | Legitimate, preserve |
-| *h-* omission              | *abere* for *habere*         | Legitimate, preserve |
-| *nichil/nihil*             | both forms                   | Both legitimate      |
-| *michi/mihi*               | both forms                   | Both legitimate      |
-| double consonant variation | *littera/litera*             | Both legitimate      |
-| *y/i* interchange          | *ymaginem/imaginem*          | Both legitimate      |
-
-**Key principle:** Preserve what might be a feature of the scribe's Latin; correct what is clearly a transmission error.
-
-#### Abbreviation Handling: Three Modes
-
-| Mode                           | Convention        | Use Case                                      |
-| ------------------------------ | ----------------- | --------------------------------------------- |
-| **Silent expansion**           | *dominus*         | Full-text search, NLP, non-specialist reading |
-| **Marked expansion** (default) | *d(omi)n(u)s*     | Scholarly transcription, best middle ground   |
-| **Diplomatic**                 | *dns* with macron | Paleographic study                            |
-
-#### Uncertain Readings Conventions
-
-| Situation                   | Convention       | Example                 |
-| --------------------------- | ---------------- | ----------------------- |
-| Uncertain but plausible     | Square brackets  | *[sanctus]*             |
-| Illegible, estimated length | Dots in brackets | *[...]*, *[..........]* |
-| Illegible, unknown extent   | Dashes           | *[---]*                 |
-| Scribal deletion            | Angle brackets   | *<deleted text>*        |
-| Hopeless corruption         | Daggers          | *+corrupted text+*      |
-
-#### Reference Knowledge for Cross-Checking
-
-1. **Vulgate Bible** -- compare against standard text, flag discrepancies
-2. **Liturgical texts** -- Breviary and Missal follow extremely standardized texts
-3. **Charter formulas** -- predictable structure: invocatio, intitulatio, inscriptio, arenga, narratio, dispositio, sanctio, corroboratio, datum
-4. **Standard dictionaries** -- Niermeyer (*Mediae Latinitatis Lexicon Minus*), Du Cange (*Glossarium*)
-
----
-
-## Paleographer Analysis
-
-### Script-Specific HTR Challenges
-
-#### Textura (Textualis Formata)
-
-The most difficult medieval script for automated recognition.
-
-**The Minim Problem ("Picket Fence"):**
-
-- Letters m, n, u, i constructed from identical vertical strokes
-- *minimi* = 10 identical strokes: ||||||||||
-- I-dots only become systematic in the 14th century, remain inconsistent
-- Even human paleographers rely on context
-
-**Biting (Litterae Mordentes):**
-When opposing curves meet (de, do, be, bo, pe, po), Textura merges them into a shared vertical. The Vision LLM may read only one letter, a different letter, or insert a spurious letter.
-
-**Textura Confusion Matrix:**
-
-| True Letter | Likely Misread As |
-| ----------- | ----------------- |
-| c           | t, e              |
-| e           | c, o              |
-| f           | long-s            |
-| long-s      | f                 |
-| m           | in, ni, mi        |
-| n           | u, ii             |
-| u           | n, ii             |
-| round-r     | z, 2, v           |
-| round-d     | cl, a             |
-| t           | c                 |
-| w           | vv, uu            |
-
-#### Textualis and Bastarda (Hybrida)
-
-**Long-s vs. f:** More acute in Bastarda because scripts are written more quickly. The crossbar distinguishing them may be merely a thickening, extended too far, or omitted entirely.
-
-**Regional Variants:**
-
-German Bastarda:
-
-- e written as two parallel strokes (like Kurrent e), confused with n or ii
-- Sharp angularity even in "looser" forms
-- z with descending tail, confused with 3
-- Early umlaut (superscript e over u) often read incorrectly or ignored
-
-French Batarde:
-
-- Pronounced looped ascenders on b, h, k, l -- may be read as separate letters (l with loop becomes "el")
-- v/b confusion more acute
-- Highly decorated capitals unrecognizable to models
-
-**Bastarda Additional Confusion Matrix:**
-
-| True Letter            | Likely Misread As           |
-| ---------------------- | --------------------------- |
-| a (single-compartment) | u, ci                       |
-| b                      | v (initial), l (with loops) |
-| h                      | b (with loops)              |
-| l                      | b (ascender loops)          |
-| looped ascender        | e+letter, o+letter          |
-| German e (two-stroke)  | n, ii                       |
-
-#### Caroline Minuscule (Why It Is Easier)
-
-1. **Open letterforms**: round, well-spaced, individually distinct -- no minim problem
-2. **No biting**: each letter occupies its own space
-3. **Resemblance to modern type**: Caroline is the historical ancestor of printed lowercase
-4. Vision LLMs find Caroline forms familiar
-
-### Paleographic Post-Processing Strategy
-
-#### Minim Disambiguation: The Anchor-Letter Approach
-
-**Key insight from paleographic practice:** Expert paleographers do NOT count minims mechanically. That is a pedagogical technique for beginners. A professional paleographer reads the **anchor letters** -- any letter that is NOT composed of minims (d, s, a, e, r, t, l, o, c, p, etc.) -- and recognizes the word instantly from Latin vocabulary knowledge. The minim letters (m, n, u, i, v) resolve themselves once the word is identified.
-
-This is directly analogous to how humans read English despite ambiguous handwriting: we recognize the word shape, not each letter individually.
-
-**Strategy for LLM post-processing:**
-
-1. **Extract the anchor skeleton:** identify all non-minim letters in their positions
-2. **Match against Latin vocabulary:** the anchor pattern usually yields a unique or near-unique word
-3. **Use grammatical context:** case endings, verb forms, preposition governance disambiguate remaining candidates
-4. **I-dot presence:** when dots are present, they are authoritative anchors too
-5. **Fallback only:** mechanical minim counting is a last resort when anchor letters are too few (rare)
-
-**Examples of anchor-letter resolution:**
-
-| HTR Output    | Anchors       | Recognition                  | Resolved      |
-| ------------- | ------------- | ---------------------------- | ------------- |
-| *domiuuui*    | d, o          | d_______  → *dominum*        | dominum       |
-| *coiiimuiiis* | c, o, s       | c_______s → *communis*       | communis      |
-| *tenipoie*    | t, e, p, e    | t___p___e → *tempore*        | tempore       |
-| *ecclefie*    | e, c, c, l, e | eccl___e → *ecclesie*        | ecclesie      |
-| *aiiiiua*     | a, a          | a_____a → *anima* or *annua* | check context |
-
-#### Ligatures and Special Characters
-
-| Feature            | Post-Processing Rule            |
-| ------------------ | ------------------------------- |
-| ct-ligature        | Do not read as separate strokes |
-| st-ligature        | Do not insert space             |
-| ae/oe as e-caudata | Expand to ae/oe or mark         |
-| Tironian et        | Replace with *et*               |
-| con/com (9-shaped) | Expand to con- or com-          |
-| -us abbreviation   | Expand to -us                   |
-| -rum abbreviation  | Expand to -rum                  |
-
-### Vision Model Guidance
-
-#### What the Initial Vision Prompt Must Include
-
-**A. Script Type Declaration (highest impact):**
-
-Tell the Vision LLM exactly which script it is looking at. Example:
-
-```
-This manuscript is written in Gothic Textura (Textualis Formata), a formal
-book script of the 14th century. Key features:
-- Vertical, angular letterforms with no curves
-- Minims (identical vertical strokes) forming m, n, u, i
-- Biting/fusion where opposing curves meet (de, do, be, bo, pe, po)
-- Long-s that looks like f but lacks a full crossbar
-- Round-r (2-shaped) after curved letters
-- Heavy abbreviation (macrons, superscript letters, special signs)
-```
-
-**B. Mark Uncertain Characters (instead of confidence scores):**
-
-```
-When unsure about a character, mark with [?]: "sacra[m?]entis"
-```
-
-**C. Do NOT Expand Abbreviations:**
-
-```
-Transcribe abbreviation marks as seen. Do NOT expand.
-Expansion requires linguistic knowledge and will be handled separately.
-```
-
-**D. Damaged Passages:**
-
-```
-Mark completely illegible characters with [...] for approximate count.
-Mark partially legible: d[?]minus. Do NOT guess at illegible words.
-```
-
-**E. Preserve Line Structure:**
-
-```
-Transcribe line by line. If a word is hyphenated across lines,
-transcribe parts on respective lines with a hyphen.
-```
-
-**F. Visual Features:**
-
-```
-Note: rubricated text, enlarged initials, marginal annotations,
-interlinear additions, deletions, hand changes.
-```
-
----
-
-## System Prompt Library
-
-### Prompt A: General Medieval Latin Philological Review
-
-```
-You are a specialist in medieval Latin philology reviewing a raw HTR
-(Handwritten Text Recognition) transcription of a manuscript page. Your task
-is to correct obvious reading errors while preserving genuine features of
-medieval Latin orthography.
-
-LETTERFORM CORRECTIONS:
-- Minim confusion: where the HTR produces nonsensical sequences of i, u, n, m
-  strokes, reconstruct the most plausible Latin word. For example, if you see
-  "domiuuui" or "domiuuni", correct to "dominum" or "dominuni" based on
-  morphological and syntactic context.
-- Long-s / f confusion: "fanctus" should be "sanctus", "ficut" should be
-  "sicut", but "fecit" is correct as-is. Decide based on Latin vocabulary.
-- c / t confusion: "diccum" is likely "dictum", "faccum" is likely "factum".
-  Check whether the resulting word exists in medieval Latin.
-
-ABBREVIATION EXPANSION:
-- Expand all abbreviations using round parentheses to mark supplied letters:
-  dns with macron -> d(omi)n(u)s
-  ecclia with macron -> eccl(esi)a
-  p with stroke (per-sign) -> p(er) or p(ar) based on context
-  p with descending flourish -> p(ro)
-  q with stroke -> q(uo)d or other q-words based on context
-  Tironian et (resembling 7 or z) -> (et)
-  superscript letters: expand the implied syllable
-- If the abbreviation is ambiguous, choose the reading that fits syntactic
-  context and note the ambiguity only if both readings are plausible.
-
-ORTHOGRAPHIC PRESERVATION:
-Do NOT normalize these medieval Latin features to classical forms:
-- e for ae/oe (e.g., "ecclesie" not "ecclesiae")
-- ci for ti before vowels (e.g., "nacio" not "natio")
-- Omitted h (e.g., "abere" for "habere")
-- michi/nichil spellings
-- Double or single consonant variations
-- y/i interchange (e.g., "ymago")
-- set for sed, ut for aut (phonetic spellings)
-These are features of the scribe's language, not errors.
-
-UNCERTAIN READINGS:
-- Plausible but unclear: square brackets [sanctus]
-- Illegible: [...] for few letters, [---] for unknown extent
-- Corrupt beyond reconstruction: +corrupted passage+
-
-OUTPUT FORMAT:
-Provide the corrected transcription line by line. After the transcription,
-add a brief apparatus section listing significant corrections with reasoning.
-```
-
-### Prompt B: Liturgical Text Specialist
-
-```
-You are reviewing an HTR transcription of a medieval liturgical manuscript
-(Breviary, Missal, Psalter, or Book of Hours). Liturgical texts are highly
-formulaic, which aids correction.
-
-LITURGICAL FORMULA CROSS-REFERENCE:
-- Compare against standard Vulgate biblical text and established formulas:
-  "In nomine Patris et Filii et Spiritus Sancti"
-  "Per omnia secula seculorum" (medieval "secula" not "saecula")
-  "Dominus vobiscum / Et cum spiritu tuo"
-  "Gloria Patri et Filio et Spiritui Sancto"
-  "Sicut erat in principio et nunc et semper"
-- Psalm incipits follow the Vulgate Psalter (Gallicanum version for most
-  Western manuscripts). If the text diverges, flag but preserve.
-- Hymns: cross-reference known compositions (Ambrose, Prudentius, Venantius
-  Fortunatus).
-
-RUBRICS:
-- Rubrics use abbreviated forms: R/ (responsorium), V/ (versiculus),
-  A/ (antiphona), Ps. (psalmus).
-- Mark rubrics distinctly from main text.
-
-MUSICAL NOTATION:
-- Garbled characters that might be neumes: mark as [neumes].
-
-Apply standard letterform correction and abbreviation expansion rules.
-```
-
-### Prompt C: Charter/Diplomatic Text Specialist
-
-```
-You are reviewing an HTR transcription of a medieval charter (Urkunde).
-Charters follow a predictable diplomatic structure.
-
-DIPLOMATIC STRUCTURE:
-1. Invocatio: "In nomine sancte et individue Trinitatis"
-2. Intitulatio: name and titles of the issuer
-3. Inscriptio: addressees
-4. Arenga: general justification
-5. Narratio: circumstances
-6. Dispositio: legal content
-7. Sanctio/Corroboratio: penalties, sealing clause
-8. Datum: "Actum et datum [place], anno Domini M CCC..."
-9. Witnesses: "Testes huius rei sunt..."
-
-DATING FORMULAS:
-- Roman numerals with flanking dots: .M.CCC.LXXVII. = 1377
-- Flag numerals outside plausible range but do not silently change.
-
-LEGAL TERMINOLOGY:
-Watch for: census/censum, mansum (not "manfum"), sigillum (not "figillum"),
-privilegium, advocatus/advocatia, decimae/decime.
-
-PERSONAL AND PLACE NAMES:
-- Preserve manuscript forms: "Heinricus", "Wienne", "Salczburga"
-- Do NOT normalize to modern forms.
-- Flag uncertain names: "Albertus de [?]burch"
-```
-
-### Prompt D: Textura Minim Resolution Module (Anchor-Letter Approach)
-
-The following prompt encodes the expert paleographer's reading strategy: read
-the clear (non-minim) letters first, then resolve the minim sequences by
-recognizing the whole word from Latin vocabulary. This is how professionals
-actually read Textura -- NOT by counting individual strokes.
-
-```
-You are an expert paleographer reading a Gothic Textura transcription. The raw
-HTR output contains garbled minim sequences (combinations of m, n, u, i, v
-that look wrong). Your task is to resolve them using the ANCHOR-LETTER method:
-
-READING STRATEGY (how expert paleographers work):
-1. IDENTIFY the anchor letters in each word -- letters that are NOT composed
-   of minims and are therefore reliably transcribed: a, b, c, d, e, f, g, h,
-   k, l, o, p, q, r, s, t, x, y, z. These form the skeleton of the word.
-2. RECOGNIZE the word from its skeleton + your Latin vocabulary knowledge.
-   Example: "d___n__s" with garbled minims -> "dominus" (immediate recognition)
-   Example: "c___n__" with garbled minims -> "commune" or "communis"
-   Example: "___n__" with garbled minims at start -> "annum", "anima", "unum"
-3. VERIFY the recognized word fits the grammatical context (case, number,
-   tense, syntactic position).
-4. Only if anchor-letter recognition fails (e.g., a word consists almost
-   entirely of minims), fall back to considering all possible Latin words
-   of that approximate letter count.
-
-DO NOT count individual minims mechanically. That is a student exercise,
-not how experts read. Trust your Latin vocabulary to resolve minim sequences
-holistically, just as a human paleographer would.
-
-EXAMPLES:
-- "domiuuui" -> anchors: d, o -> "dominum" (accusative, fits "per dominum")
-- "coiiimuiiis" -> anchors: c, o, s -> "communis"
-- "aiiiiua" -> anchors: a, a -> "anima" (not "annua" -- check context)
-- "ecclefie" -> anchors: e, c, c, l, e -> "ecclesie" (long-s/f also fixed)
-- "tenipoie" -> anchors: t, e, p, e -> "tempore" (minim n->m, i->r resolved)
-
-Mark confidence:
-- [SURE] = only one Latin word matches the anchor skeleton
-- [PROBABLE] = best match is strongly favored by context
-- [AMBIGUOUS] = multiple words fit (e.g., "anima" vs. "annum"); list all
-```
-
-### Prompt E: Script-Aware Validation Rules
-
-```
-FOR TEXTURA (13th-15th century):
-1. "ff" at word-start is almost always double long-s or long-s + f
-2. After o, b, p, d: expect round-r (2-shaped). "oz"/"o2" = "or"
-3. Word-final long-s is rare in Latin. Check word boundary.
-4. v appears only word-initially (elsewhere written as u). Flag medial v.
-5. j does not exist in medieval Latin. Read as i.
-
-FOR BASTARDA (14th-16th century):
-1. Looped ascenders are decorative, not separate letters. "el" for l -> l
-2. German two-stroke e may be read as "n" or "ii". Check spelling rules.
-3. w in German is a single letter, not "vv" or "uu". Merge if split.
-4. Superscript e over u (umlaut): note as ue, not ignore.
-
-FLAG for human review:
-- Words not found in standard dictionary for the language/period
-- Sequences of 6+ minims without clear resolution
-- Abbreviations that cannot be confidently expanded
-- Damaged or unclear passages
-```
-
----
-
-## Implementation Roadmap
-
-### Phase 1: Document Context Extension
-
-Extend the existing Document Context panel with structured fields:
-
-```
-Script Type:   [Textura | Textualis | Bastarda | Caroline | Humanistic | Other]
-Century:       [text field, e.g., "mid-14th century"]
-Region:        [German | French | Italian | English | Other]
-Language(s):   [checkboxes: Latin | German | French | Italian | Other]
-Text Type:     [Liturgical | Legal/Charter | Literary | Administrative | Scientific | Other]
-Known Text:    [text field, e.g., "Psalter, Psalms 1-50" or empty]
-```
-
-These fields dynamically shape all three pipeline stages.
-
-### Phase 2: Vision Prompt Library
-
-Create script-specific prompt modules that are injected into the transcription prompt based on Document Context:
-
-- `prompts/vision-textura.txt`
-- `prompts/vision-bastarda.txt`
-- `prompts/vision-caroline.txt`
-- `prompts/vision-generic.txt` (fallback)
-
-### Phase 3: Post-Processing Pipeline
-
-Add two additional LLM calls after transcription:
-
-1. **Paleographic correction** (Script-aware, uses confusion matrices)
-2. **Philological review** (Language-aware, uses formula databases)
-
-Display corrections as word-level diff in the editor (reuse existing Suggesting Mode).
-
-### Phase 4: Confidence Integration
-
-Map post-processing results to the existing sure/check-worthy/problematic system:
-
-- Line-level confidence based on the worst segment
-- Uncertain readings `[bracketed]` shown with tooltip explaining alternatives
-- Apparatus section in export formats
-
-### Dependencies
-
-| Phase   | Depends On                      | Estimated Scope                                 |
-| ------- | ------------------------------- | ----------------------------------------------- |
-| Phase 1 | Existing context.js             | ~100 lines (dropdowns + storage)                |
-| Phase 2 | Phase 1                         | ~200 lines (prompt templates + selection logic) |
-| Phase 3 | Phase 2, existing llm.js        | ~400 lines (pipeline orchestration)             |
-| Phase 4 | Phase 3, existing validation.js | ~150 lines (confidence mapping)                 |
-
----
-
-*Document created 2026-02-10. Based on expert consultation with Medieval Latin Philologist, Medieval Paleographer, and HTR/Vision Model Orchestrator.*
+Appendix A (Expert rationale retained):
+- minim-heavy script ambiguity must be solved contextually, not by naive stroke counting
+- script-specific prompting has high leverage
+- abbreviation expansion should be context-aware and review-driven

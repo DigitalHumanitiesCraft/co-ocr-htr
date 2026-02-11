@@ -27,6 +27,43 @@ const UNCERTAIN_MARKER_HTML = '<span class="marker-uncertain" title="Uncertain">
 const ILLEGIBLE_MARKER_HTML = '<span class="marker-illegible" title="Illegible">...</span>';
 
 // =============================================================================
+// MARKER NORMALIZATION
+// =============================================================================
+
+/** Map variant marker forms to canonical markers */
+const MARKER_NORMALIZATIONS = [
+    // Uncertain variants -> [?]
+    { pattern: /\[uncertain\]/gi, replacement: '[?]' },
+    { pattern: /\[unclear\]/gi, replacement: '[?]' },
+    { pattern: /\[unsicher\]/gi, replacement: '[?]' },
+    { pattern: /\[unklar\]/gi, replacement: '[?]' },
+    // Illegible variants -> [illegible]
+    { pattern: /\[unreadable\]/gi, replacement: '[illegible]' },
+    { pattern: /\[unlesbar\]/gi, replacement: '[illegible]' },
+    { pattern: /\[unleserlich\]/gi, replacement: '[illegible]' },
+    { pattern: /\[not readable\]/gi, replacement: '[illegible]' },
+    // Ellipsis variants -> [...]
+    { pattern: /\[\.\.+\]/g, replacement: '[...]' },  // [..], [.....], etc. -> [...]
+    { pattern: /\[gap\]/gi, replacement: '[...]' },
+    { pattern: /\[lacuna\]/gi, replacement: '[...]' }
+];
+
+/**
+ * Normalize variant marker forms to canonical markers.
+ * Canonical markers: [?], [illegible], [...]
+ * @param {string} text - Text containing markers
+ * @returns {string} Text with normalized markers
+ */
+export function normalizeMarkers(text) {
+    if (!text || typeof text !== 'string') return text || '';
+    let result = text;
+    for (const { pattern, replacement } of MARKER_NORMALIZATIONS) {
+        result = result.replace(pattern, replacement);
+    }
+    return result;
+}
+
+// =============================================================================
 // PUBLIC API
 // =============================================================================
 

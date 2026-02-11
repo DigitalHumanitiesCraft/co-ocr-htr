@@ -7,6 +7,8 @@
  * via IndexedDB and restored into memory on startup.
  */
 
+import { normalizeMarkers } from '../utils/textFormatting.js';
+
 // ============================================
 // Timeouts
 // ============================================
@@ -39,15 +41,48 @@ Output format: Only the transcribed text, no explanations or commentary.
 Begin directly with the first line of the document.`;
 
 /**
+ * Build script-specific transcription hints based on structured context.
+ * Returns empty string if no relevant context is available.
+ * @param {object} [structuredContext] - Structured context from state
+ * @returns {string} Script-specific rules block
+ */
+function buildScriptHints(structuredContext) {
+    if (!structuredContext?.scriptType) return '';
+    const hints = [];
+    const script = structuredContext.scriptType;
+
+    // Script-specific paleographic warnings
+    if (script === 'textura' || script === 'bastarda') {
+        hints.push('- CRITICAL: This script uses minim-heavy letterforms. Pay close attention to n/u/m/in/iu/ni disambiguation');
+        hints.push('- Watch for long-s (similar to f) and round-s distinctions');
+    }
+    if (script === 'cursiva' || script === 'bastarda' || script === 'kurrent') {
+        hints.push('- Watch for c/t and e/r confusions common in cursive hands');
+    }
+    if (script === 'kurrent') {
+        hints.push('- This is Kurrent/Suetterlin script: watch for e/n, h/y, f/s, and u/ue letter confusions');
+    }
+    if (script === 'insular' || script === 'uncial') {
+        hints.push('- Watch for insular/uncial letterforms: d/cl, r/s, and distinct letter shapes');
+    }
+    if (script === 'carolingian') {
+        hints.push('- Caroline minuscule: generally clear but watch for tironian et, ampersands, and abbreviation marks');
+    }
+
+    return hints.length > 0 ? '\n' + hints.join('\n') : '';
+}
+
+/**
  * Build the full transcription prompt, optionally enhanced with context
  * @param {string} contextDescription - Additional context from the expert
+ * @param {object} [structuredContext] - Structured context for script hints
  * @returns {string} The complete prompt
  */
-function buildTranscriptionPrompt(contextDescription = '') {
-    let prompt = TRANSCRIPTION_PROMPT_BASE;
+function buildTranscriptionPrompt(contextDescription = '', structuredContext = null) {
+    const scriptHints = buildScriptHints(structuredContext);
 
     if (contextDescription) {
-        prompt = `You are an expert in historical manuscripts and paleography.
+        return `You are an expert in historical manuscripts and paleography.
 
 DOCUMENT CONTEXT (provided by the expert):
 ${contextDescription}
@@ -59,13 +94,29 @@ Rules:
 - Separate paragraphs with blank lines
 - Mark uncertain readings with [?] (e.g., "[?]word") - you MUST use this when confidence is below 90%
 - Mark illegible passages with [illegible]
-- Keep abbreviations as written in the original (do not expand)
+- Keep abbreviations as written in the original (do not expand)${scriptHints}
 
 Output format: Only the transcribed text, no explanations or commentary.
 Begin directly with the first line of the document.`;
     }
 
-    return prompt;
+    if (scriptHints) {
+        return `You are an expert in historical manuscripts and paleography.
+
+Task: Transcribe the document as accurately as possible.
+
+Rules:
+- Preserve original line breaks exactly as they appear
+- Separate paragraphs with blank lines
+- Mark uncertain readings with [?] (e.g., "[?]word") - you MUST use this when confidence is below 90%
+- Mark illegible passages with [illegible]
+- Keep abbreviations as written in the original (do not expand)${scriptHints}
+
+Output format: Only the transcribed text, no explanations or commentary.
+Begin directly with the first line of the document.`;
+    }
+
+    return TRANSCRIPTION_PROMPT_BASE;
 }
 
 /**
@@ -94,6 +145,15 @@ Be specific, scholarly, and note uncertainties. Use Latin terms where appropriat
 function buildDescriptionPrompt(customPrompt = '') {
     return customPrompt.trim() || DESCRIPTION_PROMPT_BASE;
 }
+
+/**
+ * Valid issue type identifiers for structured validation results.
+ * Used by _normalizeIssueType() and contract enforcement.
+ */
+const VALID_ISSUE_TYPES = [
+  'spelling', 'accent', 'abbreviation', 'illegible',
+  'ocr_artifact', 'historical', 'structural', 'plausibility'
+];
 
 /**
  * Issue types for structured validation results
@@ -154,6 +214,142 @@ Respond ONLY with valid JSON in this exact format:
 }
 
 If no issues found, return empty issues array. Be specific about line numbers.`;
+
+// ============================================
+// Post-Processing Prompts (Stage 2 + Stage 3)
+// ============================================
+
+/**
+ * Stage 2: Paleographic Review prompt.
+ * Focuses on script-level letter confusion and abbreviation signs.
+ * MUST NOT do lexical normalization or rewriting.
+ */
+const PALEOGRAPHIC_REVIEW_PROMPT = `You are an expert paleographer specializing in historical handwriting analysis.
+
+TASK: Review the following transcription for paleographic errors -- mistakes caused by misreading letter shapes in the original handwriting.
+
+TRANSCRIPTION:
+{text}
+
+{context}
+
+FOCUS AREAS:
+1. MINIM DISAMBIGUATION: Sequences of minims (vertical strokes) that may have been misread. Common confusions: n/u, m/in, iu/ni, im/um, nn/nu, mi/nu, uu/w. Resolve by checking context.
+2. LETTER CONFUSION: Script-specific confusions: long-s vs f, c vs t, c vs e, r vs s, d vs cl, i vs l, v vs b.
+3. ABBREVIATION SIGNS: Nasal bars (macrons indicating m/n), suspension marks, special signs (e.g., p with stroke = per/par/pro, tironian et).
+4. LIGATURES: Misread ligatures or combined letterforms (st, ct, fi ligatures).
+
+RULES:
+- Propose corrections ONLY for paleographic reading errors, not for grammar, style, or content.
+- Do NOT modernize or normalize historical spellings. "Iohannes" is NOT an error for "Johannes".
+- Do NOT expand abbreviations -- only flag if the abbreviation mark appears misread.
+- Each suggestion must be a single-line replacement.
+- If multiple equally valid readings exist, list alternatives.
+- Be conservative: only flag readings where you have reasonable confidence in a better reading.
+${ISSUE_TYPE_INSTRUCTION}
+Respond ONLY with valid JSON:
+{
+  "confidence": "confident|likely|uncertain",
+  "reasoning": "Brief assessment of paleographic difficulty",
+  "issues": [
+    {
+      "line": 1,
+      "text": "original text fragment",
+      "suggestion": "corrected reading",
+      "type": "spelling|abbreviation|illegible|ocr_artifact",
+      "explanation": "paleographic rationale",
+      "alternatives": ["optional alternative reading"],
+      "stage": "paleographic",
+      "score": 0.85
+    }
+  ]
+}
+
+If no paleographic issues found, return empty issues array. Be specific about line numbers.`;
+
+/**
+ * Stage 3: Philological Review prompt.
+ * Focuses on language-level plausibility after paleographic pass.
+ * MUST NOT delete uncertainty markers without reason.
+ */
+const PHILOLOGICAL_REVIEW_PROMPT = `You are a philologist specializing in historical texts and manuscript traditions.
+
+TASK: Review the following transcription for linguistic and contextual plausibility errors -- problems that paleographic analysis alone cannot resolve.
+
+TRANSCRIPTION:
+{text}
+
+{context}
+
+{previous_issues}
+
+FOCUS AREAS:
+1. MORPHOLOGY & SYNTAX: Words that are morphologically impossible or syntactically implausible in the text's language and period (e.g., wrong case ending, impossible verb form).
+2. FORMULA RECOGNITION: Liturgical, legal, or administrative formulas where standard wording is expected. If a known formula is nearly correct but has a clear error, propose the standard reading.
+3. LEXICAL PLAUSIBILITY: Words that do not exist in the language/period vocabulary and are likely misreadings rather than rare forms.
+4. ABBREVIATION CONTEXT: Abbreviation marks where the expansion is ambiguous and the linguistic context can resolve it (e.g., "p" with stroke: per/par/pro -- context decides).
+
+RULES:
+- Do NOT correct valid historical spellings, dialectal forms, or archaic grammar.
+- Do NOT delete or alter [?] or [illegible] markers unless you can provide a confident reading.
+- Do NOT repeat issues already flagged in the previous review stage (see PREVIOUS ISSUES below).
+- Each suggestion must be a single-line replacement.
+- Be conservative: only flag issues where linguistic evidence strongly supports a correction.
+- Prefer the simplest explanation (scribal error, not rare variant).
+${ISSUE_TYPE_INSTRUCTION}
+Respond ONLY with valid JSON:
+{
+  "confidence": "confident|likely|uncertain",
+  "reasoning": "Brief assessment of linguistic quality",
+  "issues": [
+    {
+      "line": 1,
+      "text": "original text fragment",
+      "suggestion": "corrected reading",
+      "type": "spelling|plausibility|abbreviation|historical",
+      "explanation": "linguistic/philological rationale",
+      "stage": "philological",
+      "score": 0.80
+    }
+  ]
+}
+
+If no philological issues found, return empty issues array. Be specific about line numbers.`;
+
+/**
+ * Build paleographic review prompt (Stage 2)
+ * @param {string} text - Transcription text to review
+ * @param {string} contextDescription - Document context string
+ * @returns {string} Complete prompt
+ */
+function buildPaleographicReviewPrompt(text, contextDescription = '') {
+    const contextBlock = contextDescription
+        ? `DOCUMENT CONTEXT:\n${contextDescription}`
+        : 'No additional context provided.';
+    return PALEOGRAPHIC_REVIEW_PROMPT
+        .replace('{text}', text)
+        .replace('{context}', contextBlock);
+}
+
+/**
+ * Build philological review prompt (Stage 3)
+ * @param {string} text - Transcription text to review
+ * @param {string} contextDescription - Document context string
+ * @param {Array} previousIssues - Issues from Stage 2 (to avoid duplicates)
+ * @returns {string} Complete prompt
+ */
+function buildPhilologicalReviewPrompt(text, contextDescription = '', previousIssues = []) {
+    const contextBlock = contextDescription
+        ? `DOCUMENT CONTEXT:\n${contextDescription}`
+        : 'No additional context provided.';
+    const issuesBlock = previousIssues.length > 0
+        ? `PREVIOUS ISSUES (already flagged, do NOT repeat):\n${previousIssues.map(i => `- Line ${i.line}: "${i.text}" -> "${i.suggestion}" (${i.type})`).join('\n')}`
+        : 'No previous issues flagged.';
+    return PHILOLOGICAL_REVIEW_PROMPT
+        .replace('{text}', text)
+        .replace('{context}', contextBlock)
+        .replace('{previous_issues}', issuesBlock);
+}
 
 /**
  * Build validation prompt - uses default or custom prompt
@@ -510,7 +706,8 @@ class LLMService {
 
     // Build prompt with optional context from expert
     const contextDescription = options.context || '';
-    const prompt = options.prompt || buildTranscriptionPrompt(contextDescription);
+    const structuredContext = options.structuredContext || null;
+    const prompt = options.prompt || buildTranscriptionPrompt(contextDescription, structuredContext);
     const model = this.getCurrentModel();
     console.log(`[LLM] model=${model} image=${imageBase64 ? 'yes' : 'no'} context=${contextDescription ? 'yes' : 'no'}`);
 
@@ -1134,18 +1331,12 @@ class LLMService {
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
 
-        // Map old confidence values to new ones
-        let confidence = parsed.confidence || 'uncertain';
-        if (confidence === 'certain') confidence = 'confident';
+        const confidence = this._normalizeConfidence(parsed.confidence);
 
-        // Validate and normalize issues with types
-        const issues = (parsed.issues || []).map(issue => ({
-          line: issue.line || 0,
-          text: issue.text || '',
-          type: this._normalizeIssueType(issue.type),
-          suggestion: issue.suggestion || null,
-          explanation: issue.explanation || issue.suggestion || ''
-        }));
+        // Validate and normalize issues, filter out broken ones
+        const issues = (parsed.issues || [])
+          .map(issue => this._normalizeIssue(issue))
+          .filter(issue => issue !== null);
 
         return {
           confidence,
@@ -1159,13 +1350,8 @@ class LLMService {
       console.warn('[LLM] JSON parse failed in validation response:', e.message);
     }
 
-    // Fallback: extract confidence from text
-    let confidence = 'uncertain';
-    if (raw.toLowerCase().includes('"confident"') || raw.toLowerCase().includes('"certain"')) {
-      confidence = 'confident';
-    } else if (raw.toLowerCase().includes('"likely"') || raw.toLowerCase().includes('plausible')) {
-      confidence = 'likely';
-    }
+    // Fallback: extract confidence from text keywords
+    const confidence = this._extractConfidenceFromText(raw);
 
     return {
       confidence,
@@ -1177,11 +1363,84 @@ class LLMService {
   }
 
   /**
+   * Normalize a confidence value to canonical form.
+   * Canonical values: 'confident', 'likely', 'uncertain'
+   */
+  _normalizeConfidence(value) {
+    if (!value || typeof value !== 'string') return 'uncertain';
+    const lower = value.toLowerCase().trim();
+    // Canonical values
+    if (lower === 'confident' || lower === 'certain' || lower === 'sure' || lower === 'high') return 'confident';
+    if (lower === 'likely' || lower === 'check-worthy' || lower === 'medium') return 'likely';
+    if (lower === 'uncertain' || lower === 'problematic' || lower === 'low') return 'uncertain';
+    return 'uncertain';
+  }
+
+  /**
+   * Extract confidence from raw text when JSON parsing fails.
+   */
+  _extractConfidenceFromText(raw) {
+    if (!raw || typeof raw !== 'string') return 'uncertain';
+    const lower = raw.toLowerCase();
+    if (lower.includes('"confident"') || lower.includes('"certain"') || lower.includes('"sure"')) return 'confident';
+    if (lower.includes('"likely"') || lower.includes('"check-worthy"') || lower.includes('plausible')) return 'likely';
+    return 'uncertain';
+  }
+
+  /**
+   * Validate and normalize a single issue object.
+   * Returns null for fundamentally broken issues (missing text AND suggestion).
+   * Required fields: line, text, type, suggestion, explanation
+   */
+  _normalizeIssue(issue) {
+    if (!issue || typeof issue !== 'object') return null;
+
+    // line: must be positive integer, default 0 for missing
+    let line = typeof issue.line === 'number' ? issue.line : parseInt(issue.line, 10);
+    if (!Number.isFinite(line) || line < 0) line = 0;
+    line = Math.floor(line);
+
+    // text: must be string, normalize markers to canonical forms
+    const text = (typeof issue.text === 'string') ? normalizeMarkers(issue.text.trim()) : '';
+
+    // suggestion: string or null, normalize markers to canonical forms
+    let suggestion = null;
+    if (typeof issue.suggestion === 'string' && issue.suggestion.trim()) {
+      suggestion = normalizeMarkers(issue.suggestion);
+    }
+
+    // Drop issues with neither text nor suggestion -- not actionable
+    if (!text && !suggestion) return null;
+
+    // explanation: string, fallback to suggestion
+    const explanation = (typeof issue.explanation === 'string' && issue.explanation.trim())
+      ? issue.explanation
+      : (suggestion || '');
+
+    // type: normalize to valid enum
+    const type = this._normalizeIssueType(issue.type);
+
+    const normalized = { line, text, type, suggestion, explanation };
+
+    // Optional metadata fields -- pass through if present and valid
+    if (typeof issue.stage === 'string' && issue.stage.trim()) {
+      normalized.stage = issue.stage.trim();
+    }
+    if (Array.isArray(issue.alternatives) && issue.alternatives.length > 0) {
+      normalized.alternatives = issue.alternatives.filter(a => typeof a === 'string');
+    }
+    if (typeof issue.score === 'number' && Number.isFinite(issue.score)) {
+      normalized.score = Math.max(0, Math.min(1, issue.score));
+    }
+
+    return normalized;
+  }
+
+  /**
    * Normalize issue type to valid type
    */
   _normalizeIssueType(type) {
-    const validTypes = ['spelling', 'accent', 'abbreviation', 'illegible', 'ocr_artifact', 'historical', 'structural', 'plausibility'];
-    if (type && validTypes.includes(type)) {
+    if (type && VALID_ISSUE_TYPES.includes(type)) {
       return type;
     }
     // Try to infer from common variations
@@ -1237,4 +1496,9 @@ class LLMError extends Error {
 
 // Export singleton instance and classes
 export const llmService = new LLMService();
-export { LLMService, LLMError, PROVIDERS, TRANSCRIPTION_PROMPT_BASE, DESCRIPTION_PROMPT_BASE, ISSUE_TYPES };
+export {
+  LLMService, LLMError, PROVIDERS,
+  TRANSCRIPTION_PROMPT_BASE, DESCRIPTION_PROMPT_BASE,
+  ISSUE_TYPES, VALID_ISSUE_TYPES,
+  buildPaleographicReviewPrompt, buildPhilologicalReviewPrompt
+};
