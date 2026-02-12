@@ -12,6 +12,7 @@
 
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
+import { FEATURE_FLAGS } from '../utils/constants.js';
 import { dialogManager } from './dialogs.js';
 import { contextManager } from './context.js';
 import { batchProgress } from './batch-progress.js';
@@ -203,6 +204,10 @@ class TranscriptionManager {
         this.setLoading(true);
         this.showEditorLoading(true);
 
+        // Thinking panel support (declared outside try for catch access)
+        const supportsThinking = FEATURE_FLAGS.thinkingPanel &&
+            llmService._supportsThinking(llmService.activeProvider);
+
         try {
             // Get image as base64 (without data URL prefix)
             // For multi-page, use current page's dataUrl
@@ -219,11 +224,31 @@ class TranscriptionManager {
             // Get context from expert (if provided)
             const contextDescription = contextManager.buildPromptContext();
 
+            if (supportsThinking) {
+                appState.emitThinkingStart({
+                    operation: 'transcription',
+                    provider: llmService.activeProvider,
+                    model: llmService.getCurrentModel()
+                });
+            }
+            const thinkingStartTime = Date.now();
+
             // Call LLM service with context (including structured context for script hints)
             const result = await llmService.transcribe(base64, {
                 context: contextDescription,
-                structuredContext: appState.getDocumentContext()
+                structuredContext: appState.getDocumentContext(),
+                stream: supportsThinking,
+                onThinkingChunk: supportsThinking
+                    ? (text) => appState.emitThinkingChunk({ text, operation: 'transcription' })
+                    : undefined
             });
+
+            if (supportsThinking) {
+                appState.emitThinkingComplete({
+                    operation: 'transcription',
+                    duration: Date.now() - thinkingStartTime
+                });
+            }
 
             // Update state with transcription
             appState.setTranscription({
@@ -241,6 +266,13 @@ class TranscriptionManager {
 
         } catch (error) {
             console.error('Transcription error:', error);
+
+            if (supportsThinking) {
+                appState.emitThinkingError({
+                    operation: 'transcription',
+                    message: error.message
+                });
+            }
 
             // Handle specific error types
             if (error.type === 'auth') {

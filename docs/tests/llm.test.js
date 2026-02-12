@@ -5,7 +5,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { LLMService, LLMError, PROVIDERS, VALID_ISSUE_TYPES } from '../js/services/llm.js';
+import {
+  LLMService, LLMError, PROVIDERS, VALID_ISSUE_TYPES,
+  buildTranscriptionPrompt,
+  buildPaleographicReviewPrompt, buildPhilologicalReviewPrompt
+} from '../js/services/llm.js';
 
 // Mock storage module
 vi.mock('../js/services/storage.js', () => ({
@@ -568,6 +572,46 @@ describe('LLMError', () => {
     expect(error.name).toBe('LLMError');
     expect(error.type).toBe('auth');
     expect(error.message).toBe('Invalid key');
+  });
+});
+
+describe('Post-Processing Prompt Builders', () => {
+  it('buildTranscriptionPrompt includes conservative workflow and script hints', () => {
+    const prompt = buildTranscriptionPrompt('Latin liturgical text', { scriptType: 'textura' });
+    expect(prompt).toContain('INTERNAL WORKFLOW (do internally, do not output)');
+    expect(prompt).toContain('do NOT expand or normalize');
+    expect(prompt).toContain('CRITICAL: This script uses minim-heavy letterforms');
+    expect(prompt).toContain('DOCUMENT CONTEXT (provided by the expert):');
+  });
+
+  it('buildPaleographicReviewPrompt includes internal two-expert protocol and context block', () => {
+    const prompt = buildPaleographicReviewPrompt('linea prima', 'Script: Textura; Language: Latin');
+
+    expect(prompt).toContain('INTERNAL REVIEW PROTOCOL (single API call)');
+    expect(prompt).toContain('Primary Paleographer');
+    expect(prompt).toContain('Skeptical Verifier');
+    expect(prompt).toContain('DOCUMENT CONTEXT:\nScript: Textura; Language: Latin');
+    expect(prompt).toContain('Each "suggestion" must be a single-line replacement');
+  });
+
+  it('buildPhilologicalReviewPrompt includes previous issues and anti-duplication instruction', () => {
+    const prompt = buildPhilologicalReviewPrompt(
+      'ecce rex',
+      'Text type: liturgical',
+      [{ line: 3, text: 'misam', suggestion: 'missam', type: 'spelling' }]
+    );
+
+    expect(prompt).toContain('INTERNAL REVIEW PROTOCOL (single API call)');
+    expect(prompt).toContain('Latin Philologist');
+    expect(prompt).toContain('Historical Language Verifier');
+    expect(prompt).toContain('PREVIOUS ISSUES (already flagged, do NOT repeat):');
+    expect(prompt).toContain('- Line 3: "misam" -> "missam" (spelling)');
+    expect(prompt).toContain('Do NOT repeat issues already flagged in PREVIOUS ISSUES');
+  });
+
+  it('buildPhilologicalReviewPrompt falls back to "No previous issues flagged."', () => {
+    const prompt = buildPhilologicalReviewPrompt('ecce rex', '', []);
+    expect(prompt).toContain('No previous issues flagged.');
   });
 });
 
