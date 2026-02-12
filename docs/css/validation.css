@@ -721,6 +721,18 @@
   max-height: 220px;
   display: flex;
   flex-direction: column;
+  /* Stay above .validation-loading-overlay (z-index: 100) */
+  position: relative;
+  z-index: 101;
+}
+
+/* Collapsed state: hide content, shrink to header only */
+.thinking-section.thinking-collapsed .thinking-content {
+  display: none;
+}
+
+.thinking-section.thinking-collapsed {
+  max-height: none;
 }
 
 .thinking-header {
@@ -740,6 +752,35 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
+}
+
+/* Collapse/expand button in thinking header */
+.thinking-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.thinking-collapse-btn:hover {
+  color: var(--accent-primary);
+  background: var(--surface-active);
+}
+
+.thinking-collapse-btn svg {
+  transition: transform var(--transition-fast);
+}
+
+/* Rotate chevron when collapsed */
+.thinking-collapsed .thinking-collapse-btn svg {
+  transform: rotate(180deg);
 }
 
 .thinking-active .thinking-icon {

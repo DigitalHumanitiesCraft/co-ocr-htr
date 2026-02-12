@@ -22,6 +22,7 @@ class ThinkingPanel {
         this._content = null;
         this._header = null;
         this._icon = null;
+        this._collapseBtn = null;
         this._userScrolledUp = false;
     }
 
@@ -35,6 +36,7 @@ class ThinkingPanel {
         this._content = document.getElementById('thinkingContent');
         this._header = document.getElementById('thinkingHeader');
         this._icon = document.getElementById('thinkingIcon');
+        this._collapseBtn = document.getElementById('thinkingCollapseBtn');
 
         if (!this._section || !this._content) {
             console.warn('[ThinkingPanel] DOM elements not found');
@@ -54,6 +56,11 @@ class ThinkingPanel {
         // Reset on document/page change
         appState.addEventListener('documentLoaded', () => this._reset());
         appState.addEventListener('pageChanged', () => this._reset());
+
+        // Collapse/expand toggle
+        if (this._collapseBtn) {
+            this._collapseBtn.addEventListener('click', () => this._toggleCollapse());
+        }
 
         // Track user scroll to disable auto-scroll when user scrolls up
         if (this._content) {
@@ -92,7 +99,7 @@ class ThinkingPanel {
 
         this._userScrolledUp = false;
         this._section.hidden = false;
-        this._section.classList.remove('thinking-complete', 'thinking-error');
+        this._section.classList.remove('thinking-complete', 'thinking-error', 'thinking-collapsed');
         this._section.classList.add('thinking-active');
     }
 
@@ -143,13 +150,21 @@ class ThinkingPanel {
     }
 
     /**
+     * Toggle collapsed state
+     */
+    _toggleCollapse() {
+        if (!this._section) return;
+        this._section.classList.toggle('thinking-collapsed');
+    }
+
+    /**
      * Reset panel -- hide and clear content
      */
     _reset() {
         if (!this._section) return;
 
         this._section.hidden = true;
-        this._section.classList.remove('thinking-active', 'thinking-complete', 'thinking-error');
+        this._section.classList.remove('thinking-active', 'thinking-complete', 'thinking-error', 'thinking-collapsed');
 
         if (this._content) {
             this._content.textContent = '';
