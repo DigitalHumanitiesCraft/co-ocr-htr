@@ -681,6 +681,10 @@
   color: var(--problematic);
 }
 
+.issue-manual-note {
+  font-style: italic;
+}
+
 /* ==========================================================================
    BATCH PROGRESS BAR
    ========================================================================== */
@@ -704,4 +708,73 @@
 .loading-hint {
   font-size: var(--text-xs);
   color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   THINKING PANEL (LLM Reasoning Display)
+   ========================================================================== */
+
+.thinking-section {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-muted);
+  padding: var(--space-2) var(--space-3);
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.thinking-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.thinking-active .thinking-icon {
+  animation: spin 2s linear infinite;
+}
+
+.thinking-content {
+  margin: 0;
+  padding: var(--space-2);
+  font-family: var(--font-mono, 'SF Mono', 'Fira Code', 'Fira Mono', monospace);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: 160px;
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.thinking-active .thinking-content {
+  border-color: var(--ai-primary, #7c5cbf);
+}
+
+.thinking-complete .thinking-content {
+  opacity: 0.7;
+}
+
+.thinking-error .thinking-content {
+  border-color: var(--problematic);
+  opacity: 0.7;
+}
+
+.thinking-error .thinking-header {
+  color: var(--problematic);
 }

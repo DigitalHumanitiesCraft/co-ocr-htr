@@ -89,7 +89,7 @@ function mergeConfidence(c1, c2) {
  * @param {string} [options.contextDescription] - Document context string
  * @param {boolean} [options.runStage2=true] - Whether to run paleographic review
  * @param {boolean} [options.runStage3=true] - Whether to run philological review
- * @param {number} [options.maxCalls] - Maximum stage calls per page (defaults to MAX_POSTPROCESS_CALLS)
+ * @param {number} [options.maxCalls] - Maximum LLM API calls per page, including retries (defaults to MAX_POSTPROCESS_CALLS)
  * @param {AbortSignal} [options.signal] - External abort signal
  * @returns {Promise<object>} Merged llmJudge result
  */
@@ -104,7 +104,7 @@ export async function runPostprocessing(text, options = {}) {
 
   const pageStart = Date.now();
   const callLimit = Math.max(0, Math.floor(Number(maxCalls) || 0));
-  let stageCalls = 0;
+  const callBudget = { used: 0, limit: callLimit };
 
   let stage2Result = null;
   let stage3Result = null;
@@ -121,15 +121,14 @@ export async function runPostprocessing(text, options = {}) {
 
   // Stage 2: Paleographic Review
   if (runStage2) {
-    if (stageCalls >= callLimit) {
+    if (!hasCallBudget(callBudget)) {
       stage2Meta = { status: 'skipped', reason: 'max_calls_reached' };
     } else {
-      stageCalls++;
       const stageStart = Date.now();
       try {
         checkBudget(pageStart, signal);
         const prompt = buildPaleographicReviewPrompt(text, contextDescription);
-        stage2Result = await callWithGuardrails(prompt, signal, pageStart);
+        stage2Result = await callWithGuardrails(prompt, signal, pageStart, callBudget);
         // Tag all issues with stage
         if (stage2Result?.issues) {
           stage2Result.issues = stage2Result.issues.map(i => ({ ...i, stage: i.stage || 'paleographic' }));
@@ -146,7 +145,7 @@ export async function runPostprocessing(text, options = {}) {
 
   // Stage 3: Philological Review
   if (runStage3) {
-    if (stageCalls >= callLimit) {
+    if (!hasCallBudget(callBudget)) {
       stage3Meta = { status: 'skipped', reason: 'max_calls_reached' };
     } else {
       const stageStart = Date.now();
@@ -154,7 +153,7 @@ export async function runPostprocessing(text, options = {}) {
         checkBudget(pageStart, signal);
         const previousIssues = stage2Result?.issues || [];
         const prompt = buildPhilologicalReviewPrompt(text, contextDescription, previousIssues);
-        stage3Result = await callWithGuardrails(prompt, signal, pageStart);
+        stage3Result = await callWithGuardrails(prompt, signal, pageStart, callBudget);
         // Tag all issues with stage
         if (stage3Result?.issues) {
           stage3Result.issues = stage3Result.issues.map(i => ({ ...i, stage: i.stage || 'philological' }));
@@ -179,6 +178,8 @@ export async function runPostprocessing(text, options = {}) {
       pipeline: {
         stage2: stage2Meta,
         stage3: stage3Meta,
+        apiCallsUsed: callBudget.used,
+        apiCallLimit: callBudget.limit,
         duration: Date.now() - pageStart
       }
     };
@@ -210,6 +211,8 @@ export async function runPostprocessing(text, options = {}) {
     pipeline: {
       stage2: stage2Meta,
       stage3: stage3Meta,
+      apiCallsUsed: callBudget.used,
+      apiCallLimit: callBudget.limit,
       duration: Date.now() - pageStart
     }
   };
@@ -225,14 +228,18 @@ export async function runPostprocessing(text, options = {}) {
  * @param {string} prompt - The full prompt (already built by Stage prompt builders)
  * @param {AbortSignal|null} signal - External abort signal
  * @param {number} pageStart - Timestamp when page processing started
+ * @param {{used:number, limit:number}} callBudget - Shared per-page API call budget
  * @returns {Promise<object>} Parsed validation response
  */
-async function callWithGuardrails(prompt, signal, pageStart) {
+async function callWithGuardrails(prompt, signal, pageStart, callBudget) {
   let lastError;
 
   for (let attempt = 0; attempt <= POSTPROCESS_MAX_RETRIES; attempt++) {
     try {
       checkBudget(pageStart, signal);
+      if (!consumeCallBudget(callBudget)) {
+        throw lastError || new Error('Post-processing max calls reached');
+      }
 
       // Use the LLM service's validate method with custom prompt
       // The prompt already contains the text, so we pass a dummy text and override via customPrompt
@@ -258,6 +265,9 @@ async function callWithGuardrails(prompt, signal, pageStart) {
 
       // Exponential backoff
       if (attempt < POSTPROCESS_MAX_RETRIES) {
+        if (!hasCallBudget(callBudget)) {
+          throw lastError;
+        }
         const delay = POSTPROCESS_BACKOFF_BASE_MS * Math.pow(2, attempt);
         console.log(`[Postprocess] Retry ${attempt + 1}/${POSTPROCESS_MAX_RETRIES} after ${delay}ms`);
         await sleep(delay);
@@ -279,6 +289,16 @@ function checkBudget(pageStart, signal) {
   if (elapsed >= POSTPROCESS_PAGE_BUDGET_MS) {
     throw new Error(`Page budget exhausted (${elapsed}ms >= ${POSTPROCESS_PAGE_BUDGET_MS}ms)`);
   }
+}
+
+function hasCallBudget(callBudget) {
+  return Number.isFinite(callBudget?.limit) && callBudget.limit > callBudget.used;
+}
+
+function consumeCallBudget(callBudget) {
+  if (!hasCallBudget(callBudget)) return false;
+  callBudget.used += 1;
+  return true;
 }
 
 /**

@@ -180,6 +180,36 @@ describe('ValidationPanel LLM Apply', () => {
     expect(appState.setSelection).toHaveBeenCalledWith(5);
   });
 
+  it('treats multiline suggestions as manual-only in single issue apply', () => {
+    state.validation.llmJudge = {
+      confidence: 'likely',
+      reasoning: '',
+      issues: [
+        {
+          line: 2,
+          text: 'secunda',
+          type: 'spelling',
+          suggestion: 'secunda\nlinea',
+          explanation: 'Line break required'
+        }
+      ]
+    };
+
+    validationPanel.render({
+      rules: [],
+      llmJudge: state.validation.llmJudge,
+      summary: { totalIssues: 1 }
+    });
+
+    expect(document.querySelector('.issue-apply-btn')).toBeNull();
+    expect(document.querySelector('.issue-manual-note')?.textContent).toContain('Multiline suggestion');
+
+    const result = validationPanel.applyIssueCorrection(0);
+    expect(result.status).toBe('failed');
+    expect(result.message).toContain('Apply manually');
+    expect(applySuggestionAtLine).not.toHaveBeenCalled();
+  });
+
   it('returns failed for invalid issue index', () => {
     const result = validationPanel.applyIssueCorrection(9, { silent: true });
 

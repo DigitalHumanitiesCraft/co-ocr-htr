@@ -713,21 +713,63 @@ class LLMService {
 
     try {
       let response;
+      const useStream = options.stream && this._supportsThinking(this.activeProvider);
+
       switch (this.activeProvider) {
         case 'gemini':
-          response = await this._callGemini(apiKey, model, prompt, imageBase64);
+          if (useStream) {
+            try {
+              response = await this._callGeminiStream(apiKey, model, prompt, imageBase64, {
+                useThinking: true, thinkingLevel: 'high',
+                onThinkingChunk: options.onThinkingChunk,
+                timeoutMs: options.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Gemini] Stream fallback in transcribe():', streamError.message);
+              options.onStreamError?.(streamError);
+              response = await this._callGemini(apiKey, model, prompt, imageBase64);
+            }
+          } else {
+            response = await this._callGemini(apiKey, model, prompt, imageBase64);
+          }
           break;
         case 'openai':
           response = await this._callOpenAI(apiKey, model, prompt, imageBase64);
           break;
         case 'anthropic':
-          response = await this._callAnthropic(apiKey, model, prompt, imageBase64);
+          if (useStream) {
+            try {
+              response = await this._callAnthropicStream(apiKey, model, prompt, imageBase64, {
+                onThinkingChunk: options.onThinkingChunk,
+                timeoutMs: options.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Anthropic] Stream fallback in transcribe():', streamError.message);
+              options.onStreamError?.(streamError);
+              response = await this._callAnthropic(apiKey, model, prompt, imageBase64);
+            }
+          } else {
+            response = await this._callAnthropic(apiKey, model, prompt, imageBase64);
+          }
           break;
         case 'mistral':
           response = await this._callMistral(apiKey, model, imageBase64);
           break;
         case 'ollama':
-          response = await this._callOllama(model, prompt, imageBase64);
+          if (useStream) {
+            try {
+              response = await this._callOllamaStream(model, prompt, imageBase64, {
+                onThinkingChunk: options.onThinkingChunk,
+                timeoutMs: options.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Ollama] Stream fallback in transcribe():', streamError.message);
+              options.onStreamError?.(streamError);
+              response = await this._callOllama(model, prompt, imageBase64);
+            }
+          } else {
+            response = await this._callOllama(model, prompt, imageBase64);
+          }
           break;
         default:
           throw new Error(`Provider ${this.activeProvider} not implemented`);
@@ -769,7 +811,23 @@ class LLMService {
     console.log(`[LLM] describe() using Gemini model=${model} customPrompt=${!!options.customPrompt}`);
 
     try {
-      const response = await this._callGemini(apiKey, model, prompt, imageBase64);
+      let response;
+
+      if (options.stream && this._supportsThinking('gemini')) {
+        try {
+          response = await this._callGeminiStream(apiKey, model, prompt, imageBase64, {
+            useThinking: true, thinkingLevel: 'high',
+            onThinkingChunk: options.onThinkingChunk,
+            timeoutMs: options.timeoutMs
+          });
+        } catch (streamError) {
+          console.warn('[Gemini] Stream fallback in describe():', streamError.message);
+          options.onStreamError?.(streamError);
+          response = await this._callGemini(apiKey, model, prompt, imageBase64);
+        }
+      } else {
+        response = await this._callGemini(apiKey, model, prompt, imageBase64);
+      }
 
       console.log(`[LLM] describe() OK, length=${response.length} chars`);
       return {
@@ -803,11 +861,19 @@ class LLMService {
 
     const { customPrompt = '' } = options;
 
+    // Extract stream options
+    const streamOpts = {
+      stream: options.stream,
+      onThinkingChunk: options.onThinkingChunk,
+      onStreamError: options.onStreamError,
+      timeoutMs: options.timeoutMs
+    };
+
     // PRIORITY 1: Explicit validation provider
     if (this.validationProvider) {
       console.log(`[LLM] validate() using explicit provider: ${this.validationProvider}`);
       try {
-        return await this._validateWithExplicitProvider(text, customPrompt);
+        return await this._validateWithExplicitProvider(text, customPrompt, streamOpts);
       } catch (error) {
         console.error(`[LLM] validate() explicit provider FAILED:`, error.message);
         throw this._handleError(error);
@@ -819,7 +885,7 @@ class LLMService {
       const fallback = this.getValidationFallback();
       if (fallback) {
         console.log(`[LLM] validate() OCR-only model detected, using fallback: ${fallback.name}`);
-        return this._validateWithFallback(text, customPrompt, fallback);
+        return this._validateWithFallback(text, customPrompt, fallback, streamOpts);
       } else {
         throw new Error(
           `The current model (${this.getCurrentModel()}) is a pure OCR model and cannot perform text validation. ` +
@@ -841,25 +907,67 @@ class LLMService {
 
     const prompt = buildValidationPrompt(text, customPrompt);
     const model = this.getCurrentModel();
+    const useStream = streamOpts.stream && this._supportsThinking(this.activeProvider);
 
     try {
       let response;
       switch (this.activeProvider) {
         case 'gemini':
-          // Use thinking mode for validation - deeper reasoning improves analysis
-          response = await this._callGemini(apiKey, model, prompt, null, {
-            useThinking: true,
-            thinkingLevel: 'high'
-          });
+          if (useStream) {
+            try {
+              response = await this._callGeminiStream(apiKey, model, prompt, null, {
+                useThinking: true, thinkingLevel: 'high',
+                onThinkingChunk: streamOpts.onThinkingChunk,
+                timeoutMs: streamOpts.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Gemini] Stream fallback in validate():', streamError.message);
+              streamOpts.onStreamError?.(streamError);
+              response = await this._callGemini(apiKey, model, prompt, null, {
+                useThinking: true, thinkingLevel: 'high'
+              });
+            }
+          } else {
+            response = await this._callGemini(apiKey, model, prompt, null, {
+              useThinking: true,
+              thinkingLevel: 'high'
+            });
+          }
           break;
         case 'openai':
           response = await this._callOpenAI(apiKey, model, prompt);
           break;
         case 'anthropic':
-          response = await this._callAnthropic(apiKey, model, prompt);
+          if (useStream) {
+            try {
+              response = await this._callAnthropicStream(apiKey, model, prompt, null, {
+                onThinkingChunk: streamOpts.onThinkingChunk,
+                timeoutMs: streamOpts.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Anthropic] Stream fallback in validate():', streamError.message);
+              streamOpts.onStreamError?.(streamError);
+              response = await this._callAnthropic(apiKey, model, prompt);
+            }
+          } else {
+            response = await this._callAnthropic(apiKey, model, prompt);
+          }
           break;
         case 'ollama':
-          response = await this._callOllama(model, prompt);
+          if (useStream) {
+            try {
+              response = await this._callOllamaStream(model, prompt, null, {
+                onThinkingChunk: streamOpts.onThinkingChunk,
+                timeoutMs: streamOpts.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Ollama] Stream fallback in validate():', streamError.message);
+              streamOpts.onStreamError?.(streamError);
+              response = await this._callOllama(model, prompt);
+            }
+          } else {
+            response = await this._callOllama(model, prompt);
+          }
           break;
         default:
           throw new Error(`Provider ${this.activeProvider} not implemented`);
@@ -878,11 +986,9 @@ class LLMService {
    * Validate using explicitly configured validation provider
    * @private
    */
-  async _validateWithExplicitProvider(text, customPrompt) {
+  async _validateWithExplicitProvider(text, customPrompt, streamOpts = {}) {
     const provider = this.validationProvider;
     const model = this.validationModel || this.providers[provider].defaultModel;
-    // Use separate validation API key to prevent overwriting transcription key
-    // Fall back to main provider key if validation-specific key not set (for convenience)
     const apiKey = this.getValidationApiKey(provider) || this.providers[provider].apiKey;
 
     if (!apiKey && this.providers[provider].authType !== 'none') {
@@ -893,23 +999,62 @@ class LLMService {
     }
 
     const prompt = buildValidationPrompt(text, customPrompt);
+    const useStream = streamOpts.stream && this._supportsThinking(provider);
 
     let response;
     switch (provider) {
       case 'gemini':
-        response = await this._callGemini(apiKey, model, prompt, null, {
-          useThinking: true,
-          thinkingLevel: 'high'
-        });
+        if (useStream) {
+          try {
+            response = await this._callGeminiStream(apiKey, model, prompt, null, {
+              useThinking: true, thinkingLevel: 'high',
+              onThinkingChunk: streamOpts.onThinkingChunk,
+              timeoutMs: streamOpts.timeoutMs
+            });
+          } catch (streamError) {
+            console.warn('[Gemini] Stream fallback in explicit validate():', streamError.message);
+            response = await this._callGemini(apiKey, model, prompt, null, {
+              useThinking: true, thinkingLevel: 'high'
+            });
+          }
+        } else {
+          response = await this._callGemini(apiKey, model, prompt, null, {
+            useThinking: true, thinkingLevel: 'high'
+          });
+        }
         break;
       case 'openai':
         response = await this._callOpenAI(apiKey, model, prompt);
         break;
       case 'anthropic':
-        response = await this._callAnthropic(apiKey, model, prompt);
+        if (useStream) {
+          try {
+            response = await this._callAnthropicStream(apiKey, model, prompt, null, {
+              onThinkingChunk: streamOpts.onThinkingChunk,
+              timeoutMs: streamOpts.timeoutMs
+            });
+          } catch (streamError) {
+            console.warn('[Anthropic] Stream fallback in explicit validate():', streamError.message);
+            response = await this._callAnthropic(apiKey, model, prompt);
+          }
+        } else {
+          response = await this._callAnthropic(apiKey, model, prompt);
+        }
         break;
       case 'ollama':
-        response = await this._callOllama(model, prompt);
+        if (useStream) {
+          try {
+            response = await this._callOllamaStream(model, prompt, null, {
+              onThinkingChunk: streamOpts.onThinkingChunk,
+              timeoutMs: streamOpts.timeoutMs
+            });
+          } catch (streamError) {
+            console.warn('[Ollama] Stream fallback in explicit validate():', streamError.message);
+            response = await this._callOllama(model, prompt);
+          }
+        } else {
+          response = await this._callOllama(model, prompt);
+        }
         break;
       default:
         throw new Error(`Validation provider ${provider} not supported`);
@@ -929,9 +1074,10 @@ class LLMService {
    * Validate using a fallback provider (when primary is OCR-only)
    * @private
    */
-  async _validateWithFallback(text, customPrompt, fallback) {
+  async _validateWithFallback(text, customPrompt, fallback, streamOpts = {}) {
     const prompt = buildValidationPrompt(text, customPrompt);
     const { provider, model } = fallback;
+    const useStream = streamOpts.stream && this._supportsThinking(provider);
 
     console.log(`[LLM] _validateWithFallback() provider=${provider} model=${model}`);
 
@@ -940,10 +1086,24 @@ class LLMService {
       switch (provider) {
         case 'gemini': {
           const apiKey = this.providers.gemini.apiKey;
-          response = await this._callGemini(apiKey, model, prompt, null, {
-            useThinking: true,
-            thinkingLevel: 'high'
-          });
+          if (useStream) {
+            try {
+              response = await this._callGeminiStream(apiKey, model, prompt, null, {
+                useThinking: true, thinkingLevel: 'high',
+                onThinkingChunk: streamOpts.onThinkingChunk,
+                timeoutMs: streamOpts.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Gemini] Stream fallback in _validateWithFallback():', streamError.message);
+              response = await this._callGemini(apiKey, model, prompt, null, {
+                useThinking: true, thinkingLevel: 'high'
+              });
+            }
+          } else {
+            response = await this._callGemini(apiKey, model, prompt, null, {
+              useThinking: true, thinkingLevel: 'high'
+            });
+          }
           break;
         }
         case 'openai': {
@@ -953,11 +1113,35 @@ class LLMService {
         }
         case 'anthropic': {
           const apiKey = this.providers.anthropic.apiKey;
-          response = await this._callAnthropic(apiKey, model, prompt);
+          if (useStream) {
+            try {
+              response = await this._callAnthropicStream(apiKey, model, prompt, null, {
+                onThinkingChunk: streamOpts.onThinkingChunk,
+                timeoutMs: streamOpts.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Anthropic] Stream fallback in _validateWithFallback():', streamError.message);
+              response = await this._callAnthropic(apiKey, model, prompt);
+            }
+          } else {
+            response = await this._callAnthropic(apiKey, model, prompt);
+          }
           break;
         }
         case 'ollama':
-          response = await this._callOllama(model, prompt);
+          if (useStream) {
+            try {
+              response = await this._callOllamaStream(model, prompt, null, {
+                onThinkingChunk: streamOpts.onThinkingChunk,
+                timeoutMs: streamOpts.timeoutMs
+              });
+            } catch (streamError) {
+              console.warn('[Ollama] Stream fallback in _validateWithFallback():', streamError.message);
+              response = await this._callOllama(model, prompt);
+            }
+          } else {
+            response = await this._callOllama(model, prompt);
+          }
           break;
         default:
           throw new Error(`Fallback provider ${provider} not implemented`);
@@ -971,6 +1155,19 @@ class LLMService {
       console.error(`[LLM] _validateWithFallback() FAILED:`, error.message);
       throw this._handleError(error);
     }
+  }
+
+  // ============================================
+  // Streaming Support
+  // ============================================
+
+  /**
+   * Check if a provider supports thinking/reasoning tokens
+   * @param {string} provider - Provider name
+   * @returns {boolean}
+   */
+  _supportsThinking(provider) {
+    return ['gemini', 'anthropic', 'ollama'].includes(provider);
   }
 
   // ============================================
@@ -1002,16 +1199,16 @@ class LLMService {
       }
     };
 
-    // Add thinking_config for complex tasks (validation, analysis)
-    // thinking_level: "high" for more reasoning, "low" for faster responses
-    // NOTE: thinking_config may not be supported by all Gemini 3 preview models
+    // Add thinkingConfig for complex tasks (validation, analysis)
+    // thinkingLevel: "high" for more reasoning, "low" for faster responses
+    // NOTE: REST API requires camelCase (thinkingConfig, thinkingLevel)
     if (options.useThinking) {
       try {
-        requestBody.generationConfig.thinking_config = {
-          thinking_level: options.thinkingLevel || 'low'
+        requestBody.generationConfig.thinkingConfig = {
+          thinkingLevel: options.thinkingLevel || 'low'
         };
       } catch (_e) {
-        console.warn('[Gemini] thinking_config not supported, skipping');
+        console.warn('[Gemini] thinkingConfig not supported, skipping');
       }
     }
 
@@ -1033,9 +1230,426 @@ class LLMService {
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // When thinking is enabled, response contains both thinking parts (thought:true)
+    // and text parts. Find the first non-thinking part for the actual response.
+    const responseParts = data.candidates?.[0]?.content?.parts || [];
+    const textPart = responseParts.find(p => !p.thought) || responseParts[0] || {};
+    const text = textPart.text || '';
     console.log(`[Gemini] Response OK, length=${text.length} chars`);
     return text;
+  }
+
+  /**
+   * Call Gemini API with streaming (SSE) to extract thinking tokens in real-time
+   * @param {string} apiKey
+   * @param {string} model
+   * @param {string} prompt
+   * @param {string|null} imageBase64
+   * @param {object} options - { useThinking, thinkingLevel, onThinkingChunk, timeoutMs }
+   * @returns {Promise<string>} Full text response (thinking tokens excluded)
+   */
+  async _callGeminiStream(apiKey, model, prompt, imageBase64 = null, options = {}) {
+    console.log(`[Gemini] Stream call model=${model} thinking=${options.useThinking || false}`);
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+
+    const parts = [{ text: prompt }];
+    if (imageBase64) {
+      parts.push({
+        inline_data: {
+          mime_type: 'image/jpeg',
+          data: imageBase64
+        }
+      });
+    }
+
+    const requestBody = {
+      contents: [{ parts }],
+      generationConfig: {
+        temperature: 1.0,
+        maxOutputTokens: 8192
+      }
+    };
+
+    if (options.useThinking) {
+      requestBody.generationConfig.thinkingConfig = {
+        thinkingLevel: options.thinkingLevel || 'low'
+      };
+    }
+
+    const timeoutMs = options.timeoutMs || CLOUD_TIMEOUT_MS;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || `Gemini streaming error: ${response.status}`);
+    }
+
+    return this._parseGeminiSSE(response.body, options.onThinkingChunk);
+  }
+
+  /**
+   * Parse Gemini SSE stream, extracting thinking parts and accumulating text
+   * @param {ReadableStream} body - Response body stream
+   * @param {Function|undefined} onThinkingChunk - Callback for thinking tokens
+   * @returns {Promise<string>} Accumulated text response
+   */
+  async _parseGeminiSSE(body, onThinkingChunk) {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE lines
+        const lines = buffer.split('\n');
+        // Keep last potentially incomplete line in buffer
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+
+          try {
+            const chunk = JSON.parse(jsonStr);
+            const parts = chunk.candidates?.[0]?.content?.parts || [];
+
+            for (const part of parts) {
+              if (part.thought === true && onThinkingChunk) {
+                // This is a thinking part -- forward to callback
+                onThinkingChunk(part.text || '');
+              } else if (part.text !== undefined && part.thought !== true) {
+                // Regular text part -- accumulate
+                fullText += part.text;
+              }
+            }
+          } catch (_parseErr) {
+            // Malformed JSON chunk -- skip silently
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    return fullText;
+  }
+
+  /**
+   * Call Anthropic API with streaming to extract extended thinking tokens
+   * @param {string} apiKey
+   * @param {string} model
+   * @param {string} prompt
+   * @param {string|null} imageBase64
+   * @param {object} options - { onThinkingChunk, timeoutMs }
+   * @returns {Promise<string>} Full text response (thinking tokens excluded)
+   */
+  async _callAnthropicStream(apiKey, model, prompt, imageBase64 = null, options = {}) {
+    console.log(`[Anthropic] Stream call model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
+
+    const content = [];
+    if (imageBase64) {
+      content.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: 'image/jpeg',
+          data: imageBase64
+        }
+      });
+    }
+    content.push({ type: 'text', text: prompt });
+
+    const requestBody = {
+      model,
+      max_tokens: 16000,
+      stream: true,
+      thinking: {
+        type: 'enabled',
+        budget_tokens: 10000
+      },
+      messages: [{ role: 'user', content }]
+    };
+
+    const timeoutMs = options.timeoutMs || CLOUD_TIMEOUT_MS;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || `Anthropic streaming error: ${response.status}`);
+    }
+
+    return this._parseAnthropicSSE(response.body, options.onThinkingChunk);
+  }
+
+  /**
+   * Parse Anthropic SSE stream, extracting thinking_delta and text_delta
+   * @param {ReadableStream} body
+   * @param {Function|undefined} onThinkingChunk
+   * @returns {Promise<string>}
+   */
+  async _parseAnthropicSSE(body, onThinkingChunk) {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+
+          try {
+            const event = JSON.parse(jsonStr);
+
+            if (event.type === 'content_block_delta') {
+              const delta = event.delta;
+              if (delta?.type === 'thinking_delta' && onThinkingChunk) {
+                onThinkingChunk(delta.thinking || '');
+              } else if (delta?.type === 'text_delta') {
+                fullText += delta.text || '';
+              }
+            }
+          } catch (_parseErr) {
+            // Malformed JSON chunk -- skip
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    return fullText;
+  }
+
+  /**
+   * Call Ollama API with streaming, parsing <think> tags for reasoning
+   * @param {string} model
+   * @param {string} prompt
+   * @param {string|null} imageBase64
+   * @param {object} options - { onThinkingChunk, timeoutMs }
+   * @returns {Promise<string>} Full text response (think tags removed)
+   */
+  async _callOllamaStream(model, prompt, imageBase64 = null, options = {}) {
+    const ollamaUrl = this.providers.ollama.endpoint || 'http://localhost:11434';
+    console.log(`[Ollama] Stream call model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
+
+    const isVisionModel = imageBase64 && (
+      model.includes('deepseek-ocr') ||
+      model.includes('llava') ||
+      model.includes('vision')
+    );
+
+    let endpoint;
+    let body;
+
+    if (isVisionModel) {
+      endpoint = `${ollamaUrl}/api/chat`;
+      const simplePrompt = 'Extract the text in the image.';
+      body = {
+        model,
+        messages: [{ role: 'user', content: simplePrompt, images: [imageBase64] }],
+        stream: true
+      };
+    } else {
+      endpoint = `${ollamaUrl}/api/generate`;
+      body = { model, prompt, stream: true };
+      if (imageBase64) {
+        body.images = [imageBase64];
+      }
+    }
+
+    const timeoutMs = options.timeoutMs || OLLAMA_TIMEOUT_MS;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Ollama streaming error: ${response.status} - ${errorText}`);
+    }
+
+    return this._parseOllamaStream(response.body, isVisionModel, options.onThinkingChunk);
+  }
+
+  /**
+   * Parse Ollama NDJSON stream with <think> tag state machine
+   * @param {ReadableStream} body
+   * @param {boolean} isChatEndpoint - true for /api/chat, false for /api/generate
+   * @param {Function|undefined} onThinkingChunk
+   * @returns {Promise<string>}
+   */
+  async _parseOllamaStream(body, isChatEndpoint, onThinkingChunk) {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+    // State machine for <think> tag parsing
+    let insideThink = false;
+    let tagBuffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          try {
+            const chunk = JSON.parse(line);
+            // Extract token from response (generate) or message.content (chat)
+            const token = isChatEndpoint
+              ? (chunk.message?.content || '')
+              : (chunk.response || '');
+
+            if (!token) continue;
+
+            // Process token through think-tag state machine
+            const result = this._processOllamaToken(token, insideThink, tagBuffer, onThinkingChunk);
+            insideThink = result.insideThink;
+            tagBuffer = result.tagBuffer;
+            fullText += result.text;
+          } catch (_parseErr) {
+            // Malformed JSON line -- skip
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    // Flush any remaining tagBuffer as regular text
+    if (tagBuffer) {
+      fullText += tagBuffer;
+    }
+
+    return fullText;
+  }
+
+  /**
+   * Process a single Ollama token through the <think> tag state machine.
+   * Handles tag boundaries that may span across token boundaries.
+   * @param {string} token
+   * @param {boolean} insideThink
+   * @param {string} tagBuffer - partial tag match buffer
+   * @param {Function|undefined} onThinkingChunk
+   * @returns {{ text: string, insideThink: boolean, tagBuffer: string }}
+   */
+  _processOllamaToken(token, insideThink, tagBuffer, onThinkingChunk) {
+    let text = '';
+    let combined = tagBuffer + token;
+    tagBuffer = '';
+
+    while (combined.length > 0) {
+      if (insideThink) {
+        // Look for </think> closing tag
+        const closeIdx = combined.indexOf('</think>');
+        if (closeIdx !== -1) {
+          // Thinking text before the close tag
+          const thinkText = combined.slice(0, closeIdx);
+          if (thinkText && onThinkingChunk) {
+            onThinkingChunk(thinkText);
+          }
+          combined = combined.slice(closeIdx + 8); // skip '</think>'
+          insideThink = false;
+        } else {
+          // Check for partial closing tag at end
+          const partialMatch = this._partialTagMatch(combined, '</think>');
+          if (partialMatch > 0) {
+            // Buffer the potential partial tag
+            const safeText = combined.slice(0, combined.length - partialMatch);
+            if (safeText && onThinkingChunk) {
+              onThinkingChunk(safeText);
+            }
+            tagBuffer = combined.slice(combined.length - partialMatch);
+          } else {
+            // All thinking text
+            if (onThinkingChunk) {
+              onThinkingChunk(combined);
+            }
+          }
+          combined = '';
+        }
+      } else {
+        // Look for <think> opening tag
+        const openIdx = combined.indexOf('<think>');
+        if (openIdx !== -1) {
+          // Regular text before the open tag
+          text += combined.slice(0, openIdx);
+          combined = combined.slice(openIdx + 7); // skip '<think>'
+          insideThink = true;
+        } else {
+          // Check for partial opening tag at end
+          const partialMatch = this._partialTagMatch(combined, '<think>');
+          if (partialMatch > 0) {
+            text += combined.slice(0, combined.length - partialMatch);
+            tagBuffer = combined.slice(combined.length - partialMatch);
+          } else {
+            text += combined;
+          }
+          combined = '';
+        }
+      }
+    }
+
+    return { text, insideThink, tagBuffer };
+  }
+
+  /**
+   * Check if the end of text is a partial match for the beginning of tag.
+   * Returns the length of the partial match (0 if none).
+   * @param {string} text
+   * @param {string} tag
+   * @returns {number}
+   */
+  _partialTagMatch(text, tag) {
+    const maxLen = Math.min(text.length, tag.length - 1);
+    for (let len = maxLen; len > 0; len--) {
+      if (text.endsWith(tag.slice(0, len))) {
+        return len;
+      }
+    }
+    return 0;
   }
 
   async _callOpenAI(apiKey, model, prompt, imageBase64 = null) {
@@ -1395,9 +2009,9 @@ class LLMService {
   _normalizeIssue(issue) {
     if (!issue || typeof issue !== 'object') return null;
 
-    // line: must be positive integer, default 0 for missing
+    // line: must be positive integer (>=1), default 1 for missing/invalid
     let line = typeof issue.line === 'number' ? issue.line : parseInt(issue.line, 10);
-    if (!Number.isFinite(line) || line < 0) line = 0;
+    if (!Number.isFinite(line) || line < 1) line = 1;
     line = Math.floor(line);
 
     // text: must be string, normalize markers to canonical forms
