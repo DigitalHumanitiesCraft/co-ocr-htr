@@ -168,6 +168,18 @@ describe('ValidationPanel LLM Apply', () => {
     expect(dialogManager.showToast).toHaveBeenCalledWith('Source text not found in the target line.', 'warning');
   });
 
+  it('uses remapped line from apply result for selection highlighting', () => {
+    applySuggestionAtLine.mockReturnValue({
+      status: 'applied',
+      line: 5,
+      message: 'Applied suggestion at line 5 (requested line 2).'
+    });
+
+    validationPanel.applyIssueCorrection(0);
+
+    expect(appState.setSelection).toHaveBeenCalledWith(5);
+  });
+
   it('returns failed for invalid issue index', () => {
     const result = validationPanel.applyIssueCorrection(9, { silent: true });
 

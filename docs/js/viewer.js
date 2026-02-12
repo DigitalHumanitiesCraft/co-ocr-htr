@@ -284,14 +284,6 @@ function setupStateListeners() {
         if (appState.hasRegionCoordinates()) {
             highlightRegion(lineNumber);
             panToRegion(lineNumber);
-        } else {
-            // No coordinates available - show info toast via state event
-            // (avoids circular dependency with dialogManager)
-            appState.showToast(
-                `Zeile ${lineNumber} - Keine Bildkoordinaten verfügbar`,
-                'info',
-                2000
-            );
         }
     });
 

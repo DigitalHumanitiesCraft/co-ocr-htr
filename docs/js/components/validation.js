@@ -1069,8 +1069,9 @@ class ValidationPanel {
 
         this.updateIssueApplyState(issueIndex, result, issueElement);
 
-        if (result.status !== 'failed' && issue.line && !Number.isNaN(Number(issue.line))) {
-            appState.setSelection(Number(issue.line));
+        const selectedLine = Number(result.line || issue.line);
+        if (result.status !== 'failed' && Number.isFinite(selectedLine) && selectedLine > 0) {
+            appState.setSelection(selectedLine);
         }
 
         if (!silent) {

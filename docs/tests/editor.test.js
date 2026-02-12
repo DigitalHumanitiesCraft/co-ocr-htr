@@ -61,6 +61,51 @@ describe('Editor applySuggestionAtLine', () => {
     expect(textarea.value).toBe('prima linea\nsecunda linea');
   });
 
+  it('remaps to a unique matching line when requested line is wrong', () => {
+    const result = applySuggestionAtLine({
+      line: 1,
+      sourceText: 'secunda',
+      suggestion: 'secvnda'
+    });
+
+    const textarea = document.getElementById('transcriptionText');
+    expect(result.status).toBe('applied');
+    expect(result.line).toBe(2);
+    expect(result.message).toContain('requested line 1');
+    expect(textarea.value).toBe('prima linea\nsecvnda linea');
+  });
+
+  it('applies case-insensitive source matches when unique', () => {
+    mockState.transcription.raw = 'prima linea\nSecunda linea';
+    initEditor();
+
+    const result = applySuggestionAtLine({
+      line: 2,
+      sourceText: 'secunda',
+      suggestion: 'secvnda'
+    });
+
+    const textarea = document.getElementById('transcriptionText');
+    expect(result.status).toBe('applied');
+    expect(textarea.value).toBe('prima linea\nsecvnda linea');
+  });
+
+  it('returns ambiguous when source text appears in multiple lines', () => {
+    mockState.transcription.raw = 'prima nota\nsecunda linea\nsecunda nota';
+    initEditor();
+
+    const result = applySuggestionAtLine({
+      line: 1,
+      sourceText: 'secunda',
+      suggestion: 'secvnda'
+    });
+
+    const textarea = document.getElementById('transcriptionText');
+    expect(result.status).toBe('ambiguous');
+    expect(result.message).toBe('Source text appears in multiple lines. Apply manually.');
+    expect(textarea.value).toBe('prima nota\nsecunda linea\nsecunda nota');
+  });
+
   it('updates diff output and supports undo after apply', () => {
     const diffToggle = document.getElementById('showChanges');
     const btnUndo = document.getElementById('btnUndo');
