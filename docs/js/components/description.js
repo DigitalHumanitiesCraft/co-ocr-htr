@@ -15,6 +15,7 @@ import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
 import { batchProgress } from './batch-progress.js';
 import { storage } from '../services/storage.js';
+import { FEATURE_FLAGS } from '../utils/constants.js';
 
 /**
  * Default description prompt for illuminated initials
@@ -297,6 +298,9 @@ class DescriptionManager {
         // Single page description (current page)
         this.setLoading(true);
 
+        // Check thinking support before try/catch so it's available in catch block
+        const supportsThinking = FEATURE_FLAGS.thinkingPanel && llmService._supportsThinking('gemini');
+
         try {
             // Get image as base64
             let imageUrl;
@@ -311,11 +315,30 @@ class DescriptionManager {
 
             // Get custom prompt
             const customPrompt = this.promptTextarea?.value.trim() || '';
+            if (supportsThinking) {
+                appState.emitThinkingStart({
+                    operation: 'description',
+                    provider: 'gemini',
+                    model: llmService.providers.gemini?.defaultModel || 'gemini'
+                });
+            }
+            const startTime = Date.now();
 
             // Call LLM service
             const result = await llmService.describe(base64, {
-                customPrompt
+                customPrompt,
+                stream: supportsThinking,
+                onThinkingChunk: supportsThinking
+                    ? (text) => appState.emitThinkingChunk({ text, operation: 'description' })
+                    : undefined
             });
+
+            if (supportsThinking) {
+                appState.emitThinkingComplete({
+                    operation: 'description',
+                    duration: Date.now() - startTime
+                });
+            }
 
             // Update state with description
             appState.setDescription({
@@ -333,6 +356,13 @@ class DescriptionManager {
 
         } catch (error) {
             console.error('[Description] Error:', error);
+
+            if (supportsThinking) {
+                appState.emitThinkingError({
+                    operation: 'description',
+                    message: error.message
+                });
+            }
 
             // Handle specific error types
             if (error.type === 'auth') {

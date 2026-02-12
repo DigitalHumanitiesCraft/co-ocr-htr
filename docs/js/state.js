@@ -1104,6 +1104,15 @@ class AppState extends EventTarget {
   }
 
   // ============================================
+  // Thinking (LLM Reasoning Display)
+  // ============================================
+
+  emitThinkingStart(detail) { this._emit('thinkingStart', detail); }
+  emitThinkingChunk(detail) { this._emit('thinkingChunk', detail); }
+  emitThinkingComplete(detail) { this._emit('thinkingComplete', detail); }
+  emitThinkingError(detail) { this._emit('thinkingError', detail); }
+
+  // ============================================
   // Project Management
   // ============================================
 

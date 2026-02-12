@@ -17,6 +17,8 @@ import { descriptionManager } from './components/description.js';
 import { validationPanel } from './components/validation.js';
 // eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
 import { contextManager } from './components/context.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: auto-init thinking panel
+import { thinkingPanel } from './components/thinking.js';
 
 // Services
 import { storage } from './services/storage.js';

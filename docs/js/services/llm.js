@@ -26,19 +26,22 @@ const OLLAMA_TIMEOUT_MS = 480_000;
 /**
  * Base transcription prompt - will be enhanced with context if provided
  */
-const TRANSCRIPTION_PROMPT_BASE = `You are an expert in historical manuscripts and paleography.
+const TRANSCRIPTION_PROMPT_BASE = `You are a specialist for diplomatic transcription of historical manuscripts.
 
-Task: Transcribe the document as accurately as possible.
+TASK: Produce a conservative, line-faithful transcription from the manuscript image.
 
-Rules:
-- Preserve original line breaks exactly as they appear
-- Separate paragraphs with blank lines
-- Mark uncertain readings with [?] (e.g., "[?]word") - you MUST use this when confidence is below 90%
-- Mark illegible passages with [illegible]
-- Keep abbreviations as written in the original (do not expand)
+CORE RULES:
+- Preserve original line breaks exactly as visible in the manuscript
+- Preserve original spelling, capitalization, and punctuation (no modernization)
+- Keep abbreviations exactly as written (do NOT expand or normalize)
+- Mark uncertain readings with [?] directly before the uncertain token (e.g., "[?]word")
+- Mark unreadable spans with [illegible]
+- Never invent missing text; if unsure, mark uncertainty instead of guessing
 
-Output format: Only the transcribed text, no explanations or commentary.
-Begin directly with the first line of the document.`;
+OUTPUT:
+- Return only the transcribed text
+- No commentary, no explanations, no JSON
+- Begin directly with the first transcribed line`;
 
 /**
  * Build script-specific transcription hints based on structured context.
@@ -82,38 +85,54 @@ function buildTranscriptionPrompt(contextDescription = '', structuredContext = n
     const scriptHints = buildScriptHints(structuredContext);
 
     if (contextDescription) {
-        return `You are an expert in historical manuscripts and paleography.
+        return `You are a specialist for diplomatic transcription of historical manuscripts.
 
 DOCUMENT CONTEXT (provided by the expert):
 ${contextDescription}
 
-Task: Transcribe the document as accurately as possible, taking the context into account.
+TASK: Produce a conservative, line-faithful transcription, using the context only to disambiguate readings.
 
-Rules:
-- Preserve original line breaks exactly as they appear
-- Separate paragraphs with blank lines
-- Mark uncertain readings with [?] (e.g., "[?]word") - you MUST use this when confidence is below 90%
-- Mark illegible passages with [illegible]
-- Keep abbreviations as written in the original (do not expand)${scriptHints}
+INTERNAL WORKFLOW (do internally, do not output):
+1) Read glyph shapes and abbreviations first (paleographic pass)
+2) Re-check each line for local consistency (line pass)
+3) Apply uncertainty markers conservatively instead of speculative reconstruction
 
-Output format: Only the transcribed text, no explanations or commentary.
-Begin directly with the first line of the document.`;
+CORE RULES:
+- Preserve original line breaks exactly as visible in the manuscript
+- Preserve original spelling, capitalization, and punctuation (no modernization)
+- Keep abbreviations exactly as written (do NOT expand or normalize)
+- Mark uncertain readings with [?] directly before the uncertain token
+- Mark unreadable spans with [illegible]
+- Never invent missing text; if unsure, mark uncertainty instead of guessing${scriptHints}
+
+OUTPUT:
+- Return only the transcribed text
+- No commentary, no explanations, no JSON
+- Begin directly with the first transcribed line`;
     }
 
     if (scriptHints) {
-        return `You are an expert in historical manuscripts and paleography.
+        return `You are a specialist for diplomatic transcription of historical manuscripts.
 
-Task: Transcribe the document as accurately as possible.
+TASK: Produce a conservative, line-faithful transcription.
 
-Rules:
-- Preserve original line breaks exactly as they appear
-- Separate paragraphs with blank lines
-- Mark uncertain readings with [?] (e.g., "[?]word") - you MUST use this when confidence is below 90%
-- Mark illegible passages with [illegible]
-- Keep abbreviations as written in the original (do not expand)${scriptHints}
+INTERNAL WORKFLOW (do internally, do not output):
+1) Read glyph shapes and abbreviations first (paleographic pass)
+2) Re-check each line for local consistency (line pass)
+3) Apply uncertainty markers conservatively instead of speculative reconstruction
 
-Output format: Only the transcribed text, no explanations or commentary.
-Begin directly with the first line of the document.`;
+CORE RULES:
+- Preserve original line breaks exactly as visible in the manuscript
+- Preserve original spelling, capitalization, and punctuation (no modernization)
+- Keep abbreviations exactly as written (do NOT expand or normalize)
+- Mark uncertain readings with [?] directly before the uncertain token
+- Mark unreadable spans with [illegible]
+- Never invent missing text; if unsure, mark uncertainty instead of guessing${scriptHints}
+
+OUTPUT:
+- Return only the transcribed text
+- No commentary, no explanations, no JSON
+- Begin directly with the first transcribed line`;
     }
 
     return TRANSCRIPTION_PROMPT_BASE;
@@ -226,12 +245,18 @@ If no issues found, return empty issues array. Be specific about line numbers.`;
  */
 const PALEOGRAPHIC_REVIEW_PROMPT = `You are an expert paleographer specializing in historical handwriting analysis.
 
-TASK: Review the following transcription for paleographic errors -- mistakes caused by misreading letter shapes in the original handwriting.
+TASK: Review the following transcription for paleographic reading errors (letterform misreadings).
 
 TRANSCRIPTION:
 {text}
 
 {context}
+
+INTERNAL REVIEW PROTOCOL (single API call):
+- Simulate a short internal exchange between:
+  A) Primary Paleographer (generates candidates)
+  B) Skeptical Verifier (challenges weak candidates)
+- Keep that exchange internal. Output only the final JSON.
 
 FOCUS AREAS:
 1. MINIM DISAMBIGUATION: Sequences of minims (vertical strokes) that may have been misread. Common confusions: n/u, m/in, iu/ni, im/um, nn/nu, mi/nu, uu/w. Resolve by checking context.
@@ -240,12 +265,14 @@ FOCUS AREAS:
 4. LIGATURES: Misread ligatures or combined letterforms (st, ct, fi ligatures).
 
 RULES:
-- Propose corrections ONLY for paleographic reading errors, not for grammar, style, or content.
-- Do NOT modernize or normalize historical spellings. "Iohannes" is NOT an error for "Johannes".
-- Do NOT expand abbreviations -- only flag if the abbreviation mark appears misread.
-- Each suggestion must be a single-line replacement.
-- If multiple equally valid readings exist, list alternatives.
-- Be conservative: only flag readings where you have reasonable confidence in a better reading.
+- Propose corrections ONLY for paleographic reading errors, not grammar/style/content.
+- Anchor every issue to an exact source fragment ("text" field) from one line.
+- If you cannot point to an exact fragment, do not emit an issue.
+- Do NOT modernize or normalize historical spellings. "Iohannes" is not an error by itself.
+- Do NOT expand abbreviations; only flag potential misread abbreviation signs.
+- Each "suggestion" must be a single-line replacement (no \\n).
+- If multiple plausible readings remain, provide "alternatives".
+- Be conservative: prefer fewer, high-quality issues over speculative output.
 ${ISSUE_TYPE_INSTRUCTION}
 Respond ONLY with valid JSON:
 {
@@ -257,7 +284,7 @@ Respond ONLY with valid JSON:
       "text": "original text fragment",
       "suggestion": "corrected reading",
       "type": "spelling|abbreviation|illegible|ocr_artifact",
-      "explanation": "paleographic rationale",
+      "explanation": "paleographic rationale (concise, evidence-based)",
       "alternatives": ["optional alternative reading"],
       "stage": "paleographic",
       "score": 0.85
@@ -274,7 +301,7 @@ If no paleographic issues found, return empty issues array. Be specific about li
  */
 const PHILOLOGICAL_REVIEW_PROMPT = `You are a philologist specializing in historical texts and manuscript traditions.
 
-TASK: Review the following transcription for linguistic and contextual plausibility errors -- problems that paleographic analysis alone cannot resolve.
+TASK: Review the transcription for linguistic/contextual plausibility issues that remain after paleographic review.
 
 TRANSCRIPTION:
 {text}
@@ -282,6 +309,12 @@ TRANSCRIPTION:
 {context}
 
 {previous_issues}
+
+INTERNAL REVIEW PROTOCOL (single API call):
+- Simulate a short internal exchange between:
+  A) Latin Philologist (morphology/syntax/formula specialist)
+  B) Historical Language Verifier (checks variant legitimacy, avoids over-correction)
+- Keep that exchange internal. Output only the final JSON.
 
 FOCUS AREAS:
 1. MORPHOLOGY & SYNTAX: Words that are morphologically impossible or syntactically implausible in the text's language and period (e.g., wrong case ending, impossible verb form).
@@ -291,11 +324,14 @@ FOCUS AREAS:
 
 RULES:
 - Do NOT correct valid historical spellings, dialectal forms, or archaic grammar.
-- Do NOT delete or alter [?] or [illegible] markers unless you can provide a confident reading.
-- Do NOT repeat issues already flagged in the previous review stage (see PREVIOUS ISSUES below).
-- Each suggestion must be a single-line replacement.
-- Be conservative: only flag issues where linguistic evidence strongly supports a correction.
-- Prefer the simplest explanation (scribal error, not rare variant).
+- Treat medieval Latin and orthographic variation as normal unless strong counter-evidence exists.
+- Do NOT delete or alter [?] or [illegible] unless you provide a clearly justified, confident reading.
+- Do NOT repeat issues already flagged in PREVIOUS ISSUES.
+- Anchor every issue to an exact source fragment ("text" field) from one line.
+- If you cannot point to an exact fragment, do not emit an issue.
+- Each "suggestion" must be a single-line replacement (no \\n).
+- Be conservative: only flag issues where linguistic evidence clearly supports a correction.
+- Prefer the simplest explanation (likely misread/scribal slip before rare emendation).
 ${ISSUE_TYPE_INSTRUCTION}
 Respond ONLY with valid JSON:
 {
@@ -307,7 +343,7 @@ Respond ONLY with valid JSON:
       "text": "original text fragment",
       "suggestion": "corrected reading",
       "type": "spelling|plausibility|abbreviation|historical",
-      "explanation": "linguistic/philological rationale",
+      "explanation": "linguistic/philological rationale (concise, evidence-based)",
       "stage": "philological",
       "score": 0.80
     }
@@ -1201,11 +1237,13 @@ class LLMService {
 
     // Add thinkingConfig for complex tasks (validation, analysis)
     // thinkingLevel: "high" for more reasoning, "low" for faster responses
-    // NOTE: REST API requires camelCase (thinkingConfig, thinkingLevel)
+    // includeThoughts: true to get thought parts in response (thought: true)
+    // NOTE: REST API requires camelCase (thinkingConfig, thinkingLevel, includeThoughts)
     if (options.useThinking) {
       try {
         requestBody.generationConfig.thinkingConfig = {
-          thinkingLevel: options.thinkingLevel || 'low'
+          thinkingLevel: options.thinkingLevel || 'low',
+          includeThoughts: true
         };
       } catch (_e) {
         console.warn('[Gemini] thinkingConfig not supported, skipping');
@@ -1272,7 +1310,8 @@ class LLMService {
 
     if (options.useThinking) {
       requestBody.generationConfig.thinkingConfig = {
-        thinkingLevel: options.thinkingLevel || 'low'
+        thinkingLevel: options.thinkingLevel || 'low',
+        includeThoughts: true
       };
     }
 
@@ -2114,5 +2153,6 @@ export {
   LLMService, LLMError, PROVIDERS,
   TRANSCRIPTION_PROMPT_BASE, DESCRIPTION_PROMPT_BASE,
   ISSUE_TYPES, VALID_ISSUE_TYPES,
+  buildTranscriptionPrompt,
   buildPaleographicReviewPrompt, buildPhilologicalReviewPrompt
 };

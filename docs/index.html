@@ -485,6 +485,18 @@
                 <button class="panel-hint-dismiss" data-dismiss-hint="validation">×</button>
             </div>
             <div class="panel-content" id="validationContent">
+                <!-- Thinking Section (hidden until LLM starts streaming) -->
+                <div class="thinking-section" id="thinkingSection" hidden>
+                    <div class="thinking-header">
+                        <svg class="icon-sm thinking-icon" id="thinkingIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <span class="thinking-label" id="thinkingHeader">LLM Thinking</span>
+                    </div>
+                    <pre class="thinking-content" id="thinkingContent"></pre>
+                </div>
+
                 <!-- Empty State -->
                 <div class="validation-empty-state" id="validationEmptyState">
                     <svg class="empty-state-icon validation-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">

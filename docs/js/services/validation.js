@@ -310,9 +310,9 @@ class ValidationEngine {
      * @param {string} customPrompt - Optional custom validation prompt
      * @returns {Promise<object>} LLM validation result
      */
-    async validateWithLLM(text, customPrompt = '') {
+    async validateWithLLM(text, customPrompt = '', streamOptions = {}) {
         try {
-            const result = await llmService.validate(text, { customPrompt });
+            const result = await llmService.validate(text, { customPrompt, ...streamOptions });
             const validationResult = {
                 confidence: result.confidence,
                 reasoning: result.reasoning,
@@ -393,7 +393,9 @@ class ValidationEngine {
             checkStats = true,
             checkArtifacts = true,
             includeLLM = true,
-            customPrompt = ''
+            customPrompt = '',
+            stream,
+            onThinkingChunk
         } = options;
 
         // Run rule-based validation with category filtering
@@ -407,10 +409,13 @@ class ValidationEngine {
         let llmResult = null;
         if (includeLLM && llmService.hasApiKey()) {
             // PPV1-203: Use post-processing pipeline if feature flag is enabled
+            // Build stream options to forward to LLM service
+            const streamOpts = stream ? { stream, onThinkingChunk } : {};
+
             if (FEATURE_FLAGS.postprocessPipelineV1 && !customPrompt) {
                 llmResult = await this.validateWithPostprocessing(text, options);
             } else {
-                llmResult = await this.validateWithLLM(text, customPrompt);
+                llmResult = await this.validateWithLLM(text, customPrompt, streamOpts);
             }
         }
 
