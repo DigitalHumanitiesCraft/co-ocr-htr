@@ -218,7 +218,7 @@ export const POSTPROCESS_CALL_TIMEOUT_MS = 45_000;
 /** Total time budget per page for post-processing in milliseconds (90s) */
 export const POSTPROCESS_PAGE_BUDGET_MS = 90_000;
 
-/** Maximum number of stage invocations per page in post-processing pipeline */
+/** Maximum number of LLM API calls per page in post-processing pipeline (includes retries) */
 export const MAX_POSTPROCESS_CALLS = 2;
 
 /** Base delay for exponential backoff on retryable errors in milliseconds */
@@ -227,7 +227,8 @@ export const POSTPROCESS_BACKOFF_BASE_MS = 2_000;
 /** Maximum retries for a single post-processing call */
 export const POSTPROCESS_MAX_RETRIES = 2;
 
-/** Feature flag for post-processing pipeline v1 */
+/** Feature flags */
 export const FEATURE_FLAGS = {
-  postprocessPipelineV1: false
+  postprocessPipelineV1: false,
+  thinkingPanel: true
 };

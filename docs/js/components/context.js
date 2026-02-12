@@ -200,8 +200,14 @@ class ContextManager {
             parts.push(`Historical period: ${context.period}.`);
         }
 
-        if (context.language) {
-            parts.push(`Language(s): ${context.language}.`);
+        const languageItems = Array.isArray(context.languages)
+            ? context.languages.map(lang => String(lang || '').trim()).filter(Boolean)
+            : [];
+        const languageText = languageItems.length > 0
+            ? languageItems.join(', ')
+            : (context.language || '').trim();
+        if (languageText) {
+            parts.push(`Language(s): ${languageText}.`);
         }
 
         // Extended structured context fields (PPV1-103)

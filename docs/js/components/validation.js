@@ -457,6 +457,10 @@ class ValidationPanel {
         this.setButtonLoading(true);
         this.renderLoading();
 
+        // Thinking panel support (declared outside try for catch access)
+        const supportsThinking = FEATURE_FLAGS.thinkingPanel &&
+            llmService._supportsThinking(llmService.activeProvider);
+
         try {
             // Get options from dialog checkboxes
             const options = this.getValidationOptions();
@@ -466,7 +470,31 @@ class ValidationPanel {
                 options.includeLLM = false;
             }
 
+            // Emit thinking start when LLM review is included
+            const willUseLLM = options.includeLLM && llmService.hasApiKey();
+            if (supportsThinking && willUseLLM) {
+                appState.emitThinkingStart({
+                    operation: 'validation',
+                    provider: llmService.activeProvider,
+                    model: llmService.getCurrentModel()
+                });
+            }
+            const thinkingStartTime = Date.now();
+
+            // Pass stream options to validation engine
+            if (supportsThinking && willUseLLM) {
+                options.stream = true;
+                options.onThinkingChunk = (text) => appState.emitThinkingChunk({ text, operation: 'validation' });
+            }
+
             const results = await validationEngine.validate(text, segments, options);
+
+            if (supportsThinking && willUseLLM) {
+                appState.emitThinkingComplete({
+                    operation: 'validation',
+                    duration: Date.now() - thinkingStartTime
+                });
+            }
             const resultsWithPrompt = {
                 ...results,
                 customPrompt: options.customPrompt || ''
@@ -484,6 +512,14 @@ class ValidationPanel {
 
         } catch (error) {
             console.error('Validation error:', error);
+
+            if (supportsThinking) {
+                appState.emitThinkingError({
+                    operation: 'validation',
+                    message: error.message
+                });
+            }
+
             dialogManager.showToast(`Validation failed: ${error.message}`, 'error');
             appState.setValidationStatus('error');
             this.hideLoading();
@@ -924,6 +960,7 @@ class ValidationPanel {
         const sourceText = issue.text || '';
         const suggestion = issue.suggestion || '';
         const hasSuggestion = suggestion.trim().length > 0;
+        const isMultilineSuggestion = suggestion.includes('\n');
 
         // Build issue HTML
         return `
@@ -946,15 +983,20 @@ class ValidationPanel {
                 ${issue.explanation ? `<p class="issue-explanation">${escapeHtml(issue.explanation)}</p>` : ''}
                 ${hasSuggestion ? `
                     <div class="issue-actions">
-                        <button
-                            type="button"
-                            class="btn btn-secondary btn-sm issue-apply-btn"
-                            data-issue-index="${index}"
-                            ${applyState?.status === 'applied' ? 'disabled' : ''}
-                        >
-                            Apply
-                        </button>
-                        ${applyState ? `<span class="issue-apply-status status-${applyState.status}">${escapeHtml(applyState.message || applyState.status)}</span>` : ''}
+                        ${isMultilineSuggestion
+                            ? `<span class="issue-apply-status ${applyState ? `status-${applyState.status}` : 'status-ambiguous'} issue-manual-note">${escapeHtml(applyState?.message || 'Multiline suggestion. Apply manually in the editor.')}</span>`
+                            : `
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary btn-sm issue-apply-btn"
+                                    data-issue-index="${index}"
+                                    ${applyState?.status === 'applied' ? 'disabled' : ''}
+                                >
+                                    Apply
+                                </button>
+                                ${applyState ? `<span class="issue-apply-status status-${applyState.status}">${escapeHtml(applyState.message || applyState.status)}</span>` : ''}
+                            `
+                        }
                     </div>
                 ` : ''}
             </div>
@@ -1056,6 +1098,12 @@ class ValidationPanel {
         const suggestion = (issue.suggestion || '').trim();
         if (!suggestion) {
             const result = { status: 'failed', message: 'No suggestion available for this issue.' };
+            this.updateIssueApplyState(issueIndex, result, issueElement);
+            if (!silent) dialogManager.showToast(result.message, 'warning');
+            return result;
+        }
+        if (suggestion.includes('\n')) {
+            const result = { status: 'failed', message: 'Multiline suggestion. Apply manually in the editor.' };
             this.updateIssueApplyState(issueIndex, result, issueElement);
             if (!silent) dialogManager.showToast(result.message, 'warning');
             return result;

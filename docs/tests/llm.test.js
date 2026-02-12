@@ -240,10 +240,11 @@ describe('LLMService', () => {
       expect(issue.line).toBe(3);
     });
 
-    it('should default negative/NaN line to 0', () => {
-      expect(service._normalizeIssue({ line: -1, text: 'a', type: 'spelling' }).line).toBe(0);
-      expect(service._normalizeIssue({ line: NaN, text: 'a', type: 'spelling' }).line).toBe(0);
-      expect(service._normalizeIssue({ line: 'abc', text: 'a', type: 'spelling' }).line).toBe(0);
+    it('should default invalid line values to 1 (minimum contract)', () => {
+      expect(service._normalizeIssue({ line: -1, text: 'a', type: 'spelling' }).line).toBe(1);
+      expect(service._normalizeIssue({ line: 0, text: 'a', type: 'spelling' }).line).toBe(1);
+      expect(service._normalizeIssue({ line: NaN, text: 'a', type: 'spelling' }).line).toBe(1);
+      expect(service._normalizeIssue({ line: 'abc', text: 'a', type: 'spelling' }).line).toBe(1);
     });
 
     it('should trim text field', () => {

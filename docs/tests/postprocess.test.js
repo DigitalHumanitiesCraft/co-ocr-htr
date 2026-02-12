@@ -256,6 +256,29 @@ describe('runPostprocessing', () => {
     expect(result.pipeline.stage3.status).toBe('skipped');
     expect(result.pipeline.stage3.reason).toBe('max_calls_reached');
   });
+
+  it('should count retries against maxCalls and skip later stages when exhausted', async () => {
+    const validateSpy = vi.spyOn(llmService, 'validate')
+      .mockRejectedValueOnce(new Error('network timeout'))
+      .mockResolvedValueOnce({
+        confidence: 'likely',
+        reasoning: 'stage2 recovered',
+        issues: [{ line: 1, text: 'domiuus', suggestion: 'dominus', type: 'spelling' }]
+      });
+
+    const result = await runPostprocessing('text', {
+      runStage2: true,
+      runStage3: true,
+      maxCalls: 2
+    });
+
+    expect(validateSpy).toHaveBeenCalledTimes(2);
+    expect(result.pipeline.stage2.status).toBe('success');
+    expect(result.pipeline.stage3.status).toBe('skipped');
+    expect(result.pipeline.stage3.reason).toBe('max_calls_reached');
+    expect(result.pipeline.apiCallsUsed).toBe(2);
+    expect(result.pipeline.apiCallLimit).toBe(2);
+  });
 });
 
 // ============================================
