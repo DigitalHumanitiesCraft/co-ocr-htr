@@ -32,6 +32,7 @@ import { escapeHtml } from './utils/textFormatting.js';
 // Side-effect import: initializes tooltip positioning
 import './utils/tooltips.js';
 import { initPanelResize } from './utils/panelResize.js';
+import { initValidationResize } from './utils/validationResize.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -146,6 +147,7 @@ async function initApp() {
     initUI();
     validationPanel.init();
     initPanelResize();
+    initValidationResize();
 
     // Dialogs are auto-initialized via module import
 

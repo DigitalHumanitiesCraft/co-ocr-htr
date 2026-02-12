@@ -755,7 +755,8 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow-y: auto;
-  max-height: 160px;
+  flex: 1;
+  min-height: 0;
   background: var(--surface-hover);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -777,4 +778,53 @@
 
 .thinking-error .thinking-header {
   color: var(--problematic);
+}
+
+/* ==========================================================================
+   VALIDATION SECTION VERTICAL RESIZE HANDLES
+   ========================================================================== */
+
+.validation-resize-handle {
+  flex-shrink: 0;
+  height: 8px;
+  cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+}
+
+.validation-resize-handle::after {
+  content: '';
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--border-default);
+  transition: all var(--transition-fast);
+}
+
+.validation-resize-handle:hover::after,
+.validation-resize-handle.dragging::after {
+  width: 48px;
+  background: var(--accent-primary);
+}
+
+.validation-resize-handle.dragging::after {
+  width: 100%;
+}
+
+/* Global cursor override during vertical drag */
+body.validation-resizing {
+  cursor: row-resize !important;
+  user-select: none !important;
+}
+
+body.validation-resizing * {
+  cursor: row-resize !important;
+  pointer-events: none !important;
+}
+
+body.validation-resizing .validation-resize-handle {
+  pointer-events: auto !important;
 }

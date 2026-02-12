@@ -235,27 +235,29 @@ test.describe('Thinking Panel', () => {
             const computed = window.getComputedStyle(el);
             return {
                 display: computed.display,
-                maxHeight: computed.maxHeight,
+                maxHeight: parseInt(computed.maxHeight, 10),
                 borderBottom: computed.borderBottomStyle
             };
         });
 
         expect(styles.display).toBe('flex');
-        expect(styles.maxHeight).toBe('220px');
+        // max-height is managed by validationResize.js when multiple sections visible,
+        // or by CSS default (220px) when only thinking section is visible
+        expect(styles.maxHeight).toBeGreaterThan(0);
         expect(styles.borderBottom).toBe('solid');
 
-        // Check content area has monospace font and correct max-height
+        // Check content area has monospace font and flex-based sizing
         const contentStyles = await page.evaluate(() => {
             const el = document.getElementById('thinkingContent');
             const computed = window.getComputedStyle(el);
             return {
-                maxHeight: computed.maxHeight,
+                flexGrow: computed.flexGrow,
                 whiteSpace: computed.whiteSpace,
                 overflowY: computed.overflowY
             };
         });
 
-        expect(contentStyles.maxHeight).toBe('160px');
+        expect(contentStyles.flexGrow).toBe('1');
         expect(contentStyles.whiteSpace).toBe('pre-wrap');
         expect(contentStyles.overflowY).toBe('auto');
     });
