@@ -208,6 +208,15 @@ export const DEFAULT_PANEL_RATIOS = [0.4, 0.35, 0.25];
 /** localStorage key for persisted panel ratios */
 export const PANEL_RATIOS_KEY = 'coocr_panelRatios';
 
+/** Minimum section height in pixels during vertical resize */
+export const MIN_SECTION_HEIGHT = 60;
+
+/** Default validation section height ratios (thinking, ruleBased, llmReview) -- must sum to 1.0 */
+export const DEFAULT_VALIDATION_RATIOS = [0.3, 0.35, 0.35];
+
+/** localStorage key for persisted validation section ratios */
+export const VALIDATION_RATIOS_KEY = 'coocr_validationRatios';
+
 // =============================================================================
 // POST-PROCESSING CONSTANTS (PPV1-200c)
 // =============================================================================

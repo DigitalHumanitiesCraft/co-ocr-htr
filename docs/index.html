@@ -497,6 +497,11 @@
                     <pre class="thinking-content" id="thinkingContent"></pre>
                 </div>
 
+                <!-- Resize handle: Thinking <-> Validation -->
+                <div class="validation-resize-handle" role="separator" aria-orientation="horizontal"
+                     aria-label="Resize sections" tabindex="0"
+                     data-above-idx="0" data-below-idx="1" hidden></div>
+
                 <!-- Empty State -->
                 <div class="validation-empty-state" id="validationEmptyState">
                     <svg class="empty-state-icon validation-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -524,6 +529,11 @@
                         <!-- Content injected by JS -->
                     </div>
                 </div>
+
+                <!-- Resize handle: Validation <-> LLM Review -->
+                <div class="validation-resize-handle" role="separator" aria-orientation="horizontal"
+                     aria-label="Resize sections" tabindex="0"
+                     data-above-idx="1" data-below-idx="2" hidden></div>
 
                 <!-- LLM Review Section (hidden until content) -->
                 <div class="validation-section" id="llmReviewSection" hidden>
