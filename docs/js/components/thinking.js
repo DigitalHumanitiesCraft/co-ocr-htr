@@ -85,12 +85,9 @@ class ThinkingPanel {
         };
 
         const label = operationLabels[detail.operation] || detail.operation || 'LLM';
-        const providerInfo = detail.model
-            ? `${label} -- ${detail.provider}/${detail.model}`
-            : `${label} -- ${detail.provider || 'LLM'}`;
 
         if (this._header) {
-            this._header.textContent = providerInfo;
+            this._header.textContent = `${label} -- LLM Thinking`;
         }
 
         if (this._content) {
