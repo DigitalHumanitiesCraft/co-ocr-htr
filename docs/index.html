@@ -493,6 +493,11 @@
                             <path d="M12 6v6l4 2"></path>
                         </svg>
                         <span class="thinking-label" id="thinkingHeader">LLM Thinking</span>
+                        <button type="button" class="thinking-collapse-btn" id="thinkingCollapseBtn" title="Collapse thinking panel">
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="18 15 12 9 6 15"></polyline>
+                            </svg>
+                        </button>
                     </div>
                     <pre class="thinking-content" id="thinkingContent"></pre>
                 </div>
@@ -925,6 +930,28 @@
                 </div>
             </details>
 
+            <!-- Prompt Profile Section (Stage 1) -->
+            <details class="context-details" id="promptConfigDetailsTranscribe">
+                <summary class="context-summary">
+                    <span class="context-summary-title">Prompt Profile (optional)</span>
+                    <span class="context-summary-hint">Scenario profile and Stage 1 override</span>
+                </summary>
+                <div class="context-fields">
+                    <div class="input-wrapper">
+                        <label for="promptProfileSelectTranscribe">Scenario Profile</label>
+                        <select id="promptProfileSelectTranscribe"></select>
+                        <span class="input-hint">Select a document scenario. You can still override prompts manually.</span>
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="promptOverrideStage1">Stage 1 Override (Transcription)</label>
+                        <textarea id="promptOverrideStage1" rows="5" placeholder="Optional custom prompt for Stage 1. Leave empty to use selected profile/default."></textarea>
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage1">Reset Stage 1 Override</button>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
             <!-- Model Info -->
             <div class="transcribe-model-info" id="transcribeModelInfo">
                 <!-- Filled by JS -->
@@ -1101,6 +1128,33 @@
                         <span class="checkbox-hint">Morphology, syntax, formulaic patterns, lexical plausibility</span>
                     </label>
                 </div>
+            </div>
+
+            <!-- Prompt Profile Section -->
+            <div class="validate-options-section" id="promptProfileSection">
+                <h4 class="validate-section-title">Prompt Profile</h4>
+                <p class="validate-section-hint">Choose a document scenario profile for Stage 1/2/3 prompts.</p>
+                <div class="input-wrapper">
+                    <label for="promptProfileSelectValidate">Scenario Profile</label>
+                    <select id="promptProfileSelectValidate"></select>
+                </div>
+                <details class="custom-prompt-details">
+                    <summary class="custom-prompt-toggle">Advanced stage overrides (optional)</summary>
+                    <div class="custom-prompt-content">
+                        <p class="custom-prompt-hint">If filled, overrides replace profile/default prompts for the stage.</p>
+                        <label for="promptOverrideStage2">Stage 2 Override (Paleographic Review)</label>
+                        <textarea id="promptOverrideStage2" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 2"></textarea>
+                        <div style="margin-top: 8px; margin-bottom: 12px;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage2">Reset Stage 2 Override</button>
+                        </div>
+
+                        <label for="promptOverrideStage3">Stage 3 Override (Philological Review)</label>
+                        <textarea id="promptOverrideStage3" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 3"></textarea>
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage3">Reset Stage 3 Override</button>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <!-- Page Selection for Multi-Page -->

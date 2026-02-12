@@ -351,6 +351,7 @@ class ValidationEngine {
                 contextDescription: options.contextDescription || '',
                 runStage2: options.runStage2 !== false,
                 runStage3: options.runStage3 !== false,
+                promptConfig: options.promptConfig || null,
                 signal: options.signal || null
             });
 

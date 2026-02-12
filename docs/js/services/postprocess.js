@@ -89,6 +89,7 @@ function mergeConfidence(c1, c2) {
  * @param {string} [options.contextDescription] - Document context string
  * @param {boolean} [options.runStage2=true] - Whether to run paleographic review
  * @param {boolean} [options.runStage3=true] - Whether to run philological review
+ * @param {object|null} [options.promptConfig] - Prompt profile + stage overrides
  * @param {number} [options.maxCalls] - Maximum LLM API calls per page, including retries (defaults to MAX_POSTPROCESS_CALLS)
  * @param {AbortSignal} [options.signal] - External abort signal
  * @returns {Promise<object>} Merged llmJudge result
@@ -98,6 +99,7 @@ export async function runPostprocessing(text, options = {}) {
     contextDescription = '',
     runStage2 = true,
     runStage3 = true,
+    promptConfig = null,
     maxCalls = MAX_POSTPROCESS_CALLS,
     signal = null
   } = options;
@@ -127,7 +129,7 @@ export async function runPostprocessing(text, options = {}) {
       const stageStart = Date.now();
       try {
         checkBudget(pageStart, signal);
-        const prompt = buildPaleographicReviewPrompt(text, contextDescription);
+        const prompt = buildPaleographicReviewPrompt(text, contextDescription, promptConfig);
         stage2Result = await callWithGuardrails(prompt, signal, pageStart, callBudget);
         // Tag all issues with stage
         if (stage2Result?.issues) {
@@ -152,7 +154,7 @@ export async function runPostprocessing(text, options = {}) {
       try {
         checkBudget(pageStart, signal);
         const previousIssues = stage2Result?.issues || [];
-        const prompt = buildPhilologicalReviewPrompt(text, contextDescription, previousIssues);
+        const prompt = buildPhilologicalReviewPrompt(text, contextDescription, previousIssues, promptConfig);
         stage3Result = await callWithGuardrails(prompt, signal, pageStart, callBudget);
         // Tag all issues with stage
         if (stage3Result?.issues) {

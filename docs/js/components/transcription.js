@@ -17,6 +17,7 @@ import { dialogManager } from './dialogs.js';
 import { contextManager } from './context.js';
 import { batchProgress } from './batch-progress.js';
 import { escapeHtml } from '../utils/textFormatting.js';
+import { listPromptProfiles } from '../config/promptProfiles.js';
 
 /**
  * Transcription Manager
@@ -27,6 +28,7 @@ class TranscriptionManager {
         this.transcribeDialog = null;
         this.startBtn = null;
         this.isTranscribing = false;
+        this._isSyncingPromptControls = false;
     }
 
     /**
@@ -43,6 +45,7 @@ class TranscriptionManager {
         }
 
         this.bindEvents();
+        this.initPromptProfileControls();
     }
 
     /**
@@ -75,6 +78,10 @@ class TranscriptionManager {
             this.setLoading(false);
             this.showEditorLoading(false);
         });
+
+        appState.addEventListener('promptConfigChanged', () => {
+            this.syncPromptProfileControls();
+        });
     }
 
     /**
@@ -101,6 +108,7 @@ class TranscriptionManager {
 
         // Update model info display
         this.updateModelInfo();
+        this.syncPromptProfileControls();
 
         // Update page selection UI
         this.updatePageSelectionUI();
@@ -237,6 +245,7 @@ class TranscriptionManager {
             const result = await llmService.transcribe(base64, {
                 context: contextDescription,
                 structuredContext: appState.getDocumentContext(),
+                promptConfig: this.getPromptConfigSafe(),
                 stream: supportsThinking,
                 onThinkingChunk: supportsThinking
                     ? (text) => appState.emitThinkingChunk({ text, operation: 'transcription' })
@@ -519,7 +528,8 @@ class TranscriptionManager {
                 // Call LLM service with context (including structured context for script hints)
                 const result = await llmService.transcribe(base64, {
                     context: contextDescription,
-                    structuredContext: appState.getDocumentContext()
+                    structuredContext: appState.getDocumentContext(),
+                    promptConfig: this.getPromptConfigSafe()
                 });
 
                 // Store result for this page
@@ -598,6 +608,58 @@ class TranscriptionManager {
      */
     _delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    getPromptConfigSafe() {
+        if (typeof appState.getPromptConfig === 'function') {
+            return appState.getPromptConfig();
+        }
+        return {
+            profileId: 'generic_default',
+            overrides: { stage1: '', stage2: '', stage3: '' }
+        };
+    }
+
+    initPromptProfileControls() {
+        const profileSelect = document.getElementById('promptProfileSelectTranscribe');
+        const stage1Input = document.getElementById('promptOverrideStage1');
+        const resetStage1 = document.getElementById('resetPromptStage1');
+
+        if (profileSelect) {
+            const profiles = listPromptProfiles();
+            profileSelect.innerHTML = profiles
+                .map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.label)}</option>`)
+                .join('');
+
+            profileSelect.addEventListener('change', () => {
+                if (this._isSyncingPromptControls) return;
+                appState.setPromptProfile?.(profileSelect.value);
+            });
+        }
+
+        if (stage1Input) {
+            stage1Input.addEventListener('input', () => {
+                if (this._isSyncingPromptControls) return;
+                appState.setPromptOverride?.('stage1', stage1Input.value);
+            });
+        }
+
+        if (resetStage1) {
+            resetStage1.addEventListener('click', () => appState.clearPromptOverride?.('stage1'));
+        }
+
+        this.syncPromptProfileControls();
+    }
+
+    syncPromptProfileControls() {
+        const profileSelect = document.getElementById('promptProfileSelectTranscribe');
+        const stage1Input = document.getElementById('promptOverrideStage1');
+        const promptConfig = this.getPromptConfigSafe();
+
+        this._isSyncingPromptControls = true;
+        if (profileSelect) profileSelect.value = promptConfig.profileId || 'generic_default';
+        if (stage1Input) stage1Input.value = promptConfig.overrides?.stage1 || '';
+        this._isSyncingPromptControls = false;
     }
 
     /**
