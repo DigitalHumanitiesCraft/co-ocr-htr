@@ -576,42 +576,72 @@ describe('LLMError', () => {
 });
 
 describe('Post-Processing Prompt Builders', () => {
-  it('buildTranscriptionPrompt includes conservative workflow and script hints', () => {
+  it('buildTranscriptionPrompt includes context and script hints', () => {
     const prompt = buildTranscriptionPrompt('Latin liturgical text', { scriptType: 'textura' });
-    expect(prompt).toContain('INTERNAL WORKFLOW (do internally, do not output)');
-    expect(prompt).toContain('do NOT expand or normalize');
+    expect(prompt).toContain('DOCUMENT CONTEXT:\nLatin liturgical text');
+    expect(prompt).toContain('SCRIPT-SPECIFIC HINTS:');
     expect(prompt).toContain('CRITICAL: This script uses minim-heavy letterforms');
-    expect(prompt).toContain('DOCUMENT CONTEXT (provided by the expert):');
   });
 
-  it('buildPaleographicReviewPrompt includes internal two-expert protocol and context block', () => {
-    const prompt = buildPaleographicReviewPrompt('linea prima', 'Script: Textura; Language: Latin');
+  it('buildPaleographicReviewPrompt uses selected profile prompt when configured', () => {
+    const prompt = buildPaleographicReviewPrompt(
+      'linea prima',
+      'Script: Textura; Language: Latin',
+      { profileId: 'medieval_latin_manuscript', overrides: {} }
+    );
 
-    expect(prompt).toContain('INTERNAL REVIEW PROTOCOL (single API call)');
-    expect(prompt).toContain('Primary Paleographer');
-    expect(prompt).toContain('Skeptical Verifier');
+    expect(prompt).toContain('INTERNAL PROTOCOL:');
+    expect(prompt).toContain('Primary paleographer');
+    expect(prompt).toContain('Skeptical verifier');
     expect(prompt).toContain('DOCUMENT CONTEXT:\nScript: Textura; Language: Latin');
-    expect(prompt).toContain('Each "suggestion" must be a single-line replacement');
+    expect(prompt).toContain('TRANSCRIPTION:\nlinea prima');
   });
 
   it('buildPhilologicalReviewPrompt includes previous issues and anti-duplication instruction', () => {
     const prompt = buildPhilologicalReviewPrompt(
       'ecce rex',
       'Text type: liturgical',
-      [{ line: 3, text: 'misam', suggestion: 'missam', type: 'spelling' }]
+      [{ line: 3, text: 'misam', suggestion: 'missam', type: 'spelling' }],
+      { profileId: 'medieval_latin_manuscript', overrides: {} }
     );
 
-    expect(prompt).toContain('INTERNAL REVIEW PROTOCOL (single API call)');
-    expect(prompt).toContain('Latin Philologist');
-    expect(prompt).toContain('Historical Language Verifier');
+    expect(prompt).toContain('INTERNAL PROTOCOL:');
+    expect(prompt).toContain('Latin philologist');
+    expect(prompt).toContain('Historical-language verifier');
     expect(prompt).toContain('PREVIOUS ISSUES (already flagged, do NOT repeat):');
     expect(prompt).toContain('- Line 3: "misam" -> "missam" (spelling)');
-    expect(prompt).toContain('Do NOT repeat issues already flagged in PREVIOUS ISSUES');
+    expect(prompt).toContain('Do not repeat previous issues');
   });
 
   it('buildPhilologicalReviewPrompt falls back to "No previous issues flagged."', () => {
     const prompt = buildPhilologicalReviewPrompt('ecce rex', '', []);
     expect(prompt).toContain('No previous issues flagged.');
+  });
+
+  it('stage override takes precedence over profile and default prompts', () => {
+    const prompt = buildPaleographicReviewPrompt('linea prima', '', {
+      profileId: 'medieval_latin_manuscript',
+      overrides: {
+        stage2: 'CUSTOM STAGE 2 PROMPT\nTRANSCRIPTION:\n{text}'
+      }
+    });
+    expect(prompt).toContain('CUSTOM STAGE 2 PROMPT');
+    expect(prompt).toContain('TRANSCRIPTION:\nlinea prima');
+    expect(prompt).not.toContain('Primary Paleographer');
+  });
+
+  it('stage1 override takes precedence for transcription prompt', () => {
+    const prompt = buildTranscriptionPrompt('Some context', { scriptType: 'textura' }, {
+      profileId: 'medieval_latin_manuscript',
+      overrides: {
+        stage1: 'CUSTOM STAGE1 OVERRIDE',
+        stage2: '',
+        stage3: ''
+      }
+    });
+
+    expect(prompt).toContain('CUSTOM STAGE1 OVERRIDE');
+    expect(prompt).not.toContain('You are a specialist for diplomatic transcription of medieval Latin manuscripts.');
   });
 });
 

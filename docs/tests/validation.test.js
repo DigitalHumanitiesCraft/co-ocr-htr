@@ -447,13 +447,21 @@ describe('ValidationEngine', () => {
         customPrompt: '',
         contextDescription: 'Script type: Textura.',
         runStage2: true,
-        runStage3: false
+        runStage3: false,
+        promptConfig: {
+          profileId: 'medieval_latin_manuscript',
+          overrides: { stage1: '', stage2: 'Custom Stage 2', stage3: '' }
+        }
       });
 
       expect(runPostprocessing).toHaveBeenCalledWith('Test text', expect.objectContaining({
         contextDescription: 'Script type: Textura.',
         runStage2: true,
-        runStage3: false
+        runStage3: false,
+        promptConfig: {
+          profileId: 'medieval_latin_manuscript',
+          overrides: { stage1: '', stage2: 'Custom Stage 2', stage3: '' }
+        }
       }));
       expect(result.llmJudge.pipeline.stage2.status).toBe('success');
       expect(result.llmJudge.pipeline.stage3.status).toBe('success');

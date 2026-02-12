@@ -120,6 +120,16 @@ class AppState extends EventTarget {
         error: null
       },
 
+      // Prompt configuration (profile + per-stage user overrides)
+      promptConfig: {
+        profileId: 'generic_default',
+        overrides: {
+          stage1: '',
+          stage2: '',
+          stage3: ''
+        }
+      },
+
       // Session metadata
       meta: {
         createdAt: null,
@@ -195,6 +205,10 @@ class AppState extends EventTarget {
     this.data.batchTranscriptions = [];
     this.data.batchValidations = [];
     this.data.context = null;
+    this.data.promptConfig = {
+      profileId: 'generic_default',
+      overrides: { stage1: '', stage2: '', stage3: '' }
+    };
     this.data.meta = { createdAt: null, updatedAt: null };
   }
 
@@ -904,6 +918,58 @@ class AppState extends EventTarget {
   }
 
   /**
+   * Get prompt configuration for 3-stage processing.
+   * @returns {{profileId:string, overrides:{stage1:string, stage2:string, stage3:string}}}
+   */
+  getPromptConfig() {
+    return this._normalizePromptConfig(this.data.promptConfig);
+  }
+
+  /**
+   * Set the selected prompt profile.
+   * @param {string} profileId
+   */
+  setPromptProfile(profileId) {
+    const next = this._normalizePromptConfig({
+      ...this.data.promptConfig,
+      profileId
+    });
+    this.data.promptConfig = next;
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('promptConfigChanged', next);
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Set user override prompt for a stage.
+   * @param {'stage1'|'stage2'|'stage3'} stage
+   * @param {string} prompt
+   */
+  setPromptOverride(stage, prompt) {
+    if (!['stage1', 'stage2', 'stage3'].includes(stage)) return;
+    const current = this._normalizePromptConfig(this.data.promptConfig);
+    const next = {
+      ...current,
+      overrides: {
+        ...current.overrides,
+        [stage]: typeof prompt === 'string' ? prompt : ''
+      }
+    };
+    this.data.promptConfig = next;
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('promptConfigChanged', next);
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Clear user override prompt for a stage.
+   * @param {'stage1'|'stage2'|'stage3'} stage
+   */
+  clearPromptOverride(stage) {
+    this.setPromptOverride(stage, '');
+  }
+
+  /**
    * Set regions directly (from PAGE-XML import or manual definition)
    * @param {Array} regions - Array of region objects
    */
@@ -1029,6 +1095,25 @@ class AppState extends EventTarget {
       normalized.duration = pipeline.duration;
     }
     return normalized;
+  }
+
+  /**
+   * Normalize prompt config into canonical schema.
+   * @private
+   * @param {object|null} promptConfig
+   * @returns {{profileId:string, overrides:{stage1:string, stage2:string, stage3:string}}}
+   */
+  _normalizePromptConfig(promptConfig) {
+    const cfg = (promptConfig && typeof promptConfig === 'object') ? promptConfig : {};
+    const overrides = (cfg.overrides && typeof cfg.overrides === 'object') ? cfg.overrides : {};
+    return {
+      profileId: (cfg.profileId || 'generic_default').toString().trim() || 'generic_default',
+      overrides: {
+        stage1: typeof overrides.stage1 === 'string' ? overrides.stage1 : '',
+        stage2: typeof overrides.stage2 === 'string' ? overrides.stage2 : '',
+        stage3: typeof overrides.stage3 === 'string' ? overrides.stage3 : ''
+      }
+    };
   }
 
   // ============================================
@@ -1198,6 +1283,10 @@ class AppState extends EventTarget {
         corrections: this.data.corrections,
         regions: this.data.regions,
         context: this.data.context || null,
+        promptConfig: this.data.promptConfig || {
+          profileId: 'generic_default',
+          overrides: { stage1: '', stage2: '', stage3: '' }
+        },
         meta: this.data.meta,
         pages: pagesWithoutImages,
         currentPageIndex: this.data.currentPageIndex,
@@ -1259,6 +1348,7 @@ class AppState extends EventTarget {
       if (session.corrections) this.data.corrections = session.corrections;
       if (session.regions) this.data.regions = session.regions;
       if (session.context !== undefined) this.data.context = session.context;
+      this.data.promptConfig = this._normalizePromptConfig(session.promptConfig);
       if (session.meta) this.data.meta = session.meta;
 
       // Restore multi-page data
@@ -1281,6 +1371,10 @@ class AppState extends EventTarget {
       this.data.corrections = [];
       this.data.regions = [];
       this.data.context = null;
+      this.data.promptConfig = {
+        profileId: 'generic_default',
+        overrides: { stage1: '', stage2: '', stage3: '' }
+      };
       this.data.meta = { createdAt: null, updatedAt: null };
       this.data.pages = [];
       this.data.currentPageIndex = 0;

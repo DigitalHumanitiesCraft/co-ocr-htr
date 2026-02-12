@@ -257,6 +257,32 @@ describe('runPostprocessing', () => {
     expect(result.pipeline.stage3.reason).toBe('max_calls_reached');
   });
 
+  it('should apply stage prompt overrides from promptConfig', async () => {
+    const validateSpy = vi.spyOn(llmService, 'validate')
+      .mockResolvedValueOnce({
+        confidence: 'likely',
+        reasoning: 'stage2 only',
+        issues: []
+      });
+
+    await runPostprocessing('text', {
+      runStage2: true,
+      runStage3: false,
+      promptConfig: {
+        profileId: 'generic_default',
+        overrides: {
+          stage1: '',
+          stage2: 'CUSTOM STAGE2 OVERRIDE\nTRANSCRIPTION:\n{text}',
+          stage3: ''
+        }
+      }
+    });
+
+    expect(validateSpy).toHaveBeenCalledTimes(1);
+    expect(validateSpy.mock.calls[0][1].customPrompt).toContain('CUSTOM STAGE2 OVERRIDE');
+    expect(validateSpy.mock.calls[0][1].customPrompt).toContain('TRANSCRIPTION:\ntext');
+  });
+
   it('should count retries against maxCalls and skip later stages when exhausted', async () => {
     const validateSpy = vi.spyOn(llmService, 'validate')
       .mockRejectedValueOnce(new Error('network timeout'))
@@ -301,17 +327,15 @@ describe('Prompt Builders', () => {
     const { buildPaleographicReviewPrompt } = await import('../js/services/llm.js');
     const prompt = buildPaleographicReviewPrompt('Line 1\nLine 2', 'This is a textura manuscript.');
     expect(prompt).toContain('Line 1');
-    expect(prompt).toContain('MINIM DISAMBIGUATION');
+    expect(prompt).toContain('letterform confusion');
     expect(prompt).toContain('textura manuscript');
-    expect(prompt).toContain('"paleographic"');
   });
 
   it('should build philological prompt with previous issues', async () => {
     const { buildPhilologicalReviewPrompt } = await import('../js/services/llm.js');
     const prev = [{ line: 1, text: 'old', suggestion: 'new', type: 'spelling' }];
     const prompt = buildPhilologicalReviewPrompt('Line 1', '', prev);
-    expect(prompt).toContain('MORPHOLOGY');
-    expect(prompt).toContain('"philological"');
+    expect(prompt).toContain('morphology/syntax/formula plausibility');
     expect(prompt).toContain('Line 1: "old" -> "new"');
   });
 

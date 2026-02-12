@@ -92,6 +92,10 @@ describe('AppState', () => {
       customPrompt: '',
       pipeline: null
     };
+    appState.data.promptConfig = {
+      profileId: 'generic_default',
+      overrides: { stage1: '', stage2: '', stage3: '' }
+    };
     appState.data.corrections = [];
     appState.data.batchTranscriptions = [];
     appState.data.batchValidations = [];
@@ -691,6 +695,32 @@ describe('AppState', () => {
     });
   });
 
+  describe('Prompt Config', () => {
+    it('should expose default prompt config', () => {
+      const cfg = appState.getPromptConfig();
+      expect(cfg.profileId).toBe('generic_default');
+      expect(cfg.overrides).toEqual({ stage1: '', stage2: '', stage3: '' });
+    });
+
+    it('should set prompt profile and emit promptConfigChanged', () => {
+      const listener = vi.fn();
+      appState.addEventListener('promptConfigChanged', listener);
+
+      appState.setPromptProfile('medieval_latin_manuscript');
+
+      expect(appState.getPromptConfig().profileId).toBe('medieval_latin_manuscript');
+      expect(listener).toHaveBeenCalled();
+    });
+
+    it('should set and clear stage overrides', () => {
+      appState.setPromptOverride('stage2', 'Custom Stage 2');
+      expect(appState.getPromptConfig().overrides.stage2).toBe('Custom Stage 2');
+
+      appState.clearPromptOverride('stage2');
+      expect(appState.getPromptConfig().overrides.stage2).toBe('');
+    });
+  });
+
   describe('UI State', () => {
     it('should set loading state', () => {
       appState.setLoading(true, 'Processing...');
@@ -975,6 +1005,25 @@ describe('AppState', () => {
       expect(state.validation.summary).toEqual({ totalIssues: 1 });
       expect(state.validation.timestamp).toBe('2026-02-11T15:00:00.000Z');
       expect(state.validation.customPrompt).toBe('Keep abbreviations');
+    });
+
+    it('should persist promptConfig across session restore', async () => {
+      appState.data.project = { id: 'proj-1', name: 'Project 1' };
+      appState.setPromptProfile('medieval_latin_manuscript');
+      appState.setPromptOverride('stage2', 'Custom Stage 2 Prompt');
+
+      await appState.saveSessionNow();
+      const savedSession = storage.saveSession.mock.calls[0][1];
+
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue(savedSession);
+
+      const restored = await appState.restoreSession('proj-1');
+      const cfg = appState.getPromptConfig();
+
+      expect(restored).toBe(true);
+      expect(cfg.profileId).toBe('medieval_latin_manuscript');
+      expect(cfg.overrides.stage2).toBe('Custom Stage 2 Prompt');
     });
 
     it('should merge missing validation fields from older sessions with schema defaults', async () => {

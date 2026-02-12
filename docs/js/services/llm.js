@@ -8,6 +8,7 @@
  */
 
 import { normalizeMarkers } from '../utils/textFormatting.js';
+import { DEFAULT_PROMPT_PROFILE_ID, getPromptProfileById } from '../config/promptProfiles.js';
 
 // ============================================
 // Timeouts
@@ -23,25 +24,34 @@ const OLLAMA_TIMEOUT_MS = 480_000;
 // Prompts
 // ============================================
 
+const PROMPT_STAGE_KEYS = Object.freeze({
+  STAGE1: 'stage1',
+  STAGE2: 'stage2',
+  STAGE3: 'stage3'
+});
+
 /**
- * Base transcription prompt - will be enhanced with context if provided
+ * Core default for Stage 1 (generic, domain-agnostic).
+ * User/profile prompts may override this completely.
  */
-const TRANSCRIPTION_PROMPT_BASE = `You are a specialist for diplomatic transcription of historical manuscripts.
+const TRANSCRIPTION_PROMPT_BASE = `You are an expert in diplomatic transcription of historical handwritten documents.
 
-TASK: Produce a conservative, line-faithful transcription from the manuscript image.
+TASK:
+- Produce a faithful, conservative transcription from the manuscript image.
 
-CORE RULES:
-- Preserve original line breaks exactly as visible in the manuscript
-- Preserve original spelling, capitalization, and punctuation (no modernization)
-- Keep abbreviations exactly as written (do NOT expand or normalize)
-- Mark uncertain readings with [?] directly before the uncertain token (e.g., "[?]word")
-- Mark unreadable spans with [illegible]
-- Never invent missing text; if unsure, mark uncertainty instead of guessing
+RULES:
+- Preserve line breaks exactly as they appear in the image.
+- Preserve original spelling and punctuation (no modernization).
+- Keep abbreviations as written (do not expand).
+- Mark uncertain readings with [?].
+- Mark unreadable spans with [illegible].
+- Never invent missing text.
+
+{context_block}
+{script_hints}
 
 OUTPUT:
-- Return only the transcribed text
-- No commentary, no explanations, no JSON
-- Begin directly with the first transcribed line`;
+- Return only the transcription text (no commentary, no JSON).`;
 
 /**
  * Build script-specific transcription hints based on structured context.
@@ -81,61 +91,85 @@ function buildScriptHints(structuredContext) {
  * @param {object} [structuredContext] - Structured context for script hints
  * @returns {string} The complete prompt
  */
-function buildTranscriptionPrompt(contextDescription = '', structuredContext = null) {
-    const scriptHints = buildScriptHints(structuredContext);
-
-    if (contextDescription) {
-        return `You are a specialist for diplomatic transcription of historical manuscripts.
-
-DOCUMENT CONTEXT (provided by the expert):
-${contextDescription}
-
-TASK: Produce a conservative, line-faithful transcription, using the context only to disambiguate readings.
-
-INTERNAL WORKFLOW (do internally, do not output):
-1) Read glyph shapes and abbreviations first (paleographic pass)
-2) Re-check each line for local consistency (line pass)
-3) Apply uncertainty markers conservatively instead of speculative reconstruction
-
-CORE RULES:
-- Preserve original line breaks exactly as visible in the manuscript
-- Preserve original spelling, capitalization, and punctuation (no modernization)
-- Keep abbreviations exactly as written (do NOT expand or normalize)
-- Mark uncertain readings with [?] directly before the uncertain token
-- Mark unreadable spans with [illegible]
-- Never invent missing text; if unsure, mark uncertainty instead of guessing${scriptHints}
-
-OUTPUT:
-- Return only the transcribed text
-- No commentary, no explanations, no JSON
-- Begin directly with the first transcribed line`;
+function normalizePromptConfig(promptConfig = null) {
+  const profileId = (promptConfig?.profileId || '').trim() || DEFAULT_PROMPT_PROFILE_ID;
+  const overrides = promptConfig?.overrides && typeof promptConfig.overrides === 'object'
+    ? promptConfig.overrides
+    : {};
+  return {
+    profileId,
+    overrides: {
+      stage1: typeof overrides.stage1 === 'string' ? overrides.stage1 : '',
+      stage2: typeof overrides.stage2 === 'string' ? overrides.stage2 : '',
+      stage3: typeof overrides.stage3 === 'string' ? overrides.stage3 : ''
     }
+  };
+}
 
-    if (scriptHints) {
-        return `You are a specialist for diplomatic transcription of historical manuscripts.
+function replaceToken(text, token, value) {
+  return String(text || '').split(token).join(value);
+}
 
-TASK: Produce a conservative, line-faithful transcription.
+function applyTokenOrAppend(template, token, value) {
+  const prompt = String(template || '').trim();
+  const injected = String(value || '').trim();
 
-INTERNAL WORKFLOW (do internally, do not output):
-1) Read glyph shapes and abbreviations first (paleographic pass)
-2) Re-check each line for local consistency (line pass)
-3) Apply uncertainty markers conservatively instead of speculative reconstruction
+  if (prompt.includes(token)) {
+    return replaceToken(prompt, token, injected);
+  }
+  if (!injected) {
+    return prompt;
+  }
+  return `${prompt}\n\n${injected}`;
+}
 
-CORE RULES:
-- Preserve original line breaks exactly as visible in the manuscript
-- Preserve original spelling, capitalization, and punctuation (no modernization)
-- Keep abbreviations exactly as written (do NOT expand or normalize)
-- Mark uncertain readings with [?] directly before the uncertain token
-- Mark unreadable spans with [illegible]
-- Never invent missing text; if unsure, mark uncertainty instead of guessing${scriptHints}
+function stripPromptPlaceholders(template) {
+  return String(template || '')
+    .replace(/\{context_block\}/g, '')
+    .replace(/\{script_hints\}/g, '')
+    .replace(/\{text\}/g, '')
+    .replace(/\{context\}/g, '')
+    .replace(/\{previous_issues\}/g, '')
+    .trim();
+}
 
-OUTPUT:
-- Return only the transcribed text
-- No commentary, no explanations, no JSON
-- Begin directly with the first transcribed line`;
-    }
+function resolveStagePromptTemplate(stageKey, promptConfig, fallbackTemplate) {
+  const normalized = normalizePromptConfig(promptConfig);
 
-    return TRANSCRIPTION_PROMPT_BASE;
+  const override = (normalized.overrides[stageKey] || '').trim();
+  if (override) {
+    return override;
+  }
+
+  const profile = getPromptProfileById(normalized.profileId) || getPromptProfileById(DEFAULT_PROMPT_PROFILE_ID);
+  const fromProfile = profile?.prompts?.[stageKey];
+  if (typeof fromProfile === 'string' && fromProfile.trim()) {
+    return fromProfile.trim();
+  }
+
+  return fallbackTemplate;
+}
+
+/**
+ * Build the full transcription prompt, optionally enhanced with context and prompt profiles.
+ * @param {string} contextDescription - Additional context from the expert
+ * @param {object} [structuredContext] - Structured context for script hints
+ * @param {object|null} [promptConfig] - Prompt profile + stage overrides
+ * @returns {string} The complete prompt
+ */
+function buildTranscriptionPrompt(contextDescription = '', structuredContext = null, promptConfig = null) {
+    const baseTemplate = resolveStagePromptTemplate(PROMPT_STAGE_KEYS.STAGE1, promptConfig, TRANSCRIPTION_PROMPT_BASE);
+    const contextBlock = contextDescription
+      ? `DOCUMENT CONTEXT:\n${contextDescription}`
+      : '';
+
+    const scriptHints = buildScriptHints(structuredContext).trim();
+    const scriptHintsBlock = scriptHints ? `SCRIPT-SPECIFIC HINTS:\n${scriptHints}` : '';
+
+    let prompt = applyTokenOrAppend(baseTemplate, '{context_block}', contextBlock);
+    prompt = applyTokenOrAppend(prompt, '{script_hints}', scriptHintsBlock);
+
+    return stripPromptPlaceholders(prompt);
 }
 
 /**
@@ -239,69 +273,50 @@ If no issues found, return empty issues array. Be specific about line numbers.`;
 // ============================================
 
 /**
- * Stage 2: Paleographic Review prompt.
- * Focuses on script-level letter confusion and abbreviation signs.
- * MUST NOT do lexical normalization or rewriting.
+ * Stage 2 default prompt (generic, domain-agnostic).
  */
-const PALEOGRAPHIC_REVIEW_PROMPT = `You are an expert paleographer specializing in historical handwriting analysis.
+const PALEOGRAPHIC_REVIEW_PROMPT = `You are a paleographic review specialist.
 
-TASK: Review the following transcription for paleographic reading errors (letterform misreadings).
+TASK:
+- Identify likely reading errors caused by letterform confusion.
 
 TRANSCRIPTION:
 {text}
 
 {context}
 
-INTERNAL REVIEW PROTOCOL (single API call):
-- Simulate a short internal exchange between:
-  A) Primary Paleographer (generates candidates)
-  B) Skeptical Verifier (challenges weak candidates)
-- Keep that exchange internal. Output only the final JSON.
-
-FOCUS AREAS:
-1. MINIM DISAMBIGUATION: Sequences of minims (vertical strokes) that may have been misread. Common confusions: n/u, m/in, iu/ni, im/um, nn/nu, mi/nu, uu/w. Resolve by checking context.
-2. LETTER CONFUSION: Script-specific confusions: long-s vs f, c vs t, c vs e, r vs s, d vs cl, i vs l, v vs b.
-3. ABBREVIATION SIGNS: Nasal bars (macrons indicating m/n), suspension marks, special signs (e.g., p with stroke = per/par/pro, tironian et).
-4. LIGATURES: Misread ligatures or combined letterforms (st, ct, fi ligatures).
-
 RULES:
-- Propose corrections ONLY for paleographic reading errors, not grammar/style/content.
-- Anchor every issue to an exact source fragment ("text" field) from one line.
-- If you cannot point to an exact fragment, do not emit an issue.
-- Do NOT modernize or normalize historical spellings. "Iohannes" is not an error by itself.
-- Do NOT expand abbreviations; only flag potential misread abbreviation signs.
-- Each "suggestion" must be a single-line replacement (no \\n).
-- If multiple plausible readings remain, provide "alternatives".
-- Be conservative: prefer fewer, high-quality issues over speculative output.
+- Focus on script/letterform reading issues only.
+- Do not perform broad linguistic rewriting.
+- Anchor each issue to an exact fragment.
+- Suggest only single-line replacements.
+- Be conservative and evidence-based.
 ${ISSUE_TYPE_INSTRUCTION}
 Respond ONLY with valid JSON:
 {
   "confidence": "confident|likely|uncertain",
-  "reasoning": "Brief assessment of paleographic difficulty",
+  "reasoning": "Brief paleographic assessment",
   "issues": [
     {
       "line": 1,
-      "text": "original text fragment",
-      "suggestion": "corrected reading",
+      "text": "fragment from transcription",
+      "suggestion": "corrected fragment",
       "type": "spelling|abbreviation|illegible|ocr_artifact",
-      "explanation": "paleographic rationale (concise, evidence-based)",
+      "explanation": "concise rationale",
       "alternatives": ["optional alternative reading"],
       "stage": "paleographic",
       "score": 0.85
     }
   ]
-}
-
-If no paleographic issues found, return empty issues array. Be specific about line numbers.`;
+}`;
 
 /**
- * Stage 3: Philological Review prompt.
- * Focuses on language-level plausibility after paleographic pass.
- * MUST NOT delete uncertainty markers without reason.
+ * Stage 3 default prompt (generic, domain-agnostic).
  */
-const PHILOLOGICAL_REVIEW_PROMPT = `You are a philologist specializing in historical texts and manuscript traditions.
+const PHILOLOGICAL_REVIEW_PROMPT = `You are a philological review specialist.
 
-TASK: Review the transcription for linguistic/contextual plausibility issues that remain after paleographic review.
+TASK:
+- Identify linguistic/contextual plausibility issues that remain after paleographic review.
 
 TRANSCRIPTION:
 {text}
@@ -310,61 +325,46 @@ TRANSCRIPTION:
 
 {previous_issues}
 
-INTERNAL REVIEW PROTOCOL (single API call):
-- Simulate a short internal exchange between:
-  A) Latin Philologist (morphology/syntax/formula specialist)
-  B) Historical Language Verifier (checks variant legitimacy, avoids over-correction)
-- Keep that exchange internal. Output only the final JSON.
-
-FOCUS AREAS:
-1. MORPHOLOGY & SYNTAX: Words that are morphologically impossible or syntactically implausible in the text's language and period (e.g., wrong case ending, impossible verb form).
-2. FORMULA RECOGNITION: Liturgical, legal, or administrative formulas where standard wording is expected. If a known formula is nearly correct but has a clear error, propose the standard reading.
-3. LEXICAL PLAUSIBILITY: Words that do not exist in the language/period vocabulary and are likely misreadings rather than rare forms.
-4. ABBREVIATION CONTEXT: Abbreviation marks where the expansion is ambiguous and the linguistic context can resolve it (e.g., "p" with stroke: per/par/pro -- context decides).
-
 RULES:
-- Do NOT correct valid historical spellings, dialectal forms, or archaic grammar.
-- Treat medieval Latin and orthographic variation as normal unless strong counter-evidence exists.
-- Do NOT delete or alter [?] or [illegible] unless you provide a clearly justified, confident reading.
-- Do NOT repeat issues already flagged in PREVIOUS ISSUES.
-- Anchor every issue to an exact source fragment ("text" field) from one line.
-- If you cannot point to an exact fragment, do not emit an issue.
-- Each "suggestion" must be a single-line replacement (no \\n).
-- Be conservative: only flag issues where linguistic evidence clearly supports a correction.
-- Prefer the simplest explanation (likely misread/scribal slip before rare emendation).
+- Focus on morphology/syntax/formula plausibility.
+- Do not over-correct valid historical variation.
+- Do not repeat issues from previous stage.
+- Anchor each issue to an exact fragment.
+- Suggest only single-line replacements.
 ${ISSUE_TYPE_INSTRUCTION}
 Respond ONLY with valid JSON:
 {
   "confidence": "confident|likely|uncertain",
-  "reasoning": "Brief assessment of linguistic quality",
+  "reasoning": "Brief philological assessment",
   "issues": [
     {
       "line": 1,
-      "text": "original text fragment",
-      "suggestion": "corrected reading",
+      "text": "fragment from transcription",
+      "suggestion": "corrected fragment",
       "type": "spelling|plausibility|abbreviation|historical",
-      "explanation": "linguistic/philological rationale (concise, evidence-based)",
+      "explanation": "concise rationale",
       "stage": "philological",
       "score": 0.80
     }
   ]
-}
-
-If no philological issues found, return empty issues array. Be specific about line numbers.`;
+}`;
 
 /**
  * Build paleographic review prompt (Stage 2)
  * @param {string} text - Transcription text to review
  * @param {string} contextDescription - Document context string
+ * @param {object|null} [promptConfig] - Prompt profile + stage overrides
  * @returns {string} Complete prompt
  */
-function buildPaleographicReviewPrompt(text, contextDescription = '') {
+function buildPaleographicReviewPrompt(text, contextDescription = '', promptConfig = null) {
+    const baseTemplate = resolveStagePromptTemplate(PROMPT_STAGE_KEYS.STAGE2, promptConfig, PALEOGRAPHIC_REVIEW_PROMPT);
     const contextBlock = contextDescription
         ? `DOCUMENT CONTEXT:\n${contextDescription}`
         : 'No additional context provided.';
-    return PALEOGRAPHIC_REVIEW_PROMPT
-        .replace('{text}', text)
-        .replace('{context}', contextBlock);
+
+    let prompt = applyTokenOrAppend(baseTemplate, '{text}', text || '');
+    prompt = applyTokenOrAppend(prompt, '{context}', contextBlock);
+    return stripPromptPlaceholders(prompt);
 }
 
 /**
@@ -372,19 +372,22 @@ function buildPaleographicReviewPrompt(text, contextDescription = '') {
  * @param {string} text - Transcription text to review
  * @param {string} contextDescription - Document context string
  * @param {Array} previousIssues - Issues from Stage 2 (to avoid duplicates)
+ * @param {object|null} [promptConfig] - Prompt profile + stage overrides
  * @returns {string} Complete prompt
  */
-function buildPhilologicalReviewPrompt(text, contextDescription = '', previousIssues = []) {
+function buildPhilologicalReviewPrompt(text, contextDescription = '', previousIssues = [], promptConfig = null) {
+    const baseTemplate = resolveStagePromptTemplate(PROMPT_STAGE_KEYS.STAGE3, promptConfig, PHILOLOGICAL_REVIEW_PROMPT);
     const contextBlock = contextDescription
         ? `DOCUMENT CONTEXT:\n${contextDescription}`
         : 'No additional context provided.';
     const issuesBlock = previousIssues.length > 0
         ? `PREVIOUS ISSUES (already flagged, do NOT repeat):\n${previousIssues.map(i => `- Line ${i.line}: "${i.text}" -> "${i.suggestion}" (${i.type})`).join('\n')}`
         : 'No previous issues flagged.';
-    return PHILOLOGICAL_REVIEW_PROMPT
-        .replace('{text}', text)
-        .replace('{context}', contextBlock)
-        .replace('{previous_issues}', issuesBlock);
+
+    let prompt = applyTokenOrAppend(baseTemplate, '{text}', text || '');
+    prompt = applyTokenOrAppend(prompt, '{context}', contextBlock);
+    prompt = applyTokenOrAppend(prompt, '{previous_issues}', issuesBlock);
+    return stripPromptPlaceholders(prompt);
 }
 
 /**
@@ -743,7 +746,11 @@ class LLMService {
     // Build prompt with optional context from expert
     const contextDescription = options.context || '';
     const structuredContext = options.structuredContext || null;
-    const prompt = options.prompt || buildTranscriptionPrompt(contextDescription, structuredContext);
+    const prompt = options.prompt || buildTranscriptionPrompt(
+      contextDescription,
+      structuredContext,
+      options.promptConfig || null
+    );
     const model = this.getCurrentModel();
     console.log(`[LLM] model=${model} image=${imageBase64 ? 'yes' : 'no'} context=${contextDescription ? 'yes' : 'no'}`);
 
