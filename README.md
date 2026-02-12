@@ -34,6 +34,10 @@ This fork is maintained by **Robert Klugseder** (Austrian Academy of Sciences, A
 - **Illuminated initials description** via Google Gemini (art-historical analysis)
 - **Explicit validation provider configuration** for OCR-only models
 - **Responsive panel layouts** with resize handles and CSS Container Queries
+- **LLM Review Apply** -- apply LLM suggestions directly into the editor
+- **HTR Post-Processing Pipeline** (feature-flagged) with multi-stage normalization
+- **LLM Thinking Panel** -- real-time streaming of LLM reasoning (Gemini, Anthropic, Ollama)
+- **Prompt Profiles** -- scenario-based prompt architecture for different document types
 - **Improved UX** with custom dialogs, storage quota display, and tooltips
 
 ## Quick Start
@@ -125,6 +129,54 @@ Key changes:
 - Vertical resize for description vs. transcription panes (04c29d5)
 - UI refinements for controls, indicators, and dialog positioning (cd1c227, d50339f, a42ff18, 7cfa5b1, e952df4, afbfc2f)
 
+---
+
+### Fork Milestone 6: Validation Persistence and LLM Review Apply (2026-02-11)
+
+Key changes:
+
+- Unified terminology: rule-based checks = "Validation", LLM-based review = "LLM Review" (1c3a50e, 03434fd)
+- Validation results persistence: summary, timestamp, custom prompt survive page reload (6b6e8cc)
+- LLM Review Apply: apply LLM suggestions directly into the editor with one click (06d3c6f)
+- Undo support for applied LLM Review suggestions (45d2eb9)
+- Robust apply matching for multi-column layouts and abbreviated entries (3af669f)
+
+---
+
+### Fork Milestone 7: HTR Post-Processing Pipeline (2026-02-11 to 2026-02-12)
+
+Key changes:
+
+- Post-processing orchestrator with Stage 2 (normalization) + Stage 3 (enrichment) pipeline (9b70f44)
+- Strict JSON normalization, stage metadata, confidence and marker canonicalization (9b70f44)
+- Document context extension: scriptType, century, region, languages, textType, knownText (9b70f44)
+- Stage badges and toggles in validation panel for per-stage result filtering (9b70f44)
+- Feature-flagged: `FEATURE_FLAGS.postprocessPipelineV1` (default: off) (9b70f44, 4bed38e)
+- HTR post-processing strategy document with expert analysis (59db113)
+
+---
+
+### Fork Milestone 8: LLM Thinking Panel (2026-02-12)
+
+Key changes:
+
+- Real-time display of LLM thinking/reasoning during transcription, validation, and description (beb98e6)
+- Streaming support for 3 providers: Gemini (SSE), Anthropic (Extended Thinking), Ollama (`<think>` tags) (beb98e6)
+- Automatic fallback to non-streaming on stream error (beb98e6)
+- Collapse/expand button for thinking panel (6fc62c1)
+- Thinking panel stays above validation loading overlay via z-index layering (6fc62c1)
+
+---
+
+### Fork Milestone 9: Prompt Profiles and Validation Panel Resize (2026-02-12)
+
+Key changes:
+
+- Prompt profile architecture with scenario-based profiles: Generic Historical Document, Medieval Latin Manuscript, Early Modern Letter (acf0709)
+- Stage override support for advanced per-stage prompt customization (acf0709)
+- Vertical resize handles for validation panel sub-sections (thinking, validation, LLM review) (e2f9f90)
+- Keyboard, mouse, and double-click-reset support for vertical resize (e2f9f90)
+
 <!-- CHANGELOG_END -->
 
 ---
@@ -135,7 +187,10 @@ Baseline methodology and early system design come from the upstream project ([Di
 This fork extends that base with additional persistence, workflow, and UX capabilities.
 
 - **LLM providers**: Gemini, OpenAI, Anthropic, Ollama, Mistral OCR
-- **Hybrid validation**: deterministic Validation + LLM Review
+- **Hybrid validation**: deterministic Validation + LLM Review with apply-to-editor
+- **LLM Thinking Panel**: real-time streaming of LLM reasoning (Gemini SSE, Anthropic Extended Thinking, Ollama `<think>` tags)
+- **Prompt profiles**: scenario-based prompt architecture (Generic, Medieval Latin, Early Modern Letter) with stage overrides
+- **HTR Post-Processing**: multi-stage normalization pipeline (Stage 2 + 3) with confidence/marker canonicalization (feature-flagged)
 - **Import paths**: image upload, PAGE-XML, METS-XML, IIIF manifests
 - **Export formats**: TXT, JSON, Markdown, PAGE-XML, TEI-XML, ZIP (multi-page)
 - **Project persistence**: IndexedDB-backed projects/sessions/images with quota display
@@ -143,7 +198,7 @@ This fork extends that base with additional persistence, workflow, and UX capabi
 - **Optional API key persistence**: user-controlled storage in IndexedDB
 - **Describe feature**: Gemini-based image description for illuminated initials
 - **Batch operations**: transcription, validation, and description across multi-page documents
-- **Responsive workspace**: 3-column resize + vertical editor split
+- **Responsive workspace**: 3-column resize + vertical editor/validation split with keyboard support
 - **PWA support**: installable app with offline asset caching
 
 ---
