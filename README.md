@@ -22,6 +22,10 @@ This work, like the original, is licensed under the [Creative Commons Attributio
 
 ---
 
+## [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/rklugsederoeaw/co-ocr-htr-rk)
+
+---
+
 ## About This Fork
 
 This fork is maintained by **Robert Klugseder** (Austrian Academy of Sciences, ACDH) and extends coOCR/HTR with features for medieval manuscript workflows:
@@ -290,12 +294,12 @@ Primary runtime network traffic is LLM API calls and optional IIIF resources.
 
 ### Runtime Layers (Current)
 
-| Layer | Modules | Responsibility |
-| --- | --- | --- |
-| UI | `docs/index.html`, `docs/js/viewer.js`, `docs/js/editor.js`, `docs/js/ui.js`, `docs/js/components/*` | Viewer/editor/dialog UX, upload flows, panel interactions |
-| State/Event | `docs/js/state.js` | Central `AppState` (`EventTarget`) with domain state + app events |
-| Services | `docs/js/services/llm.js`, `docs/js/services/validation.js`, `docs/js/services/export.js`, `docs/js/services/storage.js`, `docs/js/services/parsers/*` | LLM abstraction, hybrid validation, export, persistence, XML parsing |
-| PWA | `docs/js/pwa.js`, `docs/sw.js`, `docs/manifest.json` | Service worker caching, offline indicator, installability |
+| Layer       | Modules                                                                                                                                                | Responsibility                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| UI          | `docs/index.html`, `docs/js/viewer.js`, `docs/js/editor.js`, `docs/js/ui.js`, `docs/js/components/*`                                                   | Viewer/editor/dialog UX, upload flows, panel interactions            |
+| State/Event | `docs/js/state.js`                                                                                                                                     | Central `AppState` (`EventTarget`) with domain state + app events    |
+| Services    | `docs/js/services/llm.js`, `docs/js/services/validation.js`, `docs/js/services/export.js`, `docs/js/services/storage.js`, `docs/js/services/parsers/*` | LLM abstraction, hybrid validation, export, persistence, XML parsing |
+| PWA         | `docs/js/pwa.js`, `docs/sw.js`, `docs/manifest.json`                                                                                                   | Service worker caching, offline indicator, installability            |
 
 ### State and Event Model
 
