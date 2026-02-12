@@ -49,6 +49,9 @@ Tests use Vitest with jsdom environment. Test files live in `docs/tests/`. E2E t
 appState.setTranscription(data)      --> dispatches 'transcriptionComplete'
 appState.setValidationResults(data)  --> dispatches 'validationComplete'
 appState.setSelection(line)          --> dispatches 'selectionChanged'
+appState.emitThinkingStart(detail)   --> dispatches 'thinkingStart'
+appState.emitThinkingChunk(detail)   --> dispatches 'thinkingChunk'
+appState.emitThinkingComplete(detail)--> dispatches 'thinkingComplete'
 ```
 
 Multi-page documents store per-page transcriptions in `appState.data.pageTranscriptions[pageId]`. The `document` and `transcription` fields always reflect the **current page**.
@@ -73,13 +76,14 @@ Multi-page documents store per-page transcriptions in `appState.data.pageTranscr
 | `dialogs.js` | `dialogManager` | Modal dialogs (API config, export, help) |
 | `context.js` | `contextManager` | Document context for enhanced transcription |
 | `description.js` | `descriptionPanel` | Illuminated initials visual description |
+| `thinking.js` | `thinkingPanel` | Real-time LLM thinking/reasoning display |
 | `batch-progress.js` | `batchProgress` | Batch operation progress panel |
 
 ### Services (`js/services/`)
 
 | Service | Singleton | Provides |
 |---------|-----------|----------|
-| `llm.js` | `llmService` | Multi-provider LLM abstraction (Gemini, OpenAI, Anthropic, Ollama) |
+| `llm.js` | `llmService` | Multi-provider LLM abstraction (Gemini, OpenAI, Anthropic, Ollama, Mistral OCR) with optional streaming |
 | `validation.js` | `validationEngine` | Deterministic rules + LLM-as-judge hybrid validation |
 | `storage.js` | `storage` | localStorage (settings/prompts) + IndexedDB (projects/sessions/images/apiKeys) |
 | `export.js` | `exportService` | Export to PAGE-XML, TEI-XML, TXT, JSON, Markdown, ZIP |
@@ -87,6 +91,17 @@ Multi-page documents store per-page transcriptions in `appState.data.pageTranscr
 | `samples.js` | `samplesService` | Demo document loading |
 | `parsers/page-xml.js` | `pageXMLParser` | PAGE-XML import/export |
 | `parsers/mets-xml.js` | `metsXMLParser` | METS-XML multi-page import |
+
+### Utilities (`js/utils/`)
+
+| Utility | Export | Provides |
+|---------|--------|----------|
+| `constants.js` | named constants | Timeouts, feature flags, localStorage keys, default ratios |
+| `textFormatting.js` | `escapeHtml()` etc. | XSS-safe HTML escaping, text formatting helpers |
+| `panelResize.js` | `initPanelResize()` | Horizontal 3-column resize with drag, keyboard, persistence |
+| `validationResize.js` | `initValidationResize()` | Vertical resize for validation sub-sections (thinking/validation/LLM review) |
+| `dom.js` | DOM helpers | Element creation and query utilities |
+| `tooltips.js` | tooltip helpers | Info tooltip rendering |
 
 ### Data Flow
 
@@ -100,9 +115,12 @@ Transcribe btn --> llmService.transcribe(image, provider)
                --> viewer shows region overlays (if coordinates present)
 
 Validate btn --> validationEngine.validate(text, segments, options)
-             --> deterministic rules + optional LLM judge
+             --> deterministic rules + optional LLM review
              --> appState.setValidationResults(results)
              --> validation panel renders issues
+             --> (if streaming) thinkingStart/Chunk/Complete events --> thinking panel
+
+Apply btn  --> editor applies LLM suggestion inline (undo-able)
 
 Export btn --> exportService.export(format)
            --> downloads file
@@ -133,7 +151,10 @@ Design decisions are documented in `knowledge/`:
 |---------|---------|
 | Critical Expert in the Loop | Human validates, machine assists |
 | Categorical Confidence | sure/check-worthy/problematic (no percentages) |
-| Hybrid Validation | Deterministic rules + LLM-Judge |
+| Hybrid Validation | Deterministic rules (Validation) + LLM-as-judge (LLM Review) |
+| LLM Review Apply | One-click apply of LLM suggestions into the editor |
+| Prompt Profiles | Scenario-based prompt sets (Generic, Medieval Latin, Early Modern Letter) |
+| LLM Thinking Panel | Real-time streaming display of LLM reasoning process |
 | Custom Validation Prompt | Optional user-defined validation prompt |
 
 ## Conventions
