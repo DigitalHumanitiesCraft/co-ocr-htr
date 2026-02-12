@@ -360,11 +360,11 @@ export function applySuggestionAtLine(params = {}) {
         return { status: 'failed', message: 'Editor is not ready.' };
     }
 
-    const line = Number.parseInt(params.line, 10);
+    const requestedLine = Number.parseInt(params.line, 10);
     const sourceText = typeof params.sourceText === 'string' ? params.sourceText : '';
     const suggestion = typeof params.suggestion === 'string' ? params.suggestion : '';
 
-    if (!Number.isInteger(line) || line <= 0) {
+    if (!Number.isInteger(requestedLine) || requestedLine <= 0) {
         return { status: 'failed', message: 'Invalid line number.' };
     }
 
@@ -373,7 +373,7 @@ export function applySuggestionAtLine(params = {}) {
     }
 
     const lines = structuredText.split('\n');
-    const lineIndex = line - 1;
+    let lineIndex = requestedLine - 1;
 
     if (lineIndex < 0 || lineIndex >= lines.length) {
         return { status: 'failed', message: 'Line is outside the current transcription.' };
@@ -381,37 +381,41 @@ export function applySuggestionAtLine(params = {}) {
 
     const targetLine = lines[lineIndex] || '';
     let updatedLine = null;
+    let remappedLine = null;
 
-    // Strategy 1: exact source-text match
+    // Strategy 1+2: line-local source-text match
     const hasSource = sourceText.trim().length > 0;
-    if (hasSource && targetLine.includes(sourceText)) {
-        const exactMatchCount = countPlainMatches(targetLine, sourceText);
-        if (exactMatchCount !== 1) {
-            return { status: 'ambiguous', message: 'Source text matches multiple times in this line.' };
-        }
-        updatedLine = targetLine.replace(sourceText, suggestion);
-    }
-
-    // Strategy 2: flexible whitespace-aware source-text match
     if (hasSource && updatedLine === null) {
-        const normalizedSource = normalizeWhitespace(sourceText);
-        const normalizedLine = normalizeWhitespace(targetLine);
-
-        if (normalizedSource && normalizedLine.includes(normalizedSource)) {
-            const flexiblePattern = new RegExp(
-                escapeRegExp(sourceText.trim()).replace(/\s+/g, '\\s+'),
-                'g'
-            );
-            const matchCount = countRegexMatches(targetLine, flexiblePattern);
-            if (matchCount === 1) {
-                updatedLine = targetLine.replace(flexiblePattern, suggestion);
-            } else {
-                return { status: 'ambiguous', message: 'Source text cannot be mapped uniquely in this line.' };
-            }
+        const localMatch = tryReplaceSourceInLine(targetLine, sourceText, suggestion);
+        if (localMatch.status === 'ambiguous') {
+            return { status: 'ambiguous', message: localMatch.message };
+        }
+        if (localMatch.status === 'applied') {
+            updatedLine = localMatch.updatedLine;
         }
     }
 
-    // Strategy 3: full-line fallback (only without source text)
+    // Strategy 3: document-wide fallback when line number is off but source match is unique.
+    if (hasSource && updatedLine === null) {
+        const candidates = [];
+
+        lines.forEach((candidateLine, idx) => {
+            const match = tryReplaceSourceInLine(candidateLine || '', sourceText, suggestion);
+            if (match.status === 'applied') {
+                candidates.push({ lineIndex: idx, updatedLine: match.updatedLine });
+            }
+        });
+
+        if (candidates.length === 1) {
+            lineIndex = candidates[0].lineIndex;
+            updatedLine = candidates[0].updatedLine;
+            remappedLine = lineIndex + 1;
+        } else if (candidates.length > 1) {
+            return { status: 'ambiguous', message: 'Source text appears in multiple lines. Apply manually.' };
+        }
+    }
+
+    // Strategy 4: full-line fallback (only without source text)
     if (!hasSource && updatedLine === null) {
         if (!targetLine.trim()) {
             return { status: 'ambiguous', message: 'Target line is empty.' };
@@ -424,8 +428,8 @@ export function applySuggestionAtLine(params = {}) {
     }
 
     // No-op guard (avoid noisy history entries)
-    if (updatedLine === targetLine) {
-        highlightEditorLine(line);
+    if (updatedLine === lines[lineIndex]) {
+        highlightEditorLine(lineIndex + 1);
         return { status: 'ambiguous', message: 'Suggestion does not change the target line.' };
     }
 
@@ -447,9 +451,18 @@ export function applySuggestionAtLine(params = {}) {
     }
 
     pushHistory();
-    highlightEditorLine(line);
+    const appliedLine = lineIndex + 1;
+    highlightEditorLine(appliedLine);
 
-    return { status: 'applied', message: `Applied suggestion at line ${line}.` };
+    if (remappedLine !== null && remappedLine !== requestedLine) {
+        return {
+            status: 'applied',
+            line: appliedLine,
+            message: `Applied suggestion at line ${appliedLine} (requested line ${requestedLine}).`
+        };
+    }
+
+    return { status: 'applied', line: appliedLine, message: `Applied suggestion at line ${appliedLine}.` };
 }
 
 // ============ History (Undo/Redo) ============
@@ -820,4 +833,56 @@ function countRegexMatches(text, regex) {
     }
     const matches = text.match(regex);
     return matches ? matches.length : 0;
+}
+
+function buildFlexibleSourcePattern(sourceText, caseInsensitive = false) {
+    const flags = caseInsensitive ? 'gi' : 'g';
+    return new RegExp(
+        escapeRegExp((sourceText || '').trim()).replace(/\s+/g, '\\s+'),
+        flags
+    );
+}
+
+function tryReplaceSourceInLine(lineText, sourceText, suggestion) {
+    const source = (sourceText || '').trim();
+    if (!source) {
+        return { status: 'not-found' };
+    }
+
+    // 1) Exact case-sensitive substring match
+    if (lineText.includes(source)) {
+        const exactMatchCount = countPlainMatches(lineText, source);
+        if (exactMatchCount !== 1) {
+            return { status: 'ambiguous', message: 'Source text matches multiple times in this line.' };
+        }
+        return { status: 'applied', updatedLine: lineText.replace(source, () => suggestion) };
+    }
+
+    // 2) Flexible whitespace case-sensitive
+    const normalizedSource = normalizeWhitespace(source);
+    const normalizedLine = normalizeWhitespace(lineText);
+    if (normalizedSource && normalizedLine.includes(normalizedSource)) {
+        const flexiblePattern = buildFlexibleSourcePattern(source, false);
+        const matchCount = countRegexMatches(lineText, flexiblePattern);
+        if (matchCount > 1) {
+            return { status: 'ambiguous', message: 'Source text cannot be mapped uniquely in this line.' };
+        }
+        if (matchCount === 1) {
+            return { status: 'applied', updatedLine: lineText.replace(flexiblePattern, () => suggestion) };
+        }
+    }
+
+    // 3) Flexible whitespace case-insensitive
+    if (normalizedSource && normalizedLine.toLowerCase().includes(normalizedSource.toLowerCase())) {
+        const ciPattern = buildFlexibleSourcePattern(source, true);
+        const matchCount = countRegexMatches(lineText, ciPattern);
+        if (matchCount > 1) {
+            return { status: 'ambiguous', message: 'Source text cannot be mapped uniquely in this line.' };
+        }
+        if (matchCount === 1) {
+            return { status: 'applied', updatedLine: lineText.replace(ciPattern, () => suggestion) };
+        }
+    }
+
+    return { status: 'not-found' };
 }
