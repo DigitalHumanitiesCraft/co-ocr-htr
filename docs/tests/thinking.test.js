@@ -66,7 +66,7 @@ describe('ThinkingPanel', () => {
             });
 
             const header = document.getElementById('thinkingHeader');
-            expect(header.textContent).toBe('Transcription -- gemini/gemini-3-flash');
+            expect(header.textContent).toBe('Transcription -- LLM Thinking');
         });
 
         it('should clear previous content on new start', () => {
