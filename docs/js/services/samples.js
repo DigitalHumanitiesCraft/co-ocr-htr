@@ -7,10 +7,12 @@
 
 import { appState } from '../state.js';
 import { pageXMLParser } from './parsers/page-xml.js';
-import { metsXMLParser } from './parsers/mets-xml.js';
 import { loadIIIFManifest } from '../viewer.js';
 
 const SAMPLES_BASE = 'samples/';
+
+/** Timeout for sample fetch operations (15 seconds) */
+const FETCH_TIMEOUT_MS = 15_000;
 
 /**
  * Sample Loader Service
@@ -28,7 +30,9 @@ class SamplesService {
         if (this.manifest) return this.manifest;
 
         try {
-            const response = await fetch(`${SAMPLES_BASE}index.json`);
+            const response = await fetch(`${SAMPLES_BASE}index.json`, {
+                signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+            });
             if (!response.ok) {
                 throw new Error(`Failed to load samples manifest: ${response.status}`);
             }
@@ -92,7 +96,9 @@ class SamplesService {
     async loadSinglePageSample(sample) {
         // Load image
         const imageUrl = `${SAMPLES_BASE}${sample.image}`;
-        const imageResponse = await fetch(imageUrl);
+        const imageResponse = await fetch(imageUrl, {
+            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+        });
         if (!imageResponse.ok) {
             throw new Error(`Failed to load sample image: ${imageResponse.status}`);
         }
@@ -108,6 +114,9 @@ class SamplesService {
         // Get image dimensions
         const dimensions = await this.getImageDimensions(dataUrl);
 
+        // Ensure project exists (auto-creates from sample name)
+        await appState.ensureProject(sample.name || file.name);
+
         // Set document state
         appState.setDocument(file, dataUrl);
         appState.setImageDimensions(dimensions.width, dimensions.height);
@@ -116,7 +125,9 @@ class SamplesService {
         if (sample.pageXml) {
             try {
                 const xmlUrl = `${SAMPLES_BASE}${sample.pageXml}`;
-                const xmlResponse = await fetch(xmlUrl);
+                const xmlResponse = await fetch(xmlUrl, {
+                    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+                });
                 if (xmlResponse.ok) {
                     const xmlContent = await xmlResponse.text();
                     const parsed = pageXMLParser.parse(xmlContent);
@@ -151,7 +162,9 @@ class SamplesService {
             const imageUrl = `${SAMPLES_BASE}${pageDef.image}`;
 
             try {
-                const imageResponse = await fetch(imageUrl);
+                const imageResponse = await fetch(imageUrl, {
+                    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+                });
                 if (!imageResponse.ok) {
                     console.warn(`Failed to load page ${i + 1}: ${imageResponse.status}`);
                     continue;
@@ -175,7 +188,9 @@ class SamplesService {
                 if (pageDef.pageXml) {
                     try {
                         const xmlUrl = `${SAMPLES_BASE}${pageDef.pageXml}`;
-                        const xmlResponse = await fetch(xmlUrl);
+                        const xmlResponse = await fetch(xmlUrl, {
+                            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+                        });
                         if (xmlResponse.ok) {
                             page.pageXmlContent = await xmlResponse.text();
                         }
@@ -193,6 +208,9 @@ class SamplesService {
         if (pages.length === 0) {
             throw new Error('No pages could be loaded');
         }
+
+        // Ensure project exists for multi-page sample
+        await appState.ensureProject(sample.name || 'Multi-page Sample');
 
         // Set pages in state
         appState.setPages(pages);
@@ -240,6 +258,7 @@ class SamplesService {
                 resolve({ width: img.width, height: img.height });
             };
             img.onerror = () => {
+                console.warn('[Samples] Failed to load image for dimensions, using fallback');
                 resolve({ width: 1000, height: 1000 });
             };
             img.src = dataUrl;

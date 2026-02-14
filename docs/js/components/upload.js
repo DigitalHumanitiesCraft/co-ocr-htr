@@ -30,6 +30,10 @@ class UploadManager {
      * Initialize upload functionality
      */
     init() {
+        // Guard against double-initialization (would accumulate listeners)
+        if (this._initialized) return;
+        this._initialized = true;
+
         this.createFileInput();
         this.bindEvents();
         this.setupDropZone();
@@ -101,7 +105,7 @@ class UploadManager {
 
         // Highlight drop zone when dragging over
         ['dragenter', 'dragover'].forEach(eventName => {
-            this.dropZone.addEventListener(eventName, (e) => {
+            this.dropZone.addEventListener(eventName, (_e) => {
                 if (!this.isDragging) {
                     this.isDragging = true;
                     this.showDropFeedback();
@@ -304,15 +308,21 @@ class UploadManager {
 
                 // Get image dimensions
                 const img = new Image();
-                img.onload = () => {
-                    appState.setDocument(file, dataUrl);
-                    appState.setImageDimensions(img.width, img.height);
+                img.onload = async () => {
+                    try {
+                        // Ensure a project exists (auto-creates from filename)
+                        await appState.ensureProject(file.name);
+                        appState.setDocument(file, dataUrl);
+                        appState.setImageDimensions(img.width, img.height);
 
-                    // Hide demo indicator when user uploads their own file
-                    this.hideDemoIndicator();
+                        // Hide demo indicator when user uploads their own file
+                        this.hideDemoIndicator();
 
-                    dialogManager.showToast(`Loaded: ${file.name}`, 'success');
-                    resolve();
+                        dialogManager.showToast(`Loaded: ${file.name}`, 'success');
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
                 };
                 img.onerror = () => {
                     reject(new Error('Failed to load image'));
@@ -403,7 +413,7 @@ class UploadManager {
             }
 
             // Set pages in state for multi-page navigation
-            const pages = metsData.pages.map((page, index) => ({
+            const pages = metsData.pages.map((page, _index) => ({
                 id: page.id,
                 order: page.order,
                 image: page.image,
@@ -412,6 +422,9 @@ class UploadManager {
                 height: page.height,
                 label: `Page ${page.order}`
             }));
+
+            // Ensure project exists for METS upload
+            await appState.ensureProject(metsData.metadata?.title || file.name);
 
             // Set pages in state
             appState.setPages(pages);

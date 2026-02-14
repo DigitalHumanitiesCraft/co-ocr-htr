@@ -2,18 +2,27 @@
   "samples": [
     {
       "id": "flechte-flora",
-      "name": "Flora Lichenes (19. Jh.)",
-      "description": "Botanischer Fachtext über Flechten - Fraktur/Antiqua gemischt (OCR Demo)",
-      "language": "Deutsch/Latein",
+      "name": "Flora Lichenes (19th c.)",
+      "description": "Specialized botanical text on lichens - mixed Fraktur/Antiqua (OCR demo)",
+      "language": "German/Latin",
       "script": "Fraktur",
       "type": "print",
       "image": "flechte/page_001.jpg"
     },
+     {
+      "id": "chorbuch-geras",
+      "name": "Gradual from Geras Monastery (2nd half, 15th c.)",
+      "description": "Choir book with chants for the Mass and elaborate illumination",
+      "language": "Latin",
+      "script": "Textura",
+      "type": "manuscript",
+      "image": "chorbuch-geras/page_001.jpg"
+    },
     {
       "id": "raitbuch-docta",
-      "name": "Raitbuch (15. Jh.) - 4 Seiten",
-      "description": "OÖKAM Raitbuch 2, Kurrentschrift - DoCTA Projekt (HTR Demo)",
-      "language": "Deutsch (Frühneuhochdeutsch)",
+      "name": "Raitbuch (15th c.) - 4 pages",
+      "description": "OÖKAM Raitbuch 2, Kurrent script - DoCTA project (HTR demo)",
+      "language": "German (Early New High German)",
       "script": "Kurrent",
       "type": "manuscript",
       "pages": [
@@ -25,9 +34,9 @@
     },
     {
       "id": "raitbuch-single",
-      "name": "Raitbuch (15. Jh.) - Einzelseite",
-      "description": "OÖKAM Raitbuch 2, fol. 1v-2r - Kurrentschrift (HTR Demo)",
-      "language": "Deutsch (Frühneuhochdeutsch)",
+      "name": "Raitbuch (15th c.) - Single page",
+      "description": "OÖKAM Raitbuch 2, fol. 1v-2r - Kurrent script (HTR demo)",
+      "language": "German (Early New High German)",
       "script": "Kurrent",
       "type": "manuscript",
       "image": "raitbuch/fol_1v-2r.jpg"
@@ -35,7 +44,7 @@
     {
       "id": "arabic-historical-magazines",
       "name": "Arabic Historical Magazines (1937)",
-      "description": "Arabische Zeitschriften via IIIF - Internet Archive (RTL-Script Test)",
+      "description": "Arabic periodicals via IIIF - Internet Archive (RTL script test)",
       "language": "Arabic",
       "script": "Arabic",
       "type": "print",
@@ -43,9 +52,9 @@
     },
     {
       "id": "wecker-multipage",
-      "name": "Antidotarium (1617) - 6 Seiten",
-      "description": "Medizinisches Fachbuch mit PAGE-XML Transkription (Multi-Page Demo)",
-      "language": "Latein",
+      "name": "Antidotarium (1617) - 6 pages",
+      "description": "Specialized medical book with PAGE-XML transcription (multi-page demo)",
+      "language": "Latin",
       "type": "print",
       "pages": [
         { "id": "p010", "image": "wecker/0010_p010.jpg", "pageXml": "wecker/0010_p010.xml" },
@@ -58,26 +67,26 @@
     },
     {
       "id": "wecker-p015",
-      "name": "Antidotarium (1617), S. 15",
-      "description": "Medizinisches Fachbuch - Einzelseite mit PAGE-XML",
-      "language": "Latein",
+      "name": "Antidotarium (1617), p. 15",
+      "description": "Specialized medical book - single page with PAGE-XML",
+      "language": "Latin",
       "type": "print",
       "image": "wecker/0015_p015.jpg",
       "pageXml": "wecker/0015_p015.xml"
     },
     {
       "id": "hsa-letter-2261",
-      "name": "HSA Brief 2261",
-      "description": "Handschriftlicher Brief - Nur Bild",
-      "language": "Deutsch/Französisch",
+      "name": "HSA Letter 2261",
+      "description": "Handwritten letter - image only",
+      "language": "German/French",
       "type": "letter",
       "image": "hsa-letter/image.jpg"
     },
     {
       "id": "karteikarte-1",
-      "name": "Karteikarte",
-      "description": "Handschriftliche Karteikarte - Nur Bild",
-      "language": "Deutsch",
+      "name": "Index Card",
+      "description": "Handwritten index card - image only",
+      "language": "German",
       "type": "card",
       "image": "karteikarte/image.jpg"
     }

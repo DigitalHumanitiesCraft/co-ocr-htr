@@ -9,14 +9,15 @@ import { storage } from '../services/storage.js';
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
 import { loadIIIFManifest } from '../viewer.js';
-import { getById, select, selectAll, show, hide, focusDelayed } from '../utils/dom.js';
+import { getById, select, selectAll, show, hide } from '../utils/dom.js';
 import { escapeHtml } from '../utils/textFormatting.js';
-import { IIIF_CONTEXT_V3, IIIF_VERSION, TOAST_DURATION_DEFAULT, TOAST_ANIMATION_DURATION, PAGE_RELOAD_DELAY, DIALOG_FOCUS_DELAY, DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
+import { DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
 
 // Model-to-provider mapping for simplified UI
 const MODEL_PROVIDER_MAP = {
     'gemini-3-flash-preview': 'gemini',
     'gemini-3-pro-preview': 'gemini',
+    'mistral-ocr-latest': 'mistral',
     'ollama:deepseek-ocr': 'ollama',
     'ollama:llava': 'ollama',
     'ollama:llama3.2-vision': 'ollama'
@@ -26,14 +27,16 @@ const MODEL_PROVIDER_MAP = {
 const API_KEY_URLS = {
     gemini: 'https://aistudio.google.com/apikey',
     openai: 'https://platform.openai.com/api-keys',
-    anthropic: 'https://console.anthropic.com/settings/keys'
+    anthropic: 'https://console.anthropic.com/settings/keys',
+    mistral: 'https://console.mistral.ai/api-keys'
 };
 
 // API key placeholders by provider
 const API_KEY_PLACEHOLDERS = {
     gemini: 'AIza...',
     openai: 'sk-...',
-    anthropic: 'sk-ant-...'
+    anthropic: 'sk-ant-...',
+    mistral: 'mi-...'
 };
 
 /**
@@ -51,6 +54,10 @@ class DialogManager {
      * Initialize all dialogs
      */
     init() {
+        // Guard against double-initialization (would accumulate listeners)
+        if (this._initialized) return;
+        this._initialized = true;
+
         // Cache dialog elements
         this.dialogs.apiKey = getById('apiKeyDialog');
         this.dialogs.export = getById('exportDialog');
@@ -82,13 +89,21 @@ class DialogManager {
             });
         });
 
-        // Close on backdrop click
+        // Close on backdrop click (only if mousedown also happened on backdrop)
         Object.values(this.dialogs).forEach(dialog => {
             if (!dialog) return;
+            let mouseDownTarget = null;
+
+            dialog.addEventListener('mousedown', (e) => {
+                mouseDownTarget = e.target;
+            });
+
             dialog.addEventListener('click', (e) => {
-                if (e.target === dialog) {
+                // Only close if both mousedown and click happened on the backdrop
+                if (e.target === dialog && mouseDownTarget === dialog) {
                     this.closeDialog(dialog);
                 }
+                mouseDownTarget = null; // Reset for next interaction
             });
         });
 
@@ -184,11 +199,20 @@ class DialogManager {
         const customModelInput = getById('llmModelCustom');
         const securityCheckbox = getById('securityAcknowledge');
         const saveBtn = select('#saveApiKeys', dialog);
+        const validationSection = getById('validationProviderSection');
+        const validationModelSelect = getById('validationModel');
+        const validationApiKeyWrapper = getById('validationApiKeyWrapper');
+        const validationApiKeyInput = getById('validationApiKey');
 
         // Update UI based on selected model
         const updateUIForModel = () => {
             const modelValue = modelSelect?.value || '';
-            const provider = this.getProviderFromModel(modelValue);
+            // Resolve effective model (use custom input value if "custom" selected)
+            const effectiveModel = modelValue === 'custom' && customModelInput?.value
+                ? customModelInput.value.trim()
+                : modelValue;
+            const provider = this.getProviderFromModel(effectiveModel);
+            const isOcrOnly = this._isModelOcrOnly(effectiveModel);
 
             // Update hidden provider field
             const providerInput = getById('llmProvider');
@@ -219,6 +243,16 @@ class DialogManager {
                 this.updateApiKeyHint(provider);
             }
 
+            // Show/hide validation section
+            if (validationSection) {
+                validationSection.hidden = !isOcrOnly;
+            }
+
+            // Auto-fill validation provider if same API key exists
+            if (isOcrOnly && validationModelSelect) {
+                this._autoFillValidationProvider();
+            }
+
             // Update save button state
             if (securityCheckbox && saveBtn) {
                 if (provider === 'ollama') {
@@ -231,9 +265,52 @@ class DialogManager {
             this.currentProvider = provider;
         };
 
+        // Update validation UI when validation model changes
+        const updateValidationUI = () => {
+            const validationModelValue = validationModelSelect?.value || '';
+            const validationProvider = this._getProviderFromValidationModel(validationModelValue);
+
+            // Show/hide validation API key wrapper (hidden for Ollama or empty selection)
+            if (validationApiKeyWrapper) {
+                validationApiKeyWrapper.hidden = !validationModelValue || validationProvider === 'ollama';
+
+                // Update placeholder and link
+                if (validationApiKeyInput && validationProvider && validationProvider !== 'ollama') {
+                    validationApiKeyInput.placeholder = API_KEY_PLACEHOLDERS[validationProvider] || 'API Key';
+
+                    // Auto-fill from memory if available
+                    const memoryKey = llmService.providers[validationProvider]?.apiKey;
+                    if (memoryKey && !validationApiKeyInput.value) {
+                        validationApiKeyInput.value = memoryKey;
+                    }
+                }
+
+                const validationApiKeyLink = getById('validationApiKeyLink');
+                if (validationApiKeyLink && API_KEY_URLS[validationProvider]) {
+                    validationApiKeyLink.href = API_KEY_URLS[validationProvider];
+                    const providerNames = {
+                        gemini: 'Google AI Studio',
+                        openai: 'OpenAI',
+                        anthropic: 'Anthropic'
+                    };
+                    validationApiKeyLink.textContent = providerNames[validationProvider] || validationProvider;
+                }
+            }
+        };
+
         // Model selection change
         if (modelSelect) {
             modelSelect.addEventListener('change', updateUIForModel);
+        }
+
+        // Custom model input -- update provider detection as user types
+        if (customModelInput) {
+            customModelInput.addEventListener('input', updateUIForModel);
+        }
+
+        // Validation model selection change
+        if (validationModelSelect) {
+            validationModelSelect.addEventListener('change', updateValidationUI);
         }
 
         // Security acknowledgment checkbox
@@ -250,7 +327,7 @@ class DialogManager {
 
         // Save button click handler
         if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveApiKeys());
+            saveBtn.addEventListener('click', () => this.saveApiKeysWithValidation());
         }
 
         // Test connection button
@@ -304,9 +381,15 @@ class DialogManager {
             return 'ollama';
         }
 
-        // For custom models, try to detect provider from model name
+        // For custom models, detect provider from the custom input field
         if (modelValue === 'custom') {
-            return 'gemini'; // Default for custom, will be updated when saving
+            const customInput = getById('llmModelCustom');
+            const customName = customInput?.value?.trim().toLowerCase() || '';
+            if (customName.includes('gpt') || customName.includes('openai') || customName.startsWith('o1') || customName.startsWith('o3') || customName.startsWith('o4')) return 'openai';
+            if (customName.includes('claude') || customName.includes('anthropic')) return 'anthropic';
+            if (customName.includes('mistral')) return 'mistral';
+            if (customName.includes('ollama')) return 'ollama';
+            return 'gemini'; // Default
         }
 
         // Infer from model name patterns
@@ -314,9 +397,73 @@ class DialogManager {
         if (lower.includes('gemini')) return 'gemini';
         if (lower.includes('gpt') || lower.includes('openai')) return 'openai';
         if (lower.includes('claude') || lower.includes('anthropic')) return 'anthropic';
+        if (lower.includes('mistral')) return 'mistral';
 
         // Default to gemini
         return 'gemini';
+    }
+
+    /**
+     * Check if model is OCR-only (cannot do validation)
+     */
+    _isModelOcrOnly(model) {
+        return model.includes('deepseek-ocr') ||
+               model.includes('mistral-ocr') ||
+               model === 'mistral-ocr-latest' ||
+               (model.startsWith('ollama:') && model.includes('deepseek'));
+    }
+
+    /**
+     * Get provider from validation model value
+     */
+    _getProviderFromValidationModel(validationModel) {
+        if (!validationModel) return null;
+
+        const dataProvider = document.querySelector(
+            `#validationModel option[value="${validationModel}"]`
+        )?.dataset?.provider;
+
+        if (dataProvider) return dataProvider;
+
+        // Fallback detection
+        if (validationModel.includes('gemini')) return 'gemini';
+        if (validationModel.includes('gpt') || validationModel.includes('openai')) return 'openai';
+        if (validationModel.includes('claude')) return 'anthropic';
+        if (validationModel.startsWith('ollama:')) return 'ollama';
+
+        return null;
+    }
+
+    /**
+     * Auto-fill validation provider if same API key exists
+     * Skips if explicit validation config already loaded from settings
+     */
+    _autoFillValidationProvider() {
+        const validationModelSelect = getById('validationModel');
+        if (!validationModelSelect || validationModelSelect.value) return; // Already selected
+
+        // Skip auto-fill if explicit validation config exists (to prevent overriding saved config)
+        if (llmService.hasValidationProviderConfigured && llmService.hasValidationProviderConfigured()) {
+            console.log('[Dialogs] Skip auto-fill - explicit validation config exists');
+            return;
+        }
+
+        // Check which cloud providers have API keys configured
+        const providers = ['gemini', 'openai', 'anthropic'];
+        for (const provider of providers) {
+            if (llmService.providers[provider]?.apiKey) {
+                // Pre-select first option of this provider
+                const option = validationModelSelect.querySelector(
+                    `option[data-provider="${provider}"]`
+                );
+                if (option) {
+                    validationModelSelect.value = option.value;
+                    validationModelSelect.dispatchEvent(new Event('change'));
+                    console.log(`[Dialogs] Auto-filled validation provider: ${provider}`);
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -325,10 +472,10 @@ class DialogManager {
     updateApiKeyHint(provider) {
         const apiKeyInput = getById('llmApiKey');
         const apiKeyLink = getById('apiKeyLink');
-        const apiKeyHint = getById('apiKeyHint');
+        const _apiKeyHint = getById('apiKeyHint');
 
         if (apiKeyInput) {
-            apiKeyInput.placeholder = API_KEY_PLACEHOLDERS[provider] || 'API-Key';
+            apiKeyInput.placeholder = API_KEY_PLACEHOLDERS[provider] || 'API Key';
             // Load key from memory if available
             const memoryKey = llmService.providers[provider]?.apiKey;
             if (memoryKey) {
@@ -379,7 +526,7 @@ class DialogManager {
 
             show(scopeSection);
             if (scopeHint) {
-                scopeHint.textContent = `${transcribedCount} von ${pageCount} Seiten haben Transkriptionen`;
+                scopeHint.textContent = `${transcribedCount} of ${pageCount} pages have transcriptions`;
             }
         } else {
             hide(scopeSection);
@@ -658,16 +805,58 @@ class DialogManager {
             saveBtn.addEventListener('click', () => this.saveSettings());
         }
 
-        // Clear session button
+        // Delete project button (was "Clear Session")
         const clearSessionBtn = dialog.querySelector('#btnClearSession');
         if (clearSessionBtn) {
-            clearSessionBtn.addEventListener('click', () => {
-                if (confirm('Clear current session? This will remove all unsaved transcription data.')) {
-                    storage.clearSession();
-                    appState.clearSession();
-                    this.showToast('Session cleared', 'success');
-                    // Reload page to reset state
-                    setTimeout(() => location.reload(), 500);
+            clearSessionBtn.addEventListener('click', async () => {
+                const projectId = appState.data.project.id;
+                if (!projectId) {
+                    this.showToast('No active project available', 'warning');
+                    return;
+                }
+                const projectName = appState.data.project.name || 'Current Project';
+                const confirmed = await this.showConfirm(
+                    'Delete project?',
+                    `Do you really want to delete the project "${projectName}"? All data (images, transcriptions) will be removed.`,
+                    'Delete',
+                    'Cancel',
+                    { icon: 'warning' }
+                );
+
+                if (confirmed) {
+                    try {
+                        await storage.deleteProject(projectId);
+                        storage.clearActiveProjectId();
+                        this.showToast('Project deleted', 'success');
+                        setTimeout(() => location.reload(), 500);
+                    } catch (err) {
+                        console.error('[Settings] Delete project failed:', err);
+                        this.showToast('Error during deletion', 'error');
+                    }
+                }
+            });
+        }
+
+        // Delete all saved API keys button
+        const deleteApiKeysBtn = dialog.querySelector('#btnDeleteApiKeys');
+        if (deleteApiKeysBtn) {
+            deleteApiKeysBtn.addEventListener('click', async () => {
+                const confirmed = await this.showConfirm(
+                    'Delete API keys?',
+                    'Do you really want to delete all stored API keys?',
+                    'Delete',
+                    'Cancel',
+                    { icon: 'warning' }
+                );
+
+                if (confirmed) {
+                    try {
+                        await storage.deleteAllApiKeys();
+                        this.showToast('Stored API keys deleted', 'success');
+                    } catch (err) {
+                        console.error('[Settings] Delete API keys failed:', err);
+                        this.showToast('Error during deletion', 'error');
+                    }
                 }
             });
         }
@@ -675,12 +864,70 @@ class DialogManager {
         // Reset settings button
         const resetBtn = dialog.querySelector('#btnResetSettings');
         if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                if (confirm('Reset all settings to defaults?')) {
+            resetBtn.addEventListener('click', async () => {
+                const confirmed = await this.showConfirm(
+                    'Reset settings?',
+                    'Do you really want to reset all settings to default values?',
+                    'Reset',
+                    'Cancel',
+                    { icon: 'question' }
+                );
+
+                if (confirmed) {
                     this.resetSettings();
-                    this.showToast('Settings reset to defaults', 'success');
+                    this.showToast('Settings reset', 'success');
                 }
             });
+        }
+
+        // Quota refresh button
+        const btnRefreshQuota = dialog.querySelector('#btnRefreshQuota');
+        if (btnRefreshQuota) {
+            btnRefreshQuota.addEventListener('click', async () => {
+                await this.updateQuotaDisplay();
+            });
+        }
+
+        // Update quota on settings dialog open
+        const settingsBtn = document.querySelector('[data-open-dialog="settings"]');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', async () => {
+                // Delay to allow dialog to open first
+                setTimeout(async () => {
+                    await this.updateQuotaDisplay();
+                }, 100);
+            });
+        }
+    }
+
+    /**
+     * Update the storage quota display in the settings dialog
+     */
+    async updateQuotaDisplay() {
+        const quotaText = document.getElementById('quotaText');
+        const quotaBarFill = document.getElementById('quotaBarFill');
+
+        if (!quotaText || !quotaBarFill) return;
+
+        const quota = await storage.getQuotaInfo();
+
+        if (!quota.supported) {
+            quotaText.textContent = 'Not available in this browser';
+            quotaBarFill.style.width = '0%';
+            quotaBarFill.removeAttribute('data-level');
+            return;
+        }
+
+        quotaText.textContent = `${quota.usageMB} MB of ${quota.quotaMB} MB used (${quota.percentUsed}%)`;
+        quotaBarFill.style.width = `${quota.percentUsed}%`;
+
+        // Color coding
+        if (quota.percentUsed > 90) {
+            quotaBarFill.setAttribute('data-level', 'critical');
+        } else if (quota.percentUsed > 70) {
+            quotaBarFill.setAttribute('data-level', 'warning');
+        } else {
+            quotaBarFill.removeAttribute('data-level');
         }
     }
 
@@ -879,9 +1126,10 @@ class DialogManager {
 
 
     /**
-     * Load saved settings into form fields (API keys are NOT loaded - memory only)
+     * Load saved settings into form fields.
+     * Persistent API keys are loaded from IndexedDB (if user opted in).
      */
-    loadSavedApiKeys() {
+    async loadSavedApiKeys() {
         const settings = storage.loadSettings() || {};
 
         // Load Ollama endpoint
@@ -911,24 +1159,85 @@ class DialogManager {
             }
         }
 
-        // NOTE: API keys are intentionally NOT loaded from storage.
-        // Users must re-enter keys each session for security.
+        // Load persistent API keys from IndexedDB (if previously saved)
+        try {
+            const savedKeys = await storage.loadAllApiKeys();
+            for (const [provider, apiKey] of Object.entries(savedKeys)) {
+                // Skip validation keys - they're loaded separately via validation config path
+                if (provider.endsWith('_validation')) {
+                    continue;
+                }
+                if (apiKey) {
+                    llmService.setApiKey(provider, apiKey);
+                }
+            }
+        } catch (err) {
+            console.warn('[Dialogs] Failed to load persistent API keys:', err);
+        }
+
+        // Load validation provider configuration
+        const validationConfig = await storage.loadValidationProviderConfig();
+        if (validationConfig) {
+            llmService.setValidationProvider(
+                validationConfig.provider,
+                validationConfig.model
+            );
+
+            // Set validation model select to saved value (before auto-fill runs)
+            const validationModelSelect = getById('validationModel');
+            if (validationModelSelect) {
+                // Find matching option by provider and model
+                const modelValue = validationConfig.provider === 'ollama'
+                    ? `ollama:${validationConfig.model}`
+                    : validationConfig.model;
+
+                const matchingOption = Array.from(validationModelSelect.options).find(
+                    opt => opt.value === modelValue
+                );
+
+                if (matchingOption) {
+                    validationModelSelect.value = modelValue;
+                    // Trigger change event to update validation UI
+                    validationModelSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
+            // Load validation API key from IndexedDB if persisted
+            try {
+                const validationApiKey = await storage.loadApiKey(validationConfig.provider, true);
+                if (validationApiKey) {
+                    // Use separate validation API key storage to prevent overwriting transcription key
+                    llmService.setValidationApiKey(validationConfig.provider, validationApiKey);
+                    console.log(`[Dialogs] Loaded validation API key for ${validationConfig.provider}`);
+                }
+            } catch (err) {
+                console.warn('[Dialogs] Failed to load validation API key:', err);
+            }
+        }
 
         // Update model indicator with saved model
-        const provider = this.getProviderFromModel(savedModel);
-        this.updateModelIndicator(savedModel, provider);
+        this.updateModelIndicatorWithValidation();
     }
 
     /**
-     * Save API configuration (API keys stored in memory only, NOT persisted)
+     * Save API configuration with validation provider support
+     * API keys stored in memory; optionally persisted to IndexedDB if user opts in.
      */
-    saveApiKeys() {
+    async saveApiKeysWithValidation() {
         const settings = storage.loadSettings() || {};
 
+        // Get transcription config
         const modelSelect = getById('llmModel');
         const customModelInput = getById('llmModelCustom');
         const apiKeyInput = getById('llmApiKey');
         const endpointInput = getById('ollamaEndpoint');
+        const persistCheckbox = getById('apiKeyPersist');
+
+        // Get validation config
+        const validationSection = getById('validationProviderSection');
+        const validationModelSelect = getById('validationModel');
+        const validationApiKeyInput = getById('validationApiKey');
+        const validationPersistCheckbox = getById('validationApiKeyPersist');
 
         // Get model (custom or from select)
         let model = modelSelect?.value;
@@ -945,15 +1254,25 @@ class DialogManager {
             actualModel = model.substring(7); // Remove "ollama:" prefix
         }
 
-        // Save model and provider
+        // Save transcription provider
         settings.activeModel = model;
         settings.activeProvider = provider;
         llmService.setProvider(provider);
         llmService.setModel(actualModel); // Set model for active provider (single argument)
 
-        // Store API key in MEMORY ONLY (for non-Ollama providers)
+        // Store API key in memory (for non-Ollama providers)
         if (provider !== 'ollama' && apiKeyInput?.value) {
-            llmService.setApiKey(provider, apiKeyInput.value);
+            const apiKey = apiKeyInput.value.trim();
+            llmService.setApiKey(provider, apiKey);
+
+            // Optionally persist to IndexedDB
+            if (persistCheckbox?.checked && apiKey) {
+                try {
+                    await storage.saveApiKey(provider, apiKey, false);
+                } catch (err) {
+                    console.warn('[Dialogs] Failed to persist API key:', err);
+                }
+            }
         }
 
         // Save Ollama endpoint
@@ -962,12 +1281,58 @@ class DialogManager {
             llmService.setEndpoint(provider, endpointInput.value);
         }
 
+        // Save validation provider (if OCR-only model and validation provider selected)
+        const isOcrOnly = this._isModelOcrOnly(model);
+        if (isOcrOnly && !validationSection?.hidden && validationModelSelect?.value) {
+            const validationModel = validationModelSelect.value;
+            const validationProvider = this._getProviderFromValidationModel(validationModel);
+
+            let actualValidationModel = validationModel;
+            if (validationModel.startsWith('ollama:')) {
+                actualValidationModel = validationModel.substring(7);
+            }
+
+            // Set in llmService
+            llmService.setValidationProvider(validationProvider, actualValidationModel);
+
+            // Save to storage
+            storage.saveValidationProviderConfig(validationProvider, actualValidationModel);
+
+            // Save validation API key
+            if (validationProvider !== 'ollama' && validationApiKeyInput?.value) {
+                const validationApiKey = validationApiKeyInput.value.trim();
+                // Use separate validation API key storage to prevent overwriting transcription key
+                llmService.setValidationApiKey(validationProvider, validationApiKey);
+
+                if (validationPersistCheckbox?.checked) {
+                    await storage.saveApiKey(validationProvider, validationApiKey, true);
+                }
+            }
+
+            // Delete persisted validation key if persist checkbox unchecked
+            // (runs independently of input value to clean up old persisted keys)
+            if (validationProvider !== 'ollama' && !validationPersistCheckbox?.checked) {
+                try {
+                    await storage.deleteApiKey(validationProvider, true);
+                } catch (err) {
+                    console.warn('[Dialogs] Failed to delete persisted validation key:', err);
+                }
+            }
+
+            console.log(`[Dialogs] Validation provider configured: ${validationProvider} (${actualValidationModel})`);
+        } else {
+            // Clear validation provider if not OCR-only or no validation provider selected
+            llmService.clearValidationProvider();
+            storage.clearValidationProviderConfig();
+            console.log('[Dialogs] Validation provider cleared');
+        }
+
         storage.saveSettings(settings);
 
-        // Update model indicator in UI
-        this.updateModelIndicator(model, provider);
+        // Update model indicator
+        this.updateModelIndicatorWithValidation();
 
-        this.showToast('Konfiguration gespeichert (API-Key nur fuer diese Sitzung)', 'success');
+        this.showToast('Configuration saved', 'success');
         this.closeDialog('apiKey');
     }
 
@@ -1012,9 +1377,134 @@ class DialogManager {
         }
 
         textEl.textContent = displayName;
-        indicator.title = `Model: ${model} (${provider})`;
+        indicator.title = 'LLM Configuration';
     }
 
+    /**
+     * Update model indicator with validation provider badge
+     */
+    updateModelIndicatorWithValidation() {
+        const currentModel = llmService.getCurrentModel();
+
+        // Update base model indicator -- only show the transcription model
+        this.updateModelIndicator(currentModel, llmService.activeProvider || this.currentProvider);
+    }
+
+
+    /**
+     * Test cloud API connection using the same endpoints/headers as llmService.
+     * Note: OpenAI blocks browser CORS -- only Gemini and Anthropic work from browser.
+     */
+    async _testCloudConnection(provider, apiKey) {
+        const timeout = AbortSignal.timeout(15000);
+
+        try {
+            if (provider === 'gemini') {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=1`;
+                const res = await fetch(url, { signal: timeout });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API key valid, connection OK', 'success');
+
+            } else if (provider === 'openai') {
+                const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [{ role: 'user', content: 'Hi' }],
+                        max_tokens: 1
+                    }),
+                    signal: timeout
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API key valid, connection OK', 'success');
+
+            } else if (provider === 'anthropic') {
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-haiku-4-5-20251001',
+                        max_tokens: 1,
+                        messages: [{ role: 'user', content: 'Hi' }]
+                    }),
+                    signal: timeout
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API key valid, connection OK', 'success');
+
+            } else if (provider === 'mistral') {
+                // Test Mistral OCR API with minimal 1x1 pixel image
+                const minimalImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+                const res = await fetch('https://api.mistral.ai/v1/ocr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'mistral-ocr-latest',
+                        document: {
+                            type: 'image_url',
+                            image_url: minimalImage
+                        }
+                    }),
+                    signal: timeout
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `HTTP ${res.status}`);
+                }
+                this._showTestStatus('API key valid, connection OK', 'success');
+
+            } else {
+                this._showTestStatus('Unknown provider', 'warning');
+            }
+        } catch (error) {
+            // TypeError = network/CORS failure (fetch never got a response)
+            // OpenAI returns no CORS headers on error responses (401/403),
+            // so auth failures appear as CORS errors in the browser
+            if (error instanceof TypeError) {
+                throw new Error(`Connection failed -- Invalid key or no credit?`, { cause: error });
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Show inline status next to test button (visible inside dialog top-layer)
+     */
+    _showTestStatus(message, type = 'info') {
+        const statusEl = getById('testConnectionStatus');
+        if (!statusEl) return;
+
+        statusEl.textContent = message;
+        statusEl.className = `test-status test-${type}`;
+        statusEl.hidden = false;
+
+        // Auto-hide after 5s
+        clearTimeout(this._testStatusTimer);
+        this._testStatusTimer = setTimeout(() => {
+            statusEl.hidden = true;
+        }, 5000);
+    }
 
     /**
      * Test API connection for current provider
@@ -1032,40 +1522,30 @@ class DialogManager {
 
             if (provider === 'ollama') {
                 const endpoint = getById('ollamaEndpoint')?.value;
-                if (!endpoint) throw new Error('Server-URL erforderlich');
+                if (!endpoint) throw new Error('Server URL required');
 
                 const response = await fetch(`${endpoint}/api/tags`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(5000)
                 });
 
-                if (!response.ok) throw new Error('Verbindung fehlgeschlagen');
+                if (!response.ok) throw new Error('Connection failed');
 
                 const data = await response.json();
                 const models = data.models?.map(m => m.name) || [];
-                this.showToast(`Verbunden! ${models.length} Modelle gefunden.`, 'success');
+                this._showTestStatus(`Verbunden! ${models.length} Modelle gefunden.`, 'success');
 
                 // Auto-populate model dropdown with available models
                 this.populateOllamaModels(models);
             } else {
                 const keyInput = getById('llmApiKey');
-                if (!keyInput?.value) throw new Error('API-Key erforderlich');
+                if (!keyInput?.value) throw new Error('API key required');
 
-                const keyFormats = {
-                    gemini: /^AIza/,
-                    openai: /^sk-/,
-                    anthropic: /^sk-ant-/
-                };
-
-                const pattern = keyFormats[provider];
-                if (pattern && !pattern.test(keyInput.value)) {
-                    this.showToast('Key-Format sieht falsch aus', 'warning');
-                } else {
-                    this.showToast('Key-Format gültig. Speichern zum Testen.', 'success');
-                }
+                const apiKey = keyInput.value.trim();
+                await this._testCloudConnection(provider, apiKey);
             }
         } catch (error) {
-            this.showToast(`Fehler: ${error.message}`, 'error');
+            this._showTestStatus(error.message, 'error');
         } finally {
             testBtn.textContent = originalText;
             testBtn.disabled = false;
@@ -1128,7 +1608,7 @@ class DialogManager {
         if (!endpoint || !refreshBtn) return;
 
         const originalText = refreshBtn.textContent;
-        refreshBtn.textContent = 'Lade...';
+        refreshBtn.textContent = 'Loading...';
         refreshBtn.disabled = true;
 
         try {
@@ -1136,19 +1616,19 @@ class DialogManager {
                 signal: AbortSignal.timeout(5000)
             });
 
-            if (!response.ok) throw new Error('Verbindung fehlgeschlagen');
+            if (!response.ok) throw new Error('Connection failed');
 
             const data = await response.json();
             const models = data.models?.map(m => m.name) || [];
 
             if (models.length === 0) {
-                this.showToast('Keine Modelle gefunden. Installiere mit: ollama pull llava', 'warning');
+                this.showToast('No models found. Install with: ollama pull llava', 'warning');
             } else {
                 this.populateOllamaModels(models);
-                this.showToast(`${models.length} Modelle gefunden`, 'success');
+                this.showToast(`${models.length} models found`, 'success');
             }
         } catch (error) {
-            this.showToast(`Fehler: ${error.message}`, 'error');
+            this.showToast(`Error: ${error.message}`, 'error');
         } finally {
             refreshBtn.textContent = originalText;
             refreshBtn.disabled = false;
@@ -1271,7 +1751,7 @@ class DialogManager {
      * @param {object} options - Additional options (icon, html)
      * @returns {Promise<boolean>} - True if confirmed, false if cancelled
      */
-    showConfirm(title, message, confirmText = 'OK', cancelText = 'Abbrechen', options = {}) {
+    showConfirm(title, message, confirmText = 'OK', cancelText = 'Cancel', options = {}) {
         return new Promise((resolve) => {
             // Icon options
             const icons = {
@@ -1320,13 +1800,21 @@ class DialogManager {
                 }
             });
 
-            // Handle backdrop click
+            // Handle backdrop click (only if mousedown also happened on backdrop)
+            let mouseDownTarget = null;
+
+            dialog.addEventListener('mousedown', (e) => {
+                mouseDownTarget = e.target;
+            });
+
             dialog.addEventListener('click', (e) => {
-                if (e.target === dialog) {
+                // Only close if both mousedown and click happened on the backdrop
+                if (e.target === dialog && mouseDownTarget === dialog) {
                     dialog.close();
                     dialog.remove();
                     resolve(false);
                 }
+                mouseDownTarget = null; // Reset for next interaction
             });
 
             // Handle escape key
@@ -1339,6 +1827,108 @@ class DialogManager {
 
             document.body.appendChild(dialog);
             dialog.showModal();
+        });
+    }
+
+    /**
+     * Show a prompt dialog for user input
+     * @param {string} title - Dialog title
+     * @param {string} message - Dialog message
+     * @param {string} defaultValue - Default input value
+     * @param {string} confirmText - Confirm button text
+     * @param {string} cancelText - Cancel button text
+     * @param {object} options - Additional options (icon, hint, maxLength, validate)
+     * @returns {Promise<string|null>} - Input value if confirmed, null if cancelled
+     */
+    showPrompt(title, message, defaultValue = '', confirmText = 'OK', cancelText = 'Cancel', options = {}) {
+        return new Promise((resolve) => {
+            // Icon options (reuse from showConfirm)
+            const icons = {
+                restore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>',
+                warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+                info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+                question: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+            };
+
+            const iconHtml = options.icon && icons[options.icon]
+                ? `<span class="dialog-icon dialog-icon-${options.icon}">${icons[options.icon]}</span>`
+                : '';
+
+            const dialog = document.createElement('dialog');
+            dialog.className = 'confirm-dialog glass-panel';
+
+            dialog.innerHTML = `
+                <div class="dialog-header">
+                    ${iconHtml}
+                    <h3>${escapeHtml(title)}</h3>
+                </div>
+                <div class="dialog-body">
+                    <p>${escapeHtml(message)}</p>
+                    <div class="input-wrapper">
+                        <input type="text" class="prompt-input" value="${escapeHtml(defaultValue)}"
+                               maxlength="${options.maxLength || 100}" autocomplete="off">
+                        ${options.hint ? `<span class="input-hint">${escapeHtml(options.hint)}</span>` : ''}
+                    </div>
+                </div>
+                <div class="dialog-actions">
+                    <button class="btn btn-ghost" data-action="cancel">${escapeHtml(cancelText)}</button>
+                    <button class="btn btn-primary" data-action="confirm">${escapeHtml(confirmText)}</button>
+                </div>
+            `;
+
+            const input = dialog.querySelector('.prompt-input');
+            const confirmBtn = dialog.querySelector('[data-action="confirm"]');
+
+            // Validierung
+            const validate = () => {
+                const value = input.value.trim();
+                const isValid = options.validate ? options.validate(value) : value.length > 0;
+                confirmBtn.disabled = !isValid;
+                return isValid;
+            };
+
+            input.addEventListener('input', validate);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && validate()) {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(input.value.trim());
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    dialog.close();
+                    dialog.remove();
+                    resolve(null);
+                }
+            });
+
+            dialog.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                if (action === 'confirm' && validate()) {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(input.value.trim());
+                } else if (action === 'cancel') {
+                    dialog.close();
+                    dialog.remove();
+                    resolve(null);
+                }
+            });
+
+            dialog.addEventListener('cancel', (e) => {
+                e.preventDefault();
+                dialog.close();
+                dialog.remove();
+                resolve(null);
+            });
+
+            document.body.appendChild(dialog);
+            dialog.showModal();
+
+            // Auto-focus + select
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 50);
         });
     }
 }

@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Status: 2026-02-04
+Status: 2026-02-11
 
 ## Overview
 
@@ -21,26 +21,29 @@ npx vitest run  # CI mode
 
 | Module | Tests | Description |
 |--------|-------|-------------|
-| `state.js` | 61 | Central state management, EventTarget |
-| `export.js` | 49 | Export formats (TXT, JSON, MD, PAGE-XML, TEI) |
-| `validation.js` | 40 | Validation engine, rules, LLM-Judge |
+| `state.js` | 76 | Central state management, EventTarget, persistence flows |
+| `export.js` | 52 | Export formats (TXT, JSON, MD, PAGE-XML, TEI, validation metadata) |
+| `validation.js` | 40 | Validation engine, rules, LLM Review |
 | `llm.js` | 27 | LLM provider abstraction, API calls |
+| `llm-validation-provider.js` | 14 | Explicit validation provider priority/fallback logic |
 | `page-xml.js` | 26 | PAGE-XML parser |
-| `storage.js` | 23 | LocalStorage wrapper |
+| `storage.js` | 40 | localStorage + IndexedDB wrappers, projects/sessions/apiKeys |
 | `textFormatting.js` | 50 | Markers, HTML escaping, confidence |
+| `description.js` | 37 | Description feature prompt/result handling |
+| `dialogs-validation-persistence.js` | 1 | Regression for validation key persistence behavior |
 
-**Total: 276 Tests**
+**Total: 363 Tests**
 
-### Not Tested (UI Components)
+### Not Fully Tested (UI Components)
 
 | Module | Lines | Rationale |
 |--------|-------|-----------|
-| `dialogs.js` | ~1200 | DOM-intensive, high effort, low value |
+| `dialogs.js` | ~1900 | DOM-intensive, only selective regression tests exist |
 | `editor.js` | ~700 | Complex DOM manipulation |
 | `viewer.js` | ~600 | OpenSeadragon integration, external dependency |
 | `upload.js` | ~500 | File API, Drag & Drop |
 | `transcription.js` | ~700 | UI + LLM combined |
-| `validation.js` (Component) | ~700 | UI rendering |
+| `validation.js` (Component) | ~900 | UI rendering and multi-page batch workflow |
 
 ## Testing Strategy
 

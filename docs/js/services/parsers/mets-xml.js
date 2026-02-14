@@ -226,7 +226,12 @@ class MetsXMLParser {
             return url;
         }
         if (baseUrl) {
-            return new URL(url, baseUrl).href;
+            try {
+                return new URL(url, baseUrl).href;
+            } catch {
+                console.warn('[METS] Invalid URL:', url, 'base:', baseUrl);
+                return url;
+            }
         }
         return url;
     }

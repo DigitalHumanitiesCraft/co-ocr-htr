@@ -19,28 +19,28 @@ class ContextManager {
         if (this.initialized) return;
         this.initialized = true;
 
-        // Bind custom document type toggle
-        this.bindCustomDocTypeToggle();
-
-        console.log('[Context] Initialized');
+        // Bind custom toggles for all select-with-custom fields
+        this._bindCustomToggle('contextDocType', 'contextDocTypeCustom');
+        this._bindCustomToggle('contextScriptType', 'contextScriptTypeCustom');
+        this._bindCustomToggle('contextRegion', 'contextRegionCustom');
+        this._bindCustomToggle('contextTextType', 'contextTextTypeCustom');
     }
 
     /**
-     * Bind the custom document type input toggle
+     * Bind a select element to show/hide its custom text input
      */
-    bindCustomDocTypeToggle() {
-        const docTypeSelect = getById('contextDocType');
-        const customInput = getById('contextDocTypeCustom');
+    _bindCustomToggle(selectId, customId) {
+        const select = getById(selectId);
+        const custom = getById(customId);
+        if (!select || !custom) return;
 
-        if (!docTypeSelect || !customInput) return;
-
-        docTypeSelect.addEventListener('change', () => {
-            if (docTypeSelect.value === 'custom') {
-                customInput.style.display = 'block';
-                customInput.focus();
+        select.addEventListener('change', () => {
+            if (select.value === 'custom') {
+                custom.style.display = 'block';
+                custom.focus();
             } else {
-                customInput.style.display = 'none';
-                customInput.value = '';
+                custom.style.display = 'none';
+                custom.value = '';
             }
         });
     }
@@ -49,84 +49,124 @@ class ContextManager {
      * Populate the context form fields with existing context
      */
     populateForm(context) {
-        const docType = getById('contextDocType');
-        const docTypeCustom = getById('contextDocTypeCustom');
         const period = getById('contextPeriod');
         const language = getById('contextLanguage');
         const description = getById('contextDescription');
+        const century = getById('contextCentury');
+        const knownText = getById('contextKnownText');
 
-        // Handle custom document type
-        if (docType && context.documentType) {
-            // Check if it's a predefined type
-            const predefinedTypes = ['letter', 'account_book', 'diary', 'register', 'protocol', 'contract', 'inventory', 'manuscript', 'certificate'];
-            if (predefinedTypes.includes(context.documentType)) {
-                docType.value = context.documentType;
-                if (docTypeCustom) {
-                    docTypeCustom.style.display = 'none';
-                    docTypeCustom.value = '';
-                }
-            } else {
-                // It's a custom type
-                docType.value = 'custom';
-                if (docTypeCustom) {
-                    docTypeCustom.style.display = 'block';
-                    docTypeCustom.value = context.documentType;
-                }
-            }
-        } else if (docType) {
-            docType.value = '';
-        }
+        // Populate select-with-custom fields
+        this._populateSelectWithCustom('contextDocType', 'contextDocTypeCustom', context.documentType);
+        this._populateSelectWithCustom('contextScriptType', 'contextScriptTypeCustom', context.scriptType);
+        this._populateSelectWithCustom('contextRegion', 'contextRegionCustom', context.region);
+        this._populateSelectWithCustom('contextTextType', 'contextTextTypeCustom', context.textType);
 
         if (period) period.value = context.period || '';
         if (language) language.value = context.language || '';
         if (description) description.value = context.description || '';
+        if (century) century.value = context.century || '';
+        if (knownText) knownText.value = context.knownText || '';
+    }
+
+    /**
+     * Populate a select element, falling back to custom input for non-predefined values
+     */
+    _populateSelectWithCustom(selectId, customId, value) {
+        const select = getById(selectId);
+        const custom = getById(customId);
+        if (!select) return;
+
+        if (!value) {
+            select.value = '';
+            if (custom) { custom.style.display = 'none'; custom.value = ''; }
+            return;
+        }
+
+        // Check if value exists as a predefined option
+        const optionExists = Array.from(select.options).some(opt => opt.value === value && opt.value !== 'custom');
+        if (optionExists) {
+            select.value = value;
+            if (custom) { custom.style.display = 'none'; custom.value = ''; }
+        } else {
+            select.value = 'custom';
+            if (custom) { custom.style.display = 'block'; custom.value = value; }
+        }
     }
 
     /**
      * Clear the context form fields
      */
     clearForm() {
-        const docType = getById('contextDocType');
-        const docTypeCustom = getById('contextDocTypeCustom');
-        const period = getById('contextPeriod');
-        const language = getById('contextLanguage');
-        const description = getById('contextDescription');
+        // Clear all select-with-custom fields
+        this._clearSelectWithCustom('contextDocType', 'contextDocTypeCustom');
+        this._clearSelectWithCustom('contextScriptType', 'contextScriptTypeCustom');
+        this._clearSelectWithCustom('contextRegion', 'contextRegionCustom');
+        this._clearSelectWithCustom('contextTextType', 'contextTextTypeCustom');
 
-        if (docType) docType.value = '';
-        if (docTypeCustom) {
-            docTypeCustom.value = '';
-            docTypeCustom.style.display = 'none';
+        // Clear text inputs
+        const fields = ['contextPeriod', 'contextLanguage', 'contextDescription', 'contextCentury', 'contextKnownText'];
+        for (const id of fields) {
+            const el = getById(id);
+            if (el) el.value = '';
         }
-        if (period) period.value = '';
-        if (language) language.value = '';
-        if (description) description.value = '';
+    }
+
+    _clearSelectWithCustom(selectId, customId) {
+        const select = getById(selectId);
+        const custom = getById(customId);
+        if (select) select.value = '';
+        if (custom) { custom.value = ''; custom.style.display = 'none'; }
     }
 
     /**
      * Save context from form fields (called from transcription dialog)
      */
     saveContextSilent() {
-        const docTypeSelect = getById('contextDocType');
-        const docTypeCustom = getById('contextDocTypeCustom');
         const period = getById('contextPeriod')?.value || '';
         const language = getById('contextLanguage')?.value || '';
         const description = getById('contextDescription')?.value || '';
+        const century = getById('contextCentury')?.value || '';
+        const knownText = getById('contextKnownText')?.value || '';
 
-        // Get document type (use custom value if "custom" is selected)
-        let docType = docTypeSelect?.value || '';
-        if (docType === 'custom' && docTypeCustom) {
-            docType = docTypeCustom.value.trim() || '';
-        }
+        // Read select-with-custom fields
+        const docType = this._readSelectWithCustom('contextDocType', 'contextDocTypeCustom');
+        const scriptType = this._readSelectWithCustom('contextScriptType', 'contextScriptTypeCustom');
+        const region = this._readSelectWithCustom('contextRegion', 'contextRegionCustom');
+        const textType = this._readSelectWithCustom('contextTextType', 'contextTextTypeCustom');
+
+        // Derive structured languages array from free-text language field
+        const languages = language
+            ? language.split(/[,;]+/).map(l => l.trim().toLowerCase()).filter(Boolean)
+            : [];
 
         // Only save if any context was provided
-        if (docType || period || language || description) {
+        if (docType || period || language || description || scriptType || century || region || textType || knownText) {
             appState.setDocumentContext({
                 documentType: docType,
-                period: period,
-                language: language,
-                description: description
+                period,
+                language,
+                description,
+                scriptType,
+                century,
+                region,
+                languages,
+                textType,
+                knownText
             });
         }
+    }
+
+    /**
+     * Read value from a select element, using custom input if "custom" is selected
+     */
+    _readSelectWithCustom(selectId, customId) {
+        const select = getById(selectId);
+        const custom = getById(customId);
+        let value = select?.value || '';
+        if (value === 'custom' && custom) {
+            value = custom.value.trim() || '';
+        }
+        return value;
     }
 
     /**
@@ -152,7 +192,6 @@ class ContextManager {
                 'certificate': 'a certificate or official document',
                 'other': 'a historical document'
             };
-            // Use the label if it's a known type, otherwise use the custom type directly
             const typeDescription = typeLabels[context.documentType] || context.documentType;
             parts.push(`This is ${typeDescription}.`);
         }
@@ -161,8 +200,57 @@ class ContextManager {
             parts.push(`Historical period: ${context.period}.`);
         }
 
-        if (context.language) {
-            parts.push(`Language(s): ${context.language}.`);
+        const languageItems = Array.isArray(context.languages)
+            ? context.languages.map(lang => String(lang || '').trim()).filter(Boolean)
+            : [];
+        const languageText = languageItems.length > 0
+            ? languageItems.join(', ')
+            : (context.language || '').trim();
+        if (languageText) {
+            parts.push(`Language(s): ${languageText}.`);
+        }
+
+        // Extended structured context fields (PPV1-103)
+        if (context.scriptType) {
+            const scriptLabels = {
+                'textura': 'Textura (Gothic Bookhand)',
+                'cursiva': 'Cursiva (Gothic Cursive)',
+                'bastarda': 'Bastarda (Hybrid Gothic-Cursive)',
+                'humanistica': 'Humanistica',
+                'carolingian': 'Caroline Minuscule',
+                'uncial': 'Uncial / Half-Uncial',
+                'insular': 'Insular Script',
+                'kurrent': 'Kurrent / Suetterlin'
+            };
+            const scriptDesc = scriptLabels[context.scriptType] || context.scriptType;
+            parts.push(`Script type: ${scriptDesc}.`);
+        }
+
+        if (context.century) {
+            parts.push(`Century: ${context.century}.`);
+        }
+
+        if (context.region) {
+            const regionLabels = {
+                'german': 'German-speaking region',
+                'french': 'French-speaking region',
+                'english': 'English-speaking region',
+                'italian': 'Italian-speaking region',
+                'spanish': 'Spanish-speaking region',
+                'dutch': 'Dutch-speaking region',
+                'scandinavian': 'Scandinavian region',
+                'bohemian': 'Bohemian / Czech region',
+                'polish': 'Polish region'
+            };
+            parts.push(`Region: ${regionLabels[context.region] || context.region}.`);
+        }
+
+        if (context.textType) {
+            parts.push(`Text type: ${context.textType}.`);
+        }
+
+        if (context.knownText) {
+            parts.push(`Known source text: ${context.knownText}.`);
         }
 
         if (context.description) {

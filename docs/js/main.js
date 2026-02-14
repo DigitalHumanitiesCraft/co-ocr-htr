@@ -10,24 +10,41 @@ import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
 import { dialogManager } from './components/dialogs.js';
 import { uploadManager } from './components/upload.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
 import { transcriptionManager } from './components/transcription.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
+import { descriptionManager } from './components/description.js';
 import { validationPanel } from './components/validation.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers DOM event listeners
 import { contextManager } from './components/context.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: auto-init thinking panel
+import { thinkingPanel } from './components/thinking.js';
 
 // Services
 import { storage } from './services/storage.js';
 import { llmService } from './services/llm.js';
 import { exportService } from './services/export.js';
+// eslint-disable-next-line no-unused-vars -- side-effect: registers pageXMLLoaded handler
 import { pageXMLParser } from './services/parsers/page-xml.js';
 import { samplesService } from './services/samples.js';
 import { appState } from './state.js';
 import { escapeHtml } from './utils/textFormatting.js';
+// Side-effect import: initializes tooltip positioning
+import './utils/tooltips.js';
+import { initPanelResize } from './utils/panelResize.js';
+import { initValidationResize } from './utils/validationResize.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
  * This file is gitignored and allows developers to pre-configure API keys
  */
 async function loadLocalConfig() {
+    // Only attempt on localhost -- avoids 404 console noise on deployed versions
+    const host = location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1' && host !== '[::1]') {
+        return false;
+    }
+
     try {
         const module = await import('../config.local.js');
         const config = module.LOCAL_CONFIG;
@@ -60,7 +77,7 @@ async function loadLocalConfig() {
         }
 
         return true;
-    } catch (e) {
+    } catch (_e) {
         // config.local.js doesn't exist - this is normal for hosted version
         return false;
     }
@@ -86,11 +103,21 @@ async function initApp() {
         }
     });
 
-    // Clean up any legacy stored API keys from previous versions
-    storage.clearAllApiKeys();
+    // Load persistently saved API keys from IndexedDB (if user opted in)
+    try {
+        const savedKeys = await storage.loadAllApiKeys();
+        for (const [provider, apiKey] of Object.entries(savedKeys)) {
+            if (apiKey) {
+                llmService.setApiKey(provider, apiKey);
+                console.log(`coOCR/HTR: Loaded persistent ${provider} API key`);
+            }
+        }
+    } catch {
+        // IndexedDB not available or empty -- no problem
+    }
 
     // Try to load local config file (for local development)
-    const hasLocalConfig = await loadLocalConfig();
+    const _hasLocalConfig = await loadLocalConfig();
 
     // Configure Ollama
     if (settings?.ollamaEndpoint) {
@@ -119,15 +146,12 @@ async function initApp() {
     initEditor();
     initUI();
     validationPanel.init();
+    initPanelResize();
+    initValidationResize();
 
     // Dialogs are auto-initialized via module import
 
-    // Restore session if available
-    const session = storage.loadSession();
-    if (session) {
-        console.log('coOCR/HTR: Restoring session...');
-        // Session restoration handled by state module
-    }
+    // Session restoration handled by checkForProjects() below
 
     // Global error handler for unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
@@ -150,6 +174,7 @@ async function initApp() {
                 includeMetadata
             });
             dialogManager.showToast(`Exported as ${result.filename}`, 'success');
+            updateWorkflowStep(5, 'completed');
         } catch (error) {
             console.error('Export error:', error);
             dialogManager.showToast(`Export failed: ${error.message}`, 'error');
@@ -162,57 +187,331 @@ async function initApp() {
     // Initialize guided workflow features
     initGuidedWorkflow();
 
-    // Check for saved session and offer to restore
-    await checkSavedSession();
+    // Wire up project management buttons
+    initProjectButtons();
+
+    // Check for saved projects and offer to restore
+    await checkForProjects();
 
     console.log('coOCR/HTR: Initialized');
 }
 
 /**
- * Check if there's a saved session and offer to restore it
+ * Check for saved projects and offer to restore
  */
-async function checkSavedSession() {
-    const savedSession = appState.hasSavedSession();
-    if (!savedSession) return;
+async function checkForProjects() {
+    const activeProjectId = storage.getActiveProjectId();
+    let projects;
+    try {
+        projects = await storage.listProjects();
+    } catch {
+        // IndexedDB unavailable -- fresh start
+        return;
+    }
 
-    // Format timestamp - show relative for recent, absolute for older
-    const date = new Date(savedSession.timestamp);
-    const timeDisplay = formatSessionTime(date);
+    if (projects.length === 0) return;
 
-    // Build structured HTML content
-    const messageHtml = `
-        <div class="session-info">
-            <div class="session-info-row">
-                <span class="session-label">Gespeichert:</span>
-                <span class="session-value">${timeDisplay}</span>
-            </div>
-            <div class="session-info-row">
-                <span class="session-label">Dokument:</span>
-                <span class="session-value session-filename">${escapeHtml(savedSession.filename)}</span>
-            </div>
-            <div class="session-info-row">
-                <span class="session-label">Status:</span>
-                <span class="session-value ${savedSession.hasTranscription ? 'status-success' : 'status-neutral'}">
-                    ${savedSession.hasTranscription ? 'Mit Transkription' : 'Ohne Transkription'}
-                </span>
-            </div>
-        </div>
-    `;
+    // If there's an active project, offer to resume it
+    if (activeProjectId) {
+        const activeProject = projects.find(p => p.id === activeProjectId);
+        if (activeProject) {
+            const timeDisplay = formatSessionTime(new Date(activeProject.updatedAt));
+            const messageHtml = `
+                <div class="session-info">
+                    <div class="session-info-row">
+                        <span class="session-label">Projekt:</span>
+                        <span class="session-value session-filename">${escapeHtml(activeProject.name)}</span>
+                    </div>
+                    <div class="session-info-row">
+                        <span class="session-label">Gespeichert:</span>
+                        <span class="session-value">${timeDisplay}</span>
+                    </div>
+                    ${activeProject.filename ? `<div class="session-info-row">
+                        <span class="session-label">Document:</span>
+                        <span class="session-value">${escapeHtml(activeProject.filename)}</span>
+                    </div>` : ''}
+                    <div class="session-info-row">
+                        <span class="session-label">Pages:</span>
+                        <span class="session-value">${activeProject.pageCount || 0}</span>
+                    </div>
+                    <div class="session-info-row">
+                        <span class="session-label">Status:</span>
+                        <span class="session-value ${activeProject.hasTranscription ? 'status-success' : 'status-neutral'}">
+                            ${activeProject.hasTranscription ? 'With transcription' : 'Without transcription'}
+                        </span>
+                    </div>
+                </div>
+            `;
 
-    // Show confirmation dialog with icon
-    const shouldRestore = await dialogManager.showConfirm(
-        'Letzte Sitzung fortsetzen?',
-        messageHtml,
-        'Fortsetzen',
-        'Neu starten',
-        { icon: 'restore', html: true }
+            const shouldRestore = await dialogManager.showConfirm(
+                'Continue project?',
+                messageHtml,
+                'Continue',
+                projects.length > 1 ? 'Show projects' : 'Start new',
+                { icon: 'restore', html: true }
+            );
+
+            if (shouldRestore) {
+                await appState.restoreSession(activeProjectId);
+                dialogManager.showToast('Project restored', 'success');
+                updateProjectDisplay();
+                return;
+            }
+
+            // If multiple projects exist, show the project list
+            if (projects.length > 1) {
+                await showProjectListDialog(projects);
+                return;
+            }
+
+            // Single project, user chose "Neu starten" -- clear and start fresh
+            storage.clearActiveProjectId();
+            return;
+        }
+    }
+
+    // No active project but projects exist -- show project list
+    await showProjectListDialog(projects);
+}
+
+/**
+ * Create a new project with user input
+ */
+async function createNewProject() {
+    const name = await dialogManager.showPrompt(
+        'Create New Project',
+        'Please enter a name for the new project:',
+        'New Project',
+        'Create',
+        'Cancel',
+        {
+            icon: 'question',
+            hint: 'The name can be changed later',
+            maxLength: 100,
+            validate: (value) => value.length > 0 && value.length <= 100
+        }
     );
 
-    if (shouldRestore) {
-        appState.restoreSession();
-        dialogManager.showToast('Sitzung wiederhergestellt', 'success');
-    } else {
-        appState.clearSession();
+    if (!name) return; // User cancelled
+
+    try {
+        // Start a truly fresh project context (save + reset + create)
+        await appState.ensureProject(name);
+
+        dialogManager.showToast(`Project "${name}" created`, 'success');
+        updateProjectDisplay();
+    } catch (error) {
+        console.error('[Main] Create project failed:', error);
+        dialogManager.showToast('Project could not be created', 'error');
+    }
+}
+
+/**
+ * Show the project list dialog
+ * @param {Array} projects
+ */
+async function showProjectListDialog(projects) {
+    return new Promise((resolve) => {
+        const dialog = document.createElement('dialog');
+        dialog.className = 'confirm-dialog glass-panel';
+        dialog.style.maxWidth = '480px';
+        dialog.style.width = '90vw';
+
+        const projectCards = projects.map(p => {
+            const time = formatSessionTime(new Date(p.updatedAt));
+            const name = p.name || p.filename || 'Unnamed';
+            return `
+                <div class="project-card" data-project-id="${escapeHtml(p.id)}" tabindex="0">
+                    <div class="project-card-header">
+                        <span class="project-card-name">${escapeHtml(name)}</span>
+                        <div class="project-card-actions">
+                            <button class="project-rename-btn icon-btn" data-rename="${escapeHtml(p.id)}" title="Rename">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
+                            </button>
+                            <button class="project-delete-btn icon-btn" data-delete="${escapeHtml(p.id)}" title="Delete">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="project-card-meta">
+                        ${p.filename ? `<span>${escapeHtml(p.filename)}</span>` : ''}
+                        <span>${p.pageCount || 0} page${(p.pageCount || 0) === 1 ? '' : 's'}</span>
+                        <span>${time}</span>
+                        <span class="${p.hasTranscription ? 'status-success' : 'status-neutral'}">${p.hasTranscription ? 'Transcribed' : 'Without transcription'}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        dialog.innerHTML = `
+            <div class="dialog-header">
+                <h3>Projects</h3>
+            </div>
+            <div class="dialog-body" style="max-height: 50vh; overflow-y: auto;">
+                <div class="project-list">
+                    ${projectCards}
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="btn btn-ghost" data-action="new">New Project</button>
+                <button class="btn btn-ghost" data-action="cancel">Cancel</button>
+            </div>
+        `;
+
+        // Handle project card click (load project)
+        dialog.addEventListener('click', async (e) => {
+            const card = e.target.closest('.project-card');
+            const renameBtn = e.target.closest('.project-rename-btn');
+            const deleteBtn = e.target.closest('.project-delete-btn');
+
+            if (deleteBtn) {
+                e.stopPropagation();
+                const projectId = deleteBtn.dataset.delete;
+                const projectCard = deleteBtn.closest('.project-card');
+                const projectName = projectCard?.querySelector('.project-card-name')?.textContent || 'this project';
+
+                const confirmed = await dialogManager.showConfirm(
+                    'Delete project?',
+                    `Do you really want to delete the project "${escapeHtml(projectName)}"? All data will be lost.`,
+                    'Delete',
+                    'Cancel',
+                    { icon: 'warning' }
+                );
+
+                if (confirmed) {
+                    await storage.deleteProject(projectId);
+                    projectCard.remove();
+                    // If no more projects, close dialog
+                    if (dialog.querySelectorAll('.project-card').length === 0) {
+                        dialog.close();
+                        dialog.remove();
+                        resolve();
+                    }
+                }
+                return;
+            }
+
+            if (renameBtn) {
+                e.stopPropagation();
+                const projectId = renameBtn.dataset.rename;
+                const projectCard = renameBtn.closest('.project-card');
+                const currentName = projectCard?.querySelector('.project-card-name')?.textContent || '';
+
+                const newName = await dialogManager.showPrompt(
+                    'Rename Project',
+                    'Please enter a new name:',
+                    currentName,
+                    'Rename',
+                    'Cancel',
+                    {
+                        maxLength: 100,
+                        validate: (value) => value.length > 0 && value.length <= 100
+                    }
+                );
+
+                if (newName) {
+                    await storage.renameProject(projectId, newName);
+                    const nameEl = projectCard?.querySelector('.project-card-name');
+                    if (nameEl) nameEl.textContent = newName;
+                }
+                return;
+            }
+
+            if (card && !renameBtn && !deleteBtn) {
+                const projectId = card.dataset.projectId;
+                dialog.close();
+                dialog.remove();
+                await appState.restoreSession(projectId);
+                dialogManager.showToast('Project loaded', 'success');
+                updateProjectDisplay();
+                resolve();
+                return;
+            }
+
+            const action = e.target.dataset?.action;
+            if (action === 'new') {
+                dialog.close();
+                dialog.remove();
+                await createNewProject();
+                resolve();
+            } else if (action === 'cancel') {
+                dialog.close();
+                dialog.remove();
+                resolve();
+            }
+        });
+
+        // Handle escape
+        dialog.addEventListener('cancel', (e) => {
+            e.preventDefault();
+            dialog.close();
+            dialog.remove();
+            resolve();
+        });
+
+        document.body.appendChild(dialog);
+        dialog.showModal();
+    });
+}
+
+/**
+ * Update project name display in header
+ */
+function updateProjectDisplay() {
+    const headerDocInfo = document.getElementById('headerDocInfo');
+    const headerFilename = document.getElementById('headerFilename');
+    if (headerDocInfo && headerFilename && appState.data.project.name) {
+        headerFilename.textContent = appState.data.project.name;
+        headerDocInfo.hidden = false;
+    }
+}
+
+// Listen for project changes to update header display
+appState.addEventListener('projectChanged', () => updateProjectDisplay());
+
+/**
+ * Open the project list dialog (callable from UI buttons)
+ */
+async function openProjectList() {
+    // Flush pending session data so project metadata is current
+    try {
+        await appState.saveSessionNow();
+    } catch (error) {
+        console.warn('[Main] Could not save session before opening project list:', error);
+        dialogManager.showToast('Latest changes could not be saved before opening projects', 'warning');
+    }
+
+    let projects;
+    try {
+        projects = await storage.listProjects();
+    } catch {
+        dialogManager.showToast('Projects could not be loaded', 'error');
+        return;
+    }
+
+    if (projects.length === 0) {
+        dialogManager.showToast('No projects available yet', 'info');
+        return;
+    }
+
+    await showProjectListDialog(projects);
+}
+
+// Wire up project list buttons after DOM is ready
+function initProjectButtons() {
+    const btnProjects = document.getElementById('btnProjects');
+    if (btnProjects) {
+        btnProjects.addEventListener('click', () => openProjectList());
+    }
+
+    const headerDocInfo = document.getElementById('headerDocInfo');
+    if (headerDocInfo) {
+        headerDocInfo.addEventListener('click', () => openProjectList());
     }
 }
 
@@ -227,13 +526,13 @@ function formatSessionTime(date) {
     const diffDays = Math.floor(diffMs / 86400000);
 
     // Recent: relative time
-    if (diffMins < 1) return 'Gerade eben';
-    if (diffMins < 60) return `Vor ${diffMins} Minute${diffMins === 1 ? '' : 'n'}`;
-    if (diffHours < 24) return `Vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`;
-    if (diffDays < 7) return `Vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`;
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 
     // Older: show date
-    return date.toLocaleDateString('de-DE', {
+    return date.toLocaleDateString('en-US', {
         day: 'numeric',
         month: 'long',
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
@@ -301,11 +600,11 @@ function generateSampleTooltip(sample) {
 
     // Source
     if (sample.iiifManifest) {
-        details.push('<dt>Quelle</dt><dd>IIIF (extern)</dd>');
+        details.push('<dt>Source</dt><dd>IIIF (external)</dd>');
     } else if (sample.pageXml || (sample.pages && sample.pages.some(p => p.pageXml))) {
-        details.push('<dt>Daten</dt><dd>Mit Transkription</dd>');
+        details.push('<dt>Data</dt><dd>With transcription</dd>');
     } else {
-        details.push('<dt>Daten</dt><dd>Nur Bild</dd>');
+        details.push('<dt>Data</dt><dd>Image only</dd>');
     }
 
     return `<dl class="sample-info-tooltip">${details.join('')}</dl>`;
@@ -394,7 +693,7 @@ async function initSamplesMenu() {
         e.stopPropagation();
         uploadMenu.classList.remove('visible');
         uploadDropdown?.classList.remove('open');
-        dialogManager.showDialog('iiifDialog');
+        dialogManager.openDialog('iiif');
     });
 
     // Prevent samples menu from closing when clicking inside it
@@ -467,11 +766,16 @@ function initGuidedWorkflow() {
 
     appState.addEventListener('transcriptionComplete', () => {
         updateWorkflowStep(2, 'completed');
-        updateWorkflowStep(3, 'completed');
-        updateWorkflowStep(4, 'active');
+        updateWorkflowStep(3, 'active');
         // Hide editor hint when transcription available
         const editorHint = document.getElementById('editorHint');
         if (editorHint) editorHint.classList.add('hidden');
+    });
+
+    appState.addEventListener('descriptionComplete', (event) => {
+        console.log('[Main] Description complete:', event.detail.provider);
+        updateWorkflowStep(3, 'completed');
+        updateWorkflowStep(4, 'active');
     });
 
     // Also hide hints when document is loaded (for demo with pre-loaded transcription)
@@ -482,8 +786,17 @@ function initGuidedWorkflow() {
             const editorHint = document.getElementById('editorHint');
             if (editorHint) editorHint.classList.add('hidden');
             updateWorkflowStep(2, 'completed');
-            updateWorkflowStep(3, 'completed');
-            updateWorkflowStep(4, 'active');
+            if (state.description?.raw) {
+                updateWorkflowStep(3, 'completed');
+                if (state.validation?.status === 'complete') {
+                    updateWorkflowStep(4, 'completed');
+                    updateWorkflowStep(5, 'active');
+                } else {
+                    updateWorkflowStep(4, 'active');
+                }
+            } else {
+                updateWorkflowStep(3, 'active');
+            }
         }
     });
 
@@ -495,10 +808,12 @@ function initGuidedWorkflow() {
         if (validationHint) validationHint.classList.add('hidden');
     });
 
-    // Track edits for step 5
+    // Keep export step visible as the current action after edits
     appState.addEventListener('segmentUpdated', () => {
-        updateWorkflowStep(5, 'completed');
-        updateWorkflowStep(6, 'active');
+        const validateStep = document.querySelector('.workflow-step[data-step="4"]');
+        if (validateStep?.classList.contains('completed')) {
+            updateWorkflowStep(5, 'active');
+        }
     });
 }
 

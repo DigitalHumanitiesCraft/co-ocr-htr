@@ -84,7 +84,7 @@ Three datasets with PAGE-XML standard: Raitbuch 2 (account book 16th/17th c., 12
 | API key storage | LocalStorage (simple) |
 | Data formats | Images + PAGE-XML |
 | Export formats | .txt, .json, .md (PAGE-XML as expansion stage) |
-| Validation | Rule-based + LLM-Judge parallel |
+| Validation | Rule-based Validation + LLM Review parallel |
 | Tests | Vitest (Claude's recommendation) |
 | DeepSeek | Both (API + Ollama local) |
 | Deployment | GitHub Pages + local file:// |
@@ -121,7 +121,7 @@ Transcription flow: Upload → Transcribe Click → Loading State → LLM API Ca
 
 **8 rule-based rules:** Date format, currency (Taler, Groschen, Gulden/Kreuzer), uncertain readings [?], illegible passages [illegible], column count consistency, empty cells.
 
-**4 LLM-Judge perspectives:** Paleographic (letter forms, ligatures), linguistic (grammar, historical orthography), structural (tables, sums, references), domain knowledge (technical terms, plausibility).
+**4 LLM Review perspectives:** Paleographic (letter forms, ligatures), linguistic (grammar, historical orthography), structural (tables, sums, references), domain knowledge (technical terms, plausibility).
 
 ---
 
@@ -454,7 +454,7 @@ Grid editor replaced with textarea. New features: synced line numbers, visible u
 
 ### AI Content Identification
 
-Violet/purple color family introduced for AI-generated content: `--ai-primary: #7c5cbf`, `--ai-bg`, `--ai-border`. AI section header with "KI" badge and violet left border. Clear visual separation from rule-based (deterministic) results.
+Violet/purple color family introduced for AI-generated content: `--ai-primary: #7c5cbf`, `--ai-bg`, `--ai-border`. AI section header with "LLM" badge and violet left border. Clear visual separation from rule-based (deterministic) results.
 
 ### Loading Overlay
 
@@ -741,7 +741,7 @@ Complete restructuring of the Knowledge Vault overview page.
 
 **Design Principles (5 items, 3+2 grid layout):**
 1. Critical Expert in the Loop - explicit mention of hallucination and sycophancy, LLM literacy required
-2. Hybrid Validation - deterministic rules + LLM-Judge, categorical confidence integrated
+2. Hybrid Validation - deterministic Validation + LLM Review, categorical confidence integrated
 3. Workflow-Agnostic - PAGE-XML import/export, multiple formats, pipeline integration
 4. Open Browser Tool - no backend, vanilla JS, open source (CC BY 4.0)
 5. Cloud & Local Models (new) - provider choice between cloud LLMs and local Ollama
@@ -820,6 +820,7 @@ TEI-XML export had UTF-8 encoding issues (Umlauts displayed as `Ã¼`).
 const charset = mimeType.includes('xml') ? '; charset=utf-8' : '';
 const blob = new Blob([content], { type: mimeType + charset });
 ```
+
 
 ---
 

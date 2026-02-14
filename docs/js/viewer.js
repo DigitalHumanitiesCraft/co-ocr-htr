@@ -3,7 +3,7 @@
  * IIIF-compatible image viewer with SVG overlay for regions
  */
 import { appState } from './state.js';
-import { getById, show, hide, setText, setDisabled, addClass, removeClass, createSVGElement, selectAll, select } from './utils/dom.js';
+import { getById, show, hide, setText, setDisabled, addClass, removeClass, selectAll, select } from './utils/dom.js';
 import { IIIF_CONTEXT_V3, IIIF_VERSION } from './utils/constants.js';
 
 let viewer = null;
@@ -11,10 +11,10 @@ let svgOverlay = null;
 
 export function initViewer() {
     const container = document.getElementById('osd-viewer');
-    const zoomLabel = document.getElementById('zoomLabel');
-    const emptyState = document.getElementById('viewerEmptyState');
-    const headerDocInfo = document.getElementById('headerDocInfo');
-    const headerFilename = document.getElementById('headerFilename');
+    const _zoomLabel = document.getElementById('zoomLabel');
+    const _emptyState = document.getElementById('viewerEmptyState');
+    const _headerDocInfo = document.getElementById('headerDocInfo');
+    const _headerFilename = document.getElementById('headerFilename');
 
     if (!container) {
         console.error('[Viewer] OSD container not found');
@@ -214,7 +214,16 @@ function setupStateListeners() {
     // Document loaded
     appState.addEventListener('documentLoaded', (e) => {
         console.log('[Viewer] Document loaded:', e.detail.filename);
-        showViewer(e.detail.filename);
+        const state = appState.getState();
+        const hasDocument = state.pages?.length > 0 ||
+            state.document?.dataUrl ||
+            (state.image?.url && state.image.url !== 'assets/mock-document.jpg');
+
+        if (hasDocument) {
+            showViewer(e.detail.filename);
+        } else {
+            showEmptyState();
+        }
         updatePageNavigation();
     });
 
@@ -275,14 +284,6 @@ function setupStateListeners() {
         if (appState.hasRegionCoordinates()) {
             highlightRegion(lineNumber);
             panToRegion(lineNumber);
-        } else {
-            // No coordinates available - show info toast via state event
-            // (avoids circular dependency with dialogManager)
-            appState.showToast(
-                `Zeile ${lineNumber} - Keine Bildkoordinaten verfügbar`,
-                'info',
-                2000
-            );
         }
     });
 
@@ -437,16 +438,18 @@ export async function loadIIIFManifest(manifestUrl) {
     if (loadingState) {
         if (emptyState) emptyState.hidden = true;
         loadingState.hidden = false;
-        if (loadingTitle) loadingTitle.textContent = 'IIIF-Manifest wird geladen...';
-        if (loadingText) loadingText.textContent = 'Verbinde mit Repository';
+        if (loadingTitle) loadingTitle.textContent = 'Loading IIIF manifest...';
+        if (loadingText) loadingText.textContent = 'Connecting to repository';
         if (loadingProgress) loadingProgress.hidden = true;
     }
 
     try {
         // Update loading text
-        if (loadingText) loadingText.textContent = 'Lade Manifest-Daten...';
+        if (loadingText) loadingText.textContent = 'Loading manifest data...';
 
-        const response = await fetch(manifestUrl);
+        const response = await fetch(manifestUrl, {
+            signal: AbortSignal.timeout(30_000)
+        });
         const manifest = await response.json();
 
         // Detect manifest version
@@ -462,15 +465,15 @@ export async function loadIIIFManifest(manifestUrl) {
         }
 
         // Update loading progress
-        if (loadingText) loadingText.textContent = `Verarbeite ${canvases.length} Seiten...`;
+        if (loadingText) loadingText.textContent = `Processing ${canvases.length} pages...`;
         if (loadingProgress) loadingProgress.hidden = false;
-        if (loadingProgressText) loadingProgressText.textContent = `0 / ${canvases.length} Seiten`;
+        if (loadingProgressText) loadingProgressText.textContent = `0 / ${canvases.length} pages`;
 
         // Build pages for multi-page support
         const pages = canvases.map((canvas, index) => {
             // Update progress
             if (loadingProgressText) {
-                loadingProgressText.textContent = `${index + 1} / ${canvases.length} Seiten`;
+                loadingProgressText.textContent = `${index + 1} / ${canvases.length} pages`;
             }
 
             const imageUrl = version === IIIF_VERSION.V3
@@ -489,6 +492,9 @@ export async function loadIIIFManifest(manifestUrl) {
 
         // Hide loading state
         if (loadingState) loadingState.hidden = true;
+
+        // Ensure project exists for IIIF manifest
+        await appState.ensureProject(manifest.label || 'IIIF Document');
 
         // Update state
         appState.setPages(pages);
@@ -612,7 +618,9 @@ function showViewer(filename) {
     addClass('viewerEmptyState', 'hidden');
     show('osd-viewer');
     show('headerDocInfo');
-    if (filename) setText('headerFilename', filename);
+    // Prefer project name over filename for header display
+    const projectName = appState.data.project?.name;
+    setText('headerFilename', projectName || filename || '');
 }
 
 function showEmptyState() {
