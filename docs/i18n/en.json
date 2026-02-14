@@ -480,7 +480,14 @@
     "loadFileFailed": "Failed to load file: {message}",
     "errorOccurred": "An error occurred. Check console for details.",
     "quotaUnavailable": "Not available in this browser",
-    "quotaUsage": "{used} MB of {total} MB used ({percent}%)"
+    "quotaUsage": "{used} MB of {total} MB used ({percent}%)",
+    "providerNoVision": "Provider {name} does not support vision/image input",
+    "noApiKeyFor": "No API key configured for {name}. Please enter your API key in the LLM configuration dialog.",
+    "geminiKeyRequired": "Gemini API key required for image description. Please configure it in LLM settings.",
+    "mistralImageRequired": "Mistral OCR requires an image",
+    "azureEndpointRequired": "Azure endpoint URL is required. Configure it in LLM settings.",
+    "apiErrorDetail": "{provider} API error: {status} - {detail}",
+    "refreshError": "Error: {message}"
   },
   "batch": {
     "transcription": "Batch Transcription",
