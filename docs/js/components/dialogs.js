@@ -7,6 +7,7 @@
 
 import { storage } from '../services/storage.js';
 import { llmService } from '../services/llm.js';
+import { t } from '../services/i18n.js';
 import { appState } from '../state.js';
 import { loadIIIFManifest } from '../viewer.js';
 import { getById, select, selectAll, show, hide } from '../utils/dom.js';
@@ -526,7 +527,7 @@ class DialogManager {
 
             show(scopeSection);
             if (scopeHint) {
-                scopeHint.textContent = `${transcribedCount} of ${pageCount} pages have transcriptions`;
+                scopeHint.textContent = t('dynamic.transcriptionPageCount', { transcribed: transcribedCount, total: pageCount });
             }
         } else {
             hide(scopeSection);
@@ -584,14 +585,14 @@ class DialogManager {
         const url = urlInput?.value?.trim();
 
         if (!url) {
-            this.showToast('Please enter a manifest URL', 'warning');
+            this.showToast(t('toast.enterManifestUrl'), 'warning');
             return;
         }
 
         try {
             new URL(url);
         } catch {
-            this.showToast('Invalid URL format', 'error');
+            this.showToast(t('toast.invalidUrl'), 'error');
             return;
         }
 
@@ -600,7 +601,7 @@ class DialogManager {
 
         try {
             await loadIIIFManifest(url);
-            this.showToast('IIIF manifest loaded', 'success');
+            this.showToast(t('toast.iiifLoaded'), 'success');
             this.closeDialog('iiif');
         } catch (error) {
             console.error('[IIIF] Load failed:', error);
@@ -618,7 +619,7 @@ class DialogManager {
         const url = urlInput?.value?.trim();
 
         if (!url) {
-            this.showToast('Please enter a manifest URL', 'warning');
+            this.showToast(t('toast.enterManifestUrl'), 'warning');
             return;
         }
 
@@ -626,7 +627,7 @@ class DialogManager {
         try {
             new URL(url);
         } catch {
-            this.showToast('Invalid URL format', 'error');
+            this.showToast(t('toast.invalidUrl'), 'error');
             return;
         }
 
@@ -704,7 +705,7 @@ class DialogManager {
         if (previewEl) previewEl.style.display = 'block';
         if (versionEl) versionEl.textContent = `v${this.iiifManifestData.version}`;
         if (titleEl) titleEl.textContent = this.iiifManifestData.title;
-        if (infoEl) infoEl.textContent = `${this.iiifManifestData.pageCount} page${this.iiifManifestData.pageCount !== 1 ? 's' : ''}`;
+        if (infoEl) infoEl.textContent = t('dynamic.iiifPageCount', { count: this.iiifManifestData.pageCount, plural: this.iiifManifestData.pageCount !== 1 ? 's' : '' });
 
         // Show first few page labels if available
         if (pagesEl && this.iiifManifestData.manifest) {
@@ -730,7 +731,7 @@ class DialogManager {
      */
     async loadIIIFFromDialog() {
         if (!this.iiifManifestData) {
-            this.showToast('Please preview the manifest first', 'warning');
+            this.showToast(t('toast.previewFirst'), 'warning');
             return;
         }
 
@@ -740,7 +741,7 @@ class DialogManager {
             // Use the viewer's loadIIIFManifest function
             await loadIIIFManifest(this.iiifManifestData.url);
 
-            this.showToast(`Loaded ${this.iiifManifestData.pageCount} pages from IIIF`, 'success');
+            this.showToast(t('toast.loadedIIIF', { count: this.iiifManifestData.pageCount }), 'success');
             this.closeDialog('iiif');
 
             // Reset state
@@ -749,7 +750,7 @@ class DialogManager {
 
         } catch (error) {
             console.error('[IIIF] Load failed:', error);
-            this.showToast(`Failed to load: ${error.message}`, 'error');
+            this.showToast(t('toast.iiifLoadFailed', { message: error.message }), 'error');
         } finally {
             this.setIIIFLoadingState(false);
         }
@@ -811,15 +812,15 @@ class DialogManager {
             clearSessionBtn.addEventListener('click', async () => {
                 const projectId = appState.data.project.id;
                 if (!projectId) {
-                    this.showToast('No active project available', 'warning');
+                    this.showToast(t('toast.noActiveProject'), 'warning');
                     return;
                 }
                 const projectName = appState.data.project.name || 'Current Project';
                 const confirmed = await this.showConfirm(
-                    'Delete project?',
-                    `Do you really want to delete the project "${projectName}"? All data (images, transcriptions) will be removed.`,
-                    'Delete',
-                    'Cancel',
+                    t('confirm.deleteProject'),
+                    t('confirm.deleteProjectText', { name: projectName }),
+                    t('dynamic.delete'),
+                    t('dialog.cancel'),
                     { icon: 'warning' }
                 );
 
@@ -827,11 +828,11 @@ class DialogManager {
                     try {
                         await storage.deleteProject(projectId);
                         storage.clearActiveProjectId();
-                        this.showToast('Project deleted', 'success');
+                        this.showToast(t('toast.projectDeleted'), 'success');
                         setTimeout(() => location.reload(), 500);
                     } catch (err) {
                         console.error('[Settings] Delete project failed:', err);
-                        this.showToast('Error during deletion', 'error');
+                        this.showToast(t('toast.deletionError'), 'error');
                     }
                 }
             });
@@ -842,20 +843,20 @@ class DialogManager {
         if (deleteApiKeysBtn) {
             deleteApiKeysBtn.addEventListener('click', async () => {
                 const confirmed = await this.showConfirm(
-                    'Delete API keys?',
-                    'Do you really want to delete all stored API keys?',
-                    'Delete',
-                    'Cancel',
+                    t('confirm.deleteApiKeys'),
+                    t('confirm.deleteApiKeysText'),
+                    t('dynamic.delete'),
+                    t('dialog.cancel'),
                     { icon: 'warning' }
                 );
 
                 if (confirmed) {
                     try {
                         await storage.deleteAllApiKeys();
-                        this.showToast('Stored API keys deleted', 'success');
+                        this.showToast(t('toast.apiKeysDeleted'), 'success');
                     } catch (err) {
                         console.error('[Settings] Delete API keys failed:', err);
-                        this.showToast('Error during deletion', 'error');
+                        this.showToast(t('toast.deletionError'), 'error');
                     }
                 }
             });
@@ -866,16 +867,16 @@ class DialogManager {
         if (resetBtn) {
             resetBtn.addEventListener('click', async () => {
                 const confirmed = await this.showConfirm(
-                    'Reset settings?',
-                    'Do you really want to reset all settings to default values?',
-                    'Reset',
-                    'Cancel',
+                    t('confirm.resetSettings'),
+                    t('confirm.resetSettingsText'),
+                    t('dynamic.reset'),
+                    t('dialog.cancel'),
                     { icon: 'question' }
                 );
 
                 if (confirmed) {
                     this.resetSettings();
-                    this.showToast('Settings reset', 'success');
+                    this.showToast(t('toast.settingsReset'), 'success');
                 }
             });
         }
@@ -912,13 +913,13 @@ class DialogManager {
         const quota = await storage.getQuotaInfo();
 
         if (!quota.supported) {
-            quotaText.textContent = 'Not available in this browser';
+            quotaText.textContent = t('toast.quotaUnavailable');
             quotaBarFill.style.width = '0%';
             quotaBarFill.removeAttribute('data-level');
             return;
         }
 
-        quotaText.textContent = `${quota.usageMB} MB of ${quota.quotaMB} MB used (${quota.percentUsed}%)`;
+        quotaText.textContent = t('toast.quotaUsage', { used: quota.usageMB, total: quota.quotaMB, percent: quota.percentUsed });
         quotaBarFill.style.width = `${quota.percentUsed}%`;
 
         // Color coding
@@ -998,7 +999,7 @@ class DialogManager {
             storage.saveSettings(settings);
         }
 
-        this.showToast('Settings saved', 'success');
+        this.showToast(t('toast.settingsSaved'), 'success');
         this.closeDialog('settings');
     }
 
@@ -1332,7 +1333,7 @@ class DialogManager {
         // Update model indicator
         this.updateModelIndicatorWithValidation();
 
-        this.showToast('Configuration saved', 'success');
+        this.showToast(t('toast.configSaved'), 'success');
         this.closeDialog('apiKey');
     }
 
@@ -1377,7 +1378,7 @@ class DialogManager {
         }
 
         textEl.textContent = displayName;
-        indicator.title = 'LLM Configuration';
+        indicator.title = t('dynamic.llmConfig');
     }
 
     /**
@@ -1406,7 +1407,7 @@ class DialogManager {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
                 }
-                this._showTestStatus('API key valid, connection OK', 'success');
+                this._showTestStatus(t('toast.apiKeyValid'), 'success');
 
             } else if (provider === 'openai') {
                 const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1426,7 +1427,7 @@ class DialogManager {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
                 }
-                this._showTestStatus('API key valid, connection OK', 'success');
+                this._showTestStatus(t('toast.apiKeyValid'), 'success');
 
             } else if (provider === 'anthropic') {
                 const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1448,7 +1449,7 @@ class DialogManager {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
                 }
-                this._showTestStatus('API key valid, connection OK', 'success');
+                this._showTestStatus(t('toast.apiKeyValid'), 'success');
 
             } else if (provider === 'mistral') {
                 // Test Mistral OCR API with minimal 1x1 pixel image
@@ -1472,17 +1473,17 @@ class DialogManager {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
                 }
-                this._showTestStatus('API key valid, connection OK', 'success');
+                this._showTestStatus(t('toast.apiKeyValid'), 'success');
 
             } else {
-                this._showTestStatus('Unknown provider', 'warning');
+                this._showTestStatus(t('toast.unknownProvider'), 'warning');
             }
         } catch (error) {
             // TypeError = network/CORS failure (fetch never got a response)
             // OpenAI returns no CORS headers on error responses (401/403),
             // so auth failures appear as CORS errors in the browser
             if (error instanceof TypeError) {
-                throw new Error(`Connection failed -- Invalid key or no credit?`, { cause: error });
+                throw new Error(t('toast.connectionError'), { cause: error });
             }
             throw error;
         }
@@ -1514,7 +1515,7 @@ class DialogManager {
         if (!testBtn) return;
 
         const originalText = testBtn.textContent;
-        testBtn.textContent = 'Testing...';
+        testBtn.textContent = t('dynamic.testing');
         testBtn.disabled = true;
 
         try {
@@ -1522,7 +1523,7 @@ class DialogManager {
 
             if (provider === 'ollama') {
                 const endpoint = getById('ollamaEndpoint')?.value;
-                if (!endpoint) throw new Error('Server URL required');
+                if (!endpoint) throw new Error(t('toast.serverUrlRequired'));
 
                 const response = await fetch(`${endpoint}/api/tags`, {
                     method: 'GET',
@@ -1533,13 +1534,13 @@ class DialogManager {
 
                 const data = await response.json();
                 const models = data.models?.map(m => m.name) || [];
-                this._showTestStatus(`Connected! ${models.length} models found.`, 'success');
+                this._showTestStatus(t('toast.modelsFound', { count: models.length }), 'success');
 
                 // Auto-populate model dropdown with available models
                 this.populateOllamaModels(models);
             } else {
                 const keyInput = getById('llmApiKey');
-                if (!keyInput?.value) throw new Error('API key required');
+                if (!keyInput?.value) throw new Error(t('toast.apiKeyRequiredShort'));
 
                 const apiKey = keyInput.value.trim();
                 await this._testCloudConnection(provider, apiKey);
@@ -1571,7 +1572,7 @@ class DialogManager {
             visionModels.forEach((model, i) => {
                 const option = document.createElement('option');
                 option.value = `ollama:${model}`; // Add prefix for provider detection
-                option.textContent = model + (i === 0 ? ' (Recommended)' : '');
+                option.textContent = model + (i === 0 ? ` ${t('dynamic.recommended')}` : '');
                 if (i === 0) option.selected = true;
                 modelSelect.appendChild(option);
             });
@@ -1581,7 +1582,7 @@ class DialogManager {
         const otherModels = models.filter(m => !visionModels.includes(m));
         if (otherModels.length > 0) {
             const optgroup = document.createElement('optgroup');
-            optgroup.label = 'Other Models';
+            optgroup.label = t('dynamic.otherModels');
             otherModels.forEach(model => {
                 const option = document.createElement('option');
                 option.value = `ollama:${model}`; // Add prefix for provider detection
@@ -1594,7 +1595,7 @@ class DialogManager {
         // Add custom option
         const customOption = document.createElement('option');
         customOption.value = 'custom';
-        customOption.textContent = 'Custom model...';
+        customOption.textContent = t('dynamic.customModel');
         modelSelect.appendChild(customOption);
     }
 
@@ -1608,7 +1609,7 @@ class DialogManager {
         if (!endpoint || !refreshBtn) return;
 
         const originalText = refreshBtn.textContent;
-        refreshBtn.textContent = 'Loading...';
+        refreshBtn.textContent = t('dynamic.loading');
         refreshBtn.disabled = true;
 
         try {
@@ -1622,10 +1623,10 @@ class DialogManager {
             const models = data.models?.map(m => m.name) || [];
 
             if (models.length === 0) {
-                this.showToast('No models found. Install with: ollama pull llava', 'warning');
+                this.showToast(t('toast.noModelsFound'), 'warning');
             } else {
                 this.populateOllamaModels(models);
-                this.showToast(`${models.length} models found`, 'success');
+                this.showToast(t('toast.modelsFound', { count: models.length }), 'success');
             }
         } catch (error) {
             this.showToast(`Error: ${error.message}`, 'error');
@@ -1655,10 +1656,10 @@ class DialogManager {
                     includeValidation,
                     includeMetadata
                 });
-                this.showToast(`Exported ${result.pageCount} pages as ${result.filename}`, 'success');
+                this.showToast(t('toast.exportedPages', { count: result.pageCount, filename: result.filename }), 'success');
             } catch (error) {
                 console.error('ZIP export failed:', error);
-                this.showToast(`Export failed: ${error.message}`, 'error');
+                this.showToast(t('toast.exportFailed', { message: error.message }), 'error');
             }
         } else {
             // Single page export

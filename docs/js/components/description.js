@@ -16,6 +16,7 @@ import { dialogManager } from './dialogs.js';
 import { batchProgress } from './batch-progress.js';
 import { storage } from '../services/storage.js';
 import { FEATURE_FLAGS } from '../utils/constants.js';
+import { t } from '../services/i18n.js';
 
 /**
  * Default description prompt for illuminated initials
@@ -187,7 +188,7 @@ class DescriptionManager {
         // Validate document is loaded
         const state = appState.getState();
         if (!state.document.dataUrl && state.image.url === 'assets/mock-document.jpg') {
-            dialogManager.showToast('Please load a document first', 'warning');
+            dialogManager.showToast(t('toast.loadDocFirst'), 'warning');
             return;
         }
 
@@ -247,8 +248,8 @@ class DescriptionManager {
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
-                <span>Gemini API key required for image description</span>
-                <button type="button" class="btn btn-secondary btn-sm" id="configureGeminiBtn">Configure</button>
+                <span>${t('toast.geminiRequired')}</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="configureGeminiBtn">${t('dynamic.configure')}</button>
             `;
             modelInfo.parentElement.appendChild(warningDiv);
 
@@ -273,7 +274,7 @@ class DescriptionManager {
 
         // Validate Gemini API key
         if (!this._isGeminiConfigured()) {
-            dialogManager.showToast('Please configure Gemini API key for image description', 'warning');
+            dialogManager.showToast(t('toast.configureGemini'), 'warning');
             this.describeDialog.close();
             dialogManager.openDialog('apiKey');
             return;
@@ -350,7 +351,7 @@ class DescriptionManager {
 
             this.setLoading(false);
             dialogManager.showToast(
-                `Description complete (${result.provider})`,
+                t('toast.descriptionComplete', { provider: result.provider }),
                 'success'
             );
 
@@ -366,15 +367,15 @@ class DescriptionManager {
 
             // Handle specific error types
             if (error.type === 'auth') {
-                dialogManager.showToast('Invalid Gemini API key. Please check configuration.', 'error');
+                dialogManager.showToast(t('toast.invalidApiKey'), 'error');
                 this.describeDialog.close();
                 dialogManager.openDialog('apiKey');
             } else if (error.type === 'rate_limit') {
-                dialogManager.showToast('Rate limit reached. Please wait and try again.', 'warning');
+                dialogManager.showToast(t('toast.rateLimitReached'), 'warning');
             } else if (error.type === 'network') {
-                dialogManager.showToast('Network error. Please check connection.', 'error');
+                dialogManager.showToast(t('toast.networkError'), 'error');
             } else {
-                dialogManager.showToast(`Description failed: ${error.message}`, 'error');
+                dialogManager.showToast(t('toast.descriptionFailed', { message: error.message }), 'error');
             }
 
             this.setLoading(false);
@@ -389,7 +390,7 @@ class DescriptionManager {
         const pages = state.pages || [];
 
         if (pages.length === 0) {
-            dialogManager.showToast('No pages to describe', 'warning');
+            dialogManager.showToast(t('toast.noPagesToBatch', { operation: 'describe' }), 'warning');
             return;
         }
 
@@ -457,14 +458,14 @@ class DescriptionManager {
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
-                    dialogManager.showToast('Invalid API key. Batch aborted.', 'error');
+                    dialogManager.showToast(t('toast.invalidApiKeyBatch'), 'error');
                     appState.requestBatchAbort();
                     break;
                 }
 
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
-                    dialogManager.showToast('Rate limit reached. Waiting 30 seconds...', 'warning');
+                    dialogManager.showToast(t('toast.rateLimitWaiting'), 'warning');
                     await this._delay(30000);
                 }
             }
@@ -493,7 +494,7 @@ class DescriptionManager {
             await appState.saveSessionNow();
         } catch (error) {
             console.warn('[Description] Failed to save batch session:', error.message);
-            dialogManager.showToast('Batch complete, but saving failed', 'warning');
+            dialogManager.showToast(t('toast.batchSaveFailed'), 'warning');
         }
     }
 
@@ -558,7 +559,7 @@ class DescriptionManager {
         const timestampEl = document.getElementById('descriptionTimestamp');
         if (timestampEl && description.timestamp) {
             const date = new Date(description.timestamp);
-            timestampEl.textContent = `Generated ${date.toLocaleString()}`;
+            timestampEl.textContent = t('dynamic.generated', { date: date.toLocaleString() });
         }
 
         // Update model badge
@@ -617,11 +618,11 @@ class DescriptionManager {
 
         navigator.clipboard.writeText(this.descriptionTextarea.value)
             .then(() => {
-                dialogManager.showToast('Description copied to clipboard', 'success');
+                dialogManager.showToast(t('toast.copiedDescription'), 'success');
             })
             .catch(err => {
                 console.error('[Description] Copy failed:', err);
-                dialogManager.showToast('Failed to copy description', 'error');
+                dialogManager.showToast(t('toast.copyFailed'), 'error');
             });
     }
 
@@ -680,11 +681,11 @@ class DescriptionManager {
 
             // Update counts
             if (pageCountEl) {
-                pageCountEl.textContent = `Page ${currentPage} of ${totalPages}`;
+                pageCountEl.textContent = t('dynamic.pageOf', { current: currentPage, total: totalPages });
             }
 
             if (allPagesHintEl) {
-                allPagesHintEl.textContent = `${totalPages} pages, may take several minutes`;
+                allPagesHintEl.textContent = t('dynamic.pagesMayTakeMinutes', { count: totalPages });
             }
 
             // Reset to "current"
@@ -718,7 +719,7 @@ class DescriptionManager {
             this.describeBtn.classList.add('loading');
             if (btnText) btnText.hidden = true;
             if (btnSpinner) btnSpinner.hidden = false;
-            appState.setLoading(true, 'Describing...');
+            appState.setLoading(true, t('dynamic.describing'));
         } else {
             this.describeBtn.disabled = false;
             this.describeBtn.classList.remove('loading');

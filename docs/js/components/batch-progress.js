@@ -4,6 +4,7 @@
  */
 
 import { appState } from '../state.js';
+import { t } from '../services/i18n.js';
 
 class BatchProgressPanel {
     constructor() {
@@ -34,7 +35,7 @@ class BatchProgressPanel {
         if (!this.panel) return;
 
         const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-        const titleMap = { transcription: 'Batch Transcription', description: 'Batch Description', validation: 'Batch Validation' };
+        const titleMap = { transcription: t('batch.transcription'), description: t('batch.description'), validation: t('batch.validation') };
         const title = titleMap[operation] || 'Batch Validation';
         const isAborted = appState.data.batch.abortRequested;
 
@@ -49,7 +50,7 @@ class BatchProgressPanel {
                     <div class="batch-progress-bar">
                         <div class="batch-progress-fill"></div>
                     </div>
-                    <button class="btn btn-secondary btn-sm batch-abort-btn" id="batchAbortBtn">Cancel</button>
+                    <button class="btn btn-secondary btn-sm batch-abort-btn" id="batchAbortBtn">${t('batch.cancel')}</button>
                 </div>
             `;
             // Bind abort handler once
@@ -58,7 +59,7 @@ class BatchProgressPanel {
                 abortBtn.addEventListener('click', () => {
                     appState.requestBatchAbort();
                     abortBtn.disabled = true;
-                    abortBtn.textContent = 'Canceling...';
+                    abortBtn.textContent = t('batch.canceling');
                 });
             }
             this._contentBuilt = true;
@@ -75,7 +76,7 @@ class BatchProgressPanel {
         if (fillEl) fillEl.style.width = `${percent}%`;
         if (abortBtn) {
             abortBtn.disabled = isAborted;
-            abortBtn.textContent = isAborted ? 'Canceling...' : 'Cancel';
+            abortBtn.textContent = isAborted ? t('batch.canceling') : t('batch.cancel');
         }
     }
 
@@ -89,17 +90,17 @@ class BatchProgressPanel {
         if (!this.panel) return;
 
         const statusText = aborted
-            ? `Cancelled: ${success} successful, ${errors} failed`
+            ? t('batch.cancelled', { success, errors })
             : errors > 0
-                ? `${success} successful, ${errors} failed`
-                : `${success} pages successful`;
+                ? t('batch.withErrors', { success, errors })
+                : t('batch.allSuccess', { success });
 
         const statusClass = aborted || errors > 0 ? 'batch-status-warning' : 'batch-status-success';
 
         this.panel.innerHTML = `
             <div class="batch-progress-content ${statusClass}">
                 <div class="batch-complete-message">${statusText}</div>
-                <button class="btn btn-secondary btn-sm" id="batchCloseBtn">Close</button>
+                <button class="btn btn-secondary btn-sm" id="batchCloseBtn">${t('batch.close')}</button>
             </div>
         `;
 

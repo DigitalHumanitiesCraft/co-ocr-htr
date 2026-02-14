@@ -18,6 +18,7 @@ import { contextManager } from './context.js';
 import { batchProgress } from './batch-progress.js';
 import { escapeHtml } from '../utils/textFormatting.js';
 import { listPromptProfiles } from '../config/promptProfiles.js';
+import { t } from '../services/i18n.js';
 
 /**
  * Transcription Manager
@@ -93,7 +94,7 @@ class TranscriptionManager {
         // Validate document is loaded
         const state = appState.getState();
         if (!state.document.dataUrl && state.image.url === 'assets/mock-document.jpg') {
-            dialogManager.showToast('Please load a document first', 'warning');
+            dialogManager.showToast(t('toast.loadDocFirst'), 'warning');
             return;
         }
 
@@ -158,7 +159,7 @@ class TranscriptionManager {
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
                     <span>API key for <strong>${escapeHtml(provider)}</strong> required</span>
-                    <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">Configure</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">${t('dynamic.configure')}</button>
                 </div>
             `;
             // Bind configure button
@@ -185,7 +186,7 @@ class TranscriptionManager {
         if (!llmService.hasApiKey()) {
             const provider = llmService.activeProvider;
             if (provider !== 'ollama') {
-                dialogManager.showToast(`Please configure ${provider} API key`, 'warning');
+                dialogManager.showToast(t('toast.configureApiKey', { provider }), 'warning');
                 this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
                 return;
@@ -269,7 +270,7 @@ class TranscriptionManager {
             this.setLoading(false);
             this.showEditorLoading(false);
             dialogManager.showToast(
-                `Transcription complete (${result.provider})`,
+                t('toast.transcriptionComplete', { provider: result.provider }),
                 'success'
             );
 
@@ -285,15 +286,15 @@ class TranscriptionManager {
 
             // Handle specific error types
             if (error.type === 'auth') {
-                dialogManager.showToast('Invalid API key. Please check configuration.', 'error');
+                dialogManager.showToast(t('toast.invalidApiKey'), 'error');
                 this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
             } else if (error.type === 'rate_limit') {
-                dialogManager.showToast('Rate limit reached. Please wait and try again.', 'warning');
+                dialogManager.showToast(t('toast.rateLimitReached'), 'warning');
             } else if (error.type === 'network') {
-                dialogManager.showToast('Network error. Please check connection.', 'error');
+                dialogManager.showToast(t('toast.networkError'), 'error');
             } else {
-                dialogManager.showToast(`Transcription failed: ${error.message}`, 'error');
+                dialogManager.showToast(t('toast.transcriptionFailed', { message: error.message }), 'error');
             }
 
             this.setLoading(false);
@@ -319,8 +320,8 @@ class TranscriptionManager {
                 overlay.innerHTML = `
                     <div class="loading-content">
                         <div class="loading-spinner-large"></div>
-                        <span>Transcribing...</span>
-                        <span class="loading-hint">This may take a few seconds</span>
+                        <span>${t('dynamic.transcribing')}</span>
+                        <span class="loading-hint">${t('dynamic.transcribingHint')}</span>
                     </div>
                 `;
                 editorPanel.style.position = 'relative';
@@ -394,7 +395,7 @@ class TranscriptionManager {
             this.transcribeBtn.classList.add('loading');
             if (btnText) btnText.hidden = true;
             if (btnSpinner) btnSpinner.hidden = false;
-            appState.setLoading(true, 'Transcribing...');
+            appState.setLoading(true, t('dynamic.transcribing'));
         } else {
             this.transcribeBtn.disabled = false;
             this.transcribeBtn.classList.remove('loading');
@@ -445,11 +446,11 @@ class TranscriptionManager {
 
             // Update counts
             if (pageCountEl) {
-                pageCountEl.textContent = `Page ${currentPage} of ${totalPages}`;
+                pageCountEl.textContent = t('dynamic.pageOf', { current: currentPage, total: totalPages });
             }
 
             if (allPagesHintEl) {
-                allPagesHintEl.textContent = `${totalPages} pages, may take several minutes`;
+                allPagesHintEl.textContent = t('dynamic.pagesMayTakeMinutes', { count: totalPages });
             }
 
             if (batchPageCountEl) {
@@ -495,7 +496,7 @@ class TranscriptionManager {
         const pages = state.pages || [];
 
         if (pages.length === 0) {
-            dialogManager.showToast('No pages to transcribe', 'warning');
+            dialogManager.showToast(t('toast.noPagesToBatch', { operation: 'transcribe' }), 'warning');
             return;
         }
 
@@ -564,13 +565,13 @@ class TranscriptionManager {
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
-                    dialogManager.showToast('Invalid API key. Batch aborted.', 'error');
+                    dialogManager.showToast(t('toast.invalidApiKeyBatch'), 'error');
                     break;
                 }
 
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
-                    dialogManager.showToast('Rate limit reached. Waiting 30 seconds...', 'warning');
+                    dialogManager.showToast(t('toast.rateLimitWaiting'), 'warning');
                     await this._delay(30000);
                 }
             }
@@ -599,7 +600,7 @@ class TranscriptionManager {
             await appState.saveSessionNow();
         } catch (error) {
             console.warn('[Transcription] Failed to save batch session:', error.message);
-            dialogManager.showToast('Batch complete, but saving failed', 'warning');
+            dialogManager.showToast(t('toast.batchSaveFailed'), 'warning');
         }
     }
 
@@ -684,8 +685,8 @@ class TranscriptionManager {
         overlay.innerHTML = `
             <div class="loading-content">
                 <div class="loading-spinner-large"></div>
-                <span>Transcribing...</span>
-                <span class="loading-hint">Page ${current} of ${total} (${percent}%)</span>
+                <span>${t('dynamic.transcribing')}</span>
+                <span class="loading-hint">${t('dynamic.batchPageProgress', { current, total, percent })}</span>
                 ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
                 <div class="batch-progress-bar">
                     <div class="batch-progress-fill" style="width: ${percent}%"></div>
