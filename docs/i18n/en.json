@@ -43,7 +43,7 @@
     "flipH": "Flip Horizontal (H)"
   },
   "editor": {
-    "title": "Description / Transcription",
+    "title": "Editor",
     "tooltipTitle": "How does it work?",
     "tooltipText1": "1. Transcribe:",
     "tooltipDesc1": "The LLM creates an initial draft which you correct and validate as an expert.",

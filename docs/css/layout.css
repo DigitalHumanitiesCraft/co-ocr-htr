@@ -210,6 +210,10 @@ body:has(.wip-banner:not([hidden])) .app-container {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: var(--text-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .panel-content {
