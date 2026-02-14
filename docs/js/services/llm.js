@@ -472,6 +472,20 @@ const PROVIDERS = {
     apiKeyUrl: 'https://console.mistral.ai/api-keys',
     apiKeyPlaceholder: 'mi-...'
   },
+  'azure-mistral': {
+    name: 'Mistral OCR (Azure)',
+    endpoint: '',
+    defaultModel: 'mistral-ocr-latest',
+    models: [
+      { id: 'mistral-ocr-latest', name: 'Mistral OCR (Recommended)', recommended: true },
+      { id: 'custom', name: 'Custom model...', hint: 'Azure deployment model ID' }
+    ],
+    authType: 'api-key',
+    requiresEndpoint: true,
+    supportsVision: true,
+    apiKeyUrl: null,
+    apiKeyPlaceholder: 'Azure API key...'
+  },
   ollama: {
     name: 'Ollama (local)',
     endpoint: 'http://localhost:11434/api/generate',
@@ -636,7 +650,8 @@ class LLMService {
     // DeepSeek-OCR and Mistral OCR are specifically OCR models, not general LLMs
     return model.includes('deepseek-ocr') ||
            model.includes('mistral-ocr') ||
-           this.activeProvider === 'mistral';
+           this.activeProvider === 'mistral' ||
+           this.activeProvider === 'azure-mistral';
   }
 
   /**
@@ -797,6 +812,9 @@ class LLMService {
           break;
         case 'mistral':
           response = await this._callMistral(apiKey, model, imageBase64);
+          break;
+        case 'azure-mistral':
+          response = await this._callAzureMistral(apiKey, model, imageBase64);
           break;
         case 'ollama':
           if (useStream) {
@@ -1819,6 +1837,50 @@ class LLMService {
     // Extract text from first page's markdown
     const text = data.pages?.[0]?.markdown || '';
     console.log(`[Mistral] Extracted text length=${text.length} chars`);
+    return text;
+  }
+
+  async _callAzureMistral(apiKey, model, imageBase64) {
+    const endpoint = this.providers['azure-mistral']?.endpoint;
+    if (!endpoint) {
+      throw new Error('Azure endpoint URL is required. Configure it in LLM settings.');
+    }
+    if (!imageBase64) {
+      throw new Error('Mistral OCR requires an image');
+    }
+
+    console.log(`[Azure-Mistral] OCR call model=${model} endpoint=${endpoint}`);
+
+    const dataUrl = `data:image/jpeg;base64,${imageBase64}`;
+    const requestBody = {
+      model,
+      document: {
+        type: 'image_url',
+        image_url: dataUrl
+      }
+    };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Azure-Mistral] API error: ${response.status}`, errorText);
+      throw new Error(`Azure Mistral OCR API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log(`[Azure-Mistral] Response OK, pages=${data.pages?.length || 0}`);
+
+    const text = data.pages?.[0]?.markdown || '';
+    console.log(`[Azure-Mistral] Extracted text length=${text.length} chars`);
     return text;
   }
 

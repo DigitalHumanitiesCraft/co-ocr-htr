@@ -19,6 +19,7 @@ const MODEL_PROVIDER_MAP = {
     'gemini-3-flash-preview': 'gemini',
     'gemini-3-pro-preview': 'gemini',
     'mistral-ocr-latest': 'mistral',
+    'azure-mistral:mistral-ocr-latest': 'azure-mistral',
     'ollama:deepseek-ocr': 'ollama',
     'ollama:llava': 'ollama',
     'ollama:llama3.2-vision': 'ollama'
@@ -232,13 +233,21 @@ class DialogManager {
             // Show/hide API key field (hidden for Ollama)
             const apiKeyWrapper = getById('apiKeyWrapper');
             const ollamaWrapper = getById('ollamaEndpointWrapper');
+            const azureWrapper = getById('azureEndpointWrapper');
 
             if (provider === 'ollama') {
                 if (apiKeyWrapper) apiKeyWrapper.style.display = 'none';
                 if (ollamaWrapper) ollamaWrapper.style.display = 'block';
+                if (azureWrapper) azureWrapper.style.display = 'none';
+            } else if (provider === 'azure-mistral') {
+                if (apiKeyWrapper) apiKeyWrapper.style.display = 'block';
+                if (ollamaWrapper) ollamaWrapper.style.display = 'none';
+                if (azureWrapper) azureWrapper.style.display = 'block';
+                this.updateApiKeyHint(provider);
             } else {
                 if (apiKeyWrapper) apiKeyWrapper.style.display = 'block';
                 if (ollamaWrapper) ollamaWrapper.style.display = 'none';
+                if (azureWrapper) azureWrapper.style.display = 'none';
 
                 // Update API key hint based on detected provider
                 this.updateApiKeyHint(provider);
@@ -1139,6 +1148,13 @@ class DialogManager {
             endpointInput.value = settings.ollamaEndpoint || DEFAULT_OLLAMA_ENDPOINT;
         }
 
+        // Load Azure endpoint
+        const azureEndpointInput = getById('azureEndpoint');
+        if (azureEndpointInput && settings.azureEndpoint) {
+            azureEndpointInput.value = settings.azureEndpoint;
+            llmService.setEndpoint('azure-mistral', settings.azureEndpoint);
+        }
+
         // Load saved model
         const savedModel = settings.activeModel || 'gemini-3-flash-preview';
         const modelSelect = getById('llmModel');
@@ -1280,6 +1296,13 @@ class DialogManager {
         if (provider === 'ollama' && endpointInput?.value) {
             settings.ollamaEndpoint = endpointInput.value;
             llmService.setEndpoint(provider, endpointInput.value);
+        }
+
+        // Save Azure endpoint
+        const azureEndpointInput = getById('azureEndpoint');
+        if (provider === 'azure-mistral' && azureEndpointInput?.value) {
+            settings.azureEndpoint = azureEndpointInput.value;
+            llmService.setEndpoint('azure-mistral', azureEndpointInput.value);
         }
 
         // Save validation provider (if OCR-only model and validation provider selected)
