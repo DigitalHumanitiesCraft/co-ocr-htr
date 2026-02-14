@@ -408,7 +408,7 @@ function buildValidationPrompt(text, customPrompt = '') {
 /**
  * Provider configurations
  *
- * NOTE: Model lists change frequently. Use "Eigenes Modell..." to enter
+ * NOTE: Model lists change frequently. Use "Custom model..." to enter
  * any model ID not listed here. Check provider docs for current models:
  * - Gemini: https://ai.google.dev/models
  * - OpenAI: https://platform.openai.com/docs/models

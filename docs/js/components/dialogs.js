@@ -1372,8 +1372,8 @@ class DialogManager {
         }
 
         // Add provider prefix for local models
-        if (provider === 'ollama' && !displayName.includes('lokal')) {
-            displayName += ' (lokal)';
+        if (provider === 'ollama' && !displayName.includes('local')) {
+            displayName += ' (local)';
         }
 
         textEl.textContent = displayName;
@@ -1514,7 +1514,7 @@ class DialogManager {
         if (!testBtn) return;
 
         const originalText = testBtn.textContent;
-        testBtn.textContent = 'Teste...';
+        testBtn.textContent = 'Testing...';
         testBtn.disabled = true;
 
         try {
@@ -1533,7 +1533,7 @@ class DialogManager {
 
                 const data = await response.json();
                 const models = data.models?.map(m => m.name) || [];
-                this._showTestStatus(`Verbunden! ${models.length} Modelle gefunden.`, 'success');
+                this._showTestStatus(`Connected! ${models.length} models found.`, 'success');
 
                 // Auto-populate model dropdown with available models
                 this.populateOllamaModels(models);
@@ -1571,7 +1571,7 @@ class DialogManager {
             visionModels.forEach((model, i) => {
                 const option = document.createElement('option');
                 option.value = `ollama:${model}`; // Add prefix for provider detection
-                option.textContent = model + (i === 0 ? ' (Empfohlen)' : '');
+                option.textContent = model + (i === 0 ? ' (Recommended)' : '');
                 if (i === 0) option.selected = true;
                 modelSelect.appendChild(option);
             });
@@ -1581,7 +1581,7 @@ class DialogManager {
         const otherModels = models.filter(m => !visionModels.includes(m));
         if (otherModels.length > 0) {
             const optgroup = document.createElement('optgroup');
-            optgroup.label = 'Andere Modelle';
+            optgroup.label = 'Other Models';
             otherModels.forEach(model => {
                 const option = document.createElement('option');
                 option.value = `ollama:${model}`; // Add prefix for provider detection
@@ -1594,7 +1594,7 @@ class DialogManager {
         // Add custom option
         const customOption = document.createElement('option');
         customOption.value = 'custom';
-        customOption.textContent = 'Eigenes Modell...';
+        customOption.textContent = 'Custom model...';
         modelSelect.appendChild(customOption);
     }
 

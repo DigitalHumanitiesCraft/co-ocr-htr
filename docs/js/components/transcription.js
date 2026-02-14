@@ -137,8 +137,8 @@ class TranscriptionManager {
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
-                    <span>Modell: <strong>${escapeHtml(model)}</strong> (${escapeHtml(provider)})</span>
-                    <button type="button" class="btn-link" id="changeModelBtn">ändern</button>
+                    <span>Model: <strong>${escapeHtml(model)}</strong> (${escapeHtml(provider)})</span>
+                    <button type="button" class="btn-link" id="changeModelBtn">change</button>
                 </div>
             `;
             // Bind change model button
