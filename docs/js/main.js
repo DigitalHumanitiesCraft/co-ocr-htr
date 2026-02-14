@@ -638,6 +638,68 @@ async function showProjectListDialog(projects) {
 }
 
 /**
+ * Migrate old structured transcription rules to new Markdown format.
+ * Old format: { scriptType, language, period, paleographicHints, specialCharacters }
+ * New format: { markdown: string }
+ * @param {object|null|undefined} transcription
+ * @returns {{ markdown: string }}
+ */
+function migrateTranscriptionRules(transcription) {
+    if (typeof transcription?.markdown === 'string') return transcription;
+    if (transcription && typeof transcription === 'object') {
+        const parts = [];
+        if (transcription.scriptType) parts.push(`## Script Type\n${transcription.scriptType}`);
+        if (transcription.language) parts.push(`## Language\n${transcription.language}`);
+        if (transcription.period) parts.push(`## Period\n${transcription.period}`);
+        if (transcription.paleographicHints) parts.push(`## Paleographic Hints\n${transcription.paleographicHints}`);
+        if (transcription.specialCharacters) parts.push(`## Special Characters\n${transcription.specialCharacters}`);
+        return { markdown: parts.join('\n\n') };
+    }
+    return { markdown: '' };
+}
+
+/**
+ * Render simple Markdown to HTML (no external dependencies).
+ * Supports: h2, h3, bold, italic, inline code, unordered lists, paragraphs.
+ * @param {string} md
+ * @returns {string} HTML string
+ */
+function renderSimpleMarkdown(md) {
+    const escaped = md
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const lines = escaped.split('\n');
+    const html = [];
+    let inList = false;
+
+    for (const line of lines) {
+        if (line.startsWith('### ')) {
+            if (inList) { html.push('</ul>'); inList = false; }
+            html.push(`<h3>${line.slice(4)}</h3>`);
+        } else if (line.startsWith('## ')) {
+            if (inList) { html.push('</ul>'); inList = false; }
+            html.push(`<h2>${line.slice(3)}</h2>`);
+        } else if (/^- /.test(line)) {
+            if (!inList) { html.push('<ul>'); inList = true; }
+            html.push(`<li>${line.slice(2)}</li>`);
+        } else if (line.trim() === '') {
+            if (inList) { html.push('</ul>'); inList = false; }
+        } else {
+            if (inList) { html.push('</ul>'); inList = false; }
+            html.push(`<p>${line}</p>`);
+        }
+    }
+    if (inList) html.push('</ul>');
+
+    return html.join('\n')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>');
+}
+
+/**
  * Show project rules dialog for a specific project
  * @param {string} projectId
  */
@@ -646,7 +708,7 @@ async function showProjectRulesDialog(projectId) {
     if (!project) return;
 
     const rules = project.rules || {};
-    const transcription = rules.transcription || {};
+    const transcription = migrateTranscriptionRules(rules.transcription);
     const validation = rules.validation || {};
 
     const profileOptions = PROMPT_PROFILES.map(p =>
@@ -684,41 +746,17 @@ async function showProjectRulesDialog(projectId) {
             </div>
 
             <fieldset class="form-fieldset">
-                <legend>${t('dialog.rules.transcription')}</legend>
-
-                <div class="form-section">
-                    <label class="form-label">${t('dialog.rules.scriptType')}</label>
-                    <input type="text" id="rulesScriptType" class="form-control"
-                        value="${escapeHtml(transcription.scriptType || '')}"
-                        placeholder="${t('dialog.rules.scriptTypePlaceholder')}">
-                </div>
-
-                <div class="form-section">
-                    <label class="form-label">${t('dialog.rules.language')}</label>
-                    <input type="text" id="rulesLanguage" class="form-control"
-                        value="${escapeHtml(transcription.language || '')}"
-                        placeholder="${t('dialog.rules.languagePlaceholder')}">
-                </div>
-
-                <div class="form-section">
-                    <label class="form-label">${t('dialog.rules.period')}</label>
-                    <input type="text" id="rulesPeriod" class="form-control"
-                        value="${escapeHtml(transcription.period || '')}"
-                        placeholder="${t('dialog.rules.periodPlaceholder')}">
-                </div>
-
-                <div class="form-section">
-                    <label class="form-label">${t('dialog.rules.paleographicHints')}</label>
-                    <textarea id="rulesPaleoHints" class="form-control" rows="2"
-                        placeholder="${t('dialog.rules.paleographicHintsPlaceholder')}">${escapeHtml(transcription.paleographicHints || '')}</textarea>
-                </div>
-
-                <div class="form-section">
-                    <label class="form-label">${t('dialog.rules.specialCharacters')}</label>
-                    <input type="text" id="rulesSpecialChars" class="form-control"
-                        value="${escapeHtml(transcription.specialCharacters || '')}"
-                        placeholder="${t('dialog.rules.specialCharactersPlaceholder')}">
-                </div>
+                <legend>
+                    ${t('dialog.rules.transcription')}
+                    <button type="button" class="btn btn-ghost btn-xs" data-action="upload-md">${t('dialog.rules.uploadMd')}</button>
+                    <button type="button" class="btn btn-ghost btn-xs" data-action="toggle-preview">${t('dialog.rules.preview')}</button>
+                </legend>
+                <p class="text-secondary" style="font-size: var(--text-xs); margin-bottom: var(--space-2);">
+                    ${t('dialog.rules.markdownHint')}
+                </p>
+                <textarea id="rulesTranscriptionMd" class="form-control" rows="12"
+                    placeholder="${t('dialog.rules.markdownPlaceholder')}">${escapeHtml(transcription.markdown || '')}</textarea>
+                <div id="rulesTranscriptionPreview" class="markdown-preview" style="display: none;"></div>
             </fieldset>
 
             <fieldset class="form-fieldset">
@@ -754,12 +792,19 @@ async function showProjectRulesDialog(projectId) {
         </div>
     `;
 
-    // Hidden file input for import
+    // Hidden file input for JSON import
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.json';
     fileInput.style.display = 'none';
     dialog.appendChild(fileInput);
+
+    // Hidden file input for Markdown upload
+    const mdFileInput = document.createElement('input');
+    mdFileInput.type = 'file';
+    mdFileInput.accept = '.md,.txt,.markdown';
+    mdFileInput.style.display = 'none';
+    dialog.appendChild(mdFileInput);
 
     dialog.addEventListener('click', async (e) => {
         const action = e.target.dataset?.action;
@@ -770,11 +815,7 @@ async function showProjectRulesDialog(projectId) {
                 editionModel: dialog.querySelector('#rulesEditionModel').value || null,
                 xmlSchema: dialog.querySelector('#rulesXmlSchema').value || 'page-xml-2019',
                 transcription: {
-                    scriptType: dialog.querySelector('#rulesScriptType').value.trim(),
-                    language: dialog.querySelector('#rulesLanguage').value.trim(),
-                    period: dialog.querySelector('#rulesPeriod').value.trim(),
-                    paleographicHints: dialog.querySelector('#rulesPaleoHints').value.trim(),
-                    specialCharacters: dialog.querySelector('#rulesSpecialChars').value.trim()
+                    markdown: dialog.querySelector('#rulesTranscriptionMd').value.trim()
                 },
                 validation: {
                     autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
@@ -791,11 +832,7 @@ async function showProjectRulesDialog(projectId) {
                 editionModel: dialog.querySelector('#rulesEditionModel').value || null,
                 xmlSchema: dialog.querySelector('#rulesXmlSchema').value || 'page-xml-2019',
                 transcription: {
-                    scriptType: dialog.querySelector('#rulesScriptType').value.trim(),
-                    language: dialog.querySelector('#rulesLanguage').value.trim(),
-                    period: dialog.querySelector('#rulesPeriod').value.trim(),
-                    paleographicHints: dialog.querySelector('#rulesPaleoHints').value.trim(),
-                    specialCharacters: dialog.querySelector('#rulesSpecialChars').value.trim()
+                    markdown: dialog.querySelector('#rulesTranscriptionMd').value.trim()
                 },
                 validation: {
                     autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
@@ -812,6 +849,22 @@ async function showProjectRulesDialog(projectId) {
             setTimeout(() => URL.revokeObjectURL(url), 5000);
         } else if (action === 'import') {
             fileInput.click();
+        } else if (action === 'upload-md') {
+            mdFileInput.click();
+        } else if (action === 'toggle-preview') {
+            const textarea = dialog.querySelector('#rulesTranscriptionMd');
+            const preview = dialog.querySelector('#rulesTranscriptionPreview');
+            const toggleBtn = e.target;
+            if (preview.style.display === 'none') {
+                preview.innerHTML = renderSimpleMarkdown(textarea.value);
+                preview.style.display = 'block';
+                textarea.style.display = 'none';
+                toggleBtn.textContent = t('dialog.rules.edit');
+            } else {
+                preview.style.display = 'none';
+                textarea.style.display = 'block';
+                toggleBtn.textContent = t('dialog.rules.preview');
+            }
         } else if (action === 'cancel') {
             dialog.close();
             dialog.remove();
@@ -824,16 +877,12 @@ async function showProjectRulesDialog(projectId) {
         try {
             const text = await file.text();
             const imported = JSON.parse(text);
-            // Populate form fields from imported rules
+            // Populate form fields from imported rules (with migration for old format)
             if (imported.editionModel) dialog.querySelector('#rulesEditionModel').value = imported.editionModel;
             if (imported.xmlSchema) dialog.querySelector('#rulesXmlSchema').value = imported.xmlSchema;
             if (imported.transcription) {
-                const tr = imported.transcription;
-                if (tr.scriptType) dialog.querySelector('#rulesScriptType').value = tr.scriptType;
-                if (tr.language) dialog.querySelector('#rulesLanguage').value = tr.language;
-                if (tr.period) dialog.querySelector('#rulesPeriod').value = tr.period;
-                if (tr.paleographicHints) dialog.querySelector('#rulesPaleoHints').value = tr.paleographicHints;
-                if (tr.specialCharacters) dialog.querySelector('#rulesSpecialChars').value = tr.specialCharacters;
+                const migrated = migrateTranscriptionRules(imported.transcription);
+                dialog.querySelector('#rulesTranscriptionMd').value = migrated.markdown;
             }
             if (imported.validation) {
                 const val = imported.validation;
@@ -846,6 +895,15 @@ async function showProjectRulesDialog(projectId) {
             dialogManager.showToast(t('dialog.rules.importFailed', { message: err.message }), 'error');
         }
         fileInput.value = '';
+    });
+
+    mdFileInput.addEventListener('change', async () => {
+        const file = mdFileInput.files?.[0];
+        if (!file) return;
+        const text = await file.text();
+        dialog.querySelector('#rulesTranscriptionMd').value = text;
+        dialogManager.showToast(t('dialog.rules.mdImported'), 'success');
+        mdFileInput.value = '';
     });
 
     dialog.addEventListener('cancel', (e) => {

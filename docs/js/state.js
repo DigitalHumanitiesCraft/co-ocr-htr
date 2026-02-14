@@ -130,6 +130,9 @@ class AppState extends EventTarget {
         }
       },
 
+      // Project-level transcription rules (Markdown)
+      transcriptionRulesMarkdown: '',
+
       // Session metadata
       meta: {
         createdAt: null,
@@ -1392,21 +1395,21 @@ class AppState extends EventTarget {
       };
     }
 
-    // Apply project rules as context defaults (if context is empty)
-    if (!this.data.context && project.rules?.transcription) {
+    // Apply project transcription rules as Markdown context
+    if (project.rules?.transcription) {
       const tr = project.rules.transcription;
-      this.data.context = {
-        documentType: '',
-        period: tr.period || '',
-        language: tr.language || '',
-        description: '',
-        scriptType: tr.scriptType || '',
-        century: '',
-        region: '',
-        languages: tr.language ? tr.language.split(/[,;]+/).map(l => l.trim().toLowerCase()).filter(Boolean) : [],
-        textType: '',
-        knownText: ''
-      };
+      if (typeof tr.markdown === 'string') {
+        this.data.transcriptionRulesMarkdown = tr.markdown;
+      } else if (typeof tr === 'object') {
+        // Migrate old structured format
+        const parts = [];
+        if (tr.scriptType) parts.push(`## Script Type\n${tr.scriptType}`);
+        if (tr.language) parts.push(`## Language\n${tr.language}`);
+        if (tr.period) parts.push(`## Period\n${tr.period}`);
+        if (tr.paleographicHints) parts.push(`## Paleographic Hints\n${tr.paleographicHints}`);
+        if (tr.specialCharacters) parts.push(`## Special Characters\n${tr.specialCharacters}`);
+        this.data.transcriptionRulesMarkdown = parts.join('\n\n');
+      }
     }
 
     // Apply prompt profile from project rules (if not already set in session)
