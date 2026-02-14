@@ -2068,3 +2068,66 @@ kbd {
   border: 1px solid var(--border-muted);
   border-radius: var(--radius-md);
 }
+
+/* ==========================================================================
+   PROJECT RULES DIALOG
+   ========================================================================== */
+
+.form-section {
+  margin-bottom: var(--space-3);
+}
+
+.form-control {
+  width: 100%;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+select.form-control {
+  cursor: pointer;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 3em;
+}
+
+.form-fieldset {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-4) 0;
+}
+
+.form-fieldset legend {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 0 var(--space-2);
+}
+
+.dialog-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.project-rules-btn {
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+.project-rules-btn:hover {
+  opacity: 1;
+}

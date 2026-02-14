@@ -1392,6 +1392,28 @@ class AppState extends EventTarget {
       };
     }
 
+    // Apply project rules as context defaults (if context is empty)
+    if (!this.data.context && project.rules?.transcription) {
+      const tr = project.rules.transcription;
+      this.data.context = {
+        documentType: '',
+        period: tr.period || '',
+        language: tr.language || '',
+        description: '',
+        scriptType: tr.scriptType || '',
+        century: '',
+        region: '',
+        languages: tr.language ? tr.language.split(/[,;]+/).map(l => l.trim().toLowerCase()).filter(Boolean) : [],
+        textType: '',
+        knownText: ''
+      };
+    }
+
+    // Apply prompt profile from project rules (if not already set in session)
+    if (project.rules?.validation?.promptProfileId && this.data.promptConfig.profileId === 'generic_default') {
+      this.data.promptConfig.profileId = project.rules.validation.promptProfileId;
+    }
+
     // Restore images from IDB
     const images = await storage.loadAllImages(projectId);
     if (Object.keys(images).length > 0) {

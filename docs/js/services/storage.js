@@ -44,29 +44,24 @@ class StorageService {
 
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
+        const oldVersion = event.oldVersion;
 
-        // projects store
-        if (!db.objectStoreNames.contains(IDB_STORES.PROJECTS)) {
+        // v1: Initial schema
+        if (oldVersion < 1) {
           const projectStore = db.createObjectStore(IDB_STORES.PROJECTS, { keyPath: 'id' });
           projectStore.createIndex('name', 'name', { unique: false });
           projectStore.createIndex('updatedAt', 'updatedAt', { unique: false });
-        }
 
-        // sessions store (1:1 per project)
-        if (!db.objectStoreNames.contains(IDB_STORES.SESSIONS)) {
           db.createObjectStore(IDB_STORES.SESSIONS, { keyPath: 'projectId' });
-        }
 
-        // images store (1 per page per project)
-        if (!db.objectStoreNames.contains(IDB_STORES.IMAGES)) {
           const imageStore = db.createObjectStore(IDB_STORES.IMAGES, { keyPath: 'id' });
           imageStore.createIndex('projectId', 'projectId', { unique: false });
-        }
 
-        // apiKeys store
-        if (!db.objectStoreNames.contains(IDB_STORES.API_KEYS)) {
           db.createObjectStore(IDB_STORES.API_KEYS, { keyPath: 'provider' });
         }
+
+        // v2: Project rules (lazy migration -- existing projects get rules: null on read)
+        // No structural changes needed; rules stored as a field on the project record.
       };
 
       request.onsuccess = (event) => {
@@ -296,6 +291,30 @@ class StorageService {
    */
   async renameProject(id, newName) {
     return this.updateProject(id, { name: newName });
+  }
+
+  // ============================================
+  // Project Rules (stored on project record)
+  // ============================================
+
+  /**
+   * Get project rules
+   * @param {string} id - Project ID
+   * @returns {Promise<object|null>} Rules object or null
+   */
+  async getProjectRules(id) {
+    const project = await this.getProject(id);
+    return project?.rules || null;
+  }
+
+  /**
+   * Update project rules (full replace)
+   * @param {string} id - Project ID
+   * @param {object} rules - Rules object
+   * @returns {Promise<object>} Updated project
+   */
+  async updateProjectRules(id, rules) {
+    return this.updateProject(id, { rules });
   }
 
   // ============================================
