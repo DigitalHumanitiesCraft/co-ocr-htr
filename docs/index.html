@@ -92,8 +92,8 @@
             <line x1="8" y1="21" x2="16" y2="21"></line>
             <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
-        <h2>Desktop Recommended</h2>
-        <p class="mobile-warning-text">
+        <h2 data-i18n="mobile.title">Desktop Recommended</h2>
+        <p class="mobile-warning-text" data-i18n="mobile.text">
             coOCR/HTR is optimized for large screens to display document, editor, and validation panels simultaneously.
         </p>
     </div>
@@ -110,7 +110,7 @@
                 coOCR/HTR
             </div>
 
-            <button class="header-doc-info" id="headerDocInfo" hidden title="Projekte anzeigen">
+            <button class="header-doc-info" id="headerDocInfo" hidden title="Show Projects" data-i18n-title="header.showProjects">
                 <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
@@ -132,12 +132,15 @@
             </div>
 
             <div class="header-controls">
-                <button class="icon-btn icon-md" id="btnProjects" title="Projekte">
+                <button class="lang-toggle" id="langToggle" title="Language / Sprache">
+                    <span class="lang-toggle-label" id="langToggleLabel">EN</span>
+                </button>
+                <button class="icon-btn icon-md" id="btnProjects" title="Projects" data-i18n-title="header.projects">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                     </svg>
                 </button>
-                <button class="icon-btn icon-md" title="Settings">
+                <button class="icon-btn icon-md" title="Settings" data-i18n-title="header.settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path
@@ -145,20 +148,20 @@
                         </path>
                     </svg>
                 </button>
-                <a href="https://github.com/rklugsederoeaw/co-ocr-htr-rk" class="icon-btn icon-md" title="GitHub" target="_blank" rel="noopener noreferrer">
+                <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr" class="icon-btn icon-md" title="GitHub" data-i18n-title="header.github" target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                     </svg>
                 </a>
-                <button type="button" class="icon-btn icon-md" title="Help">
+                <button type="button" class="icon-btn icon-md" title="Help" data-i18n-title="header.help">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                 </button>
-                <a href="about.html" class="icon-btn icon-md" title="About">
+                <a href="about.html" class="icon-btn icon-md" title="About" data-i18n-title="header.about">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -171,11 +174,11 @@
         <!-- LEFT PANEL: DOCUMENT VIEWER -->
         <section class="panel glass-panel panel-col-1">
             <div class="panel-header">
-                <span>Document Viewer</span>
+                <span data-i18n="viewer.title">Document Viewer</span>
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
-                        <div class="info-tooltip-title">Load Document</div>
-                        Supports images (JPG, PNG) and PAGE-XML. Zoom with mouse wheel, pan by dragging.
+                        <div class="info-tooltip-title" data-i18n="viewer.tooltipTitle">Load Document</div>
+                        <span data-i18n="viewer.tooltipText">Supports images (JPG, PNG) and PAGE-XML. Zoom with mouse wheel, pan by dragging.</span>
                     </div>
                 </span>
                 <div class="flex-center gap-1 ml-auto">
@@ -187,7 +190,7 @@
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
                             </svg>
-                            Upload
+                            <span data-i18n="viewer.upload">Upload</span>
                             <svg class="icon-xs ml-1 dropdown-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -199,7 +202,7 @@
                                     <polyline points="17 8 12 3 7 8"></polyline>
                                     <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
-                                <span>Upload Image</span>
+                                <span data-i18n="viewer.uploadImage">Upload Image</span>
                             </button>
                             <button class="upload-menu-item" id="btnUploadPageXML">
                                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -208,14 +211,14 @@
                                     <line x1="16" y1="13" x2="8" y2="13"></line>
                                     <line x1="16" y1="17" x2="8" y2="17"></line>
                                 </svg>
-                                <span>Import PAGE-XML</span>
+                                <span data-i18n="viewer.importPageXML">Import PAGE-XML</span>
                             </button>
                             <div class="upload-menu-divider"></div>
                             <button class="upload-menu-item" id="btnSamples">
                                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                                 </svg>
-                                <span>Load Demo</span>
+                                <span data-i18n="viewer.loadDemo">Load Demo</span>
                             </button>
                             <button class="upload-menu-item" id="btnIIIF">
                                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -223,7 +226,7 @@
                                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
                                     <polyline points="21 15 16 10 5 21"></polyline>
                                 </svg>
-                                <span>Load IIIF</span>
+                                <span data-i18n="viewer.loadIIIF">Load IIIF</span>
                             </button>
                         </div>
                         <!-- Samples Submenu (shown when Demo is hovered/clicked) -->
@@ -238,7 +241,7 @@
                     <path d="M12 16v-4"></path>
                     <path d="M12 8h.01"></path>
                 </svg>
-                <span>Load a demo document or upload an image (JPG, PNG) or PAGE-XML.</span>
+                <span data-i18n="viewer.hint">Load a demo document or upload an image (JPG, PNG) or PAGE-XML.</span>
                 <button class="panel-hint-dismiss" data-dismiss-hint="viewer">×</button>
             </div>
             <div class="panel-content viewer-panel-content">
@@ -250,19 +253,19 @@
                             <polyline points="17 8 12 3 7 8"></polyline>
                             <line x1="12" y1="3" x2="12" y2="15"></line>
                         </svg>
-                        <h3 class="empty-state-title">Drop files here</h3>
-                        <p class="empty-state-text">
+                        <h3 class="empty-state-title" data-i18n="viewer.dropTitle">Drop files here</h3>
+                        <p class="empty-state-text" data-i18n="viewer.dropText">
                             Drag & drop images or PAGE-XML files
                         </p>
-                        <span class="drop-formats">JPG, PNG, TIFF, XML</span>
+                        <span class="drop-formats" data-i18n="viewer.dropFormats">JPG, PNG, TIFF, XML</span>
                     </div>
                 </div>
 
                 <!-- Loading State (shown during IIIF loading) -->
                 <div class="viewer-loading-state" id="viewerLoadingState" hidden>
                     <div class="loading-spinner-large"></div>
-                    <h3 class="loading-title" id="loadingTitle">Loading IIIF Manifest...</h3>
-                    <p class="loading-text" id="loadingText">Connecting to repository</p>
+                    <h3 class="loading-title" id="loadingTitle" data-i18n="viewer.loadingIIIF">Loading IIIF Manifest...</h3>
+                    <p class="loading-text" id="loadingText" data-i18n="viewer.loadingConnect">Connecting to repository</p>
                     <div class="loading-progress" id="loadingProgress" hidden>
                         <span class="loading-progress-text" id="loadingProgressText">0 / 0 pages</span>
                     </div>
@@ -275,13 +278,13 @@
 
                 <!-- Page Navigation (hidden for single-page documents) -->
                 <div class="page-navigation" id="pageNavigation" hidden>
-                    <button class="icon-btn icon-sm" id="btnPrevPage" title="Previous Page" disabled>
+                    <button class="icon-btn icon-sm" id="btnPrevPage" title="Previous Page" data-i18n-title="viewer.prevPage" disabled>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
                     </button>
                     <div class="page-strip" id="pageStrip"></div>
-                    <button class="icon-btn icon-sm" id="btnNextPage" title="Next Page" disabled>
+                    <button class="icon-btn icon-sm" id="btnNextPage" title="Next Page" data-i18n-title="viewer.nextPage" disabled>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
@@ -290,18 +293,18 @@
 
                 <!-- Floating Toolbar -->
                 <div class="viewer-toolbar glass">
-                    <button class="icon-btn icon-sm" title="Zoom Out" id="zoomOut"><svg viewBox="0 0 24 24" fill="none"
+                    <button class="icon-btn icon-sm" title="Zoom Out" data-i18n-title="viewer.zoomOut" id="zoomOut"><svg viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg></button>
                     <span class="zoom-label" id="zoomLabel">100%</span>
-                    <button class="icon-btn icon-sm" title="Zoom In" id="zoomIn"><svg viewBox="0 0 24 24" fill="none"
+                    <button class="icon-btn icon-sm" title="Zoom In" data-i18n-title="viewer.zoomIn" id="zoomIn"><svg viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg></button>
                     <div class="divider-vertical"></div>
-                    <button class="icon-btn icon-sm" title="Fit to View" id="btnFitView">
+                    <button class="icon-btn icon-sm" title="Fit to View" data-i18n-title="viewer.fitView" id="btnFitView">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="15 3 21 3 21 9"></polyline>
                             <polyline points="9 21 3 21 3 15"></polyline>
@@ -309,26 +312,26 @@
                             <line x1="3" y1="21" x2="10" y2="14"></line>
                         </svg>
                     </button>
-                    <button class="icon-btn icon-sm" title="Reset View" id="btnResetView">
+                    <button class="icon-btn icon-sm" title="Reset View" data-i18n-title="viewer.resetView" id="btnResetView">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                             <path d="M3 3v5h5"></path>
                         </svg>
                     </button>
                     <div class="divider-vertical"></div>
-                    <button class="icon-btn icon-sm" title="Rotate Left (R)" id="btnRotateLeft">
+                    <button class="icon-btn icon-sm" title="Rotate Left (R)" data-i18n-title="viewer.rotateLeft" id="btnRotateLeft">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M2.5 2v6h6"></path>
                             <path d="M2.66 15.57a10 10 0 1 0 .57-8.38"></path>
                         </svg>
                     </button>
-                    <button class="icon-btn icon-sm" title="Rotate Right (Shift+R)" id="btnRotateRight">
+                    <button class="icon-btn icon-sm" title="Rotate Right (Shift+R)" data-i18n-title="viewer.rotateRight" id="btnRotateRight">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M21.5 2v6h-6"></path>
                             <path d="M21.34 15.57a10 10 0 1 1-.57-8.38"></path>
                         </svg>
                     </button>
-                    <button class="icon-btn icon-sm" title="Flip Horizontal (H)" id="btnFlipH">
+                    <button class="icon-btn icon-sm" title="Flip Horizontal (H)" data-i18n-title="viewer.flipH" id="btnFlipH">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M12 3v18"></path>
                             <path d="M16 7l4 5-4 5"></path>
@@ -342,12 +345,12 @@
         <!-- MIDDLE PANEL: EDITOR -->
         <section class="panel glass-panel panel-col-2">
             <div class="panel-header">
-                <span>Description / Transcription</span>
+                <span data-i18n="editor.title">Description / Transcription</span>
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
-                        <div class="info-tooltip-title">How does it work?</div>
-                        <strong>1. Transcribe:</strong> The LLM creates an initial draft which you correct and validate as an expert.<br>
-                        <strong>2. Describe:</strong> As configured in the user prompt, the LLM generates a visual description of the document page.
+                        <div class="info-tooltip-title" data-i18n="editor.tooltipTitle">How does it work?</div>
+                        <strong data-i18n="editor.tooltipText1">1. Transcribe:</strong> <span data-i18n="editor.tooltipDesc1">The LLM creates an initial draft which you correct and validate as an expert.</span><br>
+                        <strong data-i18n="editor.tooltipText2">2. Describe:</strong> <span data-i18n="editor.tooltipDesc2">As configured in the user prompt, the LLM generates a visual description of the document page.</span>
                     </div>
                 </span>
                 <div class="flex-center gap-1 ml-auto">
@@ -356,53 +359,53 @@
                         <span class="model-indicator-sep">|</span>
                         <span class="model-indicator-text" id="modelIndicatorText">Gemini Flash</span>
                     </span>
-                    <button class="btn btn-primary btn-sm" id="btnTranscribe" title="Transcribe document with LLM">
+                    <button class="btn btn-primary btn-sm" id="btnTranscribe" title="Transcribe document with LLM" data-i18n-title="editor.transcribeTitle">
                         <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
                             <path d="m15 5 4 4"></path>
                         </svg>
-                        <span class="btn-text">Transcribe</span>
+                        <span class="btn-text" data-i18n="editor.transcribe">Transcribe</span>
                         <span class="btn-spinner" hidden>
                             <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
                             </svg>
                         </span>
                     </button>
-                    <button class="btn btn-primary btn-sm" id="btnDescribe" title="Describe illuminated initials with Gemini">
+                    <button class="btn btn-primary btn-sm" id="btnDescribe" title="Describe illuminated initials with Gemini" data-i18n-title="editor.describeTitle">
                         <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                             <circle cx="8.5" cy="8.5" r="1.5"></circle>
                             <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
-                        <span class="btn-text">Describe</span>
+                        <span class="btn-text" data-i18n="editor.describe">Describe</span>
                         <span class="btn-spinner" hidden>
                             <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
                             </svg>
                         </span>
                     </button>
-                    <button class="btn btn-primary btn-sm" id="btnExport" title="Export transcription">
+                    <button class="btn btn-primary btn-sm" id="btnExport" title="Export transcription" data-i18n-title="editor.exportTitle">
                         <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                        <span class="btn-text">Export</span>
+                        <span class="btn-text" data-i18n="editor.export">Export</span>
                     </button>
                     <div class="divider-vertical"></div>
-                    <button class="icon-btn undo-redo" id="btnUndo" title="Undo (Ctrl+Z)" disabled>
+                    <button class="icon-btn undo-redo" id="btnUndo" title="Undo (Ctrl+Z)" data-i18n-title="editor.undoTitle" disabled>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 14 4 9 9 4" />
                             <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
                         </svg>
-                        <span class="btn-label">Undo</span>
+                        <span class="btn-label" data-i18n="editor.undo">Undo</span>
                     </button>
-                    <button class="icon-btn undo-redo" id="btnRedo" title="Redo (Ctrl+Shift+Z)" disabled>
+                    <button class="icon-btn undo-redo" id="btnRedo" title="Redo (Ctrl+Shift+Z)" data-i18n-title="editor.redoTitle" disabled>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
                             <path d="M15 4 20 9 15 14" />
                         </svg>
-                        <span class="btn-label">Redo</span>
+                        <span class="btn-label" data-i18n="editor.redo">Redo</span>
                     </button>
                 </div>
             </div>
@@ -413,7 +416,7 @@
                     <path d="M12 16v-4"></path>
                     <path d="M12 8h.01"></path>
                 </svg>
-                <span>Click "Transcribe" to process the document with AI. Double-click to edit.</span>
+                <span data-i18n="editor.hint">Click "Transcribe" to process the document with AI. Double-click to edit.</span>
                 <button class="panel-hint-dismiss" data-dismiss-hint="editor">×</button>
             </div>
             <!-- Description Panel (collapsible, outside editorContent to survive innerHTML rebuilds) -->
@@ -424,19 +427,19 @@
                         <circle cx="8.5" cy="8.5" r="1.5"></circle>
                         <polyline points="21 15 16 10 5 21"></polyline>
                     </svg>
-                    <span>Image Description</span>
+                    <span data-i18n="editor.description">Image Description</span>
                     <span class="description-summary-badge" id="descriptionModelBadge">Gemini Pro</span>
-                    <button type="button" class="description-collapse-btn" id="descriptionCollapseBtn" title="Collapse description">
+                    <button type="button" class="description-collapse-btn" id="descriptionCollapseBtn" title="Collapse description" data-i18n-title="editor.descriptionCollapse">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="18 15 12 9 6 15"></polyline>
                         </svg>
                     </button>
                 </summary>
                 <div class="description-content">
-                    <textarea id="descriptionTextarea" rows="12" placeholder="Description will appear here..."></textarea>
+                    <textarea id="descriptionTextarea" rows="12" placeholder="Description will appear here..." data-i18n-placeholder="editor.descriptionPlaceholder"></textarea>
                     <div class="description-footer">
                         <span class="description-timestamp" id="descriptionTimestamp"></span>
-                        <button type="button" class="btn-link btn-sm" id="copyDescription">Copy</button>
+                        <button type="button" class="btn-link btn-sm" id="copyDescription" data-i18n="editor.descriptionCopy">Copy</button>
                     </div>
                 </div>
             </details>
@@ -451,22 +454,22 @@
         <!-- RIGHT PANEL: VALIDATION -->
         <section class="panel glass-panel panel-col-3">
             <div class="panel-header">
-                <span>Validation / LLM Review</span>
+                <span data-i18n="validation.title">Validation / LLM Review</span>
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
-                        <div class="info-tooltip-title">Hybrid Validation</div>
-                        Combines deterministic validation with LLM Review. Categories: confident / uncertain / problematic (no percentages).
-                        <div class="info-tooltip-title" style="margin-top: 8px;">Model Thinking</div>
-                        Watch the LLM's reasoning process in real time. This helps you understand how the model approaches your document and refine your prompts accordingly.
+                        <div class="info-tooltip-title" data-i18n="validation.tooltipTitle">Hybrid Validation</div>
+                        <span data-i18n="validation.tooltipText">Combines deterministic validation with LLM Review. Categories: confident / uncertain / problematic (no percentages).</span>
+                        <div class="info-tooltip-title" style="margin-top: 8px;" data-i18n="validation.tooltipThinkingTitle">Model Thinking</div>
+                        <span data-i18n="validation.tooltipThinkingText">Watch the LLM's reasoning process in real time. This helps you understand how the model approaches your document and refine your prompts accordingly.</span>
                     </div>
                 </span>
                 <div class="flex-center gap-2 ml-auto">
-                    <button class="btn btn-primary btn-sm" id="btnValidate" title="Validate transcription" disabled>
+                    <button class="btn btn-primary btn-sm" id="btnValidate" title="Validate transcription" data-i18n-title="validation.validateTitle" disabled>
                         <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M9 11l3 3L22 4"></path>
                             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                         </svg>
-                        <span class="btn-text">Validate</span>
+                        <span class="btn-text" data-i18n="validation.validate">Validate</span>
                         <span class="btn-spinner" hidden>
                             <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
@@ -483,7 +486,7 @@
                     <path d="M12 16v-4"></path>
                     <path d="M12 8h.01"></path>
                 </svg>
-                <span>Validation checks transcription for errors and uncertainties.</span>
+                <span data-i18n="validation.hint">Validation checks transcription for errors and uncertainties.</span>
                 <button class="panel-hint-dismiss" data-dismiss-hint="validation">×</button>
             </div>
             <div class="panel-content" id="validationContent">
@@ -494,8 +497,8 @@
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M12 6v6l4 2"></path>
                         </svg>
-                        <span class="thinking-label" id="thinkingHeader">LLM Thinking</span>
-                        <button type="button" class="thinking-collapse-btn" id="thinkingCollapseBtn" title="Collapse thinking panel">
+                        <span class="thinking-label" id="thinkingHeader" data-i18n="validation.thinkingLabel">LLM Thinking</span>
+                        <button type="button" class="thinking-collapse-btn" id="thinkingCollapseBtn" title="Collapse thinking panel" data-i18n-title="validation.thinkingCollapse">
                             <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="18 15 12 9 6 15"></polyline>
                             </svg>
@@ -515,8 +518,8 @@
                         <path d="M9 12l2 2 4-4"></path>
                         <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
                     </svg>
-                    <h4 class="validation-empty-title">No Validation Yet</h4>
-                    <p class="validation-empty-text">
+                    <h4 class="validation-empty-title" data-i18n="validation.emptyTitle">No Validation Yet</h4>
+                    <p class="validation-empty-text" data-i18n="validation.emptyText">
                         Load a document and run transcription to see validation results here.
                     </p>
                 </div>
@@ -530,7 +533,7 @@
                                 d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
                             </path>
                         </svg>
-                        Validation
+                        <span data-i18n="validation.sectionValidation">Validation</span>
                     </div>
                     <div id="ruleBasedContent">
                         <!-- Content injected by JS -->
@@ -551,7 +554,7 @@
                                 d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z">
                             </path>
                         </svg>
-                        LLM Review
+                        <span data-i18n="validation.sectionLLMReview">LLM Review</span>
                     </div>
                     <div id="llmReviewContent">
                         <!-- Content injected by JS -->
@@ -578,7 +581,7 @@
                     <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    <span>Load</span>
+                    <span data-i18n="workflow.load">Load</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="2">
@@ -587,7 +590,7 @@
                         <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
                         <path d="m15 5 4 4"></path>
                     </svg>
-                    <span>Transcribe</span>
+                    <span data-i18n="workflow.transcribe">Transcribe</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="3">
@@ -596,7 +599,7 @@
                         <path d="M9 11l3 3L22 4"></path>
                         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                     </svg>
-                    <span>Describe</span>
+                    <span data-i18n="workflow.describe">Describe</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="4">
@@ -605,7 +608,7 @@
                         <path d="M9 12l2 2 4-4"></path>
                         <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
                     </svg>
-                    <span>Validate</span>
+                    <span data-i18n="workflow.validate">Validate</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="5">
@@ -615,13 +618,13 @@
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    <span>Export</span>
+                    <span data-i18n="workflow.export">Export</span>
                 </div>
             </div>
 
             <div class="status-bar-right">
-                <span id="statusProvider">Model: <span class="model-name">Gemini 3 Flash</span></span>
-                <div class="status-indicator status-confident" title="API Connected" id="statusIndicator"></div>
+                <span id="statusProvider"><span data-i18n="status.model">Model:</span> <span class="model-name">Gemini 3 Flash</span></span>
+                <div class="status-indicator status-confident" title="API Connected" data-i18n-title="status.apiConnected" id="statusIndicator"></div>
             </div>
         </footer>
 
@@ -632,7 +635,7 @@
     <!-- LLM Configuration Dialog -->
     <dialog id="apiKeyDialog" class="dialog dialog-xl">
         <div class="dialog-header">
-            <h2 class="dialog-title">LLM Configuration</h2>
+            <h2 class="dialog-title" data-i18n="dialog.llmConfig.title">LLM Configuration</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -645,30 +648,30 @@
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
                 <div class="security-notice-content">
-                    <strong>Security Notice:</strong>
+                    <strong data-i18n="dialog.llmConfig.securityTitle">Security Notice:</strong>
                     <ul class="security-notice-list">
-                        <li>API Keys are <em>not</em> stored - entry required on each visit</li>
-                        <li>Keys remain only in browser memory while the tab is open</li>
-                        <li>Never share your API Keys with others</li>
-                        <li>For maximum security: Use Ollama locally (no API key needed)</li>
+                        <li data-i18n="dialog.llmConfig.securityList1">API Keys are not stored - entry required on each visit</li>
+                        <li data-i18n="dialog.llmConfig.securityList2">Keys remain only in browser memory while the tab is open</li>
+                        <li data-i18n="dialog.llmConfig.securityList3">Never share your API Keys with others</li>
+                        <li data-i18n="dialog.llmConfig.securityList4">For maximum security: Use Ollama locally (no API key needed)</li>
                     </ul>
                     <details class="security-details">
-                        <summary>Learn more</summary>
-                        <p>Browser-based apps cannot fully protect API Keys. The key is in the browser's memory during use. We recommend:</p>
+                        <summary data-i18n="dialog.llmConfig.learnMore">Learn more</summary>
+                        <p data-i18n="dialog.llmConfig.learnMoreText">Browser-based apps cannot fully protect API Keys. The key is in the browser's memory during use. We recommend:</p>
                         <ul>
-                            <li>Create a separate API key only for this tool</li>
-                            <li>Set spending limits with your provider</li>
-                            <li>For sensitive documents: Use Ollama locally</li>
+                            <li data-i18n="dialog.llmConfig.learnMoreList1">Create a separate API key only for this tool</li>
+                            <li data-i18n="dialog.llmConfig.learnMoreList2">Set spending limits with your provider</li>
+                            <li data-i18n="dialog.llmConfig.learnMoreList3">For sensitive documents: Use Ollama locally</li>
                         </ul>
-                        <p class="security-local-hint"><strong>Tip for local use:</strong> When running the tool locally, you can create a <code>config.local.js</code> file (see <code>config.local.example.js</code>). Your keys will then be loaded automatically.</p>
+                        <p class="security-local-hint"><strong data-i18n="dialog.llmConfig.localTip">Tip for local use:</strong> <span data-i18n="dialog.llmConfig.localTipText">When running the tool locally, you can create a config.local.js file (see config.local.example.js). Your keys will then be loaded automatically.</span></p>
                     </details>
                     <label class="security-acknowledge">
                         <input type="checkbox" id="securityAcknowledge">
-                        <span>I understand that my API key will be stored in browser memory during the session</span>
+                        <span data-i18n="dialog.llmConfig.acknowledge">I understand that my API key will be stored in browser memory during the session</span>
                     </label>
                     <label class="security-acknowledge api-key-persist">
                         <input type="checkbox" id="apiKeyPersist">
-                        <span>Store API key persistently (only on trusted devices)</span>
+                        <span data-i18n="dialog.llmConfig.persist">Store API key persistently (only on trusted devices)</span>
                     </label>
                 </div>
             </div>
@@ -676,7 +679,7 @@
             <div class="llm-config-fields">
                 <!-- Model Selection (primary) -->
                 <div class="input-wrapper">
-                    <label for="llmModel">Model</label>
+                    <label for="llmModel" data-i18n="dialog.llmConfig.model">Model</label>
                     <div class="input-with-custom">
                         <select id="llmModel">
                             <optgroup label="Gemini (recommended)">
@@ -694,12 +697,12 @@
                         </select>
                         <input type="text" id="llmModelCustom" class="custom-input" placeholder="e.g. gpt-4o, claude-sonnet-4-5-20250514, gemini-..." style="display: none;">
                     </div>
-                    <span class="input-hint" id="llmModelHint">Gemini 3 Flash for fast results, Pro for complex handwriting.</span>
+                    <span class="input-hint" id="llmModelHint" data-i18n="dialog.llmConfig.modelHint">Gemini 3 Flash for fast results, Pro for complex handwriting.</span>
                 </div>
 
                 <!-- API Key (hidden for Ollama) -->
                 <div class="input-wrapper" id="apiKeyWrapper">
-                    <label for="llmApiKey">API Key</label>
+                    <label for="llmApiKey" data-i18n="dialog.llmConfig.apiKey">API Key</label>
                     <div class="input-with-toggle">
                         <input type="password" id="llmApiKey" placeholder="AIza..." autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
@@ -714,12 +717,12 @@
 
                 <!-- Ollama-specific: Endpoint (shown when Ollama model selected) -->
                 <div class="input-wrapper" id="ollamaEndpointWrapper" style="display: none;">
-                    <label for="ollamaEndpoint">Ollama Server-URL</label>
+                    <label for="ollamaEndpoint" data-i18n="dialog.llmConfig.ollamaUrl">Ollama Server-URL</label>
                     <div class="input-with-button">
                         <input type="text" id="ollamaEndpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
-                        <button type="button" class="btn btn-secondary btn-sm" id="ollamaRefreshModels">Load Models</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="ollamaRefreshModels" data-i18n="dialog.llmConfig.loadModels">Load Models</button>
                     </div>
-                    <span class="input-hint">Ollama must run locally: <code>ollama serve</code></span>
+                    <span class="input-hint" data-i18n="dialog.llmConfig.ollamaHint">Ollama must run locally: ollama serve</span>
                 </div>
 
                 <!-- Hidden provider field for JS logic -->
@@ -729,7 +732,7 @@
             <!-- Validation Provider Section (conditional - only for OCR-only models) -->
             <div id="validationProviderSection" class="validation-provider-section" hidden>
                 <div class="section-divider">
-                    <span class="section-divider-text">Validation Configuration</span>
+                    <span class="section-divider-text" data-i18n="dialog.llmConfig.validationConfig">Validation Configuration</span>
                 </div>
 
                 <div class="info-banner info-banner-warning">
@@ -739,13 +742,13 @@
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                     <p>
-                        <strong>OCR-only model selected.</strong>
-                        This model cannot validate text. Select a language model for validation or leave empty to use automatic fallback.
+                        <strong data-i18n="dialog.llmConfig.ocrOnlyWarning">OCR-only model selected.</strong>
+                        <span data-i18n="dialog.llmConfig.ocrOnlyText">This model cannot validate text. Select a language model for validation or leave empty to use automatic fallback.</span>
                     </p>
                 </div>
 
                 <div class="input-wrapper">
-                    <label for="validationModel">Validation Model (Optional)</label>
+                    <label for="validationModel" data-i18n="dialog.llmConfig.validationModel">Validation Model (Optional)</label>
                     <select id="validationModel">
                         <option value="">-- Auto-detect fallback --</option>
                         <optgroup label="Google Gemini">
@@ -766,12 +769,12 @@
                             <option value="ollama:phi3" data-provider="ollama">Phi-3</option>
                         </optgroup>
                     </select>
-                    <span class="input-hint">Leave empty to use automatic fallback detection</span>
+                    <span class="input-hint" data-i18n="dialog.llmConfig.fallbackHint">Leave empty to use automatic fallback detection</span>
                 </div>
 
                 <!-- Validation API Key (hidden for Ollama) -->
                 <div id="validationApiKeyWrapper" class="input-wrapper">
-                    <label for="validationApiKey">Validation API Key</label>
+                    <label for="validationApiKey" data-i18n="dialog.llmConfig.validationApiKey">Validation API Key</label>
                     <div class="input-with-toggle">
                         <input type="password" id="validationApiKey" placeholder="Enter API key" autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
@@ -787,19 +790,19 @@
                 <!-- Persist checkbox -->
                 <label class="security-acknowledge">
                     <input type="checkbox" id="validationApiKeyPersist">
-                    <span>Store validation API key permanently</span>
+                    <span data-i18n="dialog.llmConfig.validationPersist">Store validation API key permanently</span>
                 </label>
             </div>
         </div>
 
         <div class="dialog-footer">
             <div class="test-connection-group">
-                <button type="button" class="btn btn-secondary" id="testApiConnection">Test Connection</button>
+                <button type="button" class="btn btn-secondary" id="testApiConnection" data-i18n="dialog.llmConfig.testConnection">Test Connection</button>
                 <span id="testConnectionStatus" class="test-status" hidden></span>
             </div>
             <div class="dialog-actions">
-                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveApiKeys">Save</button>
+                <button type="button" class="btn btn-secondary" data-close-dialog data-i18n="dialog.cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveApiKeys" data-i18n="dialog.save">Save</button>
             </div>
         </div>
     </dialog>
@@ -807,7 +810,7 @@
     <!-- Transcription Dialog (combined context + transcribe) -->
     <dialog id="transcribeDialog" class="dialog dialog-xl">
         <div class="dialog-header">
-            <h2 class="dialog-title">Start Transcription</h2>
+            <h2 class="dialog-title" data-i18n="dialog.transcribe.title">Start Transcription</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -817,14 +820,14 @@
             <!-- Context Section (collapsible) -->
             <details class="context-details" id="contextDetails">
                 <summary class="context-summary">
-                    <span class="context-summary-title">Document Context (optional)</span>
-                    <span class="context-summary-hint">Additional document information</span>
+                    <span class="context-summary-title" data-i18n="dialog.transcribe.contextTitle">Document Context (optional)</span>
+                    <span class="context-summary-hint" data-i18n="dialog.transcribe.contextHint">Additional document information</span>
                 </summary>
                 <div class="context-fields">
-                    <p class="context-explanation">Optional information about the document that will be considered during transcription.</p>
+                    <p class="context-explanation" data-i18n="dialog.transcribe.contextExplanation">Optional information about the document that will be considered during transcription.</p>
                     <!-- Document Type with custom option -->
                     <div class="input-wrapper">
-                        <label for="contextDocType">Document Type</label>
+                        <label for="contextDocType" data-i18n="dialog.transcribe.docType">Document Type</label>
                         <div class="input-with-custom">
                             <select id="contextDocType">
                                 <option value="">-- Select --</option>
@@ -846,19 +849,19 @@
                     <!-- Period and Language -->
                     <div class="input-row">
                         <div class="input-wrapper">
-                            <label for="contextPeriod">Period</label>
-                            <input type="text" id="contextPeriod" placeholder="e.g. 1880-1920, 19th century">
+                            <label for="contextPeriod" data-i18n="dialog.transcribe.period">Period</label>
+                            <input type="text" id="contextPeriod" placeholder="e.g. 1880-1920, 19th century" data-i18n-placeholder="dialog.transcribe.periodPlaceholder">
                         </div>
                         <div class="input-wrapper">
-                            <label for="contextLanguage">Language(s)</label>
-                            <input type="text" id="contextLanguage" placeholder="e.g. German, French">
+                            <label for="contextLanguage" data-i18n="dialog.transcribe.language">Language(s)</label>
+                            <input type="text" id="contextLanguage" placeholder="e.g. German, French" data-i18n-placeholder="dialog.transcribe.languagePlaceholder">
                         </div>
                     </div>
 
                     <!-- Script Type and Century -->
                     <div class="input-row">
                         <div class="input-wrapper">
-                            <label for="contextScriptType">Script Type</label>
+                            <label for="contextScriptType" data-i18n="dialog.transcribe.scriptType">Script Type</label>
                             <select id="contextScriptType">
                                 <option value="">-- Select --</option>
                                 <option value="textura">Textura (Gothic Bookhand)</option>
@@ -874,15 +877,15 @@
                             <input type="text" id="contextScriptTypeCustom" class="custom-input" placeholder="Enter script type..." style="display: none;">
                         </div>
                         <div class="input-wrapper">
-                            <label for="contextCentury">Century</label>
-                            <input type="text" id="contextCentury" placeholder="e.g. 14, 15th">
+                            <label for="contextCentury" data-i18n="dialog.transcribe.century">Century</label>
+                            <input type="text" id="contextCentury" placeholder="e.g. 14, 15th" data-i18n-placeholder="dialog.transcribe.centuryPlaceholder">
                         </div>
                     </div>
 
                     <!-- Region and Text Type -->
                     <div class="input-row">
                         <div class="input-wrapper">
-                            <label for="contextRegion">Region</label>
+                            <label for="contextRegion" data-i18n="dialog.transcribe.region">Region</label>
                             <select id="contextRegion">
                                 <option value="">-- Select --</option>
                                 <option value="german">German-speaking</option>
@@ -899,7 +902,7 @@
                             <input type="text" id="contextRegionCustom" class="custom-input" placeholder="Enter region..." style="display: none;">
                         </div>
                         <div class="input-wrapper">
-                            <label for="contextTextType">Text Type</label>
+                            <label for="contextTextType" data-i18n="dialog.transcribe.textType">Text Type</label>
                             <select id="contextTextType">
                                 <option value="">-- Select --</option>
                                 <option value="liturgical">Liturgical</option>
@@ -918,16 +921,16 @@
 
                     <!-- Known Text -->
                     <div class="input-wrapper">
-                        <label for="contextKnownText">Known Source Text</label>
-                        <input type="text" id="contextKnownText" placeholder="e.g. Psalter, Sachsenspiegel, Vulgate">
-                        <span class="input-hint">If the source text is known, name it here for better correction proposals.</span>
+                        <label for="contextKnownText" data-i18n="dialog.transcribe.knownText">Known Source Text</label>
+                        <input type="text" id="contextKnownText" placeholder="e.g. Psalter, Sachsenspiegel, Vulgate" data-i18n-placeholder="dialog.transcribe.knownTextPlaceholder">
+                        <span class="input-hint" data-i18n="dialog.transcribe.knownTextHint">If the source text is known, name it here for better correction proposals.</span>
                     </div>
 
                     <!-- Context Information -->
                     <div class="input-wrapper">
-                        <label for="contextDescription">Context Information</label>
-                        <textarea id="contextDescription" rows="4" placeholder="e.g. Letter from the estate of Hugo Schuchardt to a colleague. Handwriting partially difficult to read, contains linguistic terminology."></textarea>
-                        <span class="input-hint">Describe origin, author, special features or other helpful information.</span>
+                        <label for="contextDescription" data-i18n="dialog.transcribe.contextInfo">Context Information</label>
+                        <textarea id="contextDescription" rows="4" placeholder="e.g. Letter from the estate of Hugo Schuchardt to a colleague. Handwriting partially difficult to read, contains linguistic terminology." data-i18n-placeholder="dialog.transcribe.contextInfoPlaceholder"></textarea>
+                        <span class="input-hint" data-i18n="dialog.transcribe.contextInfoHint">Describe origin, author, special features or other helpful information.</span>
                     </div>
                 </div>
             </details>
@@ -935,20 +938,20 @@
             <!-- Prompt Profile Section (Stage 1) -->
             <details class="context-details" id="promptConfigDetailsTranscribe">
                 <summary class="context-summary">
-                    <span class="context-summary-title">Prompt Profile (optional)</span>
-                    <span class="context-summary-hint">Scenario profile and Stage 1 override</span>
+                    <span class="context-summary-title" data-i18n="dialog.transcribe.promptProfile">Prompt Profile (optional)</span>
+                    <span class="context-summary-hint" data-i18n="dialog.transcribe.promptProfileHint">Scenario profile and Stage 1 override</span>
                 </summary>
                 <div class="context-fields">
                     <div class="input-wrapper">
-                        <label for="promptProfileSelectTranscribe">Scenario Profile</label>
+                        <label for="promptProfileSelectTranscribe" data-i18n="validation.scenarioProfile">Scenario Profile</label>
                         <select id="promptProfileSelectTranscribe"></select>
-                        <span class="input-hint">Select a document scenario. You can still override prompts manually.</span>
+                        <span class="input-hint" data-i18n="dialog.transcribe.profileHint">Select a document scenario. You can still override prompts manually.</span>
                     </div>
                     <div class="input-wrapper">
-                        <label for="promptOverrideStage1">Stage 1 Override (Transcription)</label>
-                        <textarea id="promptOverrideStage1" rows="5" placeholder="Optional custom prompt for Stage 1. Leave empty to use selected profile/default."></textarea>
+                        <label for="promptOverrideStage1" data-i18n="dialog.transcribe.stage1Override">Stage 1 Override (Transcription)</label>
+                        <textarea id="promptOverrideStage1" rows="5" placeholder="Optional custom prompt for Stage 1. Leave empty to use selected profile/default." data-i18n-placeholder="dialog.transcribe.stage1Placeholder"></textarea>
                         <div style="margin-top: 8px;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage1">Reset Stage 1 Override</button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage1" data-i18n="validation.resetStage1">Reset Stage 1 Override</button>
                         </div>
                     </div>
                 </div>
@@ -962,18 +965,18 @@
             <!-- Page Selection (for multi-page documents) -->
             <div class="transcribe-page-selection" id="transcribePageSelection" hidden>
                 <div class="page-selection-header">
-                    <span class="page-selection-title">Transcribe Pages</span>
+                    <span class="page-selection-title" data-i18n="dialog.transcribe.transcribePages">Transcribe Pages</span>
                     <span class="page-selection-count" id="pageSelectionCount"></span>
                 </div>
                 <div class="page-selection-options">
                     <label class="page-selection-option">
                         <input type="radio" name="pageSelection" value="current" checked>
-                        <span class="option-label">Current page only</span>
-                        <span class="option-hint">Fast, recommended for testing</span>
+                        <span class="option-label" data-i18n="dialog.transcribe.currentPageOnly">Current page only</span>
+                        <span class="option-hint" data-i18n="dialog.transcribe.currentPageHint">Fast, recommended for testing</span>
                     </label>
                     <label class="page-selection-option">
                         <input type="radio" name="pageSelection" value="all">
-                        <span class="option-label">All pages</span>
+                        <span class="option-label" data-i18n="dialog.transcribe.allPages">All pages</span>
                         <span class="option-hint" id="allPagesHint"><!-- Filled by JS --></span>
                     </label>
                 </div>
@@ -993,12 +996,12 @@
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+            <button type="button" class="btn btn-secondary" data-close-dialog data-i18n="dialog.cancel">Cancel</button>
             <button type="button" class="btn btn-primary" id="startTranscription">
                 <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
                 </svg>
-                Transcribe
+                <span data-i18n="dialog.transcribe.startTranscription">Transcribe</span>
             </button>
         </div>
     </dialog>
@@ -1006,7 +1009,7 @@
     <!-- Describe Dialog -->
     <dialog id="describeDialog" class="dialog dialog-lg">
         <div class="dialog-header">
-            <h2 class="dialog-title">Describe Illuminated Initials</h2>
+            <h2 class="dialog-title" data-i18n="dialog.describe.title">Describe Illuminated Initials</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -1015,9 +1018,9 @@
         <div class="dialog-body">
             <!-- Custom Prompt Section -->
             <div class="description-prompt-section">
-                <label for="descriptionPrompt">Analysis Prompt</label>
-                <textarea id="descriptionPrompt" rows="8" placeholder="Enter custom prompt or use default..."></textarea>
-                <button type="button" class="btn-link btn-sm" id="loadDefaultPrompt">
+                <label for="descriptionPrompt" data-i18n="dialog.describe.promptLabel">Analysis Prompt</label>
+                <textarea id="descriptionPrompt" rows="8" placeholder="Enter custom prompt or use default..." data-i18n-placeholder="dialog.describe.promptPlaceholder"></textarea>
+                <button type="button" class="btn-link btn-sm" id="loadDefaultPrompt" data-i18n="dialog.describe.loadDefault">
                     Load Default Prompt
                 </button>
             </div>
@@ -1031,18 +1034,18 @@
             <!-- Page Selection (multi-page) -->
             <div class="description-page-selection" id="descriptionPageSelection" hidden>
                 <div class="page-selection-header">
-                    <span class="page-selection-title">Describe Pages</span>
+                    <span class="page-selection-title" data-i18n="dialog.describe.describePages">Describe Pages</span>
                     <span class="page-selection-count" id="descriptionPageCount"></span>
                 </div>
                 <div class="page-selection-options">
                     <label class="page-selection-option">
                         <input type="radio" name="descriptionPageSelection" value="current" checked>
-                        <span class="option-label">Current page only</span>
-                        <span class="option-hint">Fast, recommended</span>
+                        <span class="option-label" data-i18n="dialog.describe.currentPageOnly">Current page only</span>
+                        <span class="option-hint" data-i18n="dialog.describe.currentPageHint">Fast, recommended</span>
                     </label>
                     <label class="page-selection-option">
                         <input type="radio" name="descriptionPageSelection" value="all">
-                        <span class="option-label">All pages</span>
+                        <span class="option-label" data-i18n="dialog.describe.allPages">All pages</span>
                         <span class="option-hint" id="descriptionAllPagesHint"><!-- Filled by JS --></span>
                     </label>
                 </div>
@@ -1050,14 +1053,14 @@
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+            <button type="button" class="btn btn-secondary" data-close-dialog data-i18n="dialog.cancel">Cancel</button>
             <button type="button" class="btn btn-primary" id="startDescription">
                 <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
                     <polyline points="21 15 16 10 5 21"></polyline>
                 </svg>
-                Describe
+                <span data-i18n="dialog.describe.startDescription">Describe</span>
             </button>
         </div>
     </dialog>
@@ -1065,7 +1068,7 @@
     <!-- Validate Dialog -->
     <dialog id="validateDialog" class="dialog">
         <div class="dialog-header">
-            <h2 class="dialog-title">Start Validation</h2>
+            <h2 class="dialog-title" data-i18n="dialog.validate.title">Start Validation</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -1074,23 +1077,23 @@
         <div class="dialog-body">
             <!-- Rule-based Checks -->
             <div class="validate-options-section">
-                <h4 class="validate-section-title">Validation</h4>
-                <p class="validate-section-hint">Local, fast checks without API calls</p>
+                <h4 class="validate-section-title" data-i18n="validation.ruleBasedTitle">Validation</h4>
+                <p class="validate-section-hint" data-i18n="validation.ruleBasedHint">Local, fast checks without API calls</p>
                 <div class="validate-checkbox-group">
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="checkMarkers" checked>
-                        <span class="checkbox-label">Transcription Markers</span>
-                        <span class="checkbox-hint">[?], [illegible], Abbreviations</span>
+                        <span class="checkbox-label" data-i18n="validation.markers">Transcription Markers</span>
+                        <span class="checkbox-hint" data-i18n="validation.markersHint">[?], [illegible], Abbreviations</span>
                     </label>
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="checkStats" checked>
-                        <span class="checkbox-label">Text Statistics</span>
-                        <span class="checkbox-hint">Line and character count</span>
+                        <span class="checkbox-label" data-i18n="validation.stats">Text Statistics</span>
+                        <span class="checkbox-hint" data-i18n="validation.statsHint">Line and character count</span>
                     </label>
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="checkArtifacts" checked>
-                        <span class="checkbox-label">OCR Artifacts</span>
-                        <span class="checkbox-hint">Unusual characters, control characters</span>
+                        <span class="checkbox-label" data-i18n="validation.artifacts">OCR Artifacts</span>
+                        <span class="checkbox-hint" data-i18n="validation.artifactsHint">Unusual characters, control characters</span>
                     </label>
                 </div>
             </div>
@@ -1098,17 +1101,17 @@
             <!-- LLM Review -->
             <div class="validate-options-section" id="llmModeItem">
                 <div class="validate-section-header">
-                    <h4 class="validate-section-title">LLM Review</h4>
+                    <h4 class="validate-section-title" data-i18n="validation.llmReviewTitle">LLM Review</h4>
                     <label class="validate-toggle">
                         <input type="checkbox" id="enableLLM" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
-                <p class="validate-section-hint" id="llmModeHint">One API call per page</p>
+                <p class="validate-section-hint" id="llmModeHint" data-i18n="validation.llmToggleHint">One API call per page</p>
                 <details class="custom-prompt-details">
-                    <summary class="custom-prompt-toggle">Use custom prompt (optional)</summary>
+                    <summary class="custom-prompt-toggle" data-i18n="validation.customPromptToggle">Use custom prompt (optional)</summary>
                     <div class="custom-prompt-content">
-                        <p class="custom-prompt-hint">Overrides the default LLM Review prompt. Use {text} as placeholder for the transcription.</p>
+                        <p class="custom-prompt-hint" data-i18n="validation.customPromptHint">Overrides the default LLM Review prompt. Use {text} as placeholder for the transcription.</p>
                         <textarea id="customValidationPrompt" class="custom-prompt-textarea" rows="6" placeholder="Analyze the following text for transcription errors...&#10;&#10;{text}&#10;&#10;Respond in JSON format with confidence, issues and summary."></textarea>
                     </div>
                 </details>
@@ -1116,44 +1119,44 @@
 
             <!-- Post-Processing Stage Toggles (only visible when pipeline feature flag is ON) -->
             <div class="validate-options-section" id="stageTogglesSection" hidden>
-                <h4 class="validate-section-title">Post-Processing Stages</h4>
-                <p class="validate-section-hint">Select which review stages to run</p>
+                <h4 class="validate-section-title" data-i18n="validation.postProcessTitle">Post-Processing Stages</h4>
+                <p class="validate-section-hint" data-i18n="validation.postProcessHint">Select which review stages to run</p>
                 <div class="validate-checkbox-group">
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="enableStage2" checked>
-                        <span class="checkbox-label">Paleographic Review</span>
-                        <span class="checkbox-hint">Minim disambiguation, letter confusion, abbreviation signs</span>
+                        <span class="checkbox-label" data-i18n="validation.paleographicReview">Paleographic Review</span>
+                        <span class="checkbox-hint" data-i18n="validation.paleographicHint">Minim disambiguation, letter confusion, abbreviation signs</span>
                     </label>
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="enableStage3" checked>
-                        <span class="checkbox-label">Philological Review</span>
-                        <span class="checkbox-hint">Morphology, syntax, formulaic patterns, lexical plausibility</span>
+                        <span class="checkbox-label" data-i18n="validation.philologicalReview">Philological Review</span>
+                        <span class="checkbox-hint" data-i18n="validation.philologicalHint">Morphology, syntax, formulaic patterns, lexical plausibility</span>
                     </label>
                 </div>
             </div>
 
             <!-- Prompt Profile Section -->
             <div class="validate-options-section" id="promptProfileSection">
-                <h4 class="validate-section-title">Prompt Profile</h4>
-                <p class="validate-section-hint">Choose a document scenario profile for Stage 1/2/3 prompts.</p>
+                <h4 class="validate-section-title" data-i18n="validation.promptProfileTitle">Prompt Profile</h4>
+                <p class="validate-section-hint" data-i18n="validation.promptProfileHint">Choose a document scenario profile for Stage 1/2/3 prompts.</p>
                 <div class="input-wrapper">
-                    <label for="promptProfileSelectValidate">Scenario Profile</label>
+                    <label for="promptProfileSelectValidate" data-i18n="validation.scenarioProfile">Scenario Profile</label>
                     <select id="promptProfileSelectValidate"></select>
                 </div>
                 <details class="custom-prompt-details">
-                    <summary class="custom-prompt-toggle">Advanced stage overrides (optional)</summary>
+                    <summary class="custom-prompt-toggle" data-i18n="validation.advancedOverrides">Advanced stage overrides (optional)</summary>
                     <div class="custom-prompt-content">
-                        <p class="custom-prompt-hint">If filled, overrides replace profile/default prompts for the stage.</p>
-                        <label for="promptOverrideStage2">Stage 2 Override (Paleographic Review)</label>
+                        <p class="custom-prompt-hint" data-i18n="validation.advancedOverridesHint">If filled, overrides replace profile/default prompts for the stage.</p>
+                        <label for="promptOverrideStage2" data-i18n="validation.stage2Override">Stage 2 Override (Paleographic Review)</label>
                         <textarea id="promptOverrideStage2" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 2"></textarea>
                         <div style="margin-top: 8px; margin-bottom: 12px;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage2">Reset Stage 2 Override</button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage2" data-i18n="validation.resetStage2">Reset Stage 2 Override</button>
                         </div>
 
-                        <label for="promptOverrideStage3">Stage 3 Override (Philological Review)</label>
+                        <label for="promptOverrideStage3" data-i18n="validation.stage3Override">Stage 3 Override (Philological Review)</label>
                         <textarea id="promptOverrideStage3" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 3"></textarea>
                         <div style="margin-top: 8px;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage3">Reset Stage 3 Override</button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage3" data-i18n="validation.resetStage3">Reset Stage 3 Override</button>
                         </div>
                     </div>
                 </details>
@@ -1162,18 +1165,18 @@
             <!-- Page Selection for Multi-Page -->
             <div class="validate-page-selection" id="validatePageSelection" hidden>
                 <div class="page-selection-header">
-                    <span class="page-selection-title">Validate Pages</span>
+                    <span class="page-selection-title" data-i18n="dialog.validate.validatePages">Validate Pages</span>
                     <span class="page-selection-count" id="validatePageCount"></span>
                 </div>
                 <div class="page-selection-options">
                     <label class="page-selection-option">
                         <input type="radio" name="validatePageSelection" value="current" checked>
-                        <span class="option-label">Current page only</span>
-                        <span class="option-hint">Fast, recommended for testing</span>
+                        <span class="option-label" data-i18n="dialog.validate.currentPageOnly">Current page only</span>
+                        <span class="option-hint" data-i18n="dialog.validate.currentPageHint">Fast, recommended for testing</span>
                     </label>
                     <label class="page-selection-option">
                         <input type="radio" name="validatePageSelection" value="all">
-                        <span class="option-label">All pages</span>
+                        <span class="option-label" data-i18n="dialog.validate.allPages">All pages</span>
                         <span class="option-hint" id="validateAllPagesHint"><!-- Filled by JS --></span>
                     </label>
                 </div>
@@ -1193,13 +1196,13 @@
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+            <button type="button" class="btn btn-secondary" data-close-dialog data-i18n="dialog.cancel">Cancel</button>
             <button type="button" class="btn btn-primary" id="startValidation">
                 <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M9 11l3 3L22 4"></path>
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                 </svg>
-                Validate
+                <span data-i18n="dialog.validate.startValidation">Validate</span>
             </button>
         </div>
     </dialog>
@@ -1208,7 +1211,7 @@
     <dialog id="exportDialog" class="dialog">
         <div class="dialog-container">
             <div class="dialog-header">
-                <h2 class="dialog-title">Export Transcription</h2>
+                <h2 class="dialog-title" data-i18n="dialog.export.title">Export Transcription</h2>
                 <button class="dialog-close" data-close-dialog aria-label="Close">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1224,8 +1227,8 @@
                         <div class="format-card">
                             <span class="format-icon">TXT</span>
                             <div class="format-info">
-                                <span class="format-name">Plain Text</span>
-                                <span class="format-desc">Tab-separated values, simple and portable</span>
+                                <span class="format-name" data-i18n="dialog.export.plainText">Plain Text</span>
+                                <span class="format-desc" data-i18n="dialog.export.plainTextDesc">Tab-separated values, simple and portable</span>
                             </div>
                         </div>
                     </label>
@@ -1235,8 +1238,8 @@
                         <div class="format-card">
                             <span class="format-icon">JSON</span>
                             <div class="format-info">
-                                <span class="format-name">JSON</span>
-                                <span class="format-desc">Full data with metadata and validation</span>
+                                <span class="format-name" data-i18n="dialog.export.json">JSON</span>
+                                <span class="format-desc" data-i18n="dialog.export.jsonDesc">Full data with metadata and validation</span>
                             </div>
                         </div>
                     </label>
@@ -1246,8 +1249,8 @@
                         <div class="format-card">
                             <span class="format-icon">MD</span>
                             <div class="format-info">
-                                <span class="format-name">Markdown</span>
-                                <span class="format-desc">Formatted table with validation notes</span>
+                                <span class="format-name" data-i18n="dialog.export.markdown">Markdown</span>
+                                <span class="format-desc" data-i18n="dialog.export.markdownDesc">Formatted table with validation notes</span>
                             </div>
                         </div>
                     </label>
@@ -1257,8 +1260,8 @@
                         <div class="format-card">
                             <span class="format-icon">XML</span>
                             <div class="format-info">
-                                <span class="format-name">PAGE-XML</span>
-                                <span class="format-desc">Standard format for Transkribus and other HTR tools</span>
+                                <span class="format-name" data-i18n="dialog.export.pageXML">PAGE-XML</span>
+                                <span class="format-desc" data-i18n="dialog.export.pageXMLDesc">Standard format for Transkribus and other HTR tools</span>
                             </div>
                         </div>
                     </label>
@@ -1268,8 +1271,8 @@
                         <div class="format-card">
                             <span class="format-icon">TEI</span>
                             <div class="format-info">
-                                <span class="format-name">TEI-XML</span>
-                                <span class="format-desc">TEI P5 format for digital editions and scholarly publishing</span>
+                                <span class="format-name" data-i18n="dialog.export.teiXML">TEI-XML</span>
+                                <span class="format-desc" data-i18n="dialog.export.teiXMLDesc">TEI P5 format for digital editions and scholarly publishing</span>
                             </div>
                         </div>
                     </label>
@@ -1278,20 +1281,20 @@
                 <div class="export-options">
                     <label class="checkbox-wrapper">
                         <input type="checkbox" id="exportIncludeValidation" checked>
-                        <span>Include validation results</span>
+                        <span data-i18n="dialog.export.includeValidation">Include validation results</span>
                     </label>
                     <label class="checkbox-wrapper">
                         <input type="checkbox" id="exportIncludeMetadata">
-                        <span>Include metadata (timestamp, provider, model)</span>
+                        <span data-i18n="dialog.export.includeMetadata">Include metadata (timestamp, provider, model)</span>
                     </label>
                 </div>
 
                 <!-- Export Scope (shown for multi-page documents) -->
                 <div class="export-scope" id="exportScope" hidden>
-                    <div class="form-label">Umfang</div>
+                    <div class="form-label" data-i18n="dialog.export.scope">Scope</div>
                     <div class="btn-group export-scope-btns">
-                        <button type="button" class="btn btn-secondary btn-sm active" data-scope="current">Current Page</button>
-                        <button type="button" class="btn btn-secondary btn-sm" data-scope="all">All Pages (ZIP)</button>
+                        <button type="button" class="btn btn-secondary btn-sm active" data-scope="current" data-i18n="dialog.export.currentPage">Current Page</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-scope="all" data-i18n="dialog.export.allPagesZip">All Pages (ZIP)</button>
                     </div>
                     <p class="export-scope-hint text-muted text-xs" id="exportScopeHint"></p>
                 </div>
@@ -1299,14 +1302,14 @@
 
             <div class="dialog-footer">
                 <div class="dialog-actions">
-                    <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-close-dialog data-i18n="dialog.cancel">Cancel</button>
                     <button type="button" class="btn btn-primary" id="downloadExport">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                        Download
+                        <span data-i18n="dialog.export.download">Download</span>
                     </button>
                 </div>
             </div>
@@ -1316,7 +1319,7 @@
     <!-- Settings Dialog -->
     <dialog id="settingsDialog" class="dialog">
         <div class="dialog-header">
-            <h2 class="dialog-title">Settings</h2>
+            <h2 class="dialog-title" data-i18n="dialog.settings.title">Settings</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -1325,30 +1328,30 @@
         <div class="dialog-body">
             <!-- Editor Settings -->
             <div class="settings-section">
-                <h3 class="settings-section-title">Editor</h3>
+                <h3 class="settings-section-title" data-i18n="dialog.settings.editor">Editor</h3>
                 <label class="checkbox-wrapper">
                     <input type="checkbox" id="settingAutoSave" checked>
-                    <span>Auto-save session (every 30s)</span>
+                    <span data-i18n="dialog.settings.autoSave">Auto-save session (every 30s)</span>
                 </label>
                 <label class="checkbox-wrapper">
                     <input type="checkbox" id="settingShowLineNumbers" checked>
-                    <span>Show line numbers</span>
+                    <span data-i18n="dialog.settings.lineNumbers">Show line numbers</span>
                 </label>
                 <label class="checkbox-wrapper">
                     <input type="checkbox" id="settingHighlightUncertain" checked>
-                    <span>Highlight uncertain readings</span>
+                    <span data-i18n="dialog.settings.highlightUncertain">Highlight uncertain readings</span>
                 </label>
             </div>
 
             <!-- Validation Settings -->
             <div class="settings-section">
-                <h3 class="settings-section-title">Validation</h3>
+                <h3 class="settings-section-title" data-i18n="dialog.settings.validation">Validation</h3>
                 <label class="checkbox-wrapper">
                     <input type="checkbox" id="settingAutoValidate">
-                    <span>Auto-validate after transcription</span>
+                    <span data-i18n="dialog.settings.autoValidate">Auto-validate after transcription</span>
                 </label>
                 <div class="input-wrapper">
-                    <label for="settingDefaultPerspective">Default Perspective</label>
+                    <label for="settingDefaultPerspective" data-i18n="dialog.settings.defaultPerspective">Default Perspective</label>
                     <select id="settingDefaultPerspective">
                         <option value="paleographic">Paleographic</option>
                         <option value="linguistic">Linguistic</option>
@@ -1360,56 +1363,56 @@
 
             <!-- Display Settings -->
             <div class="settings-section">
-                <h3 class="settings-section-title">Display</h3>
+                <h3 class="settings-section-title" data-i18n="dialog.settings.display">Display</h3>
                 <label class="checkbox-wrapper">
                     <input type="checkbox" id="settingShowHints" checked>
-                    <span>Show panel hints for new users</span>
+                    <span data-i18n="dialog.settings.showHints">Show panel hints for new users</span>
                 </label>
                 <label class="checkbox-wrapper">
                     <input type="checkbox" id="settingShowWorkflow" checked>
-                    <span>Show workflow stepper</span>
+                    <span data-i18n="dialog.settings.showWorkflow">Show workflow stepper</span>
                 </label>
             </div>
 
             <!-- Storage Quota -->
             <div class="settings-section">
-                <h3 class="settings-section-title">Storage</h3>
+                <h3 class="settings-section-title" data-i18n="dialog.settings.storage">Storage</h3>
                 <div class="storage-quota-display" id="storageQuotaDisplay">
                     <div class="quota-bar">
                         <div class="quota-bar-fill" id="quotaBarFill"></div>
                     </div>
                     <div class="quota-info">
-                        <span class="quota-text" id="quotaText">Loading...</span>
-                        <button type="button" class="btn-link" id="btnRefreshQuota">Refresh</button>
+                        <span class="quota-text" id="quotaText" data-i18n="dialog.settings.loading">Loading...</span>
+                        <button type="button" class="btn-link" id="btnRefreshQuota" data-i18n="dialog.settings.refresh">Refresh</button>
                     </div>
-                    <p class="quota-hint">Images and transcriptions are stored in browser storage.</p>
+                    <p class="quota-hint" data-i18n="dialog.settings.storageHint">Images and transcriptions are stored in browser storage.</p>
                 </div>
             </div>
 
             <!-- Data Management -->
             <div class="settings-section">
-                <h3 class="settings-section-title">Data</h3>
+                <h3 class="settings-section-title" data-i18n="dialog.settings.data">Data</h3>
                 <div class="settings-actions">
                     <button type="button" class="btn btn-secondary" id="btnClearSession">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                         </svg>
-                        Delete Project
+                        <span data-i18n="dialog.settings.deleteProject">Delete Project</span>
                     </button>
                     <button type="button" class="btn btn-secondary" id="btnDeleteApiKeys">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
-                        Delete Saved API Keys
+                        <span data-i18n="dialog.settings.deleteApiKeys">Delete Saved API Keys</span>
                     </button>
                     <button type="button" class="btn btn-secondary" id="btnResetSettings">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                             <path d="M3 3v5h5"></path>
                         </svg>
-                        Reset to Defaults
+                        <span data-i18n="dialog.settings.resetDefaults">Reset to Defaults</span>
                     </button>
                 </div>
             </div>
@@ -1417,8 +1420,8 @@
 
         <div class="dialog-footer">
             <div class="dialog-actions">
-                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveSettings">Save Settings</button>
+                <button type="button" class="btn btn-secondary" data-close-dialog data-i18n="dialog.cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSettings" data-i18n="dialog.settings.saveSettings">Save Settings</button>
             </div>
         </div>
     </dialog>
@@ -1426,7 +1429,7 @@
     <!-- Help Dialog -->
     <dialog id="helpDialog" class="dialog dialog-wide">
         <div class="dialog-header">
-            <h2 class="dialog-title">Help</h2>
+            <h2 class="dialog-title" data-i18n="dialog.help.title">Help</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -1440,14 +1443,14 @@
                         <circle cx="12" cy="12" r="10"></circle>
                         <polygon points="10 8 16 12 10 16 10 8"></polygon>
                     </svg>
-                    Quick Start
+                    <span data-i18n="dialog.help.quickStart">Quick Start</span>
                 </h3>
                 <ol class="help-steps">
-                    <li><strong>Load</strong> – Upload an image or load a demo document</li>
-                    <li><strong>Transcribe</strong> – Click "Transcribe" to process with AI</li>
-                    <li><strong>Describe</strong> – Generate an image description for initials and iconography</li>
-                    <li><strong>Validate</strong> – Review Validation and LLM Review results</li>
-                    <li><strong>Export</strong> – Download as TXT, JSON, or Markdown</li>
+                    <li><strong data-i18n="dialog.help.step1">Load</strong> – <span data-i18n="dialog.help.step1Desc">Upload an image or load a demo document</span></li>
+                    <li><strong data-i18n="dialog.help.step2">Transcribe</strong> – <span data-i18n="dialog.help.step2Desc">Click "Transcribe" to process with AI</span></li>
+                    <li><strong data-i18n="dialog.help.step3">Describe</strong> – <span data-i18n="dialog.help.step3Desc">Generate an image description for initials and iconography</span></li>
+                    <li><strong data-i18n="dialog.help.step4">Validate</strong> – <span data-i18n="dialog.help.step4Desc">Review Validation and LLM Review results</span></li>
+                    <li><strong data-i18n="dialog.help.step5">Export</strong> – <span data-i18n="dialog.help.step5Desc">Download as TXT, JSON, or Markdown</span></li>
                 </ol>
             </div>
 
@@ -1465,32 +1468,32 @@
                         <path d="M16 12h.001"></path>
                         <path d="M7 16h10"></path>
                     </svg>
-                    Keyboard Shortcuts
+                    <span data-i18n="dialog.help.shortcuts">Keyboard Shortcuts</span>
                 </h3>
                 <div class="shortcut-grid">
                     <div class="shortcut-item">
                         <kbd>Ctrl</kbd> + <kbd>Z</kbd>
-                        <span>Undo</span>
+                        <span data-i18n="dialog.help.undoShortcut">Undo</span>
                     </div>
                     <div class="shortcut-item">
                         <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd>
-                        <span>Redo</span>
+                        <span data-i18n="dialog.help.redoShortcut">Redo</span>
                     </div>
                     <div class="shortcut-item">
                         <kbd>↑</kbd> <kbd>↓</kbd>
-                        <span>Navigate lines</span>
+                        <span data-i18n="dialog.help.navigateLines">Navigate lines</span>
                     </div>
                     <div class="shortcut-item">
                         <kbd>Enter</kbd>
-                        <span>Edit selected cell</span>
+                        <span data-i18n="dialog.help.editCell">Edit selected cell</span>
                     </div>
                     <div class="shortcut-item">
                         <kbd>Escape</kbd>
-                        <span>Cancel editing</span>
+                        <span data-i18n="dialog.help.cancelEdit">Cancel editing</span>
                     </div>
                     <div class="shortcut-item">
                         <kbd>Tab</kbd>
-                        <span>Next cell (grid mode)</span>
+                        <span data-i18n="dialog.help.nextCell">Next cell (grid mode)</span>
                     </div>
                 </div>
             </div>
@@ -1502,24 +1505,24 @@
                         <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
                         <path d="M12 6v6l4 2"></path>
                     </svg>
-                    Confidence Markers
+                    <span data-i18n="dialog.help.confidence">Confidence Markers</span>
                 </h3>
                 <div class="marker-legend">
                     <div class="marker-item">
                         <span class="marker-indicator confident"></span>
-                        <span><strong>Confident</strong> – High certainty reading</span>
+                        <span><strong data-i18n="dialog.help.confident">Confident</strong> – <span data-i18n="dialog.help.confidentDesc">High certainty reading</span></span>
                     </div>
                     <div class="marker-item">
                         <span class="marker-indicator uncertain"></span>
-                        <span><strong>Uncertain</strong> – Needs expert review</span>
+                        <span><strong data-i18n="dialog.help.uncertain">Uncertain</strong> – <span data-i18n="dialog.help.uncertainDesc">Needs expert review</span></span>
                     </div>
                     <div class="marker-item">
                         <span class="marker-indicator problematic"></span>
-                        <span><strong>Problematic</strong> – Likely error or illegible</span>
+                        <span><strong data-i18n="dialog.help.problematic">Problematic</strong> – <span data-i18n="dialog.help.problematicDesc">Likely error or illegible</span></span>
                     </div>
                 </div>
-                <p class="help-note">
-                    Use <code>[?]</code> for uncertain readings and <code>[illegible]</code> for unreadable text.
+                <p class="help-note" data-i18n="dialog.help.markerHint">
+                    Use [?] for uncertain readings and [illegible] for unreadable text.
                 </p>
             </div>
 
@@ -1575,7 +1578,7 @@
 
         <div class="dialog-footer">
             <div class="dialog-actions">
-                <button type="button" class="btn btn-primary" data-close-dialog>Got it!</button>
+                <button type="button" class="btn btn-primary" data-close-dialog data-i18n="dialog.help.gotIt">Got it!</button>
             </div>
         </div>
     </dialog>
@@ -1583,7 +1586,7 @@
     <!-- IIIF Dialog -->
     <dialog id="iiifDialog" class="dialog">
         <div class="dialog-header">
-            <h2 class="dialog-title">Load IIIF Resource</h2>
+            <h2 class="dialog-title" data-i18n="dialog.iiif.title">Load IIIF Resource</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -1595,12 +1598,12 @@
             </p>
 
             <div class="input-wrapper">
-                <label for="iiifManifestUrl">Manifest URL</label>
+                <label for="iiifManifestUrl" data-i18n="dialog.iiif.urlLabel">Manifest URL</label>
                 <input type="url" id="iiifManifestUrl" placeholder="https://example.org/iiif/manifest.json" autocomplete="url">
             </div>
 
             <div class="iiif-examples">
-                <span class="iiif-examples-label">Examples:</span>
+                <span class="iiif-examples-label" data-i18n="dialog.iiif.examples">Examples:</span>
                 <div class="iiif-example-links">
                     <button type="button" class="btn-link" data-iiif-example="https://iiif.bodleian.ox.ac.uk/iiif/manifest/ae9f6cca-ae5c-4149-8fe4-95e6eca1f73c.json">
                         Bodleian Library
@@ -1647,9 +1650,9 @@
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" id="iiifLoadPreview">Preview</button>
+            <button type="button" class="btn btn-secondary" id="iiifLoadPreview" data-i18n="dialog.iiif.preview">Preview</button>
             <div class="dialog-actions">
-                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                <button type="button" class="btn btn-secondary" data-close-dialog data-i18n="dialog.cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="iiifLoadManifest">
                     <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
