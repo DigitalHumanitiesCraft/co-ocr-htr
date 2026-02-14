@@ -99,7 +99,7 @@ class BatchProgressPanel {
         this.panel.innerHTML = `
             <div class="batch-progress-content ${statusClass}">
                 <div class="batch-complete-message">${statusText}</div>
-                <button class="btn btn-secondary btn-sm" id="batchCloseBtn">Schließen</button>
+                <button class="btn btn-secondary btn-sm" id="batchCloseBtn">Close</button>
             </div>
         `;
 

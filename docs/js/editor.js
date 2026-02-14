@@ -595,7 +595,7 @@ function updateChangeStats() {
         }
     }
 
-    statsEl.textContent = `${changes} Zeile${changes !== 1 ? 'n' : ''} geändert`;
+    statsEl.textContent = `${changes} line${changes !== 1 ? 's' : ''} changed`;
     statsEl.className = 'change-stats has-changes';
 }
 
