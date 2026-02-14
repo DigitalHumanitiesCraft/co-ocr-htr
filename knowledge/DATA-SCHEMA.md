@@ -157,11 +157,7 @@ Four object stores for persistent data:
     editionModel: 'diplomatic',     // 'diplomatic' | 'normalized' | 'critical'
     xmlSchema: 'page-xml-2019',     // 'page-xml-2019' | 'tei-p5'
     transcription: {
-      scriptType: 'kurrent',
-      language: 'de',
-      period: '19th century',
-      paleographicHints: '',
-      specialCharacters: ''
+      markdown: '## Script Type\nKurrent\n\n## Language\nGerman\n\n## Period\n19th century'
     },
     validation: {
       autoValidate: true,

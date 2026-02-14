@@ -1,14 +1,14 @@
 ---
 type: knowledge
 created: 2026-01-16
-updated: 2026-02-03
+updated: 2026-02-14
 tags: [coocr-htr, roadmap, milestones]
 status: complete
 ---
 
 # Implementation Plan
 
-**Status:** Phase 1-4 Complete, Phase 5 (i18n) Planned
+**Status:** Phase 1-6 Complete
 
 **Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
 
@@ -123,7 +123,7 @@ status: complete
 | Task | Status | Description |
 |------|--------|-------------|
 | PAGE-XML Export | [x] | PAGE 2019-07-15 Schema |
-| Vitest Unit Tests | [x] | 125 tests (export, validation, llm, page-xml) |
+| Vitest Unit Tests | [x] | 574 tests across 18 test files |
 | Editor Simplification | [x] | Textarea with line numbers, diff view |
 | Undo/Redo Buttons | [x] | Visible buttons with feedback |
 | API Dialog Redesign | [x] | Unified form instead of tabs |
@@ -134,18 +134,33 @@ status: complete
 
 ---
 
-## Phase 5: Internationalization (i18n) [ ] PLANNED
+## Phase 5: Internationalization (i18n) [x] COMPLETE
 
 | Task | Status | Description |
 |------|--------|-------------|
-| i18n Service | [ ] | `js/services/i18n.js` with `t()` function |
-| Translations | [ ] | `js/services/translations.js` (DE/EN) |
-| HTML Migration | [ ] | `data-i18n` attributes to ~185 elements |
-| JS Migration | [ ] | `t()` calls in all components |
-| Language Switcher | [ ] | UI in Settings Dialog |
-| Testing | [ ] | Unit tests, visual verification |
+| i18n Service | [x] | `js/services/i18n.js` with `t()` function, EventTarget |
+| Translation Dictionaries | [x] | `i18n/en.json` + `i18n/de.json` (~250 keys each) |
+| HTML Migration | [x] | `data-i18n` attributes on ~200 elements |
+| JS Migration | [x] | `t()` calls in all components and services |
+| Language Switcher | [x] | DE/EN toggle in header, persisted in localStorage |
+| Testing | [x] | 24 unit tests (i18n.test.js) |
 
-**Scope:** ~400 strings, ~800 LOC
+**Actual Scope:** 250+ i18n keys, 2 languages (EN/DE), ~1200 LOC
+
+---
+
+## Phase 6: Community Integration & Stabilization [x] COMPLETE
+
+| Task | Status | Description |
+|------|--------|-------------|
+| Fork Integration | [x] | Robert Klugseder's fork (67 commits) merged with full attribution |
+| Azure Mistral OCR | [x] | New provider with configurable endpoint, `api-key` auth header |
+| Project Rules (IDB v2) | [x] | Edition model, XML schema, transcription rules, validation config |
+| Markdown Rules Editor | [x] | Free-form Markdown replaces 5 structured fields, .md upload |
+| Welcome Overlay | [x] | First-visit onboarding dialog with workflow overview and action cards |
+| i18n Stabilization | [x] | All remaining hardcoded strings replaced with `t()` calls |
+| Umlaut Fix | [x] | 164 ASCII Umlaut substitutions replaced with Unicode in de.json |
+| Documentation Update | [x] | ARCHITECTURE.md, DATA-SCHEMA.md, JOURNAL.md updated |
 
 ---
 
