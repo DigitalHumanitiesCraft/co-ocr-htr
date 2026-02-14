@@ -111,3 +111,4 @@ METHODOLOGY ──────────────────────�
 | 1.9 | 2026-02-04 | Added validation fallback for OCR-only models, hybrid OCR workflow |
 | 2.0 | 2026-02-04 | Phase 3 complete: Batch processing, page status indicators, ZIP export |
 | 2.1 | 2026-02-04 | Phase 5 planned: i18n (German/English UI) with ~400 strings |
+| 2.2 | 2026-02-14 | Adoption context: ZBZ as institutional fork, Open Development, Mistral OCR 3 |
