@@ -21,7 +21,11 @@ knowledge/
 ├── ARCHITECTURE.md        ← Technical architecture
 ├── VALIDATION.md          ← Hybrid validation
 ├── DATA-SCHEMA.md         ← Data structures
-├── IMPLEMENTATION-PLAN.md ← Roadmap (complete)
+├── HTR-POSTPROCESSING.md   ← Post-processing pipeline
+├── IMPROVEMENTS.md        ← Planned improvements
+├── SECURITY.md            ← Security considerations
+├── TESTING.md             ← Testing strategy (574 tests)
+├── IMPLEMENTATION-PLAN.md ← Roadmap (Phase 1-6 complete)
 └── JOURNAL.md             ← Development log
 ```
 
@@ -62,20 +66,28 @@ knowledge/
 | Batch Processing | Transcribe/validate all pages with abort control | ARCHITECTURE |
 | Page Status Indicators | Visual dots showing per-page status | DESIGN-SYSTEM |
 | ZIP Export | Export all pages as ZIP archive | ARCHITECTURE |
-| Internationalization (i18n) | German/English UI with runtime switching (planned) | IMPLEMENTATION-PLAN |
+| Internationalization (i18n) | German/English UI with runtime switching | ARCHITECTURE |
+| Project Rules | Per-project transcription/validation rules with Markdown editor | ARCHITECTURE |
+| Prompt Profiles | 3-stage prompt profiles for document scenarios | ARCHITECTURE |
+| Post-Processing Pipeline | Stage 2 (paleographic) + Stage 3 (philological) review | HTR-POSTPROCESSING |
+| Thinking Panel | Display LLM reasoning tokens during operations | ARCHITECTURE |
+| Welcome Overlay | First-visit onboarding with workflow overview | ARCHITECTURE |
 
 ## UI Components (Quick Reference)
 
 | Component | Description | Document |
 |-----------|-------------|----------|
 | Document Viewer | OpenSeadragon + SVG Overlay + Zoom | DESIGN-SYSTEM |
-| Transcription Table | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT | DESIGN-SYSTEM |
+| Transcription Editor | Lines/grid editor with undo/redo | DESIGN-SYSTEM |
 | Validation Panel | Validation + LLM Review sections | VALIDATION |
 | Status Bar | Model, Status, Timestamp | DESIGN-SYSTEM |
 | Inline Markers | [?], [illegible], ... | DESIGN-SYSTEM |
 | IIIF Dialog | Load manifests from external repositories | ARCHITECTURE |
 | Page Strip | Clickable dots for page navigation with status | DESIGN-SYSTEM |
 | Batch Progress Panel | Floating panel with progress bar and abort | DESIGN-SYSTEM |
+| Thinking Panel | LLM reasoning display during operations | ARCHITECTURE |
+| Welcome Overlay | First-visit onboarding dialog | ARCHITECTURE |
+| Language Switch | DE/EN toggle in header | ARCHITECTURE |
 
 ## Relationships
 
@@ -112,3 +124,4 @@ METHODOLOGY ──────────────────────�
 | 2.0 | 2026-02-04 | Phase 3 complete: Batch processing, page status indicators, ZIP export |
 | 2.1 | 2026-02-04 | Phase 5 planned: i18n (German/English UI) with ~400 strings |
 | 2.2 | 2026-02-14 | Adoption context: ZBZ as institutional fork, Open Development, Mistral OCR 3 |
+| 2.3 | 2026-02-14 | Phase 5-6 complete: i18n, Project Rules, Azure Mistral, Welcome Overlay, Markdown Rules Editor. 574 tests. |

@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Status: 2026-02-11
+Status: 2026-02-14
 
 ## Overview
 
@@ -21,18 +21,26 @@ npx vitest run  # CI mode
 
 | Module | Tests | Description |
 |--------|-------|-------------|
-| `state.js` | 76 | Central state management, EventTarget, persistence flows |
-| `export.js` | 52 | Export formats (TXT, JSON, MD, PAGE-XML, TEI, validation metadata) |
-| `validation.js` | 40 | Validation engine, rules, LLM Review |
-| `llm.js` | 27 | LLM provider abstraction, API calls |
-| `llm-validation-provider.js` | 14 | Explicit validation provider priority/fallback logic |
-| `page-xml.js` | 26 | PAGE-XML parser |
-| `storage.js` | 40 | localStorage + IndexedDB wrappers, projects/sessions/apiKeys |
+| `llm.js` | 105 | LLM provider abstraction, API calls, prompt building, streaming |
+| `state.js` | 89 | Central state management, EventTarget, persistence flows |
+| `export.js` | 55 | Export formats (TXT, JSON, MD, PAGE-XML, TEI, validation metadata) |
 | `textFormatting.js` | 50 | Markers, HTML escaping, confidence |
+| `validation.js` | 43 | Validation engine, rules, LLM Review |
+| `storage.js` | 40 | localStorage + IndexedDB wrappers, projects/sessions/apiKeys |
 | `description.js` | 37 | Description feature prompt/result handling |
+| `llm-streaming.js` | 32 | Streaming transcription, chunk parsing |
+| `page-xml.js` | 26 | PAGE-XML parser |
+| `postprocess.js` | 26 | Post-processing pipeline (Stage 2/3), retries, fallbacks |
+| `i18n.js` | 24 | i18n service, `t()` function, language switching |
+| `thinking.js` | 16 | Thinking/reasoning panel display |
+| `llm-validation-provider.js` | 14 | Explicit validation provider priority/fallback logic |
+| `editor.js` | 7 | Editor state, line numbering |
+| `context-manager.js` | 2 | Document context manager |
+| `validation-apply.js` | 6 | Apply validation suggestions |
 | `dialogs-validation-persistence.js` | 1 | Regression for validation key persistence behavior |
+| `apply-export-integration.js` | 1 | Integration: apply + export workflow |
 
-**Total: 363 Tests**
+**Total: 574 Tests (18 test files)**
 
 ### Not Fully Tested (UI Components)
 

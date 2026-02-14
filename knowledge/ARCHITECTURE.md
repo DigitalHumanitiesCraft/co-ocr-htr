@@ -74,27 +74,37 @@ docs/
 │   ├── viewer.css          # OpenSeadragon viewer styles
 │   └── validation.css      # Validation panel
 ├── js/
-│   ├── main.js             # Initialization, Workflow (~900 LOC)
-│   ├── state.js            # Central State with EventTarget (~1450 LOC)
+│   ├── main.js             # Initialization, Workflow, Welcome Overlay (~1100 LOC)
+│   ├── state.js            # Central State with EventTarget (~1500 LOC)
 │   ├── viewer.js           # OpenSeadragon Viewer (~520 LOC)
 │   ├── editor.js           # Flexible Editor (lines/grid)
 │   ├── ui.js               # UI Interactions
+│   ├── pwa.js              # Progressive Web App service worker
 │   ├── components/
 │   │   ├── dialogs.js      # Dialog Manager (~1950 LOC)
 │   │   ├── upload.js       # Upload Component
 │   │   ├── transcription.js# Transcription UI
 │   │   ├── validation.js   # Validation Panel
 │   │   ├── description.js  # Image Description (Gemini)
-│   │   ├── context.js      # Context Manager
+│   │   ├── context.js      # Context Manager (structured document context)
+│   │   ├── thinking.js     # LLM Reasoning/Thinking Panel
 │   │   └── batch-progress.js # Batch Progress Panel
 │   ├── config/
-│   │   └── promptProfiles.js # Prompt Profile Definitions
+│   │   └── promptProfiles.js # Prompt Profile Definitions (3 profiles, 3 stages)
+│   ├── utils/
+│   │   ├── constants.js    # Feature flags, magic numbers
+│   │   ├── dom.js          # DOM utilities (getById, show, hide)
+│   │   ├── textFormatting.js # Markers, HTML escaping, confidence
+│   │   ├── panelResize.js  # Panel resize with drag handles
+│   │   ├── validationResize.js # Validation panel resize
+│   │   └── tooltips.js     # Tooltip positioning system
 │   └── services/
 │       ├── llm.js          # Multi-Provider LLM Service (~1900 LOC)
 │       ├── i18n.js         # Internationalization Service (DE/EN)
-│       ├── storage.js      # localStorage + IndexedDB storage service
+│       ├── storage.js      # localStorage + IndexedDB v2 storage service
 │       ├── validation.js   # Validation Engine
-│       ├── export.js       # Export Service (incl. PAGE-XML, ZIP)
+│       ├── export.js       # Export Service (TXT, JSON, MD, PAGE-XML, TEI, ZIP)
+│       ├── postprocess.js  # Post-Processing Pipeline (Stage 2/3)
 │       ├── samples.js      # Demo Loader
 │       └── parsers/
 │           ├── page-xml.js # PAGE-XML Parser
@@ -105,11 +115,13 @@ docs/
 ├── samples/
 │   ├── index.json          # Sample Manifest
 │   └── raitbuch/           # Demo Data
-└── tests/
-    ├── llm.test.js
-    ├── page-xml.test.js
-    ├── export.test.js
-    └── validation.test.js
+└── tests/                  # 574 tests across 18 files
+    ├── llm.test.js         # 105 tests
+    ├── state.test.js       # 89 tests
+    ├── export.test.js      # 55 tests
+    ├── i18n.test.js        # 24 tests
+    ├── postprocess.test.js # 26 tests
+    └── ...                 # See TESTING.md for full list
 ```
 
 ## Core Modules
@@ -194,7 +206,7 @@ Abstraction layer for multiple LLM providers with unified API.
 |----------|----------|---------------|--------|------|
 | Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes | URL param |
 | OpenAI | api.openai.com | gpt-5.2 | Yes | Bearer token |
-| Anthropic | api.anthropic.com | claude-sonnet-4-5 | Yes | x-api-key |
+| Anthropic | api.anthropic.com | claude-sonnet-4-5-20250514 | Yes | x-api-key |
 | Mistral | api.mistral.ai | mistral-ocr-latest | Yes | Bearer token |
 | Azure Mistral | User-configured | mistral-ocr-latest | Yes | api-key header |
 | Ollama | localhost:11434 | deepseek-ocr | Yes | None (local) |
@@ -440,7 +452,7 @@ rules: {
   editionModel: 'diplomatic' | 'normalized' | 'critical',
   xmlSchema: 'page-xml-2019' | 'tei-p5',
   transcription: {
-    scriptType, language, period, paleographicHints, specialCharacters
+    markdown: string   // Free-form Markdown transcription rules
   },
   validation: {
     autoValidate, customPrompt, promptProfileId
@@ -448,13 +460,74 @@ rules: {
 }
 ```
 
+**Transcription Rules (Markdown Editor):**
+- Free-form Markdown textarea replaces the former 5 structured fields (scriptType, language, period, paleographicHints, specialCharacters)
+- Users can upload `.md` files with their transcription rules
+- Preview toggle renders basic Markdown (h2, h3, bold, italic, lists, code)
+- Markdown is passed directly to LLM prompts as context (LLMs understand Markdown natively)
+- Backward compatibility: old structured format auto-migrated to Markdown on first read
+
 **Integration:**
 - Rules dialog accessible from project list (gear icon)
-- Rules auto-populate context on session restore (scriptType, language, period)
-- Rules map to best-matching prompt profile for transcription
+- Markdown rules stored as `state.data.transcriptionRulesMarkdown` on session restore
+- Rules injected into LLM prompts alongside per-session context from ContextManager
 - Rules exportable/importable as JSON for institutional sharing
 
 **IDB Migration:** Version-based upgrade handler. Existing v1 projects get `rules: null` (lazy migration on read).
+
+## Prompt Profiles
+
+Three-stage prompt profiles for transcription and validation workflows.
+
+**Implementation:** [promptProfiles.js](../docs/js/config/promptProfiles.js)
+
+| Profile | Description |
+|---------|-------------|
+| `generic_default` | Universal fallback for mixed historical manuscripts |
+| `medieval_latin_manuscript` | Medieval Latin paleography and philological plausibility |
+| `early_modern_letter` | Cursive hands and pragmatic language variation (16th-18th c.) |
+
+**Stages:** Each profile defines prompts for Stage 1 (Vision Transcription), Stage 2 (Paleographic Review), Stage 3 (Philological Review). Users can override individual stage prompts per project.
+
+## Post-Processing Pipeline
+
+Feature-flagged 3-stage post-processing for transcription quality improvement.
+
+**Implementation:** [postprocess.js](../docs/js/services/postprocess.js)
+
+**Feature Flag:** `FEATURE_FLAGS.postprocessPipelineV1` (default: `false`)
+
+| Stage | Purpose | Provider |
+|-------|---------|----------|
+| Stage 1 | Vision transcription | Active LLM provider |
+| Stage 2 | Paleographic review (letterform analysis) | Text-only LLM |
+| Stage 3 | Philological review (linguistic plausibility) | Text-only LLM |
+
+**Details:** See [HTR-POSTPROCESSING.md](HTR-POSTPROCESSING.md) for full specification.
+
+## Thinking Panel
+
+Displays LLM reasoning tokens (extended thinking) during transcription and description.
+
+**Implementation:** [thinking.js](../docs/js/components/thinking.js)
+
+**Feature Flag:** `FEATURE_FLAGS.thinkingPanel` (default: `true`)
+
+Shows real-time thinking chunks from Gemini and Anthropic models that support extended thinking. Collapsible panel appears below the editor during LLM operations.
+
+## Welcome Overlay
+
+First-visit onboarding dialog shown when no projects exist and welcome has not been dismissed.
+
+**Implementation:** `showWelcomeOverlay()` in [main.js](../docs/js/main.js)
+
+**Startup Flow (`handleStartup()`):**
+1. Active project ID exists -> restore dialog (existing behavior)
+2. `welcome_dismissed` is false -> show welcome overlay
+3. `welcome_dismissed` is true + projects exist -> show project list
+4. Otherwise -> empty app
+
+**Content:** Logo, tagline, 5-step workflow overview, action cards (New Project, Try Demo, Upload File, Open Project), "Don't show again" checkbox.
 
 ## Technology Decisions
 

@@ -1,6 +1,14 @@
 # Improvement Plan coOCR/HTR
 
-Status: Created 2026-02-04
+Status: Updated 2026-02-14
+
+**Completed since initial plan:**
+- [x] SECURITY.md created (Priority 2.2)
+- [x] i18n system implemented (Phase 5) - 250+ keys, DE/EN switching
+- [x] Azure Mistral OCR provider (Priority 6)
+- [x] Project Rules with IDB v2 migration
+- [x] Test coverage expanded: 363 -> 574 tests
+- [x] editor.test.js, i18n.test.js, description.test.js, thinking.test.js, postprocess.test.js added
 
 ## Priority 1: Extend Test Coverage
 

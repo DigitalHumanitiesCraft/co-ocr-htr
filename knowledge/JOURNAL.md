@@ -910,3 +910,46 @@ Integration of Robert Klugseder's substantial fork (67 commits, +15,819 lines, 9
 2. **Lazy IDB migration**: Existing projects get `rules: null` on read rather than forcing schema update
 3. **i18n fallback chain**: current lang -> EN -> key string itself (graceful degradation)
 4. **Azure auth**: Uses `api-key` header (Azure convention) vs `Authorization: Bearer` (native Mistral)
+
+---
+
+## Session 34 (2026-02-14)
+
+UX improvements and documentation update.
+
+### What Was Done
+
+**Welcome Overlay**
+- Added first-visit onboarding dialog with logo, tagline, 5-step workflow overview, and action cards (New Project, Try Demo, Upload File, Open Project)
+- "Don't show again" checkbox saving `welcome_dismissed` to localStorage settings
+- Startup flow routing: active project -> restore dialog, first visit -> welcome overlay, dismissed + projects -> project list
+
+**Umlaut Fix**
+- Replaced 164 ASCII Umlaut substitutions (ae/oe/ue/ss) with real Unicode characters (ae->a, oe->o, ue->u, ss->ss) in de.json
+
+**Editor Panel Title Fix**
+- Shortened "Beschreibung / Transkription" to "Editor" (was wrapping on multiple lines)
+- Added CSS `white-space: nowrap` safeguard to panel headers
+
+**Markdown Transcription Rules Editor**
+- Replaced 5 structured form fields (scriptType, language, period, paleographicHints, specialCharacters) with single Markdown textarea
+- Added .md file upload button and preview toggle
+- Backward compatibility migration: old structured format auto-converts to Markdown headings
+- Markdown passed directly to LLM prompts as context (stored as `transcriptionRulesMarkdown` in state)
+
+**Knowledge Vault Update**
+- Updated 8 of 15 knowledge files to reflect current codebase state
+- IMPLEMENTATION-PLAN.md: Phase 5 (i18n) marked complete, Phase 6 added and completed
+- TESTING.md: Test count updated from 363 to 574
+- ARCHITECTURE.md: File tree, providers, new sections (Post-Processing, Thinking Panel, Welcome Overlay, Prompt Profiles)
+- DATA-SCHEMA.md: Transcription rules schema updated to Markdown format
+- INDEX.md: New features added, version 2.3
+- DESIGN-SYSTEM.md: v2.4 changelog
+- IMPROVEMENTS.md: Completed items marked
+- JOURNAL.md: Session 34 entry
+
+### Key Decisions
+
+1. **Markdown over structured fields**: Free-form Markdown gives experts full flexibility for transcription rules; LLMs understand Markdown natively
+2. **Dual context injection**: Project Markdown rules are concatenated with per-session ContextManager output, keeping both systems independent
+3. **Welcome overlay pattern**: Reuses existing `<dialog>` + glass-panel pattern, dismissal via localStorage settings
