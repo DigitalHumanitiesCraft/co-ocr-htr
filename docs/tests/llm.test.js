@@ -583,16 +583,14 @@ describe('Post-Processing Prompt Builders', () => {
     expect(prompt).toContain('CRITICAL: This script uses minim-heavy letterforms');
   });
 
-  it('buildPaleographicReviewPrompt uses selected profile prompt when configured', () => {
+  it('buildPaleographicReviewPrompt includes task, context and transcription', () => {
     const prompt = buildPaleographicReviewPrompt(
       'linea prima',
-      'Script: Textura; Language: Latin',
-      { profileId: 'medieval_latin_manuscript', overrides: {} }
+      'Script: Textura; Language: Latin'
     );
 
-    expect(prompt).toContain('INTERNAL PROTOCOL:');
-    expect(prompt).toContain('Primary paleographer');
-    expect(prompt).toContain('Skeptical verifier');
+    expect(prompt).toContain('You are a paleographic review specialist.');
+    expect(prompt).toContain('Identify likely reading errors caused by letterform confusion');
     expect(prompt).toContain('DOCUMENT CONTEXT:\nScript: Textura; Language: Latin');
     expect(prompt).toContain('TRANSCRIPTION:\nlinea prima');
   });
@@ -601,16 +599,14 @@ describe('Post-Processing Prompt Builders', () => {
     const prompt = buildPhilologicalReviewPrompt(
       'ecce rex',
       'Text type: liturgical',
-      [{ line: 3, text: 'misam', suggestion: 'missam', type: 'spelling' }],
-      { profileId: 'medieval_latin_manuscript', overrides: {} }
+      [{ line: 3, text: 'misam', suggestion: 'missam', type: 'spelling' }]
     );
 
-    expect(prompt).toContain('INTERNAL PROTOCOL:');
-    expect(prompt).toContain('Latin philologist');
-    expect(prompt).toContain('Historical-language verifier');
+    expect(prompt).toContain('You are a philological review specialist.');
+    expect(prompt).toContain('Identify linguistic/contextual plausibility issues');
     expect(prompt).toContain('PREVIOUS ISSUES (already flagged, do NOT repeat):');
     expect(prompt).toContain('- Line 3: "misam" -> "missam" (spelling)');
-    expect(prompt).toContain('Do not repeat previous issues');
+    expect(prompt).toContain('Do not repeat issues from previous stage');
   });
 
   it('buildPhilologicalReviewPrompt falls back to "No previous issues flagged."', () => {
@@ -618,31 +614,6 @@ describe('Post-Processing Prompt Builders', () => {
     expect(prompt).toContain('No previous issues flagged.');
   });
 
-  it('stage override takes precedence over profile and default prompts', () => {
-    const prompt = buildPaleographicReviewPrompt('linea prima', '', {
-      profileId: 'medieval_latin_manuscript',
-      overrides: {
-        stage2: 'CUSTOM STAGE 2 PROMPT\nTRANSCRIPTION:\n{text}'
-      }
-    });
-    expect(prompt).toContain('CUSTOM STAGE 2 PROMPT');
-    expect(prompt).toContain('TRANSCRIPTION:\nlinea prima');
-    expect(prompt).not.toContain('Primary Paleographer');
-  });
-
-  it('stage1 override takes precedence for transcription prompt', () => {
-    const prompt = buildTranscriptionPrompt('Some context', { scriptType: 'textura' }, {
-      profileId: 'medieval_latin_manuscript',
-      overrides: {
-        stage1: 'CUSTOM STAGE1 OVERRIDE',
-        stage2: '',
-        stage3: ''
-      }
-    });
-
-    expect(prompt).toContain('CUSTOM STAGE1 OVERRIDE');
-    expect(prompt).not.toContain('You are a specialist for diplomatic transcription of medieval Latin manuscripts.');
-  });
 });
 
 // ============================================

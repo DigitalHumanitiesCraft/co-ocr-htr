@@ -89,8 +89,6 @@ docs/
 │   │   ├── context.js      # Context Manager (structured document context)
 │   │   ├── thinking.js     # LLM Reasoning/Thinking Panel
 │   │   └── batch-progress.js # Batch Progress Panel
-│   ├── config/
-│   │   └── promptProfiles.js # Prompt Profile Definitions (3 profiles, 3 stages)
 │   ├── utils/
 │   │   ├── constants.js    # Feature flags, magic numbers
 │   │   ├── dom.js          # DOM utilities (getById, show, hide)
@@ -115,12 +113,12 @@ docs/
 ├── samples/
 │   ├── index.json          # Sample Manifest
 │   └── raitbuch/           # Demo Data
-└── tests/                  # 574 tests across 18 files
-    ├── llm.test.js         # 105 tests
-    ├── state.test.js       # 89 tests
+└── tests/                  # 567 tests across 18 files
+    ├── llm.test.js         # 103 tests
+    ├── state.test.js       # 85 tests
     ├── export.test.js      # 55 tests
     ├── i18n.test.js        # 24 tests
-    ├── postprocess.test.js # 26 tests
+    ├── postprocess.test.js # 25 tests
     └── ...                 # See TESTING.md for full list
 ```
 
@@ -455,7 +453,7 @@ rules: {
     markdown: string   // Free-form Markdown transcription rules
   },
   validation: {
-    autoValidate, customPrompt, promptProfileId
+    autoValidate, customPrompt
   }
 }
 ```
@@ -474,20 +472,6 @@ rules: {
 - Rules exportable/importable as JSON for institutional sharing
 
 **IDB Migration:** Version-based upgrade handler. Existing v1 projects get `rules: null` (lazy migration on read).
-
-## Prompt Profiles
-
-Three-stage prompt profiles for transcription and validation workflows.
-
-**Implementation:** [promptProfiles.js](../docs/js/config/promptProfiles.js)
-
-| Profile | Description |
-|---------|-------------|
-| `generic_default` | Universal fallback for mixed historical manuscripts |
-| `medieval_latin_manuscript` | Medieval Latin paleography and philological plausibility |
-| `early_modern_letter` | Cursive hands and pragmatic language variation (16th-18th c.) |
-
-**Stages:** Each profile defines prompts for Stage 1 (Vision Transcription), Stage 2 (Paleographic Review), Stage 3 (Philological Review). Users can override individual stage prompts per project.
 
 ## Post-Processing Pipeline
 

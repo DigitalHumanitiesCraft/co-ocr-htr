@@ -34,7 +34,6 @@ import './utils/tooltips.js';
 import { initPanelResize } from './utils/panelResize.js';
 import { initValidationResize } from './utils/validationResize.js';
 import { i18n, t } from './services/i18n.js';
-import { PROMPT_PROFILES } from './config/promptProfiles.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -711,10 +710,6 @@ async function showProjectRulesDialog(projectId) {
     const transcription = migrateTranscriptionRules(rules.transcription);
     const validation = rules.validation || {};
 
-    const profileOptions = PROMPT_PROFILES.map(p =>
-        `<option value="${escapeHtml(p.id)}" ${(validation.promptProfileId || 'generic_default') === p.id ? 'selected' : ''}>${escapeHtml(p.label)}</option>`
-    ).join('');
-
     const dialog = document.createElement('dialog');
     dialog.className = 'confirm-dialog glass-panel';
     dialog.style.maxWidth = '560px';
@@ -770,13 +765,6 @@ async function showProjectRulesDialog(projectId) {
                 </div>
 
                 <div class="form-section">
-                    <label class="form-label">${t('dialog.rules.promptProfile')}</label>
-                    <select id="rulesPromptProfile" class="form-control">
-                        ${profileOptions}
-                    </select>
-                </div>
-
-                <div class="form-section">
                     <label class="form-label">${t('dialog.rules.customPrompt')}</label>
                     <textarea id="rulesCustomPrompt" class="form-control" rows="3"
                         placeholder="${t('dialog.rules.customPromptPlaceholder')}">${escapeHtml(validation.customPrompt || '')}</textarea>
@@ -819,8 +807,7 @@ async function showProjectRulesDialog(projectId) {
                 },
                 validation: {
                     autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
-                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim(),
-                    promptProfileId: dialog.querySelector('#rulesPromptProfile').value
+                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim()
                 }
             };
             await storage.updateProjectRules(projectId, newRules);
@@ -836,8 +823,7 @@ async function showProjectRulesDialog(projectId) {
                 },
                 validation: {
                     autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
-                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim(),
-                    promptProfileId: dialog.querySelector('#rulesPromptProfile').value
+                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim()
                 }
             };
             const blob = new Blob([JSON.stringify(currentRules, null, 2)], { type: 'application/json' });
@@ -888,7 +874,6 @@ async function showProjectRulesDialog(projectId) {
                 const val = imported.validation;
                 if (val.autoValidate !== undefined) dialog.querySelector('#rulesAutoValidate').checked = val.autoValidate;
                 if (val.customPrompt) dialog.querySelector('#rulesCustomPrompt').value = val.customPrompt;
-                if (val.promptProfileId) dialog.querySelector('#rulesPromptProfile').value = val.promptProfileId;
             }
             dialogManager.showToast(t('dialog.rules.importSuccess'), 'success');
         } catch (err) {

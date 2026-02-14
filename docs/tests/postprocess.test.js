@@ -257,32 +257,6 @@ describe('runPostprocessing', () => {
     expect(result.pipeline.stage3.reason).toBe('max_calls_reached');
   });
 
-  it('should apply stage prompt overrides from promptConfig', async () => {
-    const validateSpy = vi.spyOn(llmService, 'validate')
-      .mockResolvedValueOnce({
-        confidence: 'likely',
-        reasoning: 'stage2 only',
-        issues: []
-      });
-
-    await runPostprocessing('text', {
-      runStage2: true,
-      runStage3: false,
-      promptConfig: {
-        profileId: 'generic_default',
-        overrides: {
-          stage1: '',
-          stage2: 'CUSTOM STAGE2 OVERRIDE\nTRANSCRIPTION:\n{text}',
-          stage3: ''
-        }
-      }
-    });
-
-    expect(validateSpy).toHaveBeenCalledTimes(1);
-    expect(validateSpy.mock.calls[0][1].customPrompt).toContain('CUSTOM STAGE2 OVERRIDE');
-    expect(validateSpy.mock.calls[0][1].customPrompt).toContain('TRANSCRIPTION:\ntext');
-  });
-
   it('should count retries against maxCalls and skip later stages when exhausted', async () => {
     const validateSpy = vi.spyOn(llmService, 'validate')
       .mockRejectedValueOnce(new Error('network timeout'))

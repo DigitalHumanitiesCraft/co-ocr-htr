@@ -23,7 +23,6 @@ import { batchProgress } from './batch-progress.js';
 import { contextManager } from './context.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
 import { escapeHtml } from '../utils/textFormatting.js';
-import { listPromptProfiles } from '../config/promptProfiles.js';
 import { t } from '../services/i18n.js';
 
 /**
@@ -40,7 +39,6 @@ class ValidationPanel {
         this.startValidationBtn = null;
         this.llmIssueApplyState = new Map();
         this.llmIssueStateSignature = '';
-        this._isSyncingPromptControls = false;
     }
 
     /**
@@ -67,7 +65,6 @@ class ValidationPanel {
         this.startValidationBtn = getById('startValidation');
 
         this.bindEvents();
-        this.initPromptProfileControls();
 
         // Check initial state
         this.updateVisibility();
@@ -173,11 +170,6 @@ class ValidationPanel {
         // Restore custom prompt when session is loaded
         appState.addEventListener('sessionRestored', () => {
             this.restoreCustomPrompt();
-            this.syncPromptProfileControls();
-        });
-
-        appState.addEventListener('promptConfigChanged', () => {
-            this.syncPromptProfileControls();
         });
 
         // Listen for validation state changes
@@ -314,73 +306,6 @@ class ValidationPanel {
         section.hidden = !FEATURE_FLAGS.postprocessPipelineV1;
     }
 
-    getPromptConfigSafe() {
-        if (typeof appState.getPromptConfig === 'function') {
-            return appState.getPromptConfig();
-        }
-        return {
-            profileId: 'generic_default',
-            overrides: { stage1: '', stage2: '', stage3: '' }
-        };
-    }
-
-    initPromptProfileControls() {
-        const profileSelect = getById('promptProfileSelectValidate');
-        const stage2Input = getById('promptOverrideStage2');
-        const stage3Input = getById('promptOverrideStage3');
-        const resetStage2 = getById('resetPromptStage2');
-        const resetStage3 = getById('resetPromptStage3');
-
-        if (profileSelect) {
-            const profiles = listPromptProfiles();
-            profileSelect.innerHTML = profiles
-                .map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.label)}</option>`)
-                .join('');
-
-            profileSelect.addEventListener('change', () => {
-                if (this._isSyncingPromptControls) return;
-                appState.setPromptProfile?.(profileSelect.value);
-            });
-        }
-
-        if (stage2Input) {
-            stage2Input.addEventListener('input', () => {
-                if (this._isSyncingPromptControls) return;
-                appState.setPromptOverride?.('stage2', stage2Input.value);
-            });
-        }
-
-        if (stage3Input) {
-            stage3Input.addEventListener('input', () => {
-                if (this._isSyncingPromptControls) return;
-                appState.setPromptOverride?.('stage3', stage3Input.value);
-            });
-        }
-
-        if (resetStage2) {
-            resetStage2.addEventListener('click', () => appState.clearPromptOverride?.('stage2'));
-        }
-
-        if (resetStage3) {
-            resetStage3.addEventListener('click', () => appState.clearPromptOverride?.('stage3'));
-        }
-
-        this.syncPromptProfileControls();
-    }
-
-    syncPromptProfileControls() {
-        const profileSelect = getById('promptProfileSelectValidate');
-        const stage2Input = getById('promptOverrideStage2');
-        const stage3Input = getById('promptOverrideStage3');
-        const promptConfig = this.getPromptConfigSafe();
-
-        this._isSyncingPromptControls = true;
-        if (profileSelect) profileSelect.value = promptConfig.profileId || 'generic_default';
-        if (stage2Input) stage2Input.value = promptConfig.overrides?.stage2 || '';
-        if (stage3Input) stage3Input.value = promptConfig.overrides?.stage3 || '';
-        this._isSyncingPromptControls = false;
-    }
-
     /**
      * Get validation options from dialog checkboxes
      * @returns {object} Validation options
@@ -393,8 +318,7 @@ class ValidationPanel {
             includeLLM: getById('enableLLM')?.checked ?? true,
             customPrompt: getById('customValidationPrompt')?.value?.trim() || '',
             // Forward document context + project transcription rules into LLM Review / postprocessing prompts.
-            contextDescription: [contextManager.buildPromptContext(), appState.data.transcriptionRulesMarkdown || ''].filter(Boolean).join('\n\n'),
-            promptConfig: this.getPromptConfigSafe()
+            contextDescription: [contextManager.buildPromptContext(), appState.data.transcriptionRulesMarkdown || ''].filter(Boolean).join('\n\n')
         };
 
         // Include stage toggles when pipeline is active

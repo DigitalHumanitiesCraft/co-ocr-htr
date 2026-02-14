@@ -941,28 +941,6 @@
                 </div>
             </details>
 
-            <!-- Prompt Profile Section (Stage 1) -->
-            <details class="context-details" id="promptConfigDetailsTranscribe">
-                <summary class="context-summary">
-                    <span class="context-summary-title" data-i18n="dialog.transcribe.promptProfile">Prompt Profile (optional)</span>
-                    <span class="context-summary-hint" data-i18n="dialog.transcribe.promptProfileHint">Scenario profile and Stage 1 override</span>
-                </summary>
-                <div class="context-fields">
-                    <div class="input-wrapper">
-                        <label for="promptProfileSelectTranscribe" data-i18n="validation.scenarioProfile">Scenario Profile</label>
-                        <select id="promptProfileSelectTranscribe"></select>
-                        <span class="input-hint" data-i18n="dialog.transcribe.profileHint">Select a document scenario. You can still override prompts manually.</span>
-                    </div>
-                    <div class="input-wrapper">
-                        <label for="promptOverrideStage1" data-i18n="dialog.transcribe.stage1Override">Stage 1 Override (Transcription)</label>
-                        <textarea id="promptOverrideStage1" rows="5" placeholder="Optional custom prompt for Stage 1. Leave empty to use selected profile/default." data-i18n-placeholder="dialog.transcribe.stage1Placeholder"></textarea>
-                        <div style="margin-top: 8px;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage1" data-i18n="validation.resetStage1">Reset Stage 1 Override</button>
-                        </div>
-                    </div>
-                </div>
-            </details>
-
             <!-- Model Info -->
             <div class="transcribe-model-info" id="transcribeModelInfo">
                 <!-- Filled by JS -->
@@ -1141,32 +1119,6 @@
                 </div>
             </div>
 
-            <!-- Prompt Profile Section -->
-            <div class="validate-options-section" id="promptProfileSection">
-                <h4 class="validate-section-title" data-i18n="validation.promptProfileTitle">Prompt Profile</h4>
-                <p class="validate-section-hint" data-i18n="validation.promptProfileHint">Choose a document scenario profile for Stage 1/2/3 prompts.</p>
-                <div class="input-wrapper">
-                    <label for="promptProfileSelectValidate" data-i18n="validation.scenarioProfile">Scenario Profile</label>
-                    <select id="promptProfileSelectValidate"></select>
-                </div>
-                <details class="custom-prompt-details">
-                    <summary class="custom-prompt-toggle" data-i18n="validation.advancedOverrides">Advanced stage overrides (optional)</summary>
-                    <div class="custom-prompt-content">
-                        <p class="custom-prompt-hint" data-i18n="validation.advancedOverridesHint">If filled, overrides replace profile/default prompts for the stage.</p>
-                        <label for="promptOverrideStage2" data-i18n="validation.stage2Override">Stage 2 Override (Paleographic Review)</label>
-                        <textarea id="promptOverrideStage2" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 2"></textarea>
-                        <div style="margin-top: 8px; margin-bottom: 12px;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage2" data-i18n="validation.resetStage2">Reset Stage 2 Override</button>
-                        </div>
-
-                        <label for="promptOverrideStage3" data-i18n="validation.stage3Override">Stage 3 Override (Philological Review)</label>
-                        <textarea id="promptOverrideStage3" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 3"></textarea>
-                        <div style="margin-top: 8px;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage3" data-i18n="validation.resetStage3">Reset Stage 3 Override</button>
-                        </div>
-                    </div>
-                </details>
-            </div>
 
             <!-- Page Selection for Multi-Page -->
             <div class="validate-page-selection" id="validatePageSelection" hidden>

@@ -9,7 +9,7 @@
 
 import { normalizeMarkers } from '../utils/textFormatting.js';
 import { t } from './i18n.js';
-import { DEFAULT_PROMPT_PROFILE_ID, getPromptProfileById } from '../config/promptProfiles.js';
+
 
 // ============================================
 // Timeouts
@@ -25,15 +25,8 @@ const OLLAMA_TIMEOUT_MS = 480_000;
 // Prompts
 // ============================================
 
-const PROMPT_STAGE_KEYS = Object.freeze({
-  STAGE1: 'stage1',
-  STAGE2: 'stage2',
-  STAGE3: 'stage3'
-});
-
 /**
  * Core default for Stage 1 (generic, domain-agnostic).
- * User/profile prompts may override this completely.
  */
 const TRANSCRIPTION_PROMPT_BASE = `You are an expert in diplomatic transcription of historical handwritten documents.
 
@@ -86,27 +79,6 @@ function buildScriptHints(structuredContext) {
     return hints.length > 0 ? '\n' + hints.join('\n') : '';
 }
 
-/**
- * Build the full transcription prompt, optionally enhanced with context
- * @param {string} contextDescription - Additional context from the expert
- * @param {object} [structuredContext] - Structured context for script hints
- * @returns {string} The complete prompt
- */
-function normalizePromptConfig(promptConfig = null) {
-  const profileId = (promptConfig?.profileId || '').trim() || DEFAULT_PROMPT_PROFILE_ID;
-  const overrides = promptConfig?.overrides && typeof promptConfig.overrides === 'object'
-    ? promptConfig.overrides
-    : {};
-  return {
-    profileId,
-    overrides: {
-      stage1: typeof overrides.stage1 === 'string' ? overrides.stage1 : '',
-      stage2: typeof overrides.stage2 === 'string' ? overrides.stage2 : '',
-      stage3: typeof overrides.stage3 === 'string' ? overrides.stage3 : ''
-    }
-  };
-}
-
 function replaceToken(text, token, value) {
   return String(text || '').split(token).join(value);
 }
@@ -134,32 +106,14 @@ function stripPromptPlaceholders(template) {
     .trim();
 }
 
-function resolveStagePromptTemplate(stageKey, promptConfig, fallbackTemplate) {
-  const normalized = normalizePromptConfig(promptConfig);
-
-  const override = (normalized.overrides[stageKey] || '').trim();
-  if (override) {
-    return override;
-  }
-
-  const profile = getPromptProfileById(normalized.profileId) || getPromptProfileById(DEFAULT_PROMPT_PROFILE_ID);
-  const fromProfile = profile?.prompts?.[stageKey];
-  if (typeof fromProfile === 'string' && fromProfile.trim()) {
-    return fromProfile.trim();
-  }
-
-  return fallbackTemplate;
-}
-
 /**
- * Build the full transcription prompt, optionally enhanced with context and prompt profiles.
+ * Build the full transcription prompt, optionally enhanced with context.
  * @param {string} contextDescription - Additional context from the expert
  * @param {object} [structuredContext] - Structured context for script hints
- * @param {object|null} [promptConfig] - Prompt profile + stage overrides
  * @returns {string} The complete prompt
  */
-function buildTranscriptionPrompt(contextDescription = '', structuredContext = null, promptConfig = null) {
-    const baseTemplate = resolveStagePromptTemplate(PROMPT_STAGE_KEYS.STAGE1, promptConfig, TRANSCRIPTION_PROMPT_BASE);
+function buildTranscriptionPrompt(contextDescription = '', structuredContext = null) {
+    const baseTemplate = TRANSCRIPTION_PROMPT_BASE;
     const contextBlock = contextDescription
       ? `DOCUMENT CONTEXT:\n${contextDescription}`
       : '';
@@ -354,11 +308,10 @@ Respond ONLY with valid JSON:
  * Build paleographic review prompt (Stage 2)
  * @param {string} text - Transcription text to review
  * @param {string} contextDescription - Document context string
- * @param {object|null} [promptConfig] - Prompt profile + stage overrides
  * @returns {string} Complete prompt
  */
-function buildPaleographicReviewPrompt(text, contextDescription = '', promptConfig = null) {
-    const baseTemplate = resolveStagePromptTemplate(PROMPT_STAGE_KEYS.STAGE2, promptConfig, PALEOGRAPHIC_REVIEW_PROMPT);
+function buildPaleographicReviewPrompt(text, contextDescription = '') {
+    const baseTemplate = PALEOGRAPHIC_REVIEW_PROMPT;
     const contextBlock = contextDescription
         ? `DOCUMENT CONTEXT:\n${contextDescription}`
         : 'No additional context provided.';
@@ -373,11 +326,10 @@ function buildPaleographicReviewPrompt(text, contextDescription = '', promptConf
  * @param {string} text - Transcription text to review
  * @param {string} contextDescription - Document context string
  * @param {Array} previousIssues - Issues from Stage 2 (to avoid duplicates)
- * @param {object|null} [promptConfig] - Prompt profile + stage overrides
  * @returns {string} Complete prompt
  */
-function buildPhilologicalReviewPrompt(text, contextDescription = '', previousIssues = [], promptConfig = null) {
-    const baseTemplate = resolveStagePromptTemplate(PROMPT_STAGE_KEYS.STAGE3, promptConfig, PHILOLOGICAL_REVIEW_PROMPT);
+function buildPhilologicalReviewPrompt(text, contextDescription = '', previousIssues = []) {
+    const baseTemplate = PHILOLOGICAL_REVIEW_PROMPT;
     const contextBlock = contextDescription
         ? `DOCUMENT CONTEXT:\n${contextDescription}`
         : 'No additional context provided.';
@@ -764,8 +716,7 @@ class LLMService {
     const structuredContext = options.structuredContext || null;
     const prompt = options.prompt || buildTranscriptionPrompt(
       contextDescription,
-      structuredContext,
-      options.promptConfig || null
+      structuredContext
     );
     const model = this.getCurrentModel();
     console.log(`[LLM] model=${model} image=${imageBase64 ? 'yes' : 'no'} context=${contextDescription ? 'yes' : 'no'}`);

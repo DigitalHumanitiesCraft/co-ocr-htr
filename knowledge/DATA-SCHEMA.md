@@ -161,8 +161,7 @@ Four object stores for persistent data:
     },
     validation: {
       autoValidate: true,
-      customPrompt: '',
-      promptProfileId: 'generic_default'
+      customPrompt: ''
     }
   }
 }
