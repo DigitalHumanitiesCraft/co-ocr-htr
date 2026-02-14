@@ -24,7 +24,7 @@ knowledge/
 ├── HTR-POSTPROCESSING.md   ← Post-processing pipeline
 ├── IMPROVEMENTS.md        ← Planned improvements
 ├── SECURITY.md            ← Security considerations
-├── TESTING.md             ← Testing strategy (574 tests)
+├── TESTING.md             ← Testing strategy (567 tests)
 ├── IMPLEMENTATION-PLAN.md ← Roadmap (Phase 1-6 complete)
 └── JOURNAL.md             ← Development log
 ```
@@ -44,6 +44,7 @@ knowledge/
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
 | [SECURITY](SECURITY.md) | How is it secured? | Everyone | ARCHITECTURE |
 | [TESTING](TESTING.md) | How is it tested? | Development | ARCHITECTURE |
+
 
 ## Core Concepts (Quick Reference)
 
@@ -68,7 +69,6 @@ knowledge/
 | ZIP Export | Export all pages as ZIP archive | ARCHITECTURE |
 | Internationalization (i18n) | German/English UI with runtime switching | ARCHITECTURE |
 | Project Rules | Per-project transcription/validation rules with Markdown editor | ARCHITECTURE |
-| Prompt Profiles | 3-stage prompt profiles for document scenarios | ARCHITECTURE |
 | Post-Processing Pipeline | Stage 2 (paleographic) + Stage 3 (philological) review | HTR-POSTPROCESSING |
 | Thinking Panel | Display LLM reasoning tokens during operations | ARCHITECTURE |
 | Welcome Overlay | First-visit onboarding with workflow overview | ARCHITECTURE |
@@ -124,4 +124,4 @@ METHODOLOGY ──────────────────────�
 | 2.0 | 2026-02-04 | Phase 3 complete: Batch processing, page status indicators, ZIP export |
 | 2.1 | 2026-02-04 | Phase 5 planned: i18n (German/English UI) with ~400 strings |
 | 2.2 | 2026-02-14 | Adoption context: ZBZ as institutional fork, Open Development, Mistral OCR 3 |
-| 2.3 | 2026-02-14 | Phase 5-6 complete: i18n, Project Rules, Azure Mistral, Welcome Overlay, Markdown Rules Editor. 574 tests. |
+| 2.3 | 2026-02-14 | Phase 5-6 complete: i18n, Project Rules, Azure Mistral, Welcome Overlay, Markdown Rules Editor. 567 tests. |

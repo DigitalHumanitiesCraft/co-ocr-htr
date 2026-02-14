@@ -615,10 +615,11 @@ ${bodyLines.join('\n')}
      */
     download(content, filename, mimeType) {
         // Ensure UTF-8 encoding for text formats
-        const charset = mimeType.startsWith('text/') || mimeType.includes('xml') || mimeType.includes('json')
-            ? '; charset=utf-8'
-            : '';
-        const blob = new Blob([content], { type: mimeType + charset });
+        const isText = mimeType.startsWith('text/') || mimeType.includes('xml') || mimeType.includes('json');
+        const charset = isText ? '; charset=utf-8' : '';
+        // Prepend UTF-8 BOM so editors/tools detect encoding correctly (XML spec allows BOM before <?xml)
+        const bom = isText && typeof content === 'string' ? '\uFEFF' : '';
+        const blob = new Blob([bom + content], { type: mimeType + charset });
         const url = URL.createObjectURL(blob);
 
         const link = document.createElement('a');
@@ -725,7 +726,8 @@ ${bodyLines.join('\n')}
             const extension = this._getExtension(format);
             const filename = `${page.filename?.replace(/\.[^.]+$/, '') || `page_${i + 1}`}.${extension}`;
 
-            folder.file(filename, content);
+            // Prepend UTF-8 BOM so editors detect encoding correctly
+            folder.file(filename, '\uFEFF' + content);
             exportedCount++;
         }
 
