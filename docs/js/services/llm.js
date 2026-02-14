@@ -8,6 +8,7 @@
  */
 
 import { normalizeMarkers } from '../utils/textFormatting.js';
+import { t } from './i18n.js';
 import { DEFAULT_PROMPT_PROFILE_ID, getPromptProfileById } from '../config/promptProfiles.js';
 
 // ============================================
@@ -749,13 +750,13 @@ class LLMService {
     console.log(`[LLM] transcribe() provider=${this.activeProvider}`);
 
     if (!config.supportsVision) {
-      throw new Error(`Provider ${config.name} does not support vision/image input`);
+      throw new Error(t('toast.providerNoVision', { name: config.name }));
     }
 
     // Get API key from memory (not persisted for security)
     const apiKey = this.providers[this.activeProvider]?.apiKey;
     if (!apiKey && config.authType !== 'none') {
-      throw new Error(`No API key configured for ${config.name}. Please enter your API key in the LLM configuration dialog.`);
+      throw new Error(t('toast.noApiKeyFor', { name: config.name }));
     }
 
     // Build prompt with optional context from expert
@@ -863,7 +864,7 @@ class LLMService {
     // This avoids race conditions if transcribe() runs concurrently.
     const apiKey = this.providers.gemini?.apiKey;
     if (!apiKey) {
-      throw new Error('Gemini API key required for image description. Please configure it in LLM settings.');
+      throw new Error(t('toast.geminiKeyRequired'));
     }
 
     const model = this.providers.gemini.defaultModel || 'gemini-3-pro-preview';
@@ -1800,7 +1801,7 @@ class LLMService {
     console.log(`[Mistral] OCR API call model=${model} image=${imageBase64 ? 'yes' : 'no'}`);
 
     if (!imageBase64) {
-      throw new Error('Mistral OCR requires an image');
+      throw new Error(t('toast.mistralImageRequired'));
     }
 
     // Convert base64 to data URL format required by Mistral
@@ -1828,7 +1829,7 @@ class LLMService {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[Mistral] API error: ${response.status}`, errorText);
-      throw new Error(`Mistral OCR API error: ${response.status} - ${errorText}`);
+      throw new Error(t('toast.apiErrorDetail', { provider: 'Mistral OCR', status: response.status, detail: errorText }));
     }
 
     const data = await response.json();
@@ -1843,10 +1844,10 @@ class LLMService {
   async _callAzureMistral(apiKey, model, imageBase64) {
     const endpoint = this.providers['azure-mistral']?.endpoint;
     if (!endpoint) {
-      throw new Error('Azure endpoint URL is required. Configure it in LLM settings.');
+      throw new Error(t('toast.azureEndpointRequired'));
     }
     if (!imageBase64) {
-      throw new Error('Mistral OCR requires an image');
+      throw new Error(t('toast.mistralImageRequired'));
     }
 
     console.log(`[Azure-Mistral] OCR call model=${model} endpoint=${endpoint}`);
@@ -1873,7 +1874,7 @@ class LLMService {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[Azure-Mistral] API error: ${response.status}`, errorText);
-      throw new Error(`Azure Mistral OCR API error: ${response.status} - ${errorText}`);
+      throw new Error(t('toast.apiErrorDetail', { provider: 'Azure Mistral OCR', status: response.status, detail: errorText }));
     }
 
     const data = await response.json();

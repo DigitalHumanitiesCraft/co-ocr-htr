@@ -49,6 +49,9 @@ System design for coOCR/HTR. Client-only, no backend.
 |  +----------+ +----------+ +----------+ +----------+        |
 |  |  Gemini  | |  OpenAI  | | Anthropic| |  Ollama  |        |
 |  +----------+ +----------+ +----------+ +----------+        |
+|  +----------+ +------------------+                          |
+|  |  Mistral | | Azure Mistral    |                          |
+|  +----------+ +------------------+                          |
 +-------------------------------------------------------------+
 ```
 
@@ -71,19 +74,24 @@ docs/
 │   ├── viewer.css          # OpenSeadragon viewer styles
 │   └── validation.css      # Validation panel
 ├── js/
-│   ├── main.js             # Initialization, Workflow (~300 LOC)
-│   ├── state.js            # Central State with EventTarget (~450 LOC)
+│   ├── main.js             # Initialization, Workflow (~900 LOC)
+│   ├── state.js            # Central State with EventTarget (~1450 LOC)
 │   ├── viewer.js           # OpenSeadragon Viewer (~520 LOC)
 │   ├── editor.js           # Flexible Editor (lines/grid)
 │   ├── ui.js               # UI Interactions
 │   ├── components/
-│   │   ├── dialogs.js      # Dialog Manager
+│   │   ├── dialogs.js      # Dialog Manager (~1950 LOC)
 │   │   ├── upload.js       # Upload Component
 │   │   ├── transcription.js# Transcription UI
 │   │   ├── validation.js   # Validation Panel
+│   │   ├── description.js  # Image Description (Gemini)
+│   │   ├── context.js      # Context Manager
 │   │   └── batch-progress.js # Batch Progress Panel
+│   ├── config/
+│   │   └── promptProfiles.js # Prompt Profile Definitions
 │   └── services/
-│       ├── llm.js          # Multi-Provider LLM Service
+│       ├── llm.js          # Multi-Provider LLM Service (~1900 LOC)
+│       ├── i18n.js         # Internationalization Service (DE/EN)
 │       ├── storage.js      # localStorage + IndexedDB storage service
 │       ├── validation.js   # Validation Engine
 │       ├── export.js       # Export Service (incl. PAGE-XML, ZIP)
@@ -91,6 +99,9 @@ docs/
 │       └── parsers/
 │           ├── page-xml.js # PAGE-XML Parser
 │           └── mets-xml.js # METS-XML Parser
+├── i18n/
+│   ├── en.json             # English translation dictionary (~250 keys)
+│   └── de.json             # German translation dictionary (~250 keys)
 ├── samples/
 │   ├── index.json          # Sample Manifest
 │   └── raitbuch/           # Demo Data
@@ -179,12 +190,14 @@ Abstraction layer for multiple LLM providers with unified API.
 - `getValidationFallback()` finds alternative provider for validation
 
 **Supported Providers:**
-| Provider | Endpoint | Default Model | Vision |
-|----------|----------|---------------|--------|
-| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes |
-| OpenAI | api.openai.com | gpt-5.2 | Yes |
-| Anthropic | api.anthropic.com | claude-sonnet-4-5 | Yes |
-| Ollama | localhost:11434 | deepseek-ocr | Yes |
+| Provider | Endpoint | Default Model | Vision | Auth |
+|----------|----------|---------------|--------|------|
+| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes | URL param |
+| OpenAI | api.openai.com | gpt-5.2 | Yes | Bearer token |
+| Anthropic | api.anthropic.com | claude-sonnet-4-5 | Yes | x-api-key |
+| Mistral | api.mistral.ai | mistral-ocr-latest | Yes | Bearer token |
+| Azure Mistral | User-configured | mistral-ocr-latest | Yes | api-key header |
+| Ollama | localhost:11434 | deepseek-ocr | Yes | None (local) |
 
 **Validation Fallback (OCR-only Models):**
 
@@ -399,6 +412,49 @@ localStorage is not used for API key material.
 ### Content Security Policy
 
 CSP restricts connections to known LLM API endpoints (Gemini, OpenAI, Anthropic) plus localhost for Ollama. Scripts and styles limited to same-origin.
+
+## Internationalization (i18n)
+
+**Implementation:** [i18n.js](../docs/js/services/i18n.js), [en.json](../docs/i18n/en.json), [de.json](../docs/i18n/de.json)
+
+The i18n system provides switchable DE/EN translations for all UI text.
+
+**Architecture:**
+- `I18nService extends EventTarget` (same pattern as other services)
+- JSON dictionaries loaded via `fetch()` at startup
+- Translation function `t(key, params)` with `{paramName}` interpolation
+- Fallback chain: current language -> EN -> key string itself
+- Language stored in `localStorage` (`coocr:lang`), default: `en`
+- DOM elements annotated with `data-i18n`, `data-i18n-title`, `data-i18n-placeholder`
+- Language switch fires `languageChanged` event, all `[data-i18n]` elements updated
+
+**Key Namespaces:** `app`, `header`, `viewer`, `editor`, `validation`, `dialog`, `toast`, `batch`, `confirm`, `dynamic`, `language`
+
+## Project Rules
+
+Projects can define transcription and validation rules that are persisted in IndexedDB.
+
+**Schema (IndexedDB v2):**
+```
+rules: {
+  editionModel: 'diplomatic' | 'normalized' | 'critical',
+  xmlSchema: 'page-xml-2019' | 'tei-p5',
+  transcription: {
+    scriptType, language, period, paleographicHints, specialCharacters
+  },
+  validation: {
+    autoValidate, customPrompt, promptProfileId
+  }
+}
+```
+
+**Integration:**
+- Rules dialog accessible from project list (gear icon)
+- Rules auto-populate context on session restore (scriptType, language, period)
+- Rules map to best-matching prompt profile for transcription
+- Rules exportable/importable as JSON for institutional sharing
+
+**IDB Migration:** Version-based upgrade handler. Existing v1 projects get `rules: null` (lazy migration on read).
 
 ## Technology Decisions
 

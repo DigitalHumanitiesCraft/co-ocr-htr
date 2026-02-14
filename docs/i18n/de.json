@@ -480,7 +480,14 @@
     "loadFileFailed": "Datei konnte nicht geladen werden: {message}",
     "errorOccurred": "Ein Fehler ist aufgetreten. Details in der Konsole.",
     "quotaUnavailable": "In diesem Browser nicht verfuegbar",
-    "quotaUsage": "{used} MB von {total} MB verwendet ({percent}%)"
+    "quotaUsage": "{used} MB von {total} MB verwendet ({percent}%)",
+    "providerNoVision": "Anbieter {name} unterstuetzt keine Bild-Eingabe",
+    "noApiKeyFor": "Kein API-Schluessel fuer {name} konfiguriert. Bitte im LLM-Konfigurationsdialog eingeben.",
+    "geminiKeyRequired": "Gemini API-Schluessel fuer Bildbeschreibung erforderlich. Bitte in den LLM-Einstellungen konfigurieren.",
+    "mistralImageRequired": "Mistral OCR benoetigt ein Bild",
+    "azureEndpointRequired": "Azure-Endpunkt-URL erforderlich. In den LLM-Einstellungen konfigurieren.",
+    "apiErrorDetail": "{provider} API-Fehler: {status} - {detail}",
+    "refreshError": "Fehler: {message}"
   },
   "batch": {
     "transcription": "Batch-Transkription",

@@ -1553,7 +1553,7 @@ class DialogManager {
                     signal: AbortSignal.timeout(5000)
                 });
 
-                if (!response.ok) throw new Error('Connection failed');
+                if (!response.ok) throw new Error(t('toast.connectionFailed'));
 
                 const data = await response.json();
                 const models = data.models?.map(m => m.name) || [];
@@ -1640,7 +1640,7 @@ class DialogManager {
                 signal: AbortSignal.timeout(5000)
             });
 
-            if (!response.ok) throw new Error('Connection failed');
+            if (!response.ok) throw new Error(t('toast.connectionFailed'));
 
             const data = await response.json();
             const models = data.models?.map(m => m.name) || [];
@@ -1652,7 +1652,7 @@ class DialogManager {
                 this.showToast(t('toast.modelsFound', { count: models.length }), 'success');
             }
         } catch (error) {
-            this.showToast(`Error: ${error.message}`, 'error');
+            this.showToast(t('toast.refreshError', { message: error.message }), 'error');
         } finally {
             refreshBtn.textContent = originalText;
             refreshBtn.disabled = false;

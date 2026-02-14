@@ -560,7 +560,7 @@ describe('LLMService', () => {
       service.setApiKey('gemini', ''); // Clear any key
 
       await expect(service.transcribe('base64image'))
-        .rejects.toThrow('No API key configured');
+        .rejects.toThrow(/No API key configured|noApiKeyFor/);
     });
   });
 });

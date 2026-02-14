@@ -861,3 +861,52 @@ The ZBZ deployment validates key architectural decisions:
 ### No Code Changes
 
 This entry documents the adoption context only. No code changes required — the existing architecture already supports institutional deployment.
+
+---
+
+## Session 33 (2026-02-14): Community Integration + Major Extensions
+
+### Context
+
+Integration of Robert Klugseder's substantial fork (67 commits, +15,819 lines, 90 files) plus three major extensions: i18n system, project rules, and Azure Mistral OCR.
+
+### What Was Done
+
+**Phase 0: Merge + Attribution**
+- Merged Robert's fork via `--no-ff` into `integration/robert-merge` branch
+- Created `CONTRIBUTING.md` with contribution guidelines
+- Added Contributors section to `README.md`
+- Cleaned fork-specific files
+
+**Phase 1: i18n System (DE/EN switchable)**
+- Created `I18nService` (`docs/js/services/i18n.js`) with EventTarget pattern
+- Built ~250 translation keys across 14 namespaces in `en.json` and `de.json`
+- Annotated ~150 HTML elements with `data-i18n` attributes
+- Replaced ~100 hardcoded strings across 8 JS files with `t()` calls
+- Added language switcher toggle (DE/EN) in header
+- All 574 tests passing
+
+**Phase 2: Project Rules**
+- IndexedDB schema migration v1 -> v2 with versioned upgrade handler
+- Project rules schema: editionModel, xmlSchema, transcription details, validation config
+- Rules dialog with full CRUD (create, edit, export/import as JSON)
+- Auto-populate context from project rules on session restore
+- Prompt profile mapping from project rules
+
+**Phase 3: Azure Mistral OCR**
+- Added `azure-mistral` provider with `api-key` header authentication
+- User-configurable endpoint URL for institutional Azure deployments
+- OCR-only detection for validation fallback
+- Endpoint field visibility toggle in LLM config dialog
+
+**Phase 4: Integration and Stabilization**
+- Replaced remaining hardcoded error strings with i18n `t()` calls
+- Fixed test expectations for i18n key returns
+- Updated ARCHITECTURE.md, DATA-SCHEMA.md, JOURNAL.md
+
+### Key Decisions
+
+1. **`--no-ff` merge**: Preserves Robert's contribution history as a visible block in `git log --first-parent`
+2. **Lazy IDB migration**: Existing projects get `rules: null` on read rather than forcing schema update
+3. **i18n fallback chain**: current lang -> EN -> key string itself (graceful degradation)
+4. **Azure auth**: Uses `api-key` header (Azure convention) vs `Authorization: Bearer` (native Mistral)

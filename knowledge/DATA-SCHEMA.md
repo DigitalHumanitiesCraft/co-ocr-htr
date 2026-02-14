@@ -133,8 +133,9 @@ Used for synchronous settings and prompt fallbacks:
 | coocr:descriptionPrompt | Last custom description prompt |
 | coocr:validationPrompt | Last custom validation prompt |
 | coocr:activeProjectId | Active project ID for startup restore |
+| coocr:lang | UI language preference (en/de), default: en |
 
-### IndexedDB
+### IndexedDB (v2)
 
 Four object stores for persistent data:
 
@@ -144,6 +145,46 @@ Four object stores for persistent data:
 | sessions | projectId | (primary key) | Serialized project session |
 | images | id (`projectId_pageId`) | projectId | Page/document image data |
 | apiKeys | provider | (primary key) | Optional persisted API keys |
+
+**Project Record (v2 fields):**
+```javascript
+{
+  id: 'uuid',
+  name: 'Project Name',
+  createdAt: '2026-01-20T...',
+  updatedAt: '2026-02-14T...',
+  rules: {                          // Added in IDB v2 (nullable)
+    editionModel: 'diplomatic',     // 'diplomatic' | 'normalized' | 'critical'
+    xmlSchema: 'page-xml-2019',     // 'page-xml-2019' | 'tei-p5'
+    transcription: {
+      scriptType: 'kurrent',
+      language: 'de',
+      period: '19th century',
+      paleographicHints: '',
+      specialCharacters: ''
+    },
+    validation: {
+      autoValidate: true,
+      customPrompt: '',
+      promptProfileId: 'generic_default'
+    }
+  }
+}
+```
+
+### i18n Translation Schema
+
+Translation dictionaries (`docs/i18n/en.json`, `docs/i18n/de.json`) use nested namespace structure:
+
+```javascript
+{
+  "namespace": {
+    "key": "Text with {parameter} interpolation"
+  }
+}
+```
+
+Key namespaces: `app`, `mobile`, `header`, `viewer`, `editor`, `validation`, `workflow`, `status`, `dialog` (with sub-namespaces: `llmConfig`, `transcribe`, `describe`, `validate`, `export`, `settings`, `help`, `iiif`, `projects`, `rules`), `toast`, `batch`, `confirm`, `dynamic`, `language`.
 
 ## Export Formats
 

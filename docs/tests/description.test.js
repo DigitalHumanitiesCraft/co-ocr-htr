@@ -436,7 +436,7 @@ describe('Description Feature', () => {
     it('should require Gemini API key', async () => {
       // No API key configured
       await expect(service.describe('base64img'))
-        .rejects.toThrow('Gemini API key required');
+        .rejects.toThrow(/Gemini API key required|geminiKeyRequired/);
     });
 
     it('should enforce Gemini even when another provider is active', async () => {
@@ -445,7 +445,7 @@ describe('Description Feature', () => {
 
       // No gemini key = should fail with Gemini-specific error
       await expect(service.describe('base64img'))
-        .rejects.toThrow('Gemini API key required');
+        .rejects.toThrow(/Gemini API key required|geminiKeyRequired/);
     });
 
     it('should restore original provider after describe call', async () => {
