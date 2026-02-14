@@ -820,3 +820,43 @@ TEI-XML export had UTF-8 encoding issues (Umlauts displayed as `Ã¼`).
 const charset = mimeType.includes('xml') ? '; charset=utf-8' : '';
 const blob = new Blob([content], { type: mimeType + charset });
 ```
+
+---
+
+## 2026-02-14 | First Institutional Adoption: ZBZ
+
+### Context
+
+The Zentralbibliothek Zürich (ZBZ) has confirmed their commission for the Jeanne Hersch digital edition project (289 documents, 7,200 pages). coOCR/HTR is positioned as the generic open-source component within the broader zbz-ocr-tei pipeline.
+
+### Relevance for coOCR/HTR
+
+| Aspect | Implication |
+|--------|-------------|
+| Institutional fork | ZBZ will fork co-ocr-htr to GitLab Uni Zürich |
+| Deployment | Podman (daemonless Docker alternative), OCI-compatible |
+| LLM access | Azure-based (Mistral OCR 3, Claude, Gemini) |
+| Team | Anouschka (editions and informatics background) as primary user |
+| Community reference | Klugseder (ÖAW) fork for medieval music manuscripts |
+
+### Open Development Vision
+
+coOCR/HTR explicitly communicated to ZBZ as a community project:
+
+- **Community of Experts**: Domain experts as peer reviewers of LLM output
+- **LLM-assisted code review**: Contributors get AI-assisted review of their contributions
+- **Institutional forks**: Each institution adapts to their needs, contributes back
+- **Promptotyping methodology**: Iterative development through AI dialogue
+
+### Architecture Implications
+
+The ZBZ deployment validates key architectural decisions:
+
+1. **No backend**: Browser-only works for institutional deployment (Podman serves static files)
+2. **Configurable API endpoints**: Essential for Azure vs. direct API switching
+3. **PAGE-XML export**: Required for integration with TEI transformation pipeline
+4. **IIIF support**: Relevant for ZBZ's digital library infrastructure
+
+### No Code Changes
+
+This entry documents the adoption context only. No code changes required — the existing architecture already supports institutional deployment.

@@ -176,6 +176,23 @@ Phase 4 (When opportunity arises)
 
 ---
 
+## Priority 6: Institutional Deployment Support
+
+Context: ZBZ (Zentralbibliothek Zürich) plans to fork co-ocr-htr for their Jeanne Hersch Edition project. Deployment on GitLab Uni Zürich with Podman.
+
+### 6.1 Containerfile for Podman/Docker
+- [ ] Create OCI-compatible Containerfile (static file serving, e.g. nginx/caddy)
+- [ ] Document deployment options (GitHub Pages, Podman/Docker, local file://)
+
+### 6.2 Azure Provider Support in LLMService
+- [ ] Azure-compatible API endpoint configuration (different auth, endpoint URLs, model naming)
+- [ ] Mistral OCR 3 as provider option (quality comparison pending, part of zbz-ocr-tei)
+
+### 6.3 Fork Documentation
+- [ ] Document institutional fork pattern and merge strategy for upstream changes
+
+---
+
 ## Not Implementing
 
 These items were deliberately classified as "not a real problem":

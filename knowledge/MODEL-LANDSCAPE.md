@@ -192,12 +192,13 @@ No multi-model pipeline required.
 
 ### Future Considerations
 
-| Action | Priority | Effort |
-|--------|----------|--------|
-| Agentic Vision integration | Medium | Medium |
-| LightOnOCR-2 Ollama conversion guide | Medium | Low |
-| Layout analysis pre-step | Low | High |
-| Multi-model ensemble | Low | High |
+| Action | Priority | Effort | Notes |
+|--------|----------|--------|-------|
+| Mistral OCR 3 as provider (Azure) | Medium | Medium | Quality comparison pending (zbz-ocr-tei), requires Azure endpoint config |
+| Agentic Vision integration | Medium | Medium | |
+| LightOnOCR-2 Ollama conversion guide | Medium | Low | |
+| Layout analysis pre-step | Low | High | |
+| Multi-model ensemble | Low | High | |
 
 ### Model Selection Guide (implemented in UI)
 
@@ -325,3 +326,7 @@ ollama create deepseek-ocr2 -f Modelfile
 ---
 
 **Related:** [METHODOLOGY](METHODOLOGY.md) | [ARCHITECTURE](ARCHITECTURE.md) | [VALIDATION](VALIDATION.md)
+
+---
+
+*Updated: 2026-02-14*

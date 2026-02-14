@@ -80,10 +80,26 @@ coOCR/HTR positions itself as an **Editor-in-the-Loop tool**:
 3. **Workflow Integration**: Output can be used in other processes
 4. **Quality Assurance**: "Good, correct OCR/HTR comes out the other side"
 
+## Adoption & Open Development
+
+coOCR/HTR is positioned as an **open-developed, community-driven tool**. The development model follows an Open Development approach: the codebase is public, contributions are welcome, and institutional forks are explicitly encouraged.
+
+### Institutional Adoption
+
+| Institution | Context | Status |
+|-------------|---------|--------|
+| ZBZ (Zentralbibliothek Zürich) | Jeanne Hersch Edition, 289 documents | Fork planned (GitLab Uni Zürich, Podman) |
+| ÖAW (Klugseder) | Medieval music manuscripts | Fork exists (reference implementation) |
+
+The ZBZ plans to fork co-ocr-htr for their OCR/TEI pipeline (see [zbz-ocr-tei](https://github.com/DigitalHumanitiesCraft/zbz-ocr-tei)). Their deployment uses Podman (daemonless Docker alternative) on institutional infrastructure with Azure-based LLM access. This validates the tool's architecture: browser-based, no backend dependencies, configurable API endpoints.
+
+### Community of Experts
+
+The Open Development vision positions domain experts (archivists, philologists, historians) as **peer reviewers of LLM output** — not just users, but co-developers of quality standards. Each institutional fork can contribute validation rules, prompts, and domain knowledge back to the main project.
+
 ## Non-Goals
 
 - Not a replacement for specialized HTR models (Transkribus, eScriptorium)
-- No batch processing of large corpora (focus: single document correction)
 - No training tool for custom models
 
 ## Current Status
@@ -113,3 +129,7 @@ coOCR/HTR positions itself as an **Editor-in-the-Loop tool**:
 - [METHODOLOGY](METHODOLOGY.md) - Scientific foundations
 - [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) - Technical roadmap
 - [ARCHITECTURE](ARCHITECTURE.md) - System architecture
+
+---
+
+*Updated: 2026-02-14*
