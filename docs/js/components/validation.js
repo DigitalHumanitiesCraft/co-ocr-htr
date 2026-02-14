@@ -392,8 +392,8 @@ class ValidationPanel {
             checkArtifacts: getById('checkArtifacts')?.checked ?? true,
             includeLLM: getById('enableLLM')?.checked ?? true,
             customPrompt: getById('customValidationPrompt')?.value?.trim() || '',
-            // Forward document context into LLM Review / postprocessing prompts.
-            contextDescription: contextManager.buildPromptContext() || '',
+            // Forward document context + project transcription rules into LLM Review / postprocessing prompts.
+            contextDescription: [contextManager.buildPromptContext(), appState.data.transcriptionRulesMarkdown || ''].filter(Boolean).join('\n\n'),
             promptConfig: this.getPromptConfigSafe()
         };
 

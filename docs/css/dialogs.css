@@ -2287,3 +2287,43 @@ textarea.form-control {
 .welcome-dismiss-label input[type="checkbox"] {
   accent-color: var(--accent-primary);
 }
+
+/* ============================================================
+   MARKDOWN EDITOR (Project Rules - Transcription Rules)
+   ============================================================ */
+
+#rulesTranscriptionMd {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  tab-size: 2;
+  resize: vertical;
+  min-height: 200px;
+}
+
+.markdown-preview {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  min-height: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.markdown-preview h2 { font-size: var(--text-base); font-weight: 600; margin: var(--space-3) 0 var(--space-1); }
+.markdown-preview h3 { font-size: var(--text-sm); font-weight: 600; margin: var(--space-2) 0 var(--space-1); }
+.markdown-preview p { margin: var(--space-1) 0; }
+.markdown-preview ul, .markdown-preview ol { padding-left: var(--space-4); margin: var(--space-1) 0; }
+.markdown-preview li { margin: var(--space-1) 0; }
+.markdown-preview code { background: var(--bg-tertiary); padding: 0 var(--space-1); border-radius: 2px; font-family: var(--font-mono); font-size: 0.9em; }
+.markdown-preview strong { font-weight: 600; }
+.markdown-preview em { font-style: italic; }
+
+.form-fieldset legend .btn-xs {
+  padding: 2px 6px;
+  font-size: var(--text-xs);
+  vertical-align: middle;
+}

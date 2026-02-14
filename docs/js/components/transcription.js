@@ -230,8 +230,9 @@ class TranscriptionManager {
 
             const base64 = await this.getImageBase64(imageUrl);
 
-            // Get context from expert (if provided)
-            const contextDescription = contextManager.buildPromptContext();
+            // Get context from expert (if provided) + project transcription rules
+            const contextParts = [contextManager.buildPromptContext(), appState.data.transcriptionRulesMarkdown || ''].filter(Boolean);
+            const contextDescription = contextParts.join('\n\n');
 
             if (supportsThinking) {
                 appState.emitThinkingStart({
@@ -523,8 +524,9 @@ class TranscriptionManager {
                 // Get image as base64
                 const base64 = await this.getImageBase64(page.dataUrl);
 
-                // Get context
-                const contextDescription = contextManager.buildPromptContext();
+                // Get context + project transcription rules
+                const contextParts = [contextManager.buildPromptContext(), appState.data.transcriptionRulesMarkdown || ''].filter(Boolean);
+                const contextDescription = contextParts.join('\n\n');
 
                 // Call LLM service with context (including structured context for script hints)
                 const result = await llmService.transcribe(base64, {
