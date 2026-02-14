@@ -196,10 +196,164 @@ async function initApp() {
     // Wire up project management buttons
     initProjectButtons();
 
-    // Check for saved projects and offer to restore
-    await checkForProjects();
+    // Check for saved projects, show welcome overlay or restore dialog
+    await handleStartup();
 
     console.log('coOCR/HTR: Initialized');
+}
+
+/**
+ * Startup handler: show welcome overlay for first-time users, or restore session
+ */
+async function handleStartup() {
+    const settings = storage.loadSettings() || {};
+    const welcomeDismissed = settings.welcome_dismissed === true;
+    const activeProjectId = storage.getActiveProjectId();
+
+    let projects;
+    try {
+        projects = await storage.listProjects();
+    } catch {
+        projects = [];
+    }
+
+    // If there's an active project, always offer to restore (existing behavior)
+    if (activeProjectId && projects.length > 0) {
+        await checkForProjects();
+        return;
+    }
+
+    // Show welcome overlay on first visit or when not dismissed
+    if (!welcomeDismissed) {
+        await showWelcomeOverlay(projects);
+        return;
+    }
+
+    // Dismissed but projects exist with no active one: show project list
+    if (projects.length > 0) {
+        await showProjectListDialog(projects);
+    }
+}
+
+/**
+ * Welcome overlay for first-time users
+ */
+async function showWelcomeOverlay(projects) {
+    return new Promise((resolve) => {
+        const dialog = document.createElement('dialog');
+        dialog.className = 'confirm-dialog glass-panel welcome-overlay';
+
+        const hasProjects = projects && projects.length > 0;
+
+        dialog.innerHTML = `
+            <div class="welcome-header">
+                <img src="assets/logo-icon.png" alt="coOCR/HTR" class="welcome-logo">
+                <div class="welcome-title-group">
+                    <h2 class="welcome-title">${t('welcome.title')}</h2>
+                    <p class="welcome-tagline">${t('welcome.tagline')}</p>
+                </div>
+            </div>
+            <div class="dialog-body">
+                <p class="welcome-description">${t('welcome.description')}</p>
+
+                <div class="welcome-workflow">
+                    <div class="welcome-step"><span class="welcome-step-num">1</span><span>${t('welcome.step1')}</span></div>
+                    <div class="welcome-step"><span class="welcome-step-num">2</span><span>${t('welcome.step2')}</span></div>
+                    <div class="welcome-step"><span class="welcome-step-num">3</span><span>${t('welcome.step3')}</span></div>
+                    <div class="welcome-step"><span class="welcome-step-num">4</span><span>${t('welcome.step4')}</span></div>
+                    <div class="welcome-step"><span class="welcome-step-num">5</span><span>${t('welcome.step5')}</span></div>
+                </div>
+
+                <h3 class="welcome-actions-title">${t('welcome.getStarted')}</h3>
+                <div class="welcome-actions-grid">
+                    <button class="welcome-action-card" data-action="new-project">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            <line x1="12" y1="11" x2="12" y2="17"></line>
+                            <line x1="9" y1="14" x2="15" y2="14"></line>
+                        </svg>
+                        <span class="welcome-action-label">${t('welcome.newProject')}</span>
+                        <span class="welcome-action-hint">${t('welcome.newProjectHint')}</span>
+                    </button>
+                    <button class="welcome-action-card" data-action="load-demo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                        </svg>
+                        <span class="welcome-action-label">${t('welcome.loadDemo')}</span>
+                        <span class="welcome-action-hint">${t('welcome.loadDemoHint')}</span>
+                    </button>
+                    <button class="welcome-action-card" data-action="upload">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span class="welcome-action-label">${t('welcome.uploadFile')}</span>
+                        <span class="welcome-action-hint">${t('welcome.uploadFileHint')}</span>
+                    </button>
+                    ${hasProjects ? `
+                    <button class="welcome-action-card" data-action="open-projects">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span class="welcome-action-label">${t('welcome.openProject')}</span>
+                        <span class="welcome-action-hint">${t('welcome.openProjectHint', { count: projects.length })}</span>
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="welcome-footer">
+                <label class="welcome-dismiss-label">
+                    <input type="checkbox" id="welcomeDontShow">
+                    <span>${t('welcome.dontShowAgain')}</span>
+                </label>
+                <button class="btn btn-secondary" data-action="close">${t('welcome.close')}</button>
+            </div>
+        `;
+
+        const closeOverlay = () => {
+            const checkbox = dialog.querySelector('#welcomeDontShow');
+            if (checkbox?.checked) {
+                storage.saveSettings({ welcome_dismissed: true });
+            }
+            dialog.close();
+            dialog.remove();
+            resolve();
+        };
+
+        dialog.addEventListener('click', async (e) => {
+            const action = e.target.closest('[data-action]')?.dataset.action;
+            if (!action) return;
+
+            if (action === 'new-project') {
+                closeOverlay();
+                await createNewProject();
+            } else if (action === 'load-demo') {
+                closeOverlay();
+                const samples = samplesService.getSamples();
+                if (samples.length > 0) {
+                    await samplesService.loadSample(samples[0].id);
+                }
+            } else if (action === 'upload') {
+                closeOverlay();
+                uploadManager.openFilePicker('image');
+            } else if (action === 'open-projects') {
+                closeOverlay();
+                await showProjectListDialog(projects);
+            } else if (action === 'close') {
+                closeOverlay();
+            }
+        });
+
+        dialog.addEventListener('cancel', (e) => {
+            e.preventDefault();
+            closeOverlay();
+        });
+
+        document.body.appendChild(dialog);
+        dialog.showModal();
+    });
 }
 
 /**

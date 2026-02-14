@@ -625,5 +625,26 @@
     "switcher": "Language",
     "en": "English",
     "de": "Deutsch"
+  },
+  "welcome": {
+    "title": "coOCR/HTR Workbench",
+    "tagline": "Expert-in-the-Loop OCR/HTR Verification and Correction",
+    "description": "A browser-based tool for verifying and correcting OCR/HTR transcriptions of historical documents. Upload your document, let AI transcribe it, then validate and export the result.",
+    "step1": "Load a document image or PAGE-XML",
+    "step2": "Transcribe with AI assistance",
+    "step3": "Generate image descriptions",
+    "step4": "Validate with hybrid checks",
+    "step5": "Export in your preferred format",
+    "getStarted": "Get Started",
+    "newProject": "New Project",
+    "newProjectHint": "Create a fresh project to start working",
+    "loadDemo": "Try a Demo",
+    "loadDemoHint": "Explore with sample documents",
+    "uploadFile": "Upload File",
+    "uploadFileHint": "Image (JPG, PNG) or PAGE-XML",
+    "openProject": "Open Project",
+    "openProjectHint": "{count} saved project(s)",
+    "dontShowAgain": "Don't show this again",
+    "close": "Skip"
   }
 }

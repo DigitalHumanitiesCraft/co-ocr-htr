@@ -625,5 +625,26 @@
     "switcher": "Sprache",
     "en": "English",
     "de": "Deutsch"
+  },
+  "welcome": {
+    "title": "coOCR/HTR Workbench",
+    "tagline": "Expert-in-the-Loop Verifikation und Korrektur von OCR/HTR",
+    "description": "Ein browserbasiertes Werkzeug zur Verifikation und Korrektur von OCR/HTR-Transkriptionen historischer Dokumente. Laden Sie Ihr Dokument, lassen Sie es per KI transkribieren, validieren und exportieren Sie das Ergebnis.",
+    "step1": "Dokumentbild oder PAGE-XML laden",
+    "step2": "Mit KI-Unterstuetzung transkribieren",
+    "step3": "Bildbeschreibungen generieren",
+    "step4": "Mit hybriden Pruefungen validieren",
+    "step5": "Im gewuenschten Format exportieren",
+    "getStarted": "Loslegen",
+    "newProject": "Neues Projekt",
+    "newProjectHint": "Ein neues Projekt erstellen",
+    "loadDemo": "Demo ausprobieren",
+    "loadDemoHint": "Mit Beispieldokumenten erkunden",
+    "uploadFile": "Datei hochladen",
+    "uploadFileHint": "Bild (JPG, PNG) oder PAGE-XML",
+    "openProject": "Projekt oeffnen",
+    "openProjectHint": "{count} gespeicherte(s) Projekt(e)",
+    "dontShowAgain": "Nicht mehr anzeigen",
+    "close": "Ueberspringen"
   }
 }
