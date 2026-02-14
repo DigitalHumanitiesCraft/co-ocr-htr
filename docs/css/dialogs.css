@@ -2131,3 +2131,159 @@ textarea.form-control {
 .project-rules-btn:hover {
   opacity: 1;
 }
+
+/* ==========================================================================
+   WELCOME OVERLAY
+   ========================================================================== */
+
+.welcome-overlay {
+  width: 560px;
+  max-width: 90vw;
+}
+
+.welcome-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.welcome-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.welcome-title-group {
+  flex: 1;
+}
+
+.welcome-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.welcome-tagline {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: var(--space-1) 0 0 0;
+  font-style: italic;
+}
+
+.welcome-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.welcome-workflow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.welcome-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+}
+
+.welcome-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.welcome-actions-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.welcome-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.welcome-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.welcome-action-card:hover {
+  border-color: var(--accent-primary);
+  background: var(--accent-muted);
+}
+
+.welcome-action-card:first-child {
+  border-color: var(--accent-primary);
+  background: var(--accent-muted);
+}
+
+.welcome-action-card svg {
+  width: 28px;
+  height: 28px;
+  color: var(--accent-primary);
+}
+
+.welcome-action-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.welcome-action-hint {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.welcome-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-default);
+}
+
+.welcome-dismiss-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.welcome-dismiss-label input[type="checkbox"] {
+  accent-color: var(--accent-primary);
+}
