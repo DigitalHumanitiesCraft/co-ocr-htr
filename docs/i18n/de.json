@@ -43,7 +43,7 @@
     "flipH": "Horizontal spiegeln (H)"
   },
   "editor": {
-    "title": "Beschreibung / Transkription",
+    "title": "Editor",
     "tooltipTitle": "Wie funktioniert es?",
     "tooltipText1": "1. Transkribieren:",
     "tooltipDesc1": "Das LLM erstellt einen ersten Entwurf, den Sie als Experte korrigieren und validieren.",
