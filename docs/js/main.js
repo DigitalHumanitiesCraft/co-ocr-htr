@@ -33,7 +33,7 @@ import { escapeHtml } from './utils/textFormatting.js';
 import './utils/tooltips.js';
 import { initPanelResize } from './utils/panelResize.js';
 import { initValidationResize } from './utils/validationResize.js';
-import { i18n } from './services/i18n.js';
+import { i18n, t } from './services/i18n.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -161,7 +161,7 @@ async function initApp() {
     // Global error handler for unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
         console.error('Unhandled promise rejection:', event.reason);
-        dialogManager.showToast('An error occurred. Check console for details.', 'error');
+        dialogManager.showToast(t('toast.errorOccurred'), 'error');
     });
 
     // Toast event handler - allows modules to show toasts without importing dialogManager
@@ -178,11 +178,11 @@ async function initApp() {
                 includeValidation,
                 includeMetadata
             });
-            dialogManager.showToast(`Exported as ${result.filename}`, 'success');
+            dialogManager.showToast(t('toast.exportedAs', { filename: result.filename }), 'success');
             updateWorkflowStep(5, 'completed');
         } catch (error) {
             console.error('Export error:', error);
-            dialogManager.showToast(`Export failed: ${error.message}`, 'error');
+            dialogManager.showToast(t('toast.exportFailed', { message: error.message }), 'error');
         }
     });
 
@@ -224,41 +224,41 @@ async function checkForProjects() {
             const messageHtml = `
                 <div class="session-info">
                     <div class="session-info-row">
-                        <span class="session-label">Project:</span>
+                        <span class="session-label">${t('dynamic.project')}</span>
                         <span class="session-value session-filename">${escapeHtml(activeProject.name)}</span>
                     </div>
                     <div class="session-info-row">
-                        <span class="session-label">Saved:</span>
+                        <span class="session-label">${t('dynamic.saved')}</span>
                         <span class="session-value">${timeDisplay}</span>
                     </div>
                     ${activeProject.filename ? `<div class="session-info-row">
-                        <span class="session-label">Document:</span>
+                        <span class="session-label">${t('dynamic.document')}</span>
                         <span class="session-value">${escapeHtml(activeProject.filename)}</span>
                     </div>` : ''}
                     <div class="session-info-row">
-                        <span class="session-label">Pages:</span>
+                        <span class="session-label">${t('dynamic.pages')}</span>
                         <span class="session-value">${activeProject.pageCount || 0}</span>
                     </div>
                     <div class="session-info-row">
-                        <span class="session-label">Status:</span>
+                        <span class="session-label">${t('dynamic.statusLabel')}</span>
                         <span class="session-value ${activeProject.hasTranscription ? 'status-success' : 'status-neutral'}">
-                            ${activeProject.hasTranscription ? 'With transcription' : 'Without transcription'}
+                            ${activeProject.hasTranscription ? t('dynamic.withTranscription') : t('dynamic.withoutTranscription')}
                         </span>
                     </div>
                 </div>
             `;
 
             const shouldRestore = await dialogManager.showConfirm(
-                'Continue project?',
+                t('confirm.restoreSession'),
                 messageHtml,
-                'Continue',
-                projects.length > 1 ? 'Show projects' : 'Start new',
+                t('confirm.restore'),
+                projects.length > 1 ? t('confirm.showProjects') : t('confirm.startFresh'),
                 { icon: 'restore', html: true }
             );
 
             if (shouldRestore) {
                 await appState.restoreSession(activeProjectId);
-                dialogManager.showToast('Project restored', 'success');
+                dialogManager.showToast(t('toast.projectRestored'), 'success');
                 updateProjectDisplay();
                 return;
             }
@@ -284,14 +284,14 @@ async function checkForProjects() {
  */
 async function createNewProject() {
     const name = await dialogManager.showPrompt(
-        'Create New Project',
-        'Please enter a name for the new project:',
-        'New Project',
-        'Create',
-        'Cancel',
+        t('dynamic.createNewProject'),
+        t('dynamic.enterProjectName'),
+        t('dynamic.newProject'),
+        t('dynamic.create'),
+        t('dialog.cancel'),
         {
             icon: 'question',
-            hint: 'The name can be changed later',
+            hint: t('dynamic.nameHint'),
             maxLength: 100,
             validate: (value) => value.length > 0 && value.length <= 100
         }
@@ -303,11 +303,11 @@ async function createNewProject() {
         // Start a truly fresh project context (save + reset + create)
         await appState.ensureProject(name);
 
-        dialogManager.showToast(`Project "${name}" created`, 'success');
+        dialogManager.showToast(t('toast.projectCreated', { name }), 'success');
         updateProjectDisplay();
     } catch (error) {
         console.error('[Main] Create project failed:', error);
-        dialogManager.showToast('Project could not be created', 'error');
+        dialogManager.showToast(t('toast.projectCreateFailed'), 'error');
     }
 }
 
@@ -325,17 +325,18 @@ async function showProjectListDialog(projects) {
         const projectCards = projects.map(p => {
             const time = formatSessionTime(new Date(p.updatedAt));
             const name = p.name || p.filename || 'Unnamed';
+            const pc = p.pageCount || 0;
             return `
                 <div class="project-card" data-project-id="${escapeHtml(p.id)}" tabindex="0">
                     <div class="project-card-header">
                         <span class="project-card-name">${escapeHtml(name)}</span>
                         <div class="project-card-actions">
-                            <button class="project-rename-btn icon-btn" data-rename="${escapeHtml(p.id)}" title="Rename">
+                            <button class="project-rename-btn icon-btn" data-rename="${escapeHtml(p.id)}" title="${t('dynamic.rename')}">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                     <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                 </svg>
                             </button>
-                            <button class="project-delete-btn icon-btn" data-delete="${escapeHtml(p.id)}" title="Delete">
+                            <button class="project-delete-btn icon-btn" data-delete="${escapeHtml(p.id)}" title="${t('dynamic.delete')}">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                     <polyline points="3 6 5 6 21 6"></polyline>
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -345,9 +346,9 @@ async function showProjectListDialog(projects) {
                     </div>
                     <div class="project-card-meta">
                         ${p.filename ? `<span>${escapeHtml(p.filename)}</span>` : ''}
-                        <span>${p.pageCount || 0} page${(p.pageCount || 0) === 1 ? '' : 's'}</span>
+                        <span>${t('dynamic.pagesCount', { count: pc, plural: pc === 1 ? '' : 's' })}</span>
                         <span>${time}</span>
-                        <span class="${p.hasTranscription ? 'status-success' : 'status-neutral'}">${p.hasTranscription ? 'Transcribed' : 'Without transcription'}</span>
+                        <span class="${p.hasTranscription ? 'status-success' : 'status-neutral'}">${p.hasTranscription ? t('dynamic.transcribed') : t('dynamic.withoutTranscription')}</span>
                     </div>
                 </div>
             `;
@@ -355,7 +356,7 @@ async function showProjectListDialog(projects) {
 
         dialog.innerHTML = `
             <div class="dialog-header">
-                <h3>Projects</h3>
+                <h3>${t('dialog.projects.title')}</h3>
             </div>
             <div class="dialog-body" style="max-height: 50vh; overflow-y: auto;">
                 <div class="project-list">
@@ -363,8 +364,8 @@ async function showProjectListDialog(projects) {
                 </div>
             </div>
             <div class="dialog-actions">
-                <button class="btn btn-ghost" data-action="new">New Project</button>
-                <button class="btn btn-ghost" data-action="cancel">Cancel</button>
+                <button class="btn btn-ghost" data-action="new">${t('dialog.projects.newProject')}</button>
+                <button class="btn btn-ghost" data-action="cancel">${t('dialog.cancel')}</button>
             </div>
         `;
 
@@ -381,10 +382,10 @@ async function showProjectListDialog(projects) {
                 const projectName = projectCard?.querySelector('.project-card-name')?.textContent || 'this project';
 
                 const confirmed = await dialogManager.showConfirm(
-                    'Delete project?',
-                    `Do you really want to delete the project "${escapeHtml(projectName)}"? All data will be lost.`,
-                    'Delete',
-                    'Cancel',
+                    t('confirm.deleteProject'),
+                    t('confirm.deleteProjectAll', { name: escapeHtml(projectName) }),
+                    t('dynamic.delete'),
+                    t('dialog.cancel'),
                     { icon: 'warning' }
                 );
 
@@ -408,11 +409,11 @@ async function showProjectListDialog(projects) {
                 const currentName = projectCard?.querySelector('.project-card-name')?.textContent || '';
 
                 const newName = await dialogManager.showPrompt(
-                    'Rename Project',
-                    'Please enter a new name:',
+                    t('dynamic.renameProject'),
+                    t('dynamic.enterNewName'),
                     currentName,
-                    'Rename',
-                    'Cancel',
+                    t('dynamic.rename'),
+                    t('dialog.cancel'),
                     {
                         maxLength: 100,
                         validate: (value) => value.length > 0 && value.length <= 100
@@ -432,7 +433,7 @@ async function showProjectListDialog(projects) {
                 dialog.close();
                 dialog.remove();
                 await appState.restoreSession(projectId);
-                dialogManager.showToast('Project loaded', 'success');
+                dialogManager.showToast(t('toast.projectLoaded'), 'success');
                 updateProjectDisplay();
                 resolve();
                 return;
@@ -488,19 +489,19 @@ async function openProjectList() {
         await appState.saveSessionNow();
     } catch (error) {
         console.warn('[Main] Could not save session before opening project list:', error);
-        dialogManager.showToast('Latest changes could not be saved before opening projects', 'warning');
+        dialogManager.showToast(t('toast.saveFailed'), 'warning');
     }
 
     let projects;
     try {
         projects = await storage.listProjects();
     } catch {
-        dialogManager.showToast('Projects could not be loaded', 'error');
+        dialogManager.showToast(t('toast.projectsLoadFailed'), 'error');
         return;
     }
 
     if (projects.length === 0) {
-        dialogManager.showToast('No projects available yet', 'info');
+        dialogManager.showToast(t('toast.noProjectsYet'), 'info');
         return;
     }
 
@@ -531,13 +532,14 @@ function formatSessionTime(date) {
     const diffDays = Math.floor(diffMs / 86400000);
 
     // Recent: relative time
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    if (diffMins < 1) return t('dynamic.justNow');
+    if (diffMins < 60) return t('dynamic.minutesAgo', { count: diffMins, plural: diffMins === 1 ? '' : 's' });
+    if (diffHours < 24) return t('dynamic.hoursAgo', { count: diffHours, plural: diffHours === 1 ? '' : 's' });
+    if (diffDays < 7) return t('dynamic.daysAgo', { count: diffDays, plural: diffDays === 1 ? '' : 's' });
 
-    // Older: show date
-    return date.toLocaleDateString('en-US', {
+    // Older: show date in locale format
+    const locale = i18n.getLang() === 'de' ? 'de-DE' : 'en-US';
+    return date.toLocaleDateString(locale, {
         day: 'numeric',
         month: 'long',
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
@@ -586,30 +588,30 @@ function generateSampleTooltip(sample) {
     const details = [];
 
     if (sample.language) {
-        details.push(`<dt>Language</dt><dd>${escapeHtml(sample.language)}</dd>`);
+        details.push(`<dt>${t('dynamic.sampleLanguage')}</dt><dd>${escapeHtml(sample.language)}</dd>`);
     }
     if (sample.script) {
-        details.push(`<dt>Script</dt><dd>${escapeHtml(sample.script)}</dd>`);
+        details.push(`<dt>${t('dynamic.sampleScript')}</dt><dd>${escapeHtml(sample.script)}</dd>`);
     }
 
     // Type label
     const typeLabels = {
-        print: 'Print',
-        manuscript: 'Manuscript',
-        letter: 'Letter',
-        card: 'Card'
+        print: t('dynamic.typePrint'),
+        manuscript: t('dynamic.typeManuscript'),
+        letter: t('dynamic.typeLetter'),
+        card: t('dynamic.typeCard')
     };
     if (sample.type && typeLabels[sample.type]) {
-        details.push(`<dt>Type</dt><dd>${typeLabels[sample.type]}</dd>`);
+        details.push(`<dt>${t('dynamic.sampleType')}</dt><dd>${typeLabels[sample.type]}</dd>`);
     }
 
     // Source
     if (sample.iiifManifest) {
-        details.push('<dt>Source</dt><dd>IIIF (external)</dd>');
+        details.push(`<dt>${t('dynamic.sampleSource')}</dt><dd>${t('dynamic.sampleIiifExternal')}</dd>`);
     } else if (sample.pageXml || (sample.pages && sample.pages.some(p => p.pageXml))) {
-        details.push('<dt>Data</dt><dd>With transcription</dd>');
+        details.push(`<dt>${t('dynamic.sampleData')}</dt><dd>${t('dynamic.sampleWithTranscription')}</dd>`);
     } else {
-        details.push('<dt>Data</dt><dd>Image only</dd>');
+        details.push(`<dt>${t('dynamic.sampleData')}</dt><dd>${t('dynamic.sampleImageOnly')}</dd>`);
     }
 
     return `<dl class="sample-info-tooltip">${details.join('')}</dl>`;
@@ -713,17 +715,17 @@ async function initSamplesMenu() {
         uploadDropdown?.classList.remove('open');
 
         try {
-            dialogManager.showToast('Loading sample...', 'info');
+            dialogManager.showToast(t('toast.loadingSample'), 'info');
             const sample = await samplesService.loadSample(sampleId);
 
             // Mark as demo and show indicator
             appState.isDemo = true;
             showDemoIndicator(true);
 
-            dialogManager.showToast(`Loaded: ${sample.name}`, 'success');
+            dialogManager.showToast(t('toast.loadedSample', { name: sample.name }), 'success');
         } catch (error) {
             console.error('Failed to load sample:', error);
-            dialogManager.showToast(`Failed to load sample: ${error.message}`, 'error');
+            dialogManager.showToast(t('toast.sampleFailed', { message: error.message }), 'error');
         }
     });
 }

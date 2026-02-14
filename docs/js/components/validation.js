@@ -24,6 +24,7 @@ import { contextManager } from './context.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
 import { escapeHtml } from '../utils/textFormatting.js';
 import { listPromptProfiles } from '../config/promptProfiles.js';
+import { t } from '../services/i18n.js';
 
 /**
  * Validation Panel Manager
@@ -97,8 +98,8 @@ class ValidationPanel {
             // No document: hide all content, show minimal state
             if (this.emptyState) {
                 this.emptyState.hidden = false;
-                setText(select('h4', this.emptyState), 'No Document');
-                setText(select('p', this.emptyState), 'Load a document to enable validation.');
+                setText(select('h4', this.emptyState), t('dynamic.noDocument'));
+                setText(select('p', this.emptyState), t('dynamic.loadDocToValidate'));
             }
             hide(this.ruleSection);
             hide(this.aiSection);
@@ -111,8 +112,8 @@ class ValidationPanel {
             // Document but no transcription: show empty state with hint
             if (this.emptyState) {
                 this.emptyState.hidden = false;
-                setText(select('h4', this.emptyState), 'No Validation Yet');
-                setText(select('p', this.emptyState), 'Run transcription to see validation results.');
+                setText(select('h4', this.emptyState), t('dynamic.noValidationYet'));
+                setText(select('p', this.emptyState), t('dynamic.runTranscriptionFirst'));
             }
             hide(this.ruleSection);
             hide(this.aiSection);
@@ -202,7 +203,7 @@ class ValidationPanel {
                                   state.transcription?.segments?.length > 0;
 
         if (!hasTranscription) {
-            dialogManager.showToast('Please transcribe first', 'warning');
+            dialogManager.showToast(t('toast.transcribeFirst'), 'warning');
             return;
         }
 
@@ -246,11 +247,11 @@ class ValidationPanel {
 
             // Update counts
             if (pageCountEl) {
-                pageCountEl.textContent = `Page ${currentPage} of ${totalPages}`;
+                pageCountEl.textContent = t('dynamic.pageOf', { current: currentPage, total: totalPages });
             }
 
             if (allPagesHintEl) {
-                allPagesHintEl.textContent = `${totalPages} pages, may take several minutes`;
+                allPagesHintEl.textContent = t('dynamic.pagesMayTakeMinutes', { count: totalPages });
             }
 
             if (batchPageCountEl) {
@@ -288,12 +289,12 @@ class ValidationPanel {
         const hasApiKey = llmService.hasApiKey();
 
         if (hasApiKey) {
-            llmModeHint.textContent = 'API call per page';
+            llmModeHint.textContent = t('dynamic.apiCallPerPage');
             if (llmModeItem) llmModeItem.classList.remove('disabled');
             if (enableLLMCheckbox) enableLLMCheckbox.disabled = false;
             if (customPromptDetails) customPromptDetails.style.display = '';
         } else {
-            llmModeHint.textContent = 'API key required';
+            llmModeHint.textContent = t('dynamic.apiKeyRequiredShort');
             if (llmModeItem) llmModeItem.classList.add('disabled');
             if (enableLLMCheckbox) {
                 enableLLMCheckbox.checked = false;
@@ -492,21 +493,21 @@ class ValidationPanel {
      * Show validation available hint in panel
      */
     showValidationHint() {
-        setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" to run rule-based checks.</p>');
-        setHTML('llmReviewContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" to run LLM Review.</p>');
+        setHTML('ruleBasedContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.clickValidateRules')}</p>`);
+        setHTML('llmReviewContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.clickValidateLLM')}</p>`);
     }
 
     /**
      * Clear validation results (e.g., when loading new document)
      */
     clearValidation() {
-        setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Run transcription to see rule-based checks.</p>');
-        setHTML('llmReviewContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Configure API key for LLM Review.</p>');
+        setHTML('ruleBasedContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.runTranscriptionRules')}</p>`);
+        setHTML('llmReviewContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.configureLLM')}</p>`);
 
         // Update badge
         const badge = getById('validationBadge');
         if (badge) {
-            badge.textContent = '0 Issues';
+            badge.textContent = t('dynamic.issueCount', { count: 0 });
             badge.hidden = true;
         }
     }
@@ -584,7 +585,7 @@ class ValidationPanel {
             this.hideLoading();
             this.render(resultsWithPrompt);
 
-            dialogManager.showToast('Validation complete', 'success');
+            dialogManager.showToast(t('toast.validationComplete'), 'success');
 
         } catch (error) {
             console.error('Validation error:', error);
@@ -596,7 +597,7 @@ class ValidationPanel {
                 });
             }
 
-            dialogManager.showToast(`Validation failed: ${error.message}`, 'error');
+            dialogManager.showToast(t('toast.validationFailed', { message: error.message }), 'error');
             appState.setValidationStatus('error');
             this.hideLoading();
             this.showValidationHint();
@@ -615,7 +616,7 @@ class ValidationPanel {
         const batchTranscriptions = state.batchTranscriptions || [];
 
         if (pages.length === 0) {
-            dialogManager.showToast('No pages to validate', 'warning');
+            dialogManager.showToast(t('toast.noPagesToBatch', { operation: 'validate' }), 'warning');
             return;
         }
 
@@ -626,7 +627,7 @@ class ValidationPanel {
         });
 
         if (pagesWithTranscription.length === 0) {
-            dialogManager.showToast('No transcriptions available. Please transcribe all pages first.', 'warning');
+            dialogManager.showToast(t('toast.noTranscriptionsAvailable'), 'warning');
             return;
         }
 
@@ -670,7 +671,7 @@ class ValidationPanel {
                     pageId: page.id,
                     pageIndex: i,
                     success: false,
-                    error: 'No transcription available'
+                    error: t('toast.noTranscription')
                 });
                 continue;
             }
@@ -717,13 +718,13 @@ class ValidationPanel {
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
-                    dialogManager.showToast('Invalid API key. Batch aborted.', 'error');
+                    dialogManager.showToast(t('toast.invalidApiKeyBatch'), 'error');
                     break;
                 }
 
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
-                    dialogManager.showToast('Rate limit reached. Waiting 30 seconds...', 'warning');
+                    dialogManager.showToast(t('toast.rateLimitWaiting'), 'warning');
                     await this._delay(30000);
                 }
             }
@@ -754,7 +755,7 @@ class ValidationPanel {
             await appState.saveSessionNow();
         } catch (error) {
             console.warn('[Validation] Failed to save batch session:', error.message);
-            dialogManager.showToast('Validation complete, but saving failed', 'warning');
+            dialogManager.showToast(t('toast.batchSaveFailed'), 'warning');
         }
 
         appState.setValidationStatus('complete');
@@ -788,8 +789,8 @@ class ValidationPanel {
         overlay.innerHTML = `
             <div class="loading-content">
                 <div class="loading-spinner"></div>
-                <span>Validating...</span>
-                <span class="loading-hint">Page ${current} of ${total} (${percent}%)</span>
+                <span>${t('dynamic.validating')}</span>
+                <span class="loading-hint">${t('dynamic.batchPageProgress', { current, total, percent })}</span>
                 ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
                 <div class="batch-progress-bar">
                     <div class="batch-progress-fill" style="width: ${percent}%"></div>
@@ -846,7 +847,7 @@ class ValidationPanel {
             overlay.innerHTML = `
                 <div class="loading-content">
                     <div class="loading-spinner"></div>
-                    <span>Validating...</span>
+                    <span>${t('dynamic.validating')}</span>
                 </div>
             `;
             this.panel.style.position = 'relative';
@@ -880,7 +881,7 @@ class ValidationPanel {
         const badge = getById('validationBadge');
         if (badge && results.summary) {
             const issueCount = results.summary.totalIssues || 0;
-            badge.textContent = `${issueCount} Issues`;
+            badge.textContent = t('dynamic.issueCount', { count: issueCount });
             badge.hidden = issueCount === 0;
             badge.style.background = issueCount > 0
                 ? 'rgba(var(--warning-rgb), 0.2)'
@@ -901,7 +902,7 @@ class ValidationPanel {
      */
     renderRuleCards(rules) {
         if (!rules || rules.length === 0) {
-            return '<p class="text-secondary text-xs" style="padding: var(--space-2);">No validation issues found.</p>';
+            return `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.noValidationIssues')}</p>`;
         }
 
         return rules.map(rule => this.renderValidationCard(rule)).join('');
@@ -915,9 +916,9 @@ class ValidationPanel {
             this.syncIssueApplyState(null);
             const hasApiKey = llmService.hasApiKey();
             if (!hasApiKey) {
-                return `<p class="text-muted text-xs">Configure API key for LLM Review</p>`;
+                return `<p class="text-muted text-xs">${t('dynamic.configureLLMAlt')}</p>`;
             }
-            return `<p class="text-muted text-xs">Run Validation to generate LLM Review</p>`;
+            return `<p class="text-muted text-xs">${t('dynamic.runValidationLLM')}</p>`;
         }
 
         const statusClass = {
@@ -931,20 +932,20 @@ class ValidationPanel {
         }[llmResult.confidence] || 'status-warning';
 
         const confidenceLabel = {
-            confident: 'High confidence',
-            certain: 'High confidence',
-            sure: 'High confidence',
-            likely: 'Medium confidence',
-            'check-worthy': 'Medium confidence',
-            uncertain: 'Low confidence',
-            problematic: 'Low confidence'
-        }[llmResult.confidence] || 'Unknown';
+            confident: t('dynamic.highConfidence'),
+            certain: t('dynamic.highConfidence'),
+            sure: t('dynamic.highConfidence'),
+            likely: t('dynamic.mediumConfidence'),
+            'check-worthy': t('dynamic.mediumConfidence'),
+            uncertain: t('dynamic.lowConfidence'),
+            problematic: t('dynamic.lowConfidence')
+        }[llmResult.confidence] || t('dynamic.unknown');
 
         // Compact summary line
         let html = `
             <div class="validation-item">
                 <span class="status-dot ${statusClass}"></span>
-                <span class="item-label">Confidence</span>
+                <span class="item-label">${t('dynamic.confidence')}</span>
                 <span class="item-value">${confidenceLabel}</span>
             </div>
         `;
@@ -958,14 +959,14 @@ class ValidationPanel {
                 ? llmResult.pipeline.stage3
                 : llmResult.pipeline.stage3?.status;
             const stages = [];
-            if (stage2Status === 'success') stages.push('Paleographic');
-            if (stage3Status === 'success') stages.push('Philological');
+            if (stage2Status === 'success') stages.push(t('dynamic.paleographic'));
+            if (stage3Status === 'success') stages.push(t('dynamic.philological'));
             if (stages.length > 0) {
                 html += `
                     <div class="validation-item pipeline-notice">
                         <span class="status-dot status-info"></span>
                         <span class="item-label">Pipeline</span>
-                        <span class="item-value text-xs">${stages.join(' + ')} review</span>
+                        <span class="item-value text-xs">${stages.join(' + ')} ${t('dynamic.review')}</span>
                     </div>
                 `;
             }
@@ -976,7 +977,7 @@ class ValidationPanel {
             html += `
                 <div class="validation-item fallback-notice">
                     <span class="status-dot status-info"></span>
-                    <span class="item-label">Fallback</span>
+                    <span class="item-label">${t('dynamic.fallback')}</span>
                     <span class="item-value text-xs">${escapeHtml(llmResult.fallbackUsed.name)}</span>
                 </div>
             `;
@@ -992,9 +993,9 @@ class ValidationPanel {
                             type="button"
                             class="btn btn-secondary btn-sm llm-apply-all-btn"
                             id="applyAllLlmIssuesBtn"
-                            title="Apply all suggestions with deterministic line matching"
+                            title="${t('dynamic.applyAllTitle')}"
                         >
-                            Apply All (${applicableCount})
+                            ${t('dynamic.applyAll', { count: applicableCount })}
                         </button>
                     </div>
                 `;
@@ -1008,7 +1009,7 @@ class ValidationPanel {
                 <details class="ai-details">
                     <summary>
                         <span class="ai-label">LLM</span>
-                        Show rationale
+                        ${t('dynamic.showRationale')}
                     </summary>
                     <div class="ai-reasoning-container">
                         <p class="ai-reasoning">${escapeHtml(llmResult.reasoning)}</p>
@@ -1060,7 +1061,7 @@ class ValidationPanel {
                 ${hasSuggestion ? `
                     <div class="issue-actions">
                         ${isMultilineSuggestion
-                            ? `<span class="issue-apply-status ${applyState ? `status-${applyState.status}` : 'status-ambiguous'} issue-manual-note">${escapeHtml(applyState?.message || 'Multiline suggestion. Apply manually in the editor.')}</span>`
+                            ? `<span class="issue-apply-status ${applyState ? `status-${applyState.status}` : 'status-ambiguous'} issue-manual-note">${escapeHtml(applyState?.message || t('dynamic.multilineSuggestion'))}</span>`
                             : `
                                 <button
                                     type="button"
@@ -1068,7 +1069,7 @@ class ValidationPanel {
                                     data-issue-index="${index}"
                                     ${applyState?.status === 'applied' ? 'disabled' : ''}
                                 >
-                                    Apply
+                                    ${t('dynamic.apply')}
                                 </button>
                                 ${applyState ? `<span class="issue-apply-status status-${applyState.status}">${escapeHtml(applyState.message || applyState.status)}</span>` : ''}
                             `
@@ -1179,7 +1180,7 @@ class ValidationPanel {
             return result;
         }
         if (suggestion.includes('\n')) {
-            const result = { status: 'failed', message: 'Multiline suggestion. Apply manually in the editor.' };
+            const result = { status: 'failed', message: t('dynamic.multilineSuggestion') };
             this.updateIssueApplyState(issueIndex, result, issueElement);
             if (!silent) dialogManager.showToast(result.message, 'warning');
             return result;
@@ -1216,7 +1217,7 @@ class ValidationPanel {
     applyAllIssueCorrections() {
         const issues = appState.getState()?.validation?.llmJudge?.issues || [];
         if (issues.length === 0) {
-            dialogManager.showToast('No LLM issues available.', 'warning');
+            dialogManager.showToast(t('dynamic.noLlmIssues'), 'warning');
             return;
         }
 
@@ -1240,7 +1241,7 @@ class ValidationPanel {
                 multilineSkipped++;
                 const result = {
                     status: 'failed',
-                    message: 'Multiline suggestion skipped in Apply All. Apply manually.'
+                    message: t('dynamic.multilineSkipped')
                 };
                 const issueElement = this.panel?.querySelector(`.validation-issue[data-issue-index="${index}"]`);
                 this.updateIssueApplyState(index, result, issueElement);
@@ -1253,9 +1254,9 @@ class ValidationPanel {
         });
 
         const multilineInfo = multilineSkipped > 0
-            ? ` (${multilineSkipped} multiline skipped)`
+            ? t('dynamic.multilineSkippedInfo', { count: multilineSkipped })
             : '';
-        const message = `Apply All finished: ${summary.applied} applied, ${summary.ambiguous} ambiguous, ${summary.failed} failed${multilineInfo}.`;
+        const message = t('dynamic.applyAllResult', { applied: summary.applied, ambiguous: summary.ambiguous, failed: summary.failed, multilineInfo });
 
         dialogManager.showToast(message, summary.failed > 0 ? 'warning' : 'success');
     }

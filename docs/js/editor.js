@@ -8,6 +8,7 @@
 import { appState } from './state.js';
 import { getById } from './utils/dom.js';
 import { escapeHtml } from './utils/textFormatting.js';
+import { t } from './services/i18n.js';
 
 // History for undo/redo
 const history = {
@@ -150,8 +151,8 @@ function renderEditor(transcription) {
     if (!text) {
         container.innerHTML = `
             <div class="editor-empty-state">
-                <p>No transcription available.</p>
-                <p class="text-secondary">Load a document and click "Transcribe".</p>
+                <p>${t('dynamic.noTranscription')}</p>
+                <p class="text-secondary">${t('dynamic.clickTranscribe')}</p>
             </div>
         `;
         textarea = null;
@@ -166,23 +167,23 @@ function renderEditor(transcription) {
     container.innerHTML = `
         <div class="editor-toolbar-secondary">
             <div class="view-mode-toggle">
-                <button class="view-mode-btn active" id="viewStructured" title="Structured View (Original Formatting)">
+                <button class="view-mode-btn active" id="viewStructured" title="${t('editor.structuredTitle')}">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 10H3M21 6H3M21 14H3M21 18H10"/>
                     </svg>
-                    <span>Structured</span>
+                    <span>${t('dynamic.structured')}</span>
                 </button>
-                <button class="view-mode-btn" id="viewNormalized" title="Normalized View (left-aligned)">
+                <button class="view-mode-btn" id="viewNormalized" title="${t('editor.normalizedTitle')}">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 6H3M21 10H3M21 14H3M21 18H3"/>
                     </svg>
-                    <span>Normalized</span>
+                    <span>${t('dynamic.normalized')}</span>
                 </button>
             </div>
             <div class="editor-toolbar-right">
-                <label class="checkbox-wrapper" title="Shows changes compared to original (view only, not editable)">
+                <label class="checkbox-wrapper" title="${t('editor.diffTooltip')}">
                     <input type="checkbox" id="showChanges">
-                    <span>Diff View</span>
+                    <span>${t('editor.diffLabel')}</span>
                 </label>
                 <span class="change-stats" id="changeStats"></span>
             </div>
@@ -194,11 +195,11 @@ function renderEditor(transcription) {
                     id="transcriptionText"
                     class="editor-textarea"
                     spellcheck="false"
-                    placeholder="Transcription will be displayed here..."
+                    placeholder="${t('editor.placeholder')}"
                 ></textarea>
             </div>
             <div id="diffDisplay" class="diff-display" style="display: none;">
-                <div class="diff-readonly-hint">Read-only - disable diff view to edit</div>
+                <div class="diff-readonly-hint">${t('dynamic.diffReadonly')}</div>
             </div>
         </div>
     `;
@@ -458,11 +459,11 @@ export function applySuggestionAtLine(params = {}) {
         return {
             status: 'applied',
             line: appliedLine,
-            message: `Applied suggestion at line ${appliedLine} (requested line ${requestedLine}).`
+            message: t('dynamic.appliedAtLineRemapped', { applied: appliedLine, requested: requestedLine })
         };
     }
 
-    return { status: 'applied', line: appliedLine, message: `Applied suggestion at line ${appliedLine}.` };
+    return { status: 'applied', line: appliedLine, message: t('dynamic.appliedAtLine', { applied: appliedLine }) };
 }
 
 // ============ History (Undo/Redo) ============
@@ -595,7 +596,7 @@ function updateChangeStats() {
         }
     }
 
-    statsEl.textContent = `${changes} line${changes !== 1 ? 's' : ''} changed`;
+    statsEl.textContent = t('dynamic.linesChanged', { count: changes, plural: changes !== 1 ? 's' : '' });
     statsEl.className = 'change-stats has-changes';
 }
 

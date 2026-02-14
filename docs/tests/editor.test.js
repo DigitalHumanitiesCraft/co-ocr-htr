@@ -71,7 +71,7 @@ describe('Editor applySuggestionAtLine', () => {
     const textarea = document.getElementById('transcriptionText');
     expect(result.status).toBe('applied');
     expect(result.line).toBe(2);
-    expect(result.message).toContain('requested line 1');
+    expect(result.message).toContain('Remapped');
     expect(textarea.value).toBe('prima linea\nsecvnda linea');
   });
 

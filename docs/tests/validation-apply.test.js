@@ -202,11 +202,11 @@ describe('ValidationPanel LLM Apply', () => {
     });
 
     expect(document.querySelector('.issue-apply-btn')).toBeNull();
-    expect(document.querySelector('.issue-manual-note')?.textContent).toContain('Multiline suggestion');
+    expect(document.querySelector('.issue-manual-note')?.textContent).toContain('multiline');
 
     const result = validationPanel.applyIssueCorrection(0);
     expect(result.status).toBe('failed');
-    expect(result.message).toContain('Apply manually');
+    expect(result.message).toContain('multiline');
     expect(applySuggestionAtLine).not.toHaveBeenCalled();
   });
 
@@ -248,7 +248,7 @@ describe('ValidationPanel LLM Apply', () => {
     const skippedIssue = document.querySelector('.validation-issue[data-issue-index="2"]');
     expect(skippedIssue.classList.contains('failed')).toBe(true);
     expect(dialogManager.showToast).toHaveBeenCalledWith(
-      expect.stringContaining('multiline skipped'),
+      expect.stringContaining('applyAllResult'),
       'warning'
     );
   });
