@@ -34,7 +34,7 @@ import './utils/tooltips.js';
 import { initPanelResize } from './utils/panelResize.js';
 import { initValidationResize } from './utils/validationResize.js';
 import { i18n, t } from './services/i18n.js';
-import { promptProfiles } from './config/promptProfiles.js';
+import { PROMPT_PROFILES } from './config/promptProfiles.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -495,7 +495,7 @@ async function showProjectRulesDialog(projectId) {
     const transcription = rules.transcription || {};
     const validation = rules.validation || {};
 
-    const profileOptions = promptProfiles.map(p =>
+    const profileOptions = PROMPT_PROFILES.map(p =>
         `<option value="${escapeHtml(p.id)}" ${(validation.promptProfileId || 'generic_default') === p.id ? 'selected' : ''}>${escapeHtml(p.label)}</option>`
     ).join('');
 
