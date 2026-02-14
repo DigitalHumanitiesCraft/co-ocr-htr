@@ -1,167 +1,112 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Projektkontext fuer Claude Code.
 
-## Project Overview
+## Projektziel
 
-**coOCR/HTR** is an Editor-in-the-Loop tool for OCR/HTR verification and correction of historical documents. Browser-based, zero-dependency (vanilla JS), deployed via GitHub Pages from `docs/`.
+**coOCR/HTR ist ein Editor-in-the-Loop Werkzeug zur OCR/HTR-Verifikation und -Korrektur.**
 
-- **Input**: Image (generate OCR via LLM) OR PAGE-XML (correct existing transcription)
-- **Output**: Corrected OCR/HTR in exportable formats (PAGE-XML, TEI-XML, TXT, JSON, Markdown, ZIP)
-- **Users**: Digital Humanists, archivists, historians
+- **Input**: Bild (OCR erzeugen) ODER PAGE-XML (vorhandene Transkription korrigieren)
+- **Output**: Korrektes OCR/HTR in exportierbarem Format (PAGE-XML, TXT, JSON)
+- **Zielgruppe**: Fachexpert*innen (Digital Humanists, Archivar*innen, Historiker*innen)
 
-## Commands
+**Erfolgskriterien:**
+1. Selbsterklaerend (ohne Anleitung nutzbar)
+2. Vollstaendiger Workflow (Upload → Bearbeiten → Export)
+3. Workflow-Integration (Output in anderen Prozessen nutzbar)
 
-All commands run from `docs/`:
+Siehe [VISION.md](knowledge/VISION.md) fuer Details.
 
-```bash
-# Serve locally (any static server works)
-npx serve docs -l 3000
+## Technologie-Stack
 
-# Run all tests
-cd docs && npm test
+| Komponente | Technologie |
+|------------|-------------|
+| Runtime | Vanilla JavaScript (ES6+) |
+| Dependencies | Keine (Tests: Vitest) |
+| Storage | LocalStorage |
+| API | Fetch API (Gemini, OpenAI, Anthropic, Ollama) |
+| UI | Plain HTML/CSS, Dark Mode, Glass Morphism |
+| Hosting | GitHub Pages (`docs/` folder) |
 
-# Run a single test file
-cd docs && npx vitest run tests/state.test.js
-
-# Run tests in watch mode
-cd docs && npx vitest
-
-# Run tests with UI
-cd docs && npm run test:ui
-
-# Run E2E tests (Playwright)
-cd docs && npx playwright test
-
-# Run E2E tests with headed browser
-cd docs && npx playwright test --headed
-```
-
-Tests use Vitest with jsdom environment. Test files live in `docs/tests/`. E2E tests use Playwright in `docs/tests/e2e/`. No build step exists -- the app runs directly from `docs/` as ES6 modules.
-
-## Architecture
-
-### State Management (Event-Driven)
-
-`state.js` exports a singleton `appState` (extends `EventTarget`). All state mutations go through `appState` methods which dispatch custom events. Components subscribe via `addEventListener`:
+## Projektstruktur
 
 ```
-appState.setTranscription(data)      --> dispatches 'transcriptionComplete'
-appState.setValidationResults(data)  --> dispatches 'validationComplete'
-appState.setSelection(line)          --> dispatches 'selectionChanged'
-appState.emitThinkingStart(detail)   --> dispatches 'thinkingStart'
-appState.emitThinkingChunk(detail)   --> dispatches 'thinkingChunk'
-appState.emitThinkingComplete(detail)--> dispatches 'thinkingComplete'
+co-ocr-htr/
+├── README.md              # Projektübersicht (englisch)
+├── CLAUDE.md              # Dieses Dokument
+├── knowledge/             # Konsolidierte Wissensbasis (Obsidian Vault)
+│   ├── INDEX.md           # Navigation, Dokumentenmatrix
+│   ├── VISION.md          # Projektziel, Erfolgskriterien
+│   ├── METHODOLOGY.md     # Wissenschaftliche Grundlagen
+│   ├── MODEL-LANDSCAPE.md # OCR/HTR-Modellvergleich
+│   ├── DESIGN-SYSTEM.md   # UI/UX-Spezifikation
+│   ├── ARCHITECTURE.md    # Technische Architektur
+│   ├── VALIDATION.md      # Hybride Validierung
+│   ├── DATA-SCHEMA.md     # Datenstrukturen
+│   ├── IMPLEMENTATION-PLAN.md # Roadmap (abgeschlossen)
+│   └── JOURNAL.md         # Entwicklungslog
+├── docs/                  # GitHub Pages Deployment
+│   ├── index.html         # Hauptanwendung
+│   ├── css/               # Modulare CSS-Dateien
+│   │   ├── variables.css  # Design Tokens
+│   │   ├── base.css       # Reset, Typography
+│   │   ├── layout.css     # Grid, Header
+│   │   ├── components.css # Buttons, Cards
+│   │   ├── viewer.css     # Document Viewer
+│   │   ├── editor.css     # Transcription Editor
+│   │   ├── validation.css # Validation Panel
+│   │   └── dialogs.css    # Modal Dialogs
+│   ├── js/
+│   │   ├── main.js        # Entry Point
+│   │   ├── state.js       # Central State (EventTarget)
+│   │   ├── viewer.js      # Document Viewer
+│   │   ├── editor.js      # Transcription Editor
+│   │   ├── components/    # UI Components
+│   │   └── services/      # LLM, Storage, Validation, Export
+│   ├── samples/           # Demo-Dokumente
+│   └── tests/             # Vitest Tests
+└── data/                  # Entwicklungsdaten (nicht deployed)
+    └── ocr-examples/      # Vollständige Datensätze
 ```
 
-Multi-page documents store per-page transcriptions in `appState.data.pageTranscriptions[pageId]`. The `document` and `transcription` fields always reflect the **current page**.
+## Wissensbasis (knowledge/)
 
-### Module Roles
+Alle Designentscheidungen sind in `knowledge/` dokumentiert und begruendet.
 
-| Module | Singleton | Role |
-|--------|-----------|------|
-| `main.js` | -- | Entry point, wires everything together |
-| `state.js` | `appState` | Central state, event dispatch, auto-save |
-| `viewer.js` | `initViewer()` | OpenSeadragon document viewer, region overlays |
-| `editor.js` | `initEditor()` | Transcription table with inline editing, undo/redo, diff |
-| `ui.js` | `initUI()` | Header controls, keyboard shortcuts, guided workflow |
+| Frage | Dokument |
+|-------|----------|
+| Was ist das Ziel? | [VISION](knowledge/VISION.md) |
+| Warum kategorielle Konfidenz? | [METHODOLOGY](knowledge/METHODOLOGY.md) |
+| Welche Modelle? | [MODEL-LANDSCAPE](knowledge/MODEL-LANDSCAPE.md) |
+| Wie sieht das UI aus? | [DESIGN-SYSTEM](knowledge/DESIGN-SYSTEM.md) |
+| Wie ist es gebaut? | [ARCHITECTURE](knowledge/ARCHITECTURE.md) |
+| Wie funktioniert Validierung? | [VALIDATION](knowledge/VALIDATION.md) |
+| Welche Datenstrukturen? | [DATA-SCHEMA](knowledge/DATA-SCHEMA.md) |
 
-### Components (`js/components/`)
+## Entwicklungsmethodik: Promptotyping
 
-| Component | Singleton | Manages |
-|-----------|-----------|---------|
-| `upload.js` | `uploadManager` | File upload, IIIF import, demo loading |
-| `transcription.js` | `transcriptionManager` | LLM transcription calls, response parsing |
-| `validation.js` | `validationPanel` | Hybrid validation display, re-validation |
-| `dialogs.js` | `dialogManager` | Modal dialogs (API config, export, help) |
-| `context.js` | `contextManager` | Document context for enhanced transcription |
-| `description.js` | `descriptionPanel` | Illuminated initials visual description |
-| `thinking.js` | `thinkingPanel` | Real-time LLM thinking/reasoning display |
-| `batch-progress.js` | `batchProgress` | Batch operation progress panel |
+1. Dokumentation vor Code
+2. Iteration durch Dialog
+3. Frühe Validierung
+4. Minimaler, lesbarer Code
 
-### Services (`js/services/`)
+## Kernkonzepte
 
-| Service | Singleton | Provides |
-|---------|-----------|----------|
-| `llm.js` | `llmService` | Multi-provider LLM abstraction (Gemini, OpenAI, Anthropic, Ollama, Mistral OCR) with optional streaming |
-| `validation.js` | `validationEngine` | Deterministic rules + LLM-as-judge hybrid validation |
-| `storage.js` | `storage` | localStorage (settings/prompts) + IndexedDB (projects/sessions/images/apiKeys) |
-| `export.js` | `exportService` | Export to PAGE-XML, TEI-XML, TXT, JSON, Markdown, ZIP |
-| `postprocess.js` | `postprocessService` | HTR post-processing orchestrator (Stage 2 + 3 pipeline) |
-| `samples.js` | `samplesService` | Demo document loading |
-| `parsers/page-xml.js` | `pageXMLParser` | PAGE-XML import/export |
-| `parsers/mets-xml.js` | `metsXMLParser` | METS-XML multi-page import |
+| Konzept | Bedeutung |
+|---------|-----------|
+| Critical Expert in the Loop | Mensch validiert, Maschine unterstützt |
+| Kategorielle Konfidenz | sicher/prüfenswert/problematisch (keine %) |
+| Hybride Validierung | Deterministische Regeln + LLM-Judge |
+| Custom Validation Prompt | Optionaler benutzerdefinierter Validierungsprompt |
 
-### Utilities (`js/utils/`)
+## Konventionen
 
-| Utility | Export | Provides |
-|---------|--------|----------|
-| `constants.js` | named constants | Timeouts, feature flags, localStorage keys, default ratios |
-| `textFormatting.js` | `escapeHtml()` etc. | XSS-safe HTML escaping, text formatting helpers |
-| `panelResize.js` | `initPanelResize()` | Horizontal 3-column resize with drag, keyboard, persistence |
-| `validationResize.js` | `initValidationResize()` | Vertical resize for validation sub-sections (thinking/validation/LLM review) |
-| `dom.js` | DOM helpers | Element creation and query utilities |
-| `tooltips.js` | tooltip helpers | Info tooltip rendering |
-
-### Data Flow
-
-```
-Upload/IIIF/Demo --> appState.setDocument() --> viewer renders image
-                                             --> editor shows empty table
-
-Transcribe btn --> llmService.transcribe(image, provider)
-               --> appState.setTranscription(segments)
-               --> editor renders editable table
-               --> viewer shows region overlays (if coordinates present)
-
-Validate btn --> validationEngine.validate(text, segments, options)
-             --> deterministic rules + optional LLM review
-             --> appState.setValidationResults(results)
-             --> validation panel renders issues
-             --> (if streaming) thinkingStart/Chunk/Complete events --> thinking panel
-
-Apply btn  --> editor applies LLM suggestion inline (undo-able)
-
-Export btn --> exportService.export(format)
-           --> downloads file
-```
-
-## Local Development Config
-
-Copy `docs/config.local.example.js` to `docs/config.local.js` (gitignored) to auto-load API keys during local development. The app will auto-detect and load this file on startup.
-
-## Knowledge Base
-
-Design decisions are documented in `knowledge/`:
-
-| Question | Document |
-|----------|----------|
-| Project goals | [VISION.md](knowledge/VISION.md) |
-| Why categorical confidence? | [METHODOLOGY.md](knowledge/METHODOLOGY.md) |
-| Which models? | [MODEL-LANDSCAPE.md](knowledge/MODEL-LANDSCAPE.md) |
-| UI/UX spec | [DESIGN-SYSTEM.md](knowledge/DESIGN-SYSTEM.md) |
-| Technical architecture | [ARCHITECTURE.md](knowledge/ARCHITECTURE.md) |
-| Validation system | [VALIDATION.md](knowledge/VALIDATION.md) |
-| Data structures | [DATA-SCHEMA.md](knowledge/DATA-SCHEMA.md) |
-| HTR post-processing | [HTR-POSTPROCESSING.md](knowledge/HTR-POSTPROCESSING.md) |
-
-## Key Concepts
-
-| Concept | Meaning |
-|---------|---------|
-| Critical Expert in the Loop | Human validates, machine assists |
-| Categorical Confidence | sure/check-worthy/problematic (no percentages) |
-| Hybrid Validation | Deterministic rules (Validation) + LLM-as-judge (LLM Review) |
-| LLM Review Apply | One-click apply of LLM suggestions into the editor |
-| Prompt Profiles | Scenario-based prompt sets (Generic, Medieval Latin, Early Modern Letter) |
-| LLM Thinking Panel | Real-time streaming display of LLM reasoning process |
-| Custom Validation Prompt | Optional user-defined validation prompt |
-
-## Conventions
-
-- No build process, no npm dependencies at runtime (Vitest is dev-only)
-- ES6 Modules (native `import`/`export`)
-- CSS Custom Properties for theming (`css/variables.css`)
-- Comments explain "why", code explains "what"
-- **No emojis** in code or docs -- use `[x]`/`[~]`/`[ ]` for status, `(green)`/`(yellow)`/`(red)` for colors
-- Deployed from `docs/` folder to GitHub Pages
+- Kein Build-Prozess
+- ES6 Modules (native)
+- CSS Custom Properties für Theming
+- Kommentare erklären "warum", Code erklärt "was"
+- **Keine Emojis** - Verwende stattdessen:
+  - `[x]` fuer abgeschlossen
+  - `[~]` fuer in Arbeit
+  - `[ ]` fuer geplant
+  - `(green)`, `(yellow)`, `(red)` fuer Statusfarben in Dokumentation

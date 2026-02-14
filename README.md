@@ -1,419 +1,191 @@
-# coOCR/HTR-rk
+# coOCR/HTR
 
-> **Forked from [DigitalHumanitiesCraft/co-ocr-htr](https://github.com/DigitalHumanitiesCraft/co-ocr-htr)** by [Christopher Pollin](https://github.com/chpollin) (DH Craft Graz).
+> **Research Preview (Beta)** - This tool is under active development using the [Promptotyping methodology](https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin). Core features are functional, but expect rough edges. Feedback welcome via [GitHub Issues](https://github.com/DigitalHumanitiesCraft/co-ocr-htr/issues).
 
-## Acknowledgements and License
+**Editor-in-the-Loop tool for OCR/HTR verification, validation, and correction.**
 
-This project is based on the excellent work of **Christopher Pollin** ([DH Craft](https://dhcraft.org/)), who designed and developed coOCR/HTR as an Editor-in-the-Loop tool for OCR/HTR verification of historical documents. The original architecture, design system, LLM integration, and Promptotyping approach originate from his upstream repository.
+A browser-based application that helps domain experts verify and correct OCR/HTR results for historical documents. Upload an image to generate transcriptions via LLM, or import existing PAGE-XML from tools like Transkribus for correction. The goal: quality-assured transcriptions ready for downstream workflows.
 
-We gratefully acknowledge Christopher Pollin for:
+## Development Approach
 
-- Developing and open-sourcing coOCR/HTR
-- The innovative Promptotyping approach (documentation-driven AI development)
-- Licensing under CC BY 4.0, enabling forks and further development
+This project is developed using **[Promptotyping](https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin)** - an iterative methodology combining AI-assisted development with structured documentation:
 
-### License
+1. **Documentation before code** - All design decisions documented in [knowledge/](knowledge/)
+2. **Iteration through dialogue** - Requirements refined through conversation
+3. **Early validation** - Continuous user feedback integration
+4. **Minimal, readable code** - Vanilla JavaScript, no build process
 
-This work, like the original, is licensed under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+The [knowledge/](knowledge/) folder contains a complete knowledge base (Obsidian-compatible) documenting the project's methodology, architecture, and development history. See also [METHODOLOGY.md](knowledge/METHODOLOGY.md) for the scientific background.
 
-[![CC BY 4.0](https://licensebuttons.net/l/by/4.0/88x31.png)](https://creativecommons.org/licenses/by/4.0/)
+**Built with:** [Claude Code](https://claude.ai/code) powered by Claude Opus 4.5 (Anthropic)
 
-**Attribution:** Christopher Pollin / DH Craft - [github.com/DigitalHumanitiesCraft/co-ocr-htr](https://github.com/DigitalHumanitiesCraft/co-ocr-htr)
+## Why coOCR/HTR?
 
----
+Standard OCR/HTR pipelines often fail on historical documents due to unusual scripts, complex layouts, and domain-specific vocabulary. These errors require **human expertise** to correct - but existing tools are often complex and not optimized for the correction workflow.
 
-## [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/rklugsederoeaw/co-ocr-htr-rk)
+coOCR/HTR provides:
+- **Two input modes**: Generate OCR from images OR correct existing PAGE-XML
+- **AI assistance**: LLM-powered transcription and validation for difficult passages
+- **Expert-focused UI**: Synchronized view of document, transcription, and validation
+- **Workflow integration**: Export corrected results in standard formats
 
----
+## Features
 
-## About This Fork
-
-This fork is maintained by **Robert Klugseder** (Austrian Academy of Sciences, ACDH) and extends coOCR/HTR with features for medieval manuscript workflows:
-
-- **Persistent project management** with IndexedDB (multiple projects, image storage)
-- **Illuminated initials description** via Google Gemini (art-historical analysis)
-- **Explicit validation provider configuration** for OCR-only models
-- **Responsive panel layouts** with resize handles and CSS Container Queries
-- **LLM Review Apply** -- apply LLM suggestions directly into the editor
-- **HTR Post-Processing Pipeline** (feature-flagged) with multi-stage normalization
-- **LLM Thinking Panel** -- real-time streaming of LLM reasoning (Gemini, Anthropic, Ollama)
-- **Prompt Profiles** -- scenario-based prompt architecture for different document types
-- **Improved UX** with custom dialogs, storage quota display, and tooltips
+- **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, Ollama (local with DeepSeek-OCR)
+- **Hybrid Validation**: Deterministic rules + LLM-as-judge (with optional custom prompt)
+- **Validation Fallback**: Automatic cloud fallback for OCR-only models (local transcription + cloud validation)
+- **Expert-in-the-Loop**: Critical expert validation workflow
+- **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
+- **Document Viewer**: Pan, zoom, fit controls with keyboard shortcuts
+- **IIIF Support**: Load documents from IIIF-compatible repositories (Internet Archive, Bodleian, etc.)
+- **RTL Script Support**: Automatic detection and display for Arabic, Hebrew, and other RTL scripts
+- **Batch Processing**: Transcribe and validate single pages or entire multi-page documents
+- **PAGE-XML Import**: Compatible with Transkribus exports
+- **METS-XML Support**: Parse multi-page documents from METS metadata
+- **Guided Workflow**: Step-by-step hints and progress tracking
+- **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15), TEI-XML, ZIP (multi-page)
+- **PWA Support**: Works offline after first load
+- **No npm Dependencies**: Vanilla JavaScript (OpenSeadragon via CDN), runs in any modern browser
 
 ## Quick Start
 
 ### Live Demo
 
-**[Try coOCR/HTR](https://rklugsederoeaw.github.io/co-ocr-htr-rk/)**
+**[Try coOCR/HTR](http://dhcraft.org/co-ocr-htr)**
 
-1. Click "Upload" > "Load Demo" to try with sample data
-2. Click the model indicator to configure your LLM provider
-3. Upload a document (image, PAGE-XML, METS-XML, IIIF manifest)
-4. Click "Transcribe" for LLM transcription
-5. Review results and export
+1. Click "Upload" > "Demo laden" to try with sample data
+2. Or click the model indicator (e.g., "Gemini Flash") to configure your LLM
+3. Upload a document image or PAGE-XML file via the Upload menu
+4. Click "Transcribe" to run LLM transcription
+5. Review validation results in the right panel
+6. Export your results
 
 ### Local Development
 
 ```bash
-git clone https://github.com/rklugsederoeaw/co-ocr-htr-rk.git
-cd co-ocr-htr-rk
+# Clone the repository
+git clone https://github.com/DigitalHumanitiesCraft/co-ocr-htr.git
+
+# Serve locally (any static server works)
 npx serve docs -l 3000
-# http://localhost:3000
+
+# Open http://localhost:3000
 ```
 
-No build step required. Tests:
-
-```bash
-cd docs && npm install && npm test
-```
-
----
-
-## Fork Changelog
-
-<!-- CHANGELOG_START -->
-
-For the complete development history before this fork, see the original repository: [DigitalHumanitiesCraft/co-ocr-htr](https://github.com/DigitalHumanitiesCraft/co-ocr-htr).
-
----
-
-### Fork Milestone 1: Audit and Stability Foundation (2026-02-08)
-
-Key changes:
-
-- Security, robustness, and data-integrity audit fixes across core modules (67ff594, 74ea53e)
-- LLM timeout tuning for cloud and local inference paths (a3bde4d)
-- Local config loading hardened for localhost-only development usage (bfcc2e4, 4e6a1af)
-- API connection test flow in configuration dialog (2d33195)
-
----
-
-### Fork Milestone 2: IndexedDB Project Persistence (2026-02-08 to 2026-02-09)
-
-Key changes:
-
-- Project/session persistence model moved to IndexedDB stores (`projects`, `sessions`, `images`, `apiKeys`) (e2d99c5)
-- Multi-project workflow (create, rename, switch, delete) (e2d99c5)
-- Custom dialog flows replacing browser-native confirm/prompt interactions (c494152)
-- Storage quota visualization in Settings (c494152)
-
----
-
-### Fork Milestone 3: OCR-Only Validation and Mistral OCR (2026-02-09)
-
-Key changes:
-
-- Mistral OCR provider added (c005db4)
-- Explicit validation provider configuration for OCR-only models (5ddce16)
-- Validation priority model: explicit provider > automatic fallback > active provider (5ddce16)
-- Regression hardening for dialog and validation edge cases (102be34, 38630e2, fca3853)
-
----
-
-### Fork Milestone 4: Describe Workflow (2026-02-10)
-
-Key changes:
-
-- Gemini-based image description workflow for illuminated initials (22f9e1d)
-- Description panel editing and per-page persistence on navigation/session save (88b94a1, f2c0603)
-- Session restore fixes for description state and panel rendering (159cd21, ade8559, fd91d8d)
-
----
-
-### Fork Milestone 5: Responsive and Resizable Workspace (2026-02-10)
-
-Key changes:
-
-- Responsive panel headers using container queries (9ca61ee)
-- Horizontal 3-column resize with keyboard/mouse support and persistence (9ca61ee)
-- Vertical resize for description vs. transcription panes (04c29d5)
-- UI refinements for controls, indicators, and dialog positioning (cd1c227, d50339f, a42ff18, 7cfa5b1, e952df4, afbfc2f)
-
----
-
-### Fork Milestone 6: Validation Persistence and LLM Review Apply (2026-02-11)
-
-Key changes:
-
-- Unified terminology: rule-based checks = "Validation", LLM-based review = "LLM Review" (1c3a50e, 03434fd)
-- Validation results persistence: summary, timestamp, custom prompt survive page reload (6b6e8cc)
-- LLM Review Apply: apply LLM suggestions directly into the editor with one click (06d3c6f)
-- Undo support for applied LLM Review suggestions (45d2eb9)
-- Robust apply matching for multi-column layouts and abbreviated entries (3af669f)
-
----
-
-### Fork Milestone 7: HTR Post-Processing Pipeline (2026-02-11 to 2026-02-12)
-
-Key changes:
-
-- Post-processing orchestrator with Stage 2 (normalization) + Stage 3 (enrichment) pipeline (9b70f44)
-- Strict JSON normalization, stage metadata, confidence and marker canonicalization (9b70f44)
-- Document context extension: scriptType, century, region, languages, textType, knownText (9b70f44)
-- Stage badges and toggles in validation panel for per-stage result filtering (9b70f44)
-- Feature-flagged: `FEATURE_FLAGS.postprocessPipelineV1` (default: off) (9b70f44, 4bed38e)
-- HTR post-processing strategy document with expert analysis (59db113)
-
----
-
-### Fork Milestone 8: LLM Thinking Panel (2026-02-12)
-
-Key changes:
-
-- Real-time display of LLM thinking/reasoning during transcription, validation, and description (beb98e6)
-- Streaming support for 3 providers: Gemini (SSE), Anthropic (Extended Thinking), Ollama (`<think>` tags) (beb98e6)
-- Automatic fallback to non-streaming on stream error (beb98e6)
-- Collapse/expand button for thinking panel (6fc62c1)
-- Thinking panel stays above validation loading overlay via z-index layering (6fc62c1)
-
----
-
-### Fork Milestone 9: Prompt Profiles and Validation Panel Resize (2026-02-12)
-
-Key changes:
-
-- Prompt profile architecture with scenario-based profiles: Generic Historical Document, Medieval Latin Manuscript, Early Modern Letter (acf0709)
-- Stage override support for advanced per-stage prompt customization (acf0709)
-- Vertical resize handles for validation panel sub-sections (thinking, validation, LLM review) (e2f9f90)
-- Keyboard, mouse, and double-click-reset support for vertical resize (e2f9f90)
-
-<!-- CHANGELOG_END -->
-
----
-
-## Features
-
-Baseline methodology and early system design come from the upstream project ([DigitalHumanitiesCraft/co-ocr-htr](https://github.com/DigitalHumanitiesCraft/co-ocr-htr)).  
-This fork extends that base with additional persistence, workflow, and UX capabilities.
-
-- **LLM providers**: Gemini, OpenAI, Anthropic, Ollama, Mistral OCR
-- **Hybrid validation**: deterministic Validation + LLM Review with apply-to-editor
-- **LLM Thinking Panel**: real-time streaming of LLM reasoning (Gemini SSE, Anthropic Extended Thinking, Ollama `<think>` tags)
-- **Prompt profiles**: scenario-based prompt architecture (Generic, Medieval Latin, Early Modern Letter) with stage overrides
-- **HTR Post-Processing**: multi-stage normalization pipeline (Stage 2 + 3) with confidence/marker canonicalization (feature-flagged)
-- **Import paths**: image upload, PAGE-XML, METS-XML, IIIF manifests
-- **Export formats**: TXT, JSON, Markdown, PAGE-XML, TEI-XML, ZIP (multi-page)
-- **Project persistence**: IndexedDB-backed projects/sessions/images with quota display
-- **Multi-project workflow**: create, rename, switch, delete
-- **Optional API key persistence**: user-controlled storage in IndexedDB
-- **Describe feature**: Gemini-based image description for illuminated initials
-- **Batch operations**: transcription, validation, and description across multi-page documents
-- **Responsive workspace**: 3-column resize + vertical editor/validation split with keyboard support
-- **PWA support**: installable app with offline asset caching
-
----
-
-## Usage Guides
-
-### Project Management
-
-coOCR/HTR stores work sessions in the browser's IndexedDB. Each project contains images, transcriptions, validations, and descriptions independently.
-
-**Create a new project:**
-
-1. Click the document name in the header (or the dropdown icon next to it)
-2. In the project dialog, click **"New Project"**
-3. Enter a project name (max. 100 characters) and confirm with **"Create"**
-4. The new project becomes active immediately
-
-**Switch between projects:**
-
-1. Click the document name in the header
-2. Select the desired project from the project list
-3. Images and transcriptions are loaded automatically
-
-**Rename/delete projects:**
-
-- The project list shows **Rename** and **Delete** icons next to each project
-- Deletion requires confirmation in a custom dialog
-
-**Storage quota:**
-
-- Under Settings, the current IndexedDB storage usage is shown as a progress bar
-- Green: < 70%, Yellow: 70-90%, Red: > 90%
-- Images are stored separately in the IndexedDB `images` store (solves QuotaExceededError for large documents)
-
----
-
-### Illuminated Initials Description
-
-This feature visually analyzes manuscript pages and generates art-historical descriptions of illuminated initials, manuscript illumination, and decorative elements. It exclusively uses Google Gemini (best vision capabilities for art analysis).
-
-**Prerequisite:** A valid Gemini API key must be configured (click the model indicator > select Gemini > enter API key).
-
-**Describe a single page:**
-
-1. Load a document (image upload, IIIF, or demo)
-2. Click the **"Describe"** button in the editor toolbar
-3. In the dialog, customize the analysis prompt or keep the default prompt
-4. Click **"Describe"** - Gemini analyzes the image (approx. 10-15 seconds)
-5. The description appears in the **"Image Description"** panel below the toolbar
-
-**Customize the analysis prompt:**
-
-- The default prompt focuses on: Historiated initials, decorative elements, iconography, artistic period, technical details
-- Use **"Load Default Prompt"** to restore the default prompt at any time
-- Custom prompts are saved automatically and reused on the next invocation
-- Example for a specific prompt: *"Identify all biblical scenes and iconographic elements. Name the depicted saints and their attributes."*
-
-**Multi-page documents:**
-
-- For multi-page documents (IIIF, METS), a page selection appears in the dialog
-- **"Current page only"** describes only the current page
-- **"All pages"** starts a batch description with progress display
-- Each page receives its own independent description
-
-**Edit descriptions:**
-
-- The description panel is directly editable (textarea)
-- Changes are saved automatically (debounce: 500ms)
-- The collapse button (chevron on the right) toggles the panel open/closed
-- **"Copy"** copies the description to the clipboard
-
-**Export descriptions:**
-
-- JSON export includes `description` with raw text, prompt, model, and timestamp
-- Markdown export includes the description as a separate section before the transcription
-
----
-
-### Validation Provider for OCR-Only Models
-
-OCR-only models like Mistral OCR or DeepSeek OCR are specialized for text recognition and cannot perform content validation. For hybrid workflows (OCR transcription + LLM validation), coOCR/HTR-rk supports explicit validation provider configuration.
-
-**Automatic fallback (default):**
-
-- When an OCR-only model is active and **no** validation provider is configured, the system first searches for a configured cloud validation provider
-- Cloud fallback priority: Gemini > OpenAI > Anthropic
-- For Ollama-based OCR workflows (e.g., DeepSeek-OCR), a local text-model fallback can be attempted (e.g., `llama3.2`) if no cloud key is configured
-- Fallback selection is automatic when a suitable provider is available; otherwise, the UI prompts you to configure one explicitly
-
-**Configure an explicit validation provider:**
-
-1. Click the model indicator to open the API dialog
-2. Select an OCR-only model (e.g., Mistral OCR) - a warning banner appears
-3. In the **"Validation Configuration"** section, choose a validation model from the dropdown
-4. Enter the API key for the validation provider (auto-filled if already stored)
-5. Optional: Enable **"Store validation API key permanently"** for persistent storage
-
-**Validation priority (three tiers):**
-
-1. Explicitly configured validation provider (highest priority)
-2. Automatic fallback to a configured cloud provider
-3. Active provider (if it supports validation)
-
-**Typical hybrid workflow:**
-
-- **Transcription:** DeepSeek-OCR via Ollama (local) or Mistral OCR (cloud)
-- **Validation:** Gemini Flash or GPT-5.2 Mini (cloud, affordable and fast)
-
----
-
-### Responsive and Resizable Panels
-
-The 3-column layout (Viewer | Editor | Validation) is freely scalable.
-
-**Horizontal resize (between columns):**
-
-- Vertical resize handles are positioned between the three panels (visible as a thin line)
-- **Mouse:** Drag the handle to adjust column widths
-- **Keyboard:** Focus the handle (Tab), then use Arrow Left/Right (+/- 10px, with Shift: +/- 50px)
-- **Reset:** Double-click the handle to restore the default ratios (40/35/25%)
-- Column ratios are saved to localStorage and restored on next load
-- Minimum panel width: 200px
-
-**Vertical resize (description/transcription):**
-
-- When the description panel is visible, a horizontal resize handle appears between the description and transcription areas
-- Drag to adjust the heights of both areas
-- Minimum height per area: 80px
-
-**Responsive button labels:**
-
-- When panels are narrow, button labels are automatically hidden (only icons remain visible)
-- Editor panel: below 750px width (common due to many buttons)
-- All panels: below 400px width (generic fallback)
-- Tooltips and info icons are also hidden below 400px
-
-**Below 1200px viewport width:** The layout automatically switches to 2 columns (validation panel hidden, resize handles deactivated).
-
-**Below 768px viewport width:** A desktop-use warning is displayed.
-
----
+No build step required.
 
 ## Architecture
 
-coOCR/HTR-rk is a **browser-only SPA** served from `docs/`.  
-There is no backend application layer; state and persistence live in the browser.  
-Primary runtime network traffic is LLM API calls and optional IIIF resources.
+```
+docs/
+├── index.html              # Main application
+├── css/                    # Modular CSS (8 files)
+│   ├── variables.css       # Design tokens
+│   ├── base.css            # Reset, typography
+│   ├── layout.css          # Grid, header
+│   ├── components.css      # Buttons, cards
+│   ├── viewer.css          # Document viewer
+│   ├── editor.css          # Transcription table
+│   ├── validation.css      # Validation panel
+│   └── dialogs.css         # Modal dialogs
+├── js/
+│   ├── main.js             # Entry point
+│   ├── state.js            # Central state (EventTarget)
+│   ├── viewer.js           # Document viewer
+│   ├── editor.js           # Transcription editor
+│   ├── components/
+│   │   ├── dialogs.js      # Modal dialogs
+│   │   ├── upload.js       # File upload
+│   │   ├── transcription.js# LLM transcription
+│   │   ├── validation.js   # Validation panel
+│   │   └── batch-progress.js # Batch progress panel
+│   └── services/
+│       ├── llm.js          # LLM provider abstraction
+│       ├── storage.js      # LocalStorage wrapper
+│       ├── validation.js   # Validation engine
+│       └── parsers/
+│           ├── page-xml.js # PAGE-XML import
+│           └── mets-xml.js # METS-XML import
+└── tests/                  # Vitest tests
+```
 
-### Runtime Layers (Current)
+## Supported Providers
 
-| Layer       | Modules                                                                                                                                                | Responsibility                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| UI          | `docs/index.html`, `docs/js/viewer.js`, `docs/js/editor.js`, `docs/js/ui.js`, `docs/js/components/*`                                                   | Viewer/editor/dialog UX, upload flows, panel interactions            |
-| State/Event | `docs/js/state.js`                                                                                                                                     | Central `AppState` (`EventTarget`) with domain state + app events    |
-| Services    | `docs/js/services/llm.js`, `docs/js/services/validation.js`, `docs/js/services/export.js`, `docs/js/services/storage.js`, `docs/js/services/parsers/*` | LLM abstraction, hybrid validation, export, persistence, XML parsing |
-| PWA         | `docs/js/pwa.js`, `docs/sw.js`, `docs/manifest.json`                                                                                                   | Service worker caching, offline indicator, installability            |
+| Provider | Default Models | Vision |
+|----------|----------------|--------|
+| Gemini | gemini-3-flash, gemini-3-pro | Yes |
+| OpenAI | gpt-5.2, gpt-5.2-mini | Yes |
+| Anthropic | claude-4.5-sonnet, claude-4.5-haiku, claude-4.5-opus | Yes |
+| Ollama (local) | deepseek-ocr, llava, llama3.2-vision | Yes |
 
-### State and Event Model
+> **Note:** Model lists change frequently. Use "Custom model..." in the UI to enter any model ID. Check provider docs for current models.
 
-- `appState` in `docs/js/state.js` is the single source of truth for:
-  - Project/session context
-  - Current document/page + multi-page collections
-  - Transcription, validation, and description data
-  - Batch operation status
-  - UI state (selection, loading, active dialog)
-- UI modules communicate via `CustomEvent`s on `appState` (e.g. `transcriptionComplete`, `validationComplete`, `selectionChanged`, `pageChanged`).
+### Local OCR with DeepSeek-OCR
 
-### Persistence Model (Current)
+For best local OCR results, install [DeepSeek-OCR](https://ollama.com/library/deepseek-ocr) via Ollama:
 
-- `localStorage` stores lightweight synchronous settings:
-  - `coocr:settings`
-  - `coocr:descriptionPrompt`
-  - `coocr:validationPrompt`
-  - `coocr:activeProjectId`
-- `IndexedDB` (`coocr-htr`) stores structured project data:
-  - `projects`
-  - `sessions`
-  - `images`
-  - `apiKeys` (optional, only when user enables persistence)
+```bash
+ollama pull deepseek-ocr
+```
 
-### LLM and Validation Flow
+Requires Ollama v0.13.0+. Model size: ~6.7GB.
 
-- Active provider handles transcription (`Gemini`, `OpenAI`, `Anthropic`, `Mistral OCR`, `Ollama`).
-- Validation provider resolution is:
-  1. Explicit validation provider/model (if configured)
-  2. Automatic fallback when OCR-only model is active
-  3. Active provider (standard case)
-- API keys are always used in runtime memory; optional persistence can restore keys from IndexedDB on startup.
+**Hybrid Workflow**: DeepSeek-OCR is an OCR-only model optimized for text extraction but cannot perform text validation. When you use DeepSeek-OCR for transcription, validation automatically falls back to a cloud provider (Gemini, OpenAI, or Anthropic) if configured. This enables a privacy-conscious hybrid workflow: local transcription + cloud validation.
 
-### Import/Export and Viewer
+### API Key Security
 
-- Import: image upload, PAGE-XML, METS-XML, IIIF manifests.
-- Viewer: OpenSeadragon + SVG overlay for region/line synchronization.
-- Export: TXT, JSON, Markdown, PAGE-XML, TEI-XML, plus ZIP export for multi-page batches.
+API keys are stored in browser memory only (not localStorage) and cleared when you close the tab. This is **not fully secure** - browser extensions or physical access could expose them. Recommendations:
+- Use a dedicated API key with spending limits
+- For sensitive documents, use Ollama locally (no API key needed)
 
-For deeper technical details, see `knowledge/ARCHITECTURE.md`.
+See [SECURITY.md](knowledge/SECURITY.md) for the complete security model.
 
 ## Documentation
 
-Knowledge base in `knowledge/`:
-
-- [VISION.md](knowledge/VISION.md) - Project goals
+See the [knowledge/](knowledge/) folder for detailed documentation:
+- [VISION.md](knowledge/VISION.md) - Project goals and success criteria
+- [INDEX.md](knowledge/INDEX.md) - Navigation and document matrix
 - [METHODOLOGY.md](knowledge/METHODOLOGY.md) - Scientific background
+- [MODEL-LANDSCAPE.md](knowledge/MODEL-LANDSCAPE.md) - OCR/HTR model comparison
 - [ARCHITECTURE.md](knowledge/ARCHITECTURE.md) - Technical architecture
 - [VALIDATION.md](knowledge/VALIDATION.md) - Validation system
-- [MODEL-LANDSCAPE.md](knowledge/MODEL-LANDSCAPE.md) - OCR/HTR model comparison
+- [JOURNAL.md](knowledge/JOURNAL.md) - Development log
 
-## Contributors
+## Development
 
-| Role            | Person                                                       |
-| --------------- | ------------------------------------------------------------ |
-| Original author | [Christopher Pollin](https://github.com/chpollin) (DH Craft) |
-| Fork maintainer | Robert Klugseder (OEAW / ACDH-CH)                            |
-| AI assistance   | Claude Code (Anthropic) and Codex CLI (OpenAI)               |
+### Run Tests
+```bash
+cd docs
+npm install
+npm test
+```
 
----
+### Project Status
 
-*Based on [co-ocr-htr](https://github.com/DigitalHumanitiesCraft/co-ocr-htr) by Christopher Pollin, licensed under CC BY 4.0.*
+**Phase 1-2: Core Application** - Complete
+- LLM Integration (4 cloud + 1 local provider), Gemini 3 optimization
+- Document Viewer (OpenSeadragon), Transcription Editor, Hybrid Validation
+- PAGE-XML/METS-XML Import & Export
+- Multi-page navigation, IIIF support, Help & About pages
+
+**Phase 3: Batch Processing** - Complete
+- Batch transcription/validation for all pages with abort control
+- Page status indicators (dots showing idle/transcribed/validated/error)
+- Floating progress panel with progress bar
+- ZIP export for multi-page documents
+
+**Phase 4: Polish & Release** - Complete
+- 276 unit tests passing (state, storage, export, validation, llm, page-xml, textFormatting)
+- Simplified API configuration dialog with clickable model indicator
+- Document context for enhanced transcription
+- Undo/Redo, Diff view, Line numbers
+- Upload dropdown with demo badges (OCR/HTR, IIIF, XML, page count)
+- Validation fallback for OCR-only models (hybrid local+cloud workflow)
+
+See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
+
+## License
+
+This work is licensed under a [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
+[![CC BY 4.0](https://licensebuttons.net/l/by/4.0/88x31.png)](https://creativecommons.org/licenses/by/4.0/)
