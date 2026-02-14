@@ -33,6 +33,7 @@ import { escapeHtml } from './utils/textFormatting.js';
 import './utils/tooltips.js';
 import { initPanelResize } from './utils/panelResize.js';
 import { initValidationResize } from './utils/validationResize.js';
+import { i18n } from './services/i18n.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -88,6 +89,10 @@ async function loadLocalConfig() {
  */
 async function initApp() {
     console.log('coOCR/HTR: Initializing...');
+
+    // Initialize i18n (loads dictionary, translates DOM)
+    await i18n.init();
+    initLanguageSwitcher();
 
     // Load saved settings
     const settings = storage.loadSettings();
@@ -219,11 +224,11 @@ async function checkForProjects() {
             const messageHtml = `
                 <div class="session-info">
                     <div class="session-info-row">
-                        <span class="session-label">Projekt:</span>
+                        <span class="session-label">Project:</span>
                         <span class="session-value session-filename">${escapeHtml(activeProject.name)}</span>
                     </div>
                     <div class="session-info-row">
-                        <span class="session-label">Gespeichert:</span>
+                        <span class="session-label">Saved:</span>
                         <span class="session-value">${timeDisplay}</span>
                     </div>
                     ${activeProject.filename ? `<div class="session-info-row">
@@ -264,7 +269,7 @@ async function checkForProjects() {
                 return;
             }
 
-            // Single project, user chose "Neu starten" -- clear and start fresh
+            // Single project, user chose "Start new" -- clear and start fresh
             storage.clearActiveProjectId();
             return;
         }
@@ -581,21 +586,21 @@ function generateSampleTooltip(sample) {
     const details = [];
 
     if (sample.language) {
-        details.push(`<dt>Sprache</dt><dd>${escapeHtml(sample.language)}</dd>`);
+        details.push(`<dt>Language</dt><dd>${escapeHtml(sample.language)}</dd>`);
     }
     if (sample.script) {
-        details.push(`<dt>Schrift</dt><dd>${escapeHtml(sample.script)}</dd>`);
+        details.push(`<dt>Script</dt><dd>${escapeHtml(sample.script)}</dd>`);
     }
 
     // Type label
     const typeLabels = {
-        print: 'Druck',
-        manuscript: 'Handschrift',
-        letter: 'Brief',
-        card: 'Karteikarte'
+        print: 'Print',
+        manuscript: 'Manuscript',
+        letter: 'Letter',
+        card: 'Card'
     };
     if (sample.type && typeLabels[sample.type]) {
-        details.push(`<dt>Typ</dt><dd>${typeLabels[sample.type]}</dd>`);
+        details.push(`<dt>Type</dt><dd>${typeLabels[sample.type]}</dd>`);
     }
 
     // Source
@@ -852,6 +857,24 @@ function showDemoIndicator(show = true) {
     if (demoIndicator) {
         demoIndicator.style.display = show ? 'flex' : 'none';
     }
+}
+
+/**
+ * Initialize language switcher toggle
+ */
+function initLanguageSwitcher() {
+    const toggle = document.getElementById('langToggle');
+    const label = document.getElementById('langToggleLabel');
+    if (!toggle || !label) return;
+
+    // Set initial label
+    label.textContent = i18n.getLang().toUpperCase();
+
+    toggle.addEventListener('click', async () => {
+        const newLang = i18n.getLang() === 'en' ? 'de' : 'en';
+        await i18n.setLang(newLang);
+        label.textContent = newLang.toUpperCase();
+    });
 }
 
 // Start application when DOM is ready
