@@ -34,6 +34,7 @@ import './utils/tooltips.js';
 import { initPanelResize } from './utils/panelResize.js';
 import { initValidationResize } from './utils/validationResize.js';
 import { i18n, t } from './services/i18n.js';
+import { promptProfiles } from './config/promptProfiles.js';
 
 /**
  * Try to load local configuration file (for local development convenience)
@@ -331,6 +332,15 @@ async function showProjectListDialog(projects) {
                     <div class="project-card-header">
                         <span class="project-card-name">${escapeHtml(name)}</span>
                         <div class="project-card-actions">
+                            <button class="project-rules-btn icon-btn" data-rules="${escapeHtml(p.id)}" title="${t('dynamic.rules')}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </button>
                             <button class="project-rename-btn icon-btn" data-rename="${escapeHtml(p.id)}" title="${t('dynamic.rename')}">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                     <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
@@ -374,6 +384,14 @@ async function showProjectListDialog(projects) {
             const card = e.target.closest('.project-card');
             const renameBtn = e.target.closest('.project-rename-btn');
             const deleteBtn = e.target.closest('.project-delete-btn');
+            const rulesBtn = e.target.closest('.project-rules-btn');
+
+            if (rulesBtn) {
+                e.stopPropagation();
+                const projectId = rulesBtn.dataset.rules;
+                await showProjectRulesDialog(projectId);
+                return;
+            }
 
             if (deleteBtn) {
                 e.stopPropagation();
@@ -463,6 +481,227 @@ async function showProjectListDialog(projects) {
         document.body.appendChild(dialog);
         dialog.showModal();
     });
+}
+
+/**
+ * Show project rules dialog for a specific project
+ * @param {string} projectId
+ */
+async function showProjectRulesDialog(projectId) {
+    const project = await storage.getProject(projectId);
+    if (!project) return;
+
+    const rules = project.rules || {};
+    const transcription = rules.transcription || {};
+    const validation = rules.validation || {};
+
+    const profileOptions = promptProfiles.map(p =>
+        `<option value="${escapeHtml(p.id)}" ${(validation.promptProfileId || 'generic_default') === p.id ? 'selected' : ''}>${escapeHtml(p.label)}</option>`
+    ).join('');
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'confirm-dialog glass-panel';
+    dialog.style.maxWidth = '560px';
+    dialog.style.width = '90vw';
+
+    dialog.innerHTML = `
+        <div class="dialog-header">
+            <h3>${t('dialog.rules.title')}: ${escapeHtml(project.name || 'Project')}</h3>
+        </div>
+        <div class="dialog-body" style="max-height: 60vh; overflow-y: auto;">
+            <p class="dialog-subtitle">${t('dialog.rules.subtitle')}</p>
+
+            <div class="form-section">
+                <label class="form-label">${t('dialog.rules.editionModel')}</label>
+                <select id="rulesEditionModel" class="form-control">
+                    <option value="" ${!rules.editionModel ? 'selected' : ''}>-- ${t('dialog.transcribe.select')} --</option>
+                    <option value="diplomatic" ${rules.editionModel === 'diplomatic' ? 'selected' : ''}>${t('dialog.rules.diplomatic')}</option>
+                    <option value="normalized" ${rules.editionModel === 'normalized' ? 'selected' : ''}>${t('dialog.rules.normalized')}</option>
+                    <option value="critical" ${rules.editionModel === 'critical' ? 'selected' : ''}>${t('dialog.rules.critical')}</option>
+                </select>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">${t('dialog.rules.xmlSchema')}</label>
+                <select id="rulesXmlSchema" class="form-control">
+                    <option value="page-xml-2019" ${(rules.xmlSchema || 'page-xml-2019') === 'page-xml-2019' ? 'selected' : ''}>${t('dialog.rules.pageXml2019')}</option>
+                    <option value="tei-p5" ${rules.xmlSchema === 'tei-p5' ? 'selected' : ''}>${t('dialog.rules.teiP5')}</option>
+                </select>
+            </div>
+
+            <fieldset class="form-fieldset">
+                <legend>${t('dialog.rules.transcription')}</legend>
+
+                <div class="form-section">
+                    <label class="form-label">${t('dialog.rules.scriptType')}</label>
+                    <input type="text" id="rulesScriptType" class="form-control"
+                        value="${escapeHtml(transcription.scriptType || '')}"
+                        placeholder="${t('dialog.rules.scriptTypePlaceholder')}">
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">${t('dialog.rules.language')}</label>
+                    <input type="text" id="rulesLanguage" class="form-control"
+                        value="${escapeHtml(transcription.language || '')}"
+                        placeholder="${t('dialog.rules.languagePlaceholder')}">
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">${t('dialog.rules.period')}</label>
+                    <input type="text" id="rulesPeriod" class="form-control"
+                        value="${escapeHtml(transcription.period || '')}"
+                        placeholder="${t('dialog.rules.periodPlaceholder')}">
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">${t('dialog.rules.paleographicHints')}</label>
+                    <textarea id="rulesPaleoHints" class="form-control" rows="2"
+                        placeholder="${t('dialog.rules.paleographicHintsPlaceholder')}">${escapeHtml(transcription.paleographicHints || '')}</textarea>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">${t('dialog.rules.specialCharacters')}</label>
+                    <input type="text" id="rulesSpecialChars" class="form-control"
+                        value="${escapeHtml(transcription.specialCharacters || '')}"
+                        placeholder="${t('dialog.rules.specialCharactersPlaceholder')}">
+                </div>
+            </fieldset>
+
+            <fieldset class="form-fieldset">
+                <legend>${t('dialog.rules.validationRules')}</legend>
+
+                <div class="form-section">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" id="rulesAutoValidate" ${validation.autoValidate !== false ? 'checked' : ''}>
+                        <span>${t('dialog.rules.autoValidate')}</span>
+                    </label>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">${t('dialog.rules.promptProfile')}</label>
+                    <select id="rulesPromptProfile" class="form-control">
+                        ${profileOptions}
+                    </select>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">${t('dialog.rules.customPrompt')}</label>
+                    <textarea id="rulesCustomPrompt" class="form-control" rows="3"
+                        placeholder="${t('dialog.rules.customPromptPlaceholder')}">${escapeHtml(validation.customPrompt || '')}</textarea>
+                </div>
+            </fieldset>
+        </div>
+        <div class="dialog-actions">
+            <button class="btn btn-ghost" data-action="export">${t('dialog.rules.exportRules')}</button>
+            <button class="btn btn-ghost" data-action="import">${t('dialog.rules.importRules')}</button>
+            <span style="flex:1"></span>
+            <button class="btn btn-ghost" data-action="cancel">${t('dialog.cancel')}</button>
+            <button class="btn btn-primary" data-action="save">${t('dialog.rules.saveRules')}</button>
+        </div>
+    `;
+
+    // Hidden file input for import
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.style.display = 'none';
+    dialog.appendChild(fileInput);
+
+    dialog.addEventListener('click', async (e) => {
+        const action = e.target.dataset?.action;
+        if (!action) return;
+
+        if (action === 'save') {
+            const newRules = {
+                editionModel: dialog.querySelector('#rulesEditionModel').value || null,
+                xmlSchema: dialog.querySelector('#rulesXmlSchema').value || 'page-xml-2019',
+                transcription: {
+                    scriptType: dialog.querySelector('#rulesScriptType').value.trim(),
+                    language: dialog.querySelector('#rulesLanguage').value.trim(),
+                    period: dialog.querySelector('#rulesPeriod').value.trim(),
+                    paleographicHints: dialog.querySelector('#rulesPaleoHints').value.trim(),
+                    specialCharacters: dialog.querySelector('#rulesSpecialChars').value.trim()
+                },
+                validation: {
+                    autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
+                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim(),
+                    promptProfileId: dialog.querySelector('#rulesPromptProfile').value
+                }
+            };
+            await storage.updateProjectRules(projectId, newRules);
+            dialogManager.showToast(t('dialog.rules.rulesSaved'), 'success');
+            dialog.close();
+            dialog.remove();
+        } else if (action === 'export') {
+            const currentRules = {
+                editionModel: dialog.querySelector('#rulesEditionModel').value || null,
+                xmlSchema: dialog.querySelector('#rulesXmlSchema').value || 'page-xml-2019',
+                transcription: {
+                    scriptType: dialog.querySelector('#rulesScriptType').value.trim(),
+                    language: dialog.querySelector('#rulesLanguage').value.trim(),
+                    period: dialog.querySelector('#rulesPeriod').value.trim(),
+                    paleographicHints: dialog.querySelector('#rulesPaleoHints').value.trim(),
+                    specialCharacters: dialog.querySelector('#rulesSpecialChars').value.trim()
+                },
+                validation: {
+                    autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
+                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim(),
+                    promptProfileId: dialog.querySelector('#rulesPromptProfile').value
+                }
+            };
+            const blob = new Blob([JSON.stringify(currentRules, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${(project.name || 'project').replace(/[^a-zA-Z0-9-_]/g, '_')}-rules.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+        } else if (action === 'import') {
+            fileInput.click();
+        } else if (action === 'cancel') {
+            dialog.close();
+            dialog.remove();
+        }
+    });
+
+    fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const imported = JSON.parse(text);
+            // Populate form fields from imported rules
+            if (imported.editionModel) dialog.querySelector('#rulesEditionModel').value = imported.editionModel;
+            if (imported.xmlSchema) dialog.querySelector('#rulesXmlSchema').value = imported.xmlSchema;
+            if (imported.transcription) {
+                const tr = imported.transcription;
+                if (tr.scriptType) dialog.querySelector('#rulesScriptType').value = tr.scriptType;
+                if (tr.language) dialog.querySelector('#rulesLanguage').value = tr.language;
+                if (tr.period) dialog.querySelector('#rulesPeriod').value = tr.period;
+                if (tr.paleographicHints) dialog.querySelector('#rulesPaleoHints').value = tr.paleographicHints;
+                if (tr.specialCharacters) dialog.querySelector('#rulesSpecialChars').value = tr.specialCharacters;
+            }
+            if (imported.validation) {
+                const val = imported.validation;
+                if (val.autoValidate !== undefined) dialog.querySelector('#rulesAutoValidate').checked = val.autoValidate;
+                if (val.customPrompt) dialog.querySelector('#rulesCustomPrompt').value = val.customPrompt;
+                if (val.promptProfileId) dialog.querySelector('#rulesPromptProfile').value = val.promptProfileId;
+            }
+            dialogManager.showToast(t('dialog.rules.importSuccess'), 'success');
+        } catch (err) {
+            dialogManager.showToast(t('dialog.rules.importFailed', { message: err.message }), 'error');
+        }
+        fileInput.value = '';
+    });
+
+    dialog.addEventListener('cancel', (e) => {
+        e.preventDefault();
+        dialog.close();
+        dialog.remove();
+    });
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
 }
 
 /**

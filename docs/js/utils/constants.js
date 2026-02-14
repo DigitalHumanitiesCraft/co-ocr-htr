@@ -182,7 +182,7 @@ export const JPEG_QUALITY = 0.9;
 export const IDB_NAME = 'coocr-htr';
 
 /** IndexedDB schema version */
-export const IDB_VERSION = 1;
+export const IDB_VERSION = 2;
 
 /** IndexedDB object store names */
 export const IDB_STORES = {
