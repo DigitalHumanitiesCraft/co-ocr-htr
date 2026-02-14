@@ -688,6 +688,7 @@
                             </optgroup>
                             <optgroup label="Mistral">
                                 <option value="mistral-ocr-latest" data-provider="mistral">Mistral OCR - specialized OCR</option>
+                                <option value="azure-mistral:mistral-ocr-latest" data-provider="azure-mistral">Mistral OCR (Azure) - via Azure endpoint</option>
                             </optgroup>
                             <optgroup label="Local (Ollama)">
                                 <option value="ollama:deepseek-ocr" data-provider="ollama">DeepSeek-OCR (local)</option>
@@ -723,6 +724,13 @@
                         <button type="button" class="btn btn-secondary btn-sm" id="ollamaRefreshModels" data-i18n="dialog.llmConfig.loadModels">Load Models</button>
                     </div>
                     <span class="input-hint" data-i18n="dialog.llmConfig.ollamaHint">Ollama must run locally: ollama serve</span>
+                </div>
+
+                <!-- Azure-specific: Endpoint (shown when Azure Mistral model selected) -->
+                <div class="input-wrapper" id="azureEndpointWrapper" style="display: none;">
+                    <label for="azureEndpoint" data-i18n="dialog.llmConfig.azureEndpoint">Azure Endpoint URL</label>
+                    <input type="text" id="azureEndpoint" value="" placeholder="https://your-resource.services.ai.azure.com/models/chat/completions?api-version=...">
+                    <span class="input-hint" data-i18n="dialog.llmConfig.azureHint">Enter the full Azure AI endpoint URL for Mistral OCR</span>
                 </div>
 
                 <!-- Hidden provider field for JS logic -->

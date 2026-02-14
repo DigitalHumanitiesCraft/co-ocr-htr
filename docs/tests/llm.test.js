@@ -86,7 +86,7 @@ describe('LLMService', () => {
 
       const providers = service.getAvailableProviders();
 
-      expect(providers).toHaveLength(5); // gemini, openai, anthropic, mistral, ollama
+      expect(providers).toHaveLength(6); // gemini, openai, anthropic, mistral, ollama, azure-mistral
 
       const gemini = providers.find(p => p.id === 'gemini');
       expect(gemini.hasKey).toBe(true);

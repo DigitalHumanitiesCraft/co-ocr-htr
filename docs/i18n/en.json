@@ -159,6 +159,8 @@
       "modelHint": "Gemini 3 Flash for fast results, Pro for complex handwriting.",
       "getApiKey": "Get API key from",
       "testConnection": "Test Connection",
+      "azureEndpoint": "Azure Endpoint URL",
+      "azureHint": "Enter the full Azure AI endpoint URL for Mistral OCR",
       "validationConfig": "Validation Configuration",
       "ocrOnlyWarning": "OCR-only model selected.",
       "ocrOnlyText": "This model cannot validate text. Select a language model for validation or leave empty to use automatic fallback.",
