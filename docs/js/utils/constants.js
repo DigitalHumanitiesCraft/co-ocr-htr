@@ -22,8 +22,8 @@ export const DIALOG_FOCUS_DELAY = 50;
 /** Page reload delay after clear session in milliseconds */
 export const PAGE_RELOAD_DELAY = 500;
 
-/** URL revoke delay for downloads in milliseconds */
-export const URL_REVOKE_DELAY = 100;
+/** URL revoke delay for downloads in milliseconds (long enough for browser to start download) */
+export const URL_REVOKE_DELAY = 60_000;
 
 /** Validation menu close delay in milliseconds */
 export const MENU_CLOSE_DELAY = 150;
@@ -173,3 +173,71 @@ export const DOCUMENT_TYPES = {
 
 /** JPEG quality for canvas export (0.0 - 1.0) */
 export const JPEG_QUALITY = 0.9;
+
+// =============================================================================
+// INDEXEDDB CONSTANTS
+// =============================================================================
+
+/** IndexedDB database name */
+export const IDB_NAME = 'coocr-htr';
+
+/** IndexedDB schema version */
+export const IDB_VERSION = 2;
+
+/** IndexedDB object store names */
+export const IDB_STORES = {
+  PROJECTS: 'projects',
+  SESSIONS: 'sessions',
+  IMAGES: 'images',
+  API_KEYS: 'apiKeys'
+};
+
+/** localStorage key for active project ID (synchronous access at startup) */
+export const ACTIVE_PROJECT_KEY = 'coocr:activeProjectId';
+
+// =============================================================================
+// PANEL RESIZE CONSTANTS
+// =============================================================================
+
+/** Minimum panel width in pixels during resize */
+export const MIN_PANEL_WIDTH = 200;
+
+/** Default panel width ratios (viewer, editor, validation) -- must sum to 1.0 */
+export const DEFAULT_PANEL_RATIOS = [0.4, 0.35, 0.25];
+
+/** localStorage key for persisted panel ratios */
+export const PANEL_RATIOS_KEY = 'coocr_panelRatios';
+
+/** Minimum section height in pixels during vertical resize */
+export const MIN_SECTION_HEIGHT = 60;
+
+/** Default validation section height ratios (thinking, ruleBased, llmReview) -- must sum to 1.0 */
+export const DEFAULT_VALIDATION_RATIOS = [0.3, 0.35, 0.35];
+
+/** localStorage key for persisted validation section ratios */
+export const VALIDATION_RATIOS_KEY = 'coocr_validationRatios';
+
+// =============================================================================
+// POST-PROCESSING CONSTANTS (PPV1-200c)
+// =============================================================================
+
+/** Timeout per post-processing review call in milliseconds (45s) */
+export const POSTPROCESS_CALL_TIMEOUT_MS = 45_000;
+
+/** Total time budget per page for post-processing in milliseconds (90s) */
+export const POSTPROCESS_PAGE_BUDGET_MS = 90_000;
+
+/** Maximum number of LLM API calls per page in post-processing pipeline (includes retries) */
+export const MAX_POSTPROCESS_CALLS = 2;
+
+/** Base delay for exponential backoff on retryable errors in milliseconds */
+export const POSTPROCESS_BACKOFF_BASE_MS = 2_000;
+
+/** Maximum retries for a single post-processing call */
+export const POSTPROCESS_MAX_RETRIES = 2;
+
+/** Feature flags */
+export const FEATURE_FLAGS = {
+  postprocessPipelineV1: false,
+  thinkingPanel: true
+};

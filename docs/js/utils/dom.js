@@ -179,9 +179,11 @@ export function setText(elementOrId, text) {
 }
 
 /**
- * Set HTML content of element safely
+ * Set innerHTML of element.
+ * IMPORTANT: Callers must escape user/LLM-provided strings with escapeHtml()
+ * before embedding them in the html parameter.
  * @param {HTMLElement|string} elementOrId - Element or element ID
- * @param {string} html - HTML content to set
+ * @param {string} html - HTML content to set (must be pre-sanitized)
  */
 export function setHTML(elementOrId, html) {
     const el = typeof elementOrId === 'string'

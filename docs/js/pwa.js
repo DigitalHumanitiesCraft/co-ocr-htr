@@ -2,6 +2,7 @@
  * PWA Support Module
  * Handles service worker registration and offline indicator
  */
+import { appState } from './state.js';
 
 /**
  * Initialize PWA features
@@ -81,36 +82,24 @@ function updateOnlineStatus() {
  * @param {string} status - 'online' or 'offline'
  */
 function showConnectivityToast(status) {
-    // Use the app's toast system via state event
-    const event = new CustomEvent('toastRequested', {
-        detail: {
-            message: status === 'online'
-                ? 'Connection restored'
-                : 'You are offline. Some features may be unavailable.',
-            type: status === 'online' ? 'success' : 'warning',
-            duration: status === 'online' ? 2000 : 5000
-        }
-    });
-
-    // Dispatch to appState if available, otherwise to window
-    const target = window.appState || window;
-    target.dispatchEvent(event);
+    appState.showToast(
+        status === 'online'
+            ? 'Connection restored'
+            : 'You are offline. Some features may be unavailable.',
+        status === 'online' ? 'success' : 'warning',
+        status === 'online' ? 2000 : 5000
+    );
 }
 
 /**
  * Show update notification when new version is available
  */
 function showUpdateNotification() {
-    const event = new CustomEvent('toastRequested', {
-        detail: {
-            message: 'New version available. Reload to update.',
-            type: 'info',
-            duration: 10000
-        }
-    });
-
-    const target = window.appState || window;
-    target.dispatchEvent(event);
+    appState.showToast(
+        'New version available. Reload to update.',
+        'info',
+        10000
+    );
 }
 
 /**

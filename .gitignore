@@ -46,3 +46,8 @@ temp/
 .claude/settings.local.json
 nul
 .claude/settings.local.json
+
+# Claude
+.claude/
+.playwright-mcp/
+start_server.sh

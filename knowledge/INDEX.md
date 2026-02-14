@@ -49,7 +49,7 @@ knowledge/
 | Functional Triad (Fogg) | Tool / Medium / Social Actor → CA* / CS* / GenAI | METHODOLOGY |
 | Computer-Aided Paradigm | Human steers, AI assists (CAD, CAT, CALL) | METHODOLOGY |
 | Categorical Confidence | confident/uncertain/problematic instead of 0-100% | METHODOLOGY |
-| Hybrid Validation | Deterministic + LLM-Judge combined | VALIDATION |
+| Hybrid Validation | Deterministic validation + LLM Review combined | VALIDATION |
 | Custom Validation Prompt | Optional user-defined validation prompt | VALIDATION |
 | Promptotyping | Iterative development through AI dialogue | METHODOLOGY |
 | Triple Synchronization | Viewer ↔ Transcription ↔ Validation | ARCHITECTURE |
@@ -70,7 +70,7 @@ knowledge/
 |-----------|-------------|----------|
 | Document Viewer | OpenSeadragon + SVG Overlay + Zoom | DESIGN-SYSTEM |
 | Transcription Table | Columns: #, DATE, NAME, DESCRIPTION, AMOUNT | DESIGN-SYSTEM |
-| Validation Panel | Rule-Based + AI Assistant sections | VALIDATION |
+| Validation Panel | Validation + LLM Review sections | VALIDATION |
 | Status Bar | Model, Status, Timestamp | DESIGN-SYSTEM |
 | Inline Markers | [?], [illegible], ... | DESIGN-SYSTEM |
 | IIIF Dialog | Load manifests from external repositories | ARCHITECTURE |

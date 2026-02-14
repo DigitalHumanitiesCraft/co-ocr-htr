@@ -10,6 +10,7 @@
  */
 
 import { appState } from '../state.js';
+import { URL_REVOKE_DELAY } from '../utils/constants.js';
 
 /**
  * Export Service
@@ -17,6 +18,21 @@ import { appState } from '../state.js';
 class ExportService {
     constructor() {
         this.formats = ['txt', 'json', 'md', 'xml', 'tei'];
+    }
+
+    /**
+     * Resolve pipeline stage status across legacy and canonical schemas.
+     * Legacy: stage = 'success' | 'error' | 'skipped'
+     * Canonical: stage = { status: 'success' | 'error' | 'skipped', ... }
+     * @param {string|object|null|undefined} stage
+     * @returns {string}
+     */
+    resolvePipelineStageStatus(stage) {
+        if (typeof stage === 'string') return stage;
+        if (stage && typeof stage === 'object' && typeof stage.status === 'string') {
+            return stage.status;
+        }
+        return '';
     }
 
     /**
@@ -93,10 +109,11 @@ class ExportService {
      */
     exportTxt(state) {
         const lines = [];
+        const segments = this.getConsistentSegments(state.transcription);
 
         // Use segments if available, otherwise fall back to lines or raw
-        if (state.transcription.segments?.length > 0) {
-            state.transcription.segments.forEach(seg => {
+        if (segments.length > 0) {
+            segments.forEach(seg => {
                 if (seg.fields) {
                     // Structured fields
                     lines.push(Object.values(seg.fields).join('\t'));
@@ -133,16 +150,30 @@ class ExportService {
         const data = {
             transcription: {
                 raw: state.transcription.raw || '',
-                segments: state.transcription.segments || [],
+                segments: this.getConsistentSegments(state.transcription),
                 columns: state.transcription.columns || []
             }
         };
+
+        // Include description if present
+        if (state.description?.raw) {
+            data.description = {
+                raw: state.description.raw,
+                customPrompt: state.description.customPrompt || '',
+                model: state.description.model || '',
+                timestamp: state.description.timestamp || null
+            };
+        }
 
         if (includeValidation && state.validation) {
             data.validation = {
                 status: state.validation.status,
                 rules: state.validation.rules || [],
-                llmJudge: state.validation.llmJudge
+                llmJudge: state.validation.llmJudge,
+                summary: state.validation.summary || null,
+                timestamp: state.validation.timestamp || null,
+                customPrompt: state.validation.customPrompt || '',
+                pipeline: state.validation.pipeline || null
             };
         }
 
@@ -181,9 +212,27 @@ class ExportService {
             lines.push('');
         }
 
+        // Description section (if present)
+        if (state.description?.raw) {
+            lines.push('## Image Description');
+            lines.push('');
+            lines.push(`*Generated with ${state.description.model || 'Gemini'}*`);
+            lines.push('');
+            if (state.description.customPrompt) {
+                lines.push('**Analysis Prompt:**');
+                lines.push(state.description.customPrompt.split('\n').map(l => `> ${l}`).join('\n'));
+                lines.push('');
+            }
+            lines.push(state.description.raw);
+            lines.push('');
+            lines.push('---');
+            lines.push('');
+        }
+
         // Transcription content
-        if (state.transcription.segments?.length > 0) {
-            lines.push(this.segmentsToMarkdownTable(state.transcription.segments, state.transcription.columns));
+        const segments = this.getConsistentSegments(state.transcription);
+        if (segments.length > 0) {
+            lines.push(this.segmentsToMarkdownTable(segments, state.transcription.columns));
         } else if (state.transcription.lines?.length > 0) {
             // Use raw lines (already markdown table)
             lines.push(...state.transcription.lines);
@@ -203,6 +252,26 @@ class ExportService {
             lines.push('## Validation Notes');
             lines.push('');
 
+            // Show pipeline info if post-processing was used
+            if (state.validation.pipeline) {
+                const stage2Status = this.resolvePipelineStageStatus(state.validation.pipeline.stage2);
+                const stage3Status = this.resolvePipelineStageStatus(state.validation.pipeline.stage3);
+                const stages = [];
+                if (stage2Status === 'success') stages.push('Paleographic');
+                if (stage3Status === 'success') stages.push('Philological');
+                if (stages.length > 0) {
+                    lines.push(`**Pipeline:** ${stages.join(' + ')} review`);
+                    lines.push('');
+                }
+            }
+
+            // Show custom validation prompt if present
+            if (state.validation.customPrompt) {
+                lines.push('**Expert Prompt:**');
+                lines.push(state.validation.customPrompt.split('\n').map(l => `> ${l}`).join('\n'));
+                lines.push('');
+            }
+
             const issues = state.validation.rules.filter(r =>
                 r.type === 'warning' || r.type === 'error'
             );
@@ -221,9 +290,9 @@ class ExportService {
 
             lines.push('');
 
-            // LLM-Judge assessment
+            // LLM Review
             if (state.validation.llmJudge) {
-                lines.push('### AI Assessment');
+                lines.push('### LLM Review');
                 lines.push('');
                 const confidence = {
                     certain: 'High Confidence',
@@ -253,7 +322,7 @@ class ExportService {
     exportPageXml(state) {
         const timestamp = new Date().toISOString();
         const filename = state.document.filename || 'unknown';
-        const segments = state.transcription.segments || [];
+        const segments = this.getConsistentSegments(state.transcription);
         const regions = state.regions || [];
 
         // Try to get image dimensions from state
@@ -331,7 +400,7 @@ class ExportService {
      */
     exportTei(state) {
         const filename = state.document.filename || 'transcription';
-        const segments = state.transcription.segments || [];
+        const segments = this.getConsistentSegments(state.transcription);
         const timestamp = new Date().toISOString();
 
         // Build TEI body lines
@@ -440,6 +509,53 @@ ${bodyLines.join('\n')}
     }
 
     /**
+     * Ensure export uses text that reflects current raw editor content.
+     * Keeps structured field exports untouched when `fields` are present.
+     * @param {object} transcription
+     * @returns {Array}
+     */
+    getConsistentSegments(transcription = {}) {
+        const segments = transcription.segments || [];
+        const raw = transcription.raw || '';
+
+        if (!raw.trim()) {
+            return segments;
+        }
+
+        const rawLines = raw.split('\n');
+        const hasStructuredFields = segments.some(seg => seg.fields && Object.keys(seg.fields).length > 0);
+        if (hasStructuredFields) {
+            return segments;
+        }
+
+        // Build segments from raw when no segments exist.
+        if (segments.length === 0) {
+            return rawLines.map((line, index) => ({
+                lineNumber: index + 1,
+                text: line
+            }));
+        }
+
+        // Keep existing metadata, but update line text when out of sync.
+        const segmentTexts = segments.map(seg => seg.text || '');
+        const inSync = segmentTexts.length === rawLines.length &&
+            segmentTexts.every((text, index) => text === rawLines[index]);
+
+        if (inSync) {
+            return segments;
+        }
+
+        return rawLines.map((line, index) => {
+            const previous = segments[index] || {};
+            return {
+                ...previous,
+                lineNumber: index + 1,
+                text: line
+            };
+        });
+    }
+
+    /**
      * Convert segments to markdown table
      */
     segmentsToMarkdownTable(segments, columns) {
@@ -515,7 +631,7 @@ ${bodyLines.join('\n')}
         document.body.removeChild(link);
 
         // Clean up
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        setTimeout(() => URL.revokeObjectURL(url), URL_REVOKE_DELAY);
     }
 
     /**
@@ -557,6 +673,9 @@ ${bodyLines.join('\n')}
     async exportAllPagesZip(format, options = {}) {
         // Load JSZip dynamically (only when needed)
         await this._loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+
+        // Flush current page to pageTranscriptions before export
+        await appState.saveSessionNow();
 
         const state = appState.getState();
         const pages = state.pages || [];

@@ -164,7 +164,7 @@
             <section class="page-section">
                 <h2 class="section-title">API Key Security</h2>
                 <div class="section-content">
-                    <p>API keys are stored <strong>in browser memory only</strong> (not localStorage) and cleared when you close the tab. This minimizes exposure but is <strong>not fully secure</strong>.</p>
+                    <p>API keys are used <strong>in browser memory by default</strong>. Optionally, they can be persisted in IndexedDB when you explicitly enable "Store API key persistently". This is convenient but <strong>not fully secure</strong> on shared or untrusted devices.</p>
 
                     <h3 class="subsection-title" style="margin-top: var(--space-4);">Known Risks</h3>
                     <ul style="margin-top: var(--space-2); padding-left: var(--space-4);">
@@ -263,7 +263,7 @@ php -S localhost:8000</code></pre>
                             </svg>
                         </button>
                         <div class="faq-answer">
-                            <p>Keys are stored <strong>in memory only</strong> and cleared when you close the tab. However, browser-based storage is <strong>not fully secure</strong>: extensions, XSS, or physical access could expose them. Use a dedicated API key with spending limits. For maximum security, use Ollama locally. See "API Key Security" section above for details.</p>
+                            <p>Keys are loaded into <strong>memory at runtime</strong>. If you enabled persistent storage, an additional IndexedDB copy exists locally on your device. Browser-based key handling is <strong>not fully secure</strong>: extensions, XSS, or physical access could expose keys. Use dedicated keys with spending limits and keep persistence disabled on shared devices.</p>
                         </div>
                     </div>
                     <div class="faq-item">

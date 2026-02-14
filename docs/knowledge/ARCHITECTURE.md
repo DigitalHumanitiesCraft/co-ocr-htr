@@ -38,8 +38,8 @@ System design for coOCR/HTR. Client-only, no backend.
 |  PERSISTENCE                                                |
 |  +----------------+ +----------------------------+          |
 |  |  LocalStorage  | |       IndexedDB            |          |
-|  |  (Settings,    | |  (Documents, Sessions)     |          |
-|  |   API Keys)    | |                            |          |
+|  |  (Settings,    | |  (Projects, Sessions,      |          |
+|  |   Prompts)     | |   Images, optional keys)   |          |
 |  +----------------+ +----------------------------+          |
 +-------------------------------------------------------------+
                               |
@@ -84,7 +84,7 @@ docs/
 │   │   └── batch-progress.js # Batch Progress Panel
 │   └── services/
 │       ├── llm.js          # Multi-Provider LLM Service
-│       ├── storage.js      # LocalStorage Wrapper
+│       ├── storage.js      # localStorage + IndexedDB storage service
 │       ├── validation.js   # Validation Engine
 │       ├── export.js       # Export Service (incl. PAGE-XML, ZIP)
 │       ├── samples.js      # Demo Loader
@@ -174,7 +174,7 @@ Abstraction layer for multiple LLM providers with unified API.
 - `setProvider(name)` switches between Gemini, OpenAI, Anthropic, Ollama
 - `setApiKey(key)` configures authentication
 - `transcribe(image, options)` sends image to VLM for OCR/HTR
-- `validate(text, options)` requests LLM-Judge analysis (options: `{ customPrompt }`)
+- `validate(text, options)` requests LLM Review (options: `{ customPrompt }`)
 - `isOcrOnlyModel()` detects OCR-specific models (e.g., DeepSeek-OCR)
 - `getValidationFallback()` finds alternative provider for validation
 
@@ -271,8 +271,8 @@ This creates bidirectional synchronization between all three panels.
 
 | Storage | Type | Content | Limit |
 |---------|------|---------|-------|
-| LocalStorage | Synchronous | Settings, API Keys | 5MB |
-| IndexedDB | Asynchronous | Documents, Sessions, History | Unlimited |
+| LocalStorage | Synchronous | Settings, prompt fallbacks, active project ID | ~5MB |
+| IndexedDB | Asynchronous | Projects, sessions, images, optional API keys | Browser quota |
 
 ## Data Flows
 
@@ -382,7 +382,7 @@ All provider-specific API calls are implemented in [llm.js](../docs/js/services/
 | AuthError | Invalid API Key | Dialog for key entry |
 | RateLimitError | Too many requests | Wait, countdown |
 | QuotaError | Quota exhausted | Alternative provider |
-| StorageError | LocalStorage full | Delete old sessions |
+| StorageError | IndexedDB/localStorage quota reached | Show warning, cleanup option |
 
 **Retry Strategy:** Exponential backoff (1s, 2s, 4s) with max 3 attempts. Respects `retryAfter` header from rate-limited responses.
 
@@ -390,7 +390,9 @@ All provider-specific API calls are implemented in [llm.js](../docs/js/services/
 
 ### API Key Handling
 
-Keys are stored in LocalStorage (Base64 obfuscation, not real encryption).
+Keys are always used in memory during runtime.
+Optional persistence (trusted devices only) stores keys in IndexedDB `apiKeys`.
+localStorage is not used for API key material.
 
 **Warning in UI:** "Do not use this tool on public computers."
 
@@ -403,7 +405,7 @@ CSP restricts connections to known LLM API endpoints (Gemini, OpenAI, Anthropic)
 | Decision | Rationale |
 |----------|-----------|
 | No Framework | Reduces complexity, improves longevity |
-| LocalStorage | No backend needed, instant persistence |
+| IndexedDB + localStorage split | Fast settings access + robust project persistence |
 | Fetch API | Native, sufficient for REST |
 | ES6 Modules | Native browser support, no bundler |
 | CSS Custom Properties | Theming without preprocessor |

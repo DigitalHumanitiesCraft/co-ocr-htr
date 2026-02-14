@@ -107,6 +107,18 @@ describe('ExportService', () => {
       expect(result.content).toContain('Müller');
       expect(result.content).toContain('5 Taler');
     });
+
+    it('should prefer raw-aligned text when segments are stale and unstructured', () => {
+      mockState.transcription.raw = 'Corrected line 1\nCorrected line 2';
+      mockState.transcription.segments = [
+        { lineNumber: 1, text: 'Old line 1' },
+        { lineNumber: 2, text: 'Old line 2' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('txt');
+      expect(result.content).toBe('Corrected line 1\nCorrected line 2');
+    });
   });
 
   describe('JSON Export', () => {
@@ -159,6 +171,30 @@ describe('ExportService', () => {
       const result = service.export('md', { includeValidation: true });
       expect(result.content).toContain('Validation Notes');
       expect(result.content).toContain('Uncertainty Markers');
+    });
+
+    it('should render pipeline notice for canonical object schema', () => {
+      mockState.validation.pipeline = {
+        stage2: { status: 'success', duration: 1200 },
+        stage3: { status: 'success', duration: 800 },
+        duration: 2000
+      };
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('md', { includeValidation: true });
+      expect(result.content).toContain('**Pipeline:** Paleographic + Philological review');
+    });
+
+    it('should render pipeline notice for legacy string schema', () => {
+      mockState.validation.pipeline = {
+        stage2: 'success',
+        stage3: 'success',
+        duration: 1800
+      };
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('md', { includeValidation: true });
+      expect(result.content).toContain('**Pipeline:** Paleographic + Philological review');
     });
   });
 
@@ -487,6 +523,47 @@ describe('ExportService', () => {
 
       expect(result.content).toContain('<TEI');
       expect(result.format).toBe('tei-xml');
+    });
+  });
+
+  describe('Validation Persistence in Export', () => {
+    beforeEach(() => {
+      mockState.validation = {
+        status: 'complete',
+        rules: [
+          { name: 'Uncertainty Markers', type: 'warning', message: 'Found uncertain readings', lines: [2] }
+        ],
+        llmJudge: { confidence: 'likely', reasoning: 'Looks reasonable' },
+        summary: { totalIssues: 1 },
+        timestamp: '2026-02-11T10:00:00.000Z',
+        customPrompt: 'Check for Latin abbreviations'
+      };
+      appState.getState.mockReturnValue(mockState);
+    });
+
+    it('should include summary, timestamp, and customPrompt in JSON export', () => {
+      const result = service.export('json', { includeValidation: true });
+      const parsed = JSON.parse(result.content);
+
+      expect(parsed.validation.summary).toEqual({ totalIssues: 1 });
+      expect(parsed.validation.timestamp).toBe('2026-02-11T10:00:00.000Z');
+      expect(parsed.validation.customPrompt).toBe('Check for Latin abbreviations');
+    });
+
+    it('should show custom prompt as blockquote in Markdown export', () => {
+      const result = service.export('md', { includeValidation: true });
+
+      expect(result.content).toContain('**Expert Prompt:**');
+      expect(result.content).toContain('> Check for Latin abbreviations');
+    });
+
+    it('should not show expert prompt section when customPrompt is empty', () => {
+      mockState.validation.customPrompt = '';
+      appState.getState.mockReturnValue(mockState);
+
+      const result = service.export('md', { includeValidation: true });
+
+      expect(result.content).not.toContain('**Expert Prompt:**');
     });
   });
 });

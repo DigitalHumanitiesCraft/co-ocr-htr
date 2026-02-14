@@ -30,7 +30,7 @@ status: complete
 | LLM Integration (4 providers) | [x] | `js/services/llm.js` |
 | Gemini 3 Optimization | [x] | `js/services/llm.js` |
 | Rule-Based Validation | [x] | `js/services/validation.js` |
-| LLM-Judge Validation | [x] | `js/services/llm.js` |
+| LLM Review | [x] | `js/services/llm.js` |
 | Export (TXT/JSON/MD) | [x] | `js/services/export.js` |
 | PAGE-XML Import | [x] | `js/services/parsers/page-xml.js` |
 | METS-XML Parser | [x] | `js/services/parsers/mets-xml.js` |

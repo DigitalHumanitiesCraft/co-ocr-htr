@@ -4,14 +4,44 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock storage module
+// Mock storage module with all new async methods
 vi.mock('../js/services/storage.js', () => ({
   storage: {
+    // Settings (sync, localStorage)
     loadSettings: vi.fn(() => ({ autoSave: false })),
     saveSettings: vi.fn(),
-    loadSession: vi.fn(() => null),
-    saveSession: vi.fn(),
-    clearSession: vi.fn()
+
+    // Active Project (sync, localStorage)
+    getActiveProjectId: vi.fn(() => null),
+    setActiveProjectId: vi.fn(),
+    clearActiveProjectId: vi.fn(),
+
+    // Projects (async, IndexedDB)
+    listProjects: vi.fn(async () => []),
+    createProject: vi.fn(async (project) => project),
+    getProject: vi.fn(async () => undefined),
+    updateProject: vi.fn(async (id, updates) => ({ id, ...updates })),
+    deleteProject: vi.fn(async () => {}),
+    renameProject: vi.fn(async () => {}),
+
+    // Sessions (async, IndexedDB)
+    saveSession: vi.fn(async () => {}),
+    loadSession: vi.fn(async () => null),
+    clearSession: vi.fn(async () => {}),
+
+    // Images (async, IndexedDB)
+    saveImage: vi.fn(async () => {}),
+    saveImages: vi.fn(async () => {}),
+    loadImage: vi.fn(async () => null),
+    loadAllImages: vi.fn(async () => ({})),
+    deleteImages: vi.fn(async () => {}),
+
+    // API Keys (async, IndexedDB)
+    saveApiKey: vi.fn(async () => {}),
+    loadApiKey: vi.fn(async () => null),
+    loadAllApiKeys: vi.fn(async () => ({})),
+    deleteApiKey: vi.fn(async () => {}),
+    deleteAllApiKeys: vi.fn(async () => {})
   }
 }));
 
@@ -19,7 +49,6 @@ import { storage } from '../js/services/storage.js';
 
 // We need to import after mocking
 // Create a fresh AppState instance for each test
-let AppState;
 let appState;
 
 describe('AppState', () => {
@@ -32,6 +61,7 @@ describe('AppState', () => {
     appState = module.appState;
 
     // Reset state manually
+    appState.data.project = { id: null, name: '' };
     appState.data.document = {
       id: null,
       filename: '',
@@ -57,7 +87,14 @@ describe('AppState', () => {
       status: 'idle',
       rules: [],
       llmJudge: null,
-      perspective: 'paleographic'
+      summary: null,
+      timestamp: null,
+      customPrompt: '',
+      pipeline: null
+    };
+    appState.data.promptConfig = {
+      profileId: 'generic_default',
+      overrides: { stage1: '', stage2: '', stage3: '' }
     };
     appState.data.corrections = [];
     appState.data.batchTranscriptions = [];
@@ -84,6 +121,7 @@ describe('AppState', () => {
       expect(state).toHaveProperty('validation');
       expect(state).toHaveProperty('ui');
       expect(state).toHaveProperty('pages');
+      expect(state).toHaveProperty('project');
     });
 
     it('should have default zoom of 100', () => {
@@ -92,6 +130,54 @@ describe('AppState', () => {
 
     it('should have no selected line initially', () => {
       expect(appState.selectedLine).toBeNull();
+    });
+
+    it('should have no active project initially', () => {
+      expect(appState.data.project.id).toBeNull();
+    });
+  });
+
+  describe('Project Management', () => {
+    it('should create a project', async () => {
+      const project = await appState.createProject('Test Project');
+
+      expect(project.id).toBeTruthy();
+      expect(project.name).toBe('Test Project');
+      expect(storage.createProject).toHaveBeenCalled();
+      expect(storage.setActiveProjectId).toHaveBeenCalledWith(project.id);
+      expect(appState.data.project.id).toBe(project.id);
+      expect(appState.data.project.name).toBe('Test Project');
+    });
+
+    it('should emit projectChanged on create', async () => {
+      const listener = vi.fn();
+      appState.addEventListener('projectChanged', listener);
+
+      await appState.createProject('Test');
+
+      expect(listener).toHaveBeenCalled();
+      expect(listener.mock.calls[0][0].detail.name).toBe('Test');
+    });
+
+    it('should ensure project creates one if none active', async () => {
+      const projectId = await appState.ensureProject('test.jpg');
+
+      expect(projectId).toBeTruthy();
+      expect(storage.createProject).toHaveBeenCalled();
+      expect(appState.data.project.id).toBe(projectId);
+    });
+
+    it('should save current and create new project when one is already active', async () => {
+      appState.data.project.id = 'existing-id';
+      appState.data.project.name = 'Old Project';
+
+      const projectId = await appState.ensureProject('test.jpg');
+
+      // Should create a new project, not return the existing one
+      expect(projectId).not.toBe('existing-id');
+      expect(storage.createProject).toHaveBeenCalled();
+      expect(storage.saveSession).toHaveBeenCalled(); // saved the old project
+      expect(appState.data.project.name).toBe('test.jpg');
     });
   });
 
@@ -152,6 +238,19 @@ describe('AppState', () => {
 
       const state = appState.getState();
       expect(state.image.url).toBe(dataUrl);
+    });
+
+    it('should fire-and-forget save image to IDB when project active', () => {
+      appState.data.project.id = 'proj-1';
+
+      const mockFile = { name: 'test.jpg', type: 'image/jpeg' };
+      appState.setDocument(mockFile, 'data:image/jpeg;base64,abc');
+
+      expect(storage.saveImage).toHaveBeenCalledWith(
+        'proj-1',
+        expect.any(String),
+        'data:image/jpeg;base64,abc'
+      );
     });
   });
 
@@ -257,6 +356,19 @@ describe('AppState', () => {
       const state = appState.getState();
       expect(state.transcription.segments).toHaveLength(1);
       expect(state.transcription.segments[0].text).toBe('Page 1 text');
+    });
+
+    it('should fire-and-forget save page images to IDB when project active', () => {
+      appState.data.project.id = 'proj-1';
+
+      appState.setPages(mockPages);
+
+      expect(storage.saveImages).toHaveBeenCalledWith(
+        'proj-1',
+        expect.arrayContaining([
+          expect.objectContaining({ pageId: expect.any(String), dataUrl: 'data:1' })
+        ])
+      );
     });
   });
 
@@ -415,6 +527,198 @@ describe('AppState', () => {
 
       expect(listener).toHaveBeenCalled();
     });
+
+    it('should store summary, timestamp, and customPrompt in validation results', () => {
+      const results = {
+        rules: [{ name: 'Test', type: 'warning' }],
+        llmJudge: { confidence: 'likely' },
+        summary: { totalIssues: 3 },
+        timestamp: '2026-02-11T10:00:00.000Z',
+        customPrompt: 'Check for abbreviations'
+      };
+
+      appState.setValidationResults(results);
+
+      const state = appState.getState();
+      expect(state.validation.summary).toEqual({ totalIssues: 3 });
+      expect(state.validation.timestamp).toBe('2026-02-11T10:00:00.000Z');
+      expect(state.validation.customPrompt).toBe('Check for abbreviations');
+    });
+
+    it('should preserve customPrompt when not provided in results', () => {
+      // Set initial custom prompt
+      appState.data.validation.customPrompt = 'Existing prompt';
+
+      // Set results without customPrompt
+      appState.setValidationResults({
+        rules: [{ name: 'Test', type: 'info' }],
+        llmJudge: null
+      });
+
+      const state = appState.getState();
+      expect(state.validation.customPrompt).toBe('Existing prompt');
+    });
+
+    it('should auto-generate timestamp when not provided', () => {
+      appState.setValidationResults({
+        rules: [],
+        llmJudge: null
+      });
+
+      const state = appState.getState();
+      expect(state.validation.timestamp).toBeTruthy();
+      // Should be a valid ISO string
+      expect(new Date(state.validation.timestamp).toISOString()).toBe(state.validation.timestamp);
+    });
+
+    it('should store pipeline metadata from llmJudge in validation results (PPV1-206)', () => {
+      const pipelineMeta = {
+        stage2: { status: 'success', duration: 1200 },
+        stage3: { status: 'success', duration: 800 }
+      };
+      const results = {
+        rules: [{ name: 'Test', type: 'warning' }],
+        llmJudge: {
+          confidence: 'likely',
+          reasoning: 'Found issues',
+          pipeline: pipelineMeta
+        }
+      };
+
+      appState.setValidationResults(results);
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toEqual(pipelineMeta);
+      expect(state.validation.pipeline.stage2.status).toBe('success');
+      expect(state.validation.pipeline.stage3.duration).toBe(800);
+    });
+
+    it('should set pipeline to null when llmJudge has no pipeline field', () => {
+      appState.setValidationResults({
+        rules: [],
+        llmJudge: { confidence: 'confident', reasoning: 'All good' }
+      });
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toBeNull();
+    });
+
+    it('should set pipeline to null when llmJudge is null', () => {
+      appState.setValidationResults({
+        rules: [{ name: 'Test', type: 'info' }],
+        llmJudge: null
+      });
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toBeNull();
+    });
+
+    it('should normalize legacy string pipeline schema to canonical object schema', () => {
+      appState.setValidationResults({
+        rules: [],
+        llmJudge: {
+          confidence: 'likely',
+          pipeline: {
+            stage2: 'success',
+            stage3: 'skipped',
+            duration: 1234
+          }
+        }
+      });
+
+      const state = appState.getState();
+      expect(state.validation.pipeline.stage2.status).toBe('success');
+      expect(state.validation.pipeline.stage3.status).toBe('skipped');
+      expect(state.validation.pipeline.duration).toBe(1234);
+      expect(state.validation.llmJudge.pipeline.stage2.status).toBe('success');
+    });
+
+    it('should persist pipeline metadata across page switch roundtrip (PPV1-206)', () => {
+      const mockPages = [
+        { id: 'p1', filename: 'page1.jpg', dataUrl: 'data:1' },
+        { id: 'p2', filename: 'page2.jpg', dataUrl: 'data:2' }
+      ];
+      appState.setPages(mockPages);
+
+      const pipelineMeta = {
+        stage2: { status: 'success', duration: 1500 },
+        stage3: { status: 'skipped', duration: 0, reason: 'timeout' }
+      };
+      appState.setValidationResults({
+        rules: [{ name: 'Paleo', type: 'warning' }],
+        llmJudge: { confidence: 'likely', pipeline: pipelineMeta },
+        summary: { totalIssues: 2 },
+        timestamp: '2026-02-11T14:00:00.000Z',
+        customPrompt: 'Check minims'
+      });
+
+      // Navigate away to page 2
+      appState.nextPage();
+
+      // Navigate back to page 1
+      appState.prevPage();
+
+      const state = appState.getState();
+      expect(state.validation.pipeline).toEqual(pipelineMeta);
+      expect(state.validation.pipeline.stage2.status).toBe('success');
+      expect(state.validation.pipeline.stage3.reason).toBe('timeout');
+      expect(state.validation.status).toBe('complete');
+    });
+
+    it('should persist validation fields across page switch roundtrip', () => {
+      const mockPages = [
+        { id: 'p1', filename: 'page1.jpg', dataUrl: 'data:1' },
+        { id: 'p2', filename: 'page2.jpg', dataUrl: 'data:2' }
+      ];
+      appState.setPages(mockPages);
+
+      // Set validation on page 1
+      appState.setValidationResults({
+        rules: [{ name: 'Rule1', type: 'warning' }],
+        llmJudge: { confidence: 'likely' },
+        summary: { totalIssues: 1 },
+        timestamp: '2026-02-11T12:00:00.000Z',
+        customPrompt: 'Expert prompt for page 1'
+      });
+
+      // Navigate away to page 2
+      appState.nextPage();
+
+      // Navigate back to page 1
+      appState.prevPage();
+
+      const state = appState.getState();
+      expect(state.validation.status).toBe('complete');
+      expect(state.validation.summary).toEqual({ totalIssues: 1 });
+      expect(state.validation.timestamp).toBe('2026-02-11T12:00:00.000Z');
+      expect(state.validation.customPrompt).toBe('Expert prompt for page 1');
+    });
+  });
+
+  describe('Prompt Config', () => {
+    it('should expose default prompt config', () => {
+      const cfg = appState.getPromptConfig();
+      expect(cfg.profileId).toBe('generic_default');
+      expect(cfg.overrides).toEqual({ stage1: '', stage2: '', stage3: '' });
+    });
+
+    it('should set prompt profile and emit promptConfigChanged', () => {
+      const listener = vi.fn();
+      appState.addEventListener('promptConfigChanged', listener);
+
+      appState.setPromptProfile('medieval_latin_manuscript');
+
+      expect(appState.getPromptConfig().profileId).toBe('medieval_latin_manuscript');
+      expect(listener).toHaveBeenCalled();
+    });
+
+    it('should set and clear stage overrides', () => {
+      appState.setPromptOverride('stage2', 'Custom Stage 2');
+      expect(appState.getPromptConfig().overrides.stage2).toBe('Custom Stage 2');
+
+      appState.clearPromptOverride('stage2');
+      expect(appState.getPromptConfig().overrides.stage2).toBe('');
+    });
   });
 
   describe('UI State', () => {
@@ -529,6 +833,44 @@ describe('AppState', () => {
 
       expect(appState.getDocumentContext()).toBeNull();
     });
+
+    it('should store extended context fields (PPV1-101)', () => {
+      appState.setDocumentContext({
+        documentType: 'manuscript',
+        period: 'mid-14th century',
+        language: 'Latin',
+        description: 'Psalter fragment',
+        scriptType: 'textura',
+        century: '14',
+        region: 'german',
+        languages: ['latin', 'middle-high-german'],
+        textType: 'liturgical',
+        knownText: 'psalter'
+      });
+
+      const ctx = appState.getDocumentContext();
+      expect(ctx.scriptType).toBe('textura');
+      expect(ctx.century).toBe('14');
+      expect(ctx.region).toBe('german');
+      expect(ctx.languages).toEqual(['latin', 'middle-high-german']);
+      expect(ctx.textType).toBe('liturgical');
+      expect(ctx.knownText).toBe('psalter');
+      // Legacy fields still present
+      expect(ctx.documentType).toBe('manuscript');
+      expect(ctx.language).toBe('Latin');
+    });
+
+    it('should default extended fields to empty when not provided (backward compat)', () => {
+      appState.setDocumentContext({ documentType: 'Letter' });
+
+      const ctx = appState.getDocumentContext();
+      expect(ctx.scriptType).toBe('');
+      expect(ctx.century).toBe('');
+      expect(ctx.region).toBe('');
+      expect(ctx.languages).toEqual([]);
+      expect(ctx.textType).toBe('');
+      expect(ctx.knownText).toBe('');
+    });
   });
 
   describe('Batch Operations', () => {
@@ -582,34 +924,171 @@ describe('AppState', () => {
   });
 
   describe('Session Management', () => {
-    it('should save session manually', () => {
-      appState.saveSessionNow();
+    it('should save session manually', async () => {
+      appState.data.project.id = 'proj-1';
+      await appState.saveSessionNow();
 
-      expect(storage.saveSession).toHaveBeenCalled();
+      expect(storage.saveSession).toHaveBeenCalledWith('proj-1', expect.any(Object));
     });
 
-    it('should emit sessionSaved event', () => {
+    it('should emit sessionSaved event', async () => {
+      appState.data.project.id = 'proj-1';
       const listener = vi.fn();
       appState.addEventListener('sessionSaved', listener);
 
-      appState.saveSessionNow();
+      await appState.saveSessionNow();
 
       expect(listener).toHaveBeenCalled();
     });
 
-    it('should clear session', () => {
-      appState.clearSession();
+    it('should not save session if no project active', async () => {
+      await appState.saveSessionNow();
 
-      expect(storage.clearSession).toHaveBeenCalled();
+      expect(storage.saveSession).not.toHaveBeenCalled();
     });
 
-    it('should emit sessionCleared event', () => {
+    it('should clear session', async () => {
+      appState.data.project.id = 'proj-1';
+      await appState.clearSession();
+
+      expect(storage.clearSession).toHaveBeenCalledWith('proj-1');
+    });
+
+    it('should emit sessionCleared event', async () => {
       const listener = vi.fn();
       appState.addEventListener('sessionCleared', listener);
 
-      appState.clearSession();
+      await appState.clearSession();
 
       expect(listener).toHaveBeenCalled();
+    });
+
+    it('should strip image dataUrls from session data', async () => {
+      appState.data.project.id = 'proj-1';
+      appState.data.document = {
+        id: 'doc1',
+        filename: 'test.jpg',
+        mimeType: 'image/jpeg',
+        dataUrl: 'data:image/jpeg;base64,HUGE_IMAGE',
+        width: 100,
+        height: 100
+      };
+
+      await appState.saveSessionNow();
+
+      const savedData = storage.saveSession.mock.calls[0][1];
+      expect(savedData.document.dataUrl).toBeUndefined();
+      expect(savedData.document.filename).toBe('test.jpg');
+    });
+
+    it('should persist validation summary, timestamp, and customPrompt across session restore', async () => {
+      appState.data.project = { id: 'proj-1', name: 'Project 1' };
+      appState.data.validation = {
+        status: 'complete',
+        rules: [{ name: 'Test Rule', type: 'warning' }],
+        llmJudge: { confidence: 'likely', reasoning: 'Looks good' },
+        summary: { totalIssues: 1 },
+        timestamp: '2026-02-11T15:00:00.000Z',
+        customPrompt: 'Keep abbreviations'
+      };
+
+      await appState.saveSessionNow();
+      const savedSession = storage.saveSession.mock.calls[0][1];
+
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue(savedSession);
+
+      const restored = await appState.restoreSession('proj-1');
+      const state = appState.getState();
+
+      expect(restored).toBe(true);
+      expect(state.validation.summary).toEqual({ totalIssues: 1 });
+      expect(state.validation.timestamp).toBe('2026-02-11T15:00:00.000Z');
+      expect(state.validation.customPrompt).toBe('Keep abbreviations');
+    });
+
+    it('should persist promptConfig across session restore', async () => {
+      appState.data.project = { id: 'proj-1', name: 'Project 1' };
+      appState.setPromptProfile('medieval_latin_manuscript');
+      appState.setPromptOverride('stage2', 'Custom Stage 2 Prompt');
+
+      await appState.saveSessionNow();
+      const savedSession = storage.saveSession.mock.calls[0][1];
+
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue(savedSession);
+
+      const restored = await appState.restoreSession('proj-1');
+      const cfg = appState.getPromptConfig();
+
+      expect(restored).toBe(true);
+      expect(cfg.profileId).toBe('medieval_latin_manuscript');
+      expect(cfg.overrides.stage2).toBe('Custom Stage 2 Prompt');
+    });
+
+    it('should merge missing validation fields from older sessions with schema defaults', async () => {
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Legacy Project' });
+      storage.loadSession.mockResolvedValue({
+        validation: {
+          status: 'complete',
+          rules: [{ name: 'Legacy Rule', type: 'warning' }],
+          llmJudge: { confidence: 'likely' }
+        }
+      });
+
+      const restored = await appState.restoreSession('proj-1');
+      const state = appState.getState();
+
+      expect(restored).toBe(true);
+      expect(state.validation.status).toBe('complete');
+      expect(state.validation.rules).toHaveLength(1);
+      expect(state.validation.summary).toBeNull();
+      expect(state.validation.timestamp).toBeNull();
+      expect(state.validation.customPrompt).toBe('');
+    });
+
+    it('should emit validationComplete on restore when validation status is complete', async () => {
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue({
+        validation: {
+          status: 'complete',
+          rules: [{ name: 'Rule1', type: 'info' }],
+          llmJudge: null,
+          summary: { totalIssues: 0 },
+          timestamp: '2026-02-11T12:00:00.000Z',
+          customPrompt: 'Check Latin'
+        }
+      });
+
+      const listener = vi.fn();
+      appState.addEventListener('validationComplete', listener);
+
+      await appState.restoreSession('proj-1');
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener.mock.calls[0][0].detail).toEqual({
+        rules: [{ name: 'Rule1', type: 'info' }],
+        llmJudge: null,
+        summary: { totalIssues: 0 }
+      });
+    });
+
+    it('should not emit validationComplete on restore when validation status is idle', async () => {
+      storage.getProject.mockResolvedValue({ id: 'proj-1', name: 'Project 1' });
+      storage.loadSession.mockResolvedValue({
+        validation: {
+          status: 'idle',
+          rules: [],
+          llmJudge: null
+        }
+      });
+
+      const listener = vi.fn();
+      appState.addEventListener('validationComplete', listener);
+
+      await appState.restoreSession('proj-1');
+
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 

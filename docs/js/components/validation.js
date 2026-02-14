@@ -3,23 +3,28 @@
  *
  * Renders validation results in the right panel:
  * - Rule-based validation results (configurable categories)
- * - LLM-Judge results with optional custom prompt
+ * - LLM Review results with optional custom prompt
  * - Clickable line references for navigation
  *
  * Display Logic:
  * - Shows empty state when no transcription exists
  * - Shows validation results when transcription is available
- * - Both Rule-Based and AI sections always visible (compact)
+ * - Both Validation and LLM Review sections always visible (compact)
  */
 
 import { validationEngine } from '../services/validation.js';
 import { llmService, ISSUE_TYPES } from '../services/llm.js';
+import { FEATURE_FLAGS } from '../utils/constants.js';
+import { storage } from '../services/storage.js';
 import { appState } from '../state.js';
+import { applySuggestionAtLine } from '../editor.js';
 import { dialogManager } from './dialogs.js';
 import { batchProgress } from './batch-progress.js';
+import { contextManager } from './context.js';
 import { getById, show, hide, select, selectAll, setText, setHTML } from '../utils/dom.js';
-import { MENU_CLOSE_DELAY } from '../utils/constants.js';
-import { getConfidenceLabel, getStatusClass } from '../utils/textFormatting.js';
+import { escapeHtml } from '../utils/textFormatting.js';
+import { listPromptProfiles } from '../config/promptProfiles.js';
+import { t } from '../services/i18n.js';
 
 /**
  * Validation Panel Manager
@@ -33,17 +38,24 @@ class ValidationPanel {
         this.isValidating = false;
         this.validateDialog = null;
         this.startValidationBtn = null;
+        this.llmIssueApplyState = new Map();
+        this.llmIssueStateSignature = '';
+        this._isSyncingPromptControls = false;
     }
 
     /**
      * Initialize validation panel
      */
     init() {
+        // Guard against double-initialization (auto-init + main.js)
+        if (this._initialized) return;
+        this._initialized = true;
+
         // Find panel elements
         this.panel = getById('validationContent');
         this.emptyState = getById('validationEmptyState');
         this.ruleSection = getById('ruleBasedSection');
-        this.aiSection = getById('aiAssistantSection');
+        this.aiSection = getById('llmReviewSection');
 
         if (!this.panel) {
             console.warn('Validation panel not found');
@@ -55,6 +67,7 @@ class ValidationPanel {
         this.startValidationBtn = getById('startValidation');
 
         this.bindEvents();
+        this.initPromptProfileControls();
 
         // Check initial state
         this.updateVisibility();
@@ -79,14 +92,14 @@ class ValidationPanel {
                                   state.transcription?.segments?.length > 0;
 
         // Get the main panel container
-        const panelContent = this.panel;
+        // panelContent reference unused - using this.panel directly
 
         if (!hasDocument) {
             // No document: hide all content, show minimal state
             if (this.emptyState) {
                 this.emptyState.hidden = false;
-                setText(select('h4', this.emptyState), 'No Document');
-                setText(select('p', this.emptyState), 'Load a document to enable validation.');
+                setText(select('h4', this.emptyState), t('dynamic.noDocument'));
+                setText(select('p', this.emptyState), t('dynamic.loadDocToValidate'));
             }
             hide(this.ruleSection);
             hide(this.aiSection);
@@ -99,8 +112,8 @@ class ValidationPanel {
             // Document but no transcription: show empty state with hint
             if (this.emptyState) {
                 this.emptyState.hidden = false;
-                setText(select('h4', this.emptyState), 'No Validation Yet');
-                setText(select('p', this.emptyState), 'Run transcription to see validation results.');
+                setText(select('h4', this.emptyState), t('dynamic.noValidationYet'));
+                setText(select('p', this.emptyState), t('dynamic.runTranscriptionFirst'));
             }
             hide(this.ruleSection);
             hide(this.aiSection);
@@ -143,13 +156,28 @@ class ValidationPanel {
         appState.addEventListener('documentLoaded', () => {
             this.updateVisibility();
             this.clearValidation();
-            this.updateValidateButton(false);
+            // Check if transcription exists (e.g., from loaded project with existing transcription)
+            const state = appState.getState();
+            const hasTranscription = (state.transcription?.raw && state.transcription.raw.trim().length > 0) ||
+                                    (state.transcription?.segments?.length > 0);
+            this.updateValidateButton(hasTranscription);
         });
 
         // Listen for page changes (multi-page support) - load saved validation or clear
         appState.addEventListener('pageChanged', () => {
             this.updateVisibility();
             this.loadPageValidation();
+            this.restoreCustomPrompt();
+        });
+
+        // Restore custom prompt when session is loaded
+        appState.addEventListener('sessionRestored', () => {
+            this.restoreCustomPrompt();
+            this.syncPromptProfileControls();
+        });
+
+        appState.addEventListener('promptConfigChanged', () => {
+            this.syncPromptProfileControls();
         });
 
         // Listen for validation state changes
@@ -175,7 +203,7 @@ class ValidationPanel {
                                   state.transcription?.segments?.length > 0;
 
         if (!hasTranscription) {
-            dialogManager.showToast('Bitte zuerst transkribieren', 'warning');
+            dialogManager.showToast(t('toast.transcribeFirst'), 'warning');
             return;
         }
 
@@ -184,6 +212,9 @@ class ValidationPanel {
 
         // Update LLM mode hint
         this.updateLLMModeHint();
+
+        // Show/hide stage toggles based on feature flag
+        this.updateStageTogglesVisibility();
 
         // Show dialog
         if (this.validateDialog) {
@@ -216,11 +247,11 @@ class ValidationPanel {
 
             // Update counts
             if (pageCountEl) {
-                pageCountEl.textContent = `Seite ${currentPage} von ${totalPages}`;
+                pageCountEl.textContent = t('dynamic.pageOf', { current: currentPage, total: totalPages });
             }
 
             if (allPagesHintEl) {
-                allPagesHintEl.textContent = `${totalPages} Seiten, kann mehrere Minuten dauern`;
+                allPagesHintEl.textContent = t('dynamic.pagesMayTakeMinutes', { count: totalPages });
             }
 
             if (batchPageCountEl) {
@@ -258,12 +289,12 @@ class ValidationPanel {
         const hasApiKey = llmService.hasApiKey();
 
         if (hasApiKey) {
-            llmModeHint.textContent = 'API-Call pro Seite';
+            llmModeHint.textContent = t('dynamic.apiCallPerPage');
             if (llmModeItem) llmModeItem.classList.remove('disabled');
             if (enableLLMCheckbox) enableLLMCheckbox.disabled = false;
             if (customPromptDetails) customPromptDetails.style.display = '';
         } else {
-            llmModeHint.textContent = 'API-Key erforderlich';
+            llmModeHint.textContent = t('dynamic.apiKeyRequiredShort');
             if (llmModeItem) llmModeItem.classList.add('disabled');
             if (enableLLMCheckbox) {
                 enableLLMCheckbox.checked = false;
@@ -274,17 +305,105 @@ class ValidationPanel {
     }
 
     /**
+     * Show/hide stage toggles based on feature flag
+     */
+    updateStageTogglesVisibility() {
+        const section = getById('stageTogglesSection');
+        if (!section) return;
+        // Only show stage toggles when postprocessing pipeline is enabled
+        section.hidden = !FEATURE_FLAGS.postprocessPipelineV1;
+    }
+
+    getPromptConfigSafe() {
+        if (typeof appState.getPromptConfig === 'function') {
+            return appState.getPromptConfig();
+        }
+        return {
+            profileId: 'generic_default',
+            overrides: { stage1: '', stage2: '', stage3: '' }
+        };
+    }
+
+    initPromptProfileControls() {
+        const profileSelect = getById('promptProfileSelectValidate');
+        const stage2Input = getById('promptOverrideStage2');
+        const stage3Input = getById('promptOverrideStage3');
+        const resetStage2 = getById('resetPromptStage2');
+        const resetStage3 = getById('resetPromptStage3');
+
+        if (profileSelect) {
+            const profiles = listPromptProfiles();
+            profileSelect.innerHTML = profiles
+                .map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.label)}</option>`)
+                .join('');
+
+            profileSelect.addEventListener('change', () => {
+                if (this._isSyncingPromptControls) return;
+                appState.setPromptProfile?.(profileSelect.value);
+            });
+        }
+
+        if (stage2Input) {
+            stage2Input.addEventListener('input', () => {
+                if (this._isSyncingPromptControls) return;
+                appState.setPromptOverride?.('stage2', stage2Input.value);
+            });
+        }
+
+        if (stage3Input) {
+            stage3Input.addEventListener('input', () => {
+                if (this._isSyncingPromptControls) return;
+                appState.setPromptOverride?.('stage3', stage3Input.value);
+            });
+        }
+
+        if (resetStage2) {
+            resetStage2.addEventListener('click', () => appState.clearPromptOverride?.('stage2'));
+        }
+
+        if (resetStage3) {
+            resetStage3.addEventListener('click', () => appState.clearPromptOverride?.('stage3'));
+        }
+
+        this.syncPromptProfileControls();
+    }
+
+    syncPromptProfileControls() {
+        const profileSelect = getById('promptProfileSelectValidate');
+        const stage2Input = getById('promptOverrideStage2');
+        const stage3Input = getById('promptOverrideStage3');
+        const promptConfig = this.getPromptConfigSafe();
+
+        this._isSyncingPromptControls = true;
+        if (profileSelect) profileSelect.value = promptConfig.profileId || 'generic_default';
+        if (stage2Input) stage2Input.value = promptConfig.overrides?.stage2 || '';
+        if (stage3Input) stage3Input.value = promptConfig.overrides?.stage3 || '';
+        this._isSyncingPromptControls = false;
+    }
+
+    /**
      * Get validation options from dialog checkboxes
      * @returns {object} Validation options
      */
     getValidationOptions() {
-        return {
+        const options = {
             checkMarkers: getById('checkMarkers')?.checked ?? true,
             checkStats: getById('checkStats')?.checked ?? true,
             checkArtifacts: getById('checkArtifacts')?.checked ?? true,
             includeLLM: getById('enableLLM')?.checked ?? true,
-            customPrompt: getById('customValidationPrompt')?.value?.trim() || ''
+            customPrompt: getById('customValidationPrompt')?.value?.trim() || '',
+            // Forward document context into LLM Review / postprocessing prompts.
+            contextDescription: contextManager.buildPromptContext() || '',
+            promptConfig: this.getPromptConfigSafe()
         };
+
+        // Include stage toggles when pipeline is active
+        if (FEATURE_FLAGS.postprocessPipelineV1) {
+            options.runStage2 = getById('enableStage2')?.checked ?? true;
+            options.runStage3 = getById('enableStage3')?.checked ?? true;
+        }
+
+        return options;
     }
 
     /**
@@ -355,24 +474,40 @@ class ValidationPanel {
     }
 
     /**
+     * Restore custom prompt into textarea from state or localStorage
+     */
+    restoreCustomPrompt() {
+        const textarea = getById('customValidationPrompt');
+        if (!textarea) return;
+
+        const state = appState.getState();
+        // For validated pages, show exactly the per-page prompt (including explicit empty).
+        // Otherwise use the global fallback prompt for convenience.
+        const prompt = state.validation?.status === 'complete'
+            ? (state.validation.customPrompt || '')
+            : storage.loadValidationPrompt();
+        textarea.value = prompt || '';
+    }
+
+    /**
      * Show validation available hint in panel
      */
     showValidationHint() {
-        setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" to run rule-based checks.</p>');
-        setHTML('aiAssistantContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Click "Validate" for AI-powered analysis.</p>');
+        setHTML('ruleBasedContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.clickValidateRules')}</p>`);
+        setHTML('llmReviewContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.clickValidateLLM')}</p>`);
     }
 
     /**
      * Clear validation results (e.g., when loading new document)
      */
     clearValidation() {
-        setHTML('ruleBasedContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Run transcription to see rule-based checks.</p>');
-        setHTML('aiAssistantContent', '<p class="text-secondary text-xs" style="padding: var(--space-2);">Configure API key for AI-powered analysis.</p>');
+        setHTML('ruleBasedContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.runTranscriptionRules')}</p>`);
+        setHTML('llmReviewContent', `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.configureLLM')}</p>`);
 
         // Update badge
         const badge = getById('validationBadge');
         if (badge) {
-            badge.textContent = '0 Issues';
+            badge.textContent = t('dynamic.issueCount', { count: 0 });
             badge.hidden = true;
         }
     }
@@ -381,7 +516,7 @@ class ValidationPanel {
      * Run validation on current transcription
      * @param {boolean} llmOnly - Only run LLM validation (skip rules)
      */
-    async runValidation(llmOnly = false) {
+    async runValidation(_llmOnly = false) {
         if (this.isValidating) return;
 
         const state = appState.getState();
@@ -399,6 +534,10 @@ class ValidationPanel {
         this.setButtonLoading(true);
         this.renderLoading();
 
+        // Thinking panel support (declared outside try for catch access)
+        const supportsThinking = FEATURE_FLAGS.thinkingPanel &&
+            llmService._supportsThinking(llmService.activeProvider);
+
         try {
             // Get options from dialog checkboxes
             const options = this.getValidationOptions();
@@ -408,18 +547,57 @@ class ValidationPanel {
                 options.includeLLM = false;
             }
 
+            // Emit thinking start when LLM review is included
+            const willUseLLM = options.includeLLM && llmService.hasApiKey();
+            if (supportsThinking && willUseLLM) {
+                appState.emitThinkingStart({
+                    operation: 'validation',
+                    provider: llmService.activeProvider,
+                    model: llmService.getCurrentModel()
+                });
+            }
+            const thinkingStartTime = Date.now();
+
+            // Pass stream options to validation engine
+            if (supportsThinking && willUseLLM) {
+                options.stream = true;
+                options.onThinkingChunk = (text) => appState.emitThinkingChunk({ text, operation: 'validation' });
+            }
+
             const results = await validationEngine.validate(text, segments, options);
 
-            // Update state
-            appState.setValidationResults(results);
-            this.hideLoading();
-            this.render(results);
+            if (supportsThinking && willUseLLM) {
+                appState.emitThinkingComplete({
+                    operation: 'validation',
+                    duration: Date.now() - thinkingStartTime
+                });
+            }
+            const resultsWithPrompt = {
+                ...results,
+                customPrompt: options.customPrompt || ''
+            };
+            if (options.customPrompt) {
+                storage.saveValidationPrompt(options.customPrompt);
+            }
 
-            dialogManager.showToast('Validierung abgeschlossen', 'success');
+            // Update state
+            appState.setValidationResults(resultsWithPrompt);
+            this.hideLoading();
+            this.render(resultsWithPrompt);
+
+            dialogManager.showToast(t('toast.validationComplete'), 'success');
 
         } catch (error) {
             console.error('Validation error:', error);
-            dialogManager.showToast(`Validierung fehlgeschlagen: ${error.message}`, 'error');
+
+            if (supportsThinking) {
+                appState.emitThinkingError({
+                    operation: 'validation',
+                    message: error.message
+                });
+            }
+
+            dialogManager.showToast(t('toast.validationFailed', { message: error.message }), 'error');
             appState.setValidationStatus('error');
             this.hideLoading();
             this.showValidationHint();
@@ -438,7 +616,7 @@ class ValidationPanel {
         const batchTranscriptions = state.batchTranscriptions || [];
 
         if (pages.length === 0) {
-            dialogManager.showToast('Keine Seiten zum Validieren', 'warning');
+            dialogManager.showToast(t('toast.noPagesToBatch', { operation: 'validate' }), 'warning');
             return;
         }
 
@@ -449,7 +627,7 @@ class ValidationPanel {
         });
 
         if (pagesWithTranscription.length === 0) {
-            dialogManager.showToast('Keine Transkriptionen vorhanden. Bitte erst alle Seiten transkribieren.', 'warning');
+            dialogManager.showToast(t('toast.noTranscriptionsAvailable'), 'warning');
             return;
         }
 
@@ -463,6 +641,11 @@ class ValidationPanel {
 
         // Get options from dialog checkboxes
         const options = this.getValidationOptions();
+
+        // Save custom prompt to localStorage
+        if (options.customPrompt) {
+            storage.saveValidationPrompt(options.customPrompt);
+        }
 
         // Override LLM option if no API key
         if (!llmService.hasApiKey()) {
@@ -488,7 +671,7 @@ class ValidationPanel {
                     pageId: page.id,
                     pageIndex: i,
                     success: false,
-                    error: 'Keine Transkription vorhanden'
+                    error: t('toast.noTranscription')
                 });
                 continue;
             }
@@ -503,12 +686,16 @@ class ValidationPanel {
 
                 // Run validation with options
                 const validationResult = await validationEngine.validate(text, segments, options);
+                const validationWithPrompt = {
+                    ...validationResult,
+                    customPrompt: options.customPrompt || ''
+                };
 
                 results.push({
                     pageId: page.id,
                     pageIndex: i,
                     success: true,
-                    validation: validationResult
+                    validation: validationWithPrompt
                 });
 
                 appState.updateBatchProgress(i, true);
@@ -531,13 +718,13 @@ class ValidationPanel {
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
-                    dialogManager.showToast('API-Key ungültig. Batch abgebrochen.', 'error');
+                    dialogManager.showToast(t('toast.invalidApiKeyBatch'), 'error');
                     break;
                 }
 
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
-                    dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
+                    dialogManager.showToast(t('toast.rateLimitWaiting'), 'warning');
                     await this._delay(30000);
                 }
             }
@@ -564,7 +751,12 @@ class ValidationPanel {
         batchProgress.showComplete(successCount, errorCount, status === 'aborted');
 
         // Trigger session save for persistence
-        appState.saveSessionNow();
+        try {
+            await appState.saveSessionNow();
+        } catch (error) {
+            console.warn('[Validation] Failed to save batch session:', error.message);
+            dialogManager.showToast(t('toast.batchSaveFailed'), 'warning');
+        }
 
         appState.setValidationStatus('complete');
     }
@@ -597,8 +789,8 @@ class ValidationPanel {
         overlay.innerHTML = `
             <div class="loading-content">
                 <div class="loading-spinner"></div>
-                <span>Validierung läuft...</span>
-                <span class="loading-hint">Seite ${current} von ${total} (${percent}%)</span>
+                <span>${t('dynamic.validating')}</span>
+                <span class="loading-hint">${t('dynamic.batchPageProgress', { current, total, percent })}</span>
                 ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
                 <div class="batch-progress-bar">
                     <div class="batch-progress-fill" style="width: ${percent}%"></div>
@@ -655,7 +847,7 @@ class ValidationPanel {
             overlay.innerHTML = `
                 <div class="loading-content">
                     <div class="loading-spinner"></div>
-                    <span>Validierung läuft...</span>
+                    <span>${t('dynamic.validating')}</span>
                 </div>
             `;
             this.panel.style.position = 'relative';
@@ -683,12 +875,13 @@ class ValidationPanel {
 
         // Update visibility
         this.updateVisibility();
+        this.syncIssueApplyState(results.llmJudge);
 
         // Update issue badge
         const badge = getById('validationBadge');
         if (badge && results.summary) {
             const issueCount = results.summary.totalIssues || 0;
-            badge.textContent = `${issueCount} Issues`;
+            badge.textContent = t('dynamic.issueCount', { count: issueCount });
             badge.hidden = issueCount === 0;
             badge.style.background = issueCount > 0
                 ? 'rgba(var(--warning-rgb), 0.2)'
@@ -697,70 +890,117 @@ class ValidationPanel {
 
         // Render into separate sections
         setHTML('ruleBasedContent', this.renderRuleCards(results.rules));
-        setHTML('aiAssistantContent', this.renderLLMCards(results.llmJudge));
+        setHTML('llmReviewContent', this.renderLLMCards(results.llmJudge));
 
         // Bind line click handlers
         this.bindLineClicks();
+        this.bindIssueActions();
     }
 
     /**
-     * Render rule-based validation cards (content only)
+     * Render Validation cards (content only)
      */
     renderRuleCards(rules) {
         if (!rules || rules.length === 0) {
-            return '<p class="text-secondary text-xs" style="padding: var(--space-2);">No rule-based issues found.</p>';
+            return `<p class="text-secondary text-xs" style="padding: var(--space-2);">${t('dynamic.noValidationIssues')}</p>`;
         }
 
         return rules.map(rule => this.renderValidationCard(rule)).join('');
     }
 
     /**
-     * Render LLM-Judge validation cards - compact style with issue types
+     * Render LLM Review cards - compact style with issue types
      */
     renderLLMCards(llmResult) {
         if (!llmResult) {
+            this.syncIssueApplyState(null);
             const hasApiKey = llmService.hasApiKey();
             if (!hasApiKey) {
-                return `<p class="text-muted text-xs">API-Key fuer KI-Analyse konfigurieren</p>`;
+                return `<p class="text-muted text-xs">${t('dynamic.configureLLMAlt')}</p>`;
             }
-            return `<p class="text-muted text-xs">Validierung starten fuer KI-Analyse</p>`;
+            return `<p class="text-muted text-xs">${t('dynamic.runValidationLLM')}</p>`;
         }
 
         const statusClass = {
+            confident: 'status-success',
             certain: 'status-success',
+            sure: 'status-success',
             likely: 'status-warning',
-            uncertain: 'status-error'
+            'check-worthy': 'status-warning',
+            uncertain: 'status-error',
+            problematic: 'status-error'
         }[llmResult.confidence] || 'status-warning';
 
         const confidenceLabel = {
-            confident: 'Hohe Konfidenz',
-            likely: 'Mittlere Konfidenz',
-            uncertain: 'Niedrige Konfidenz'
-        }[llmResult.confidence] || 'Unbekannt';
+            confident: t('dynamic.highConfidence'),
+            certain: t('dynamic.highConfidence'),
+            sure: t('dynamic.highConfidence'),
+            likely: t('dynamic.mediumConfidence'),
+            'check-worthy': t('dynamic.mediumConfidence'),
+            uncertain: t('dynamic.lowConfidence'),
+            problematic: t('dynamic.lowConfidence')
+        }[llmResult.confidence] || t('dynamic.unknown');
 
         // Compact summary line
         let html = `
             <div class="validation-item">
                 <span class="status-dot ${statusClass}"></span>
-                <span class="item-label">Konfidenz</span>
+                <span class="item-label">${t('dynamic.confidence')}</span>
                 <span class="item-value">${confidenceLabel}</span>
             </div>
         `;
+
+        // Show pipeline info if post-processing was used
+        if (llmResult.pipeline) {
+            const stage2Status = (typeof llmResult.pipeline.stage2 === 'string')
+                ? llmResult.pipeline.stage2
+                : llmResult.pipeline.stage2?.status;
+            const stage3Status = (typeof llmResult.pipeline.stage3 === 'string')
+                ? llmResult.pipeline.stage3
+                : llmResult.pipeline.stage3?.status;
+            const stages = [];
+            if (stage2Status === 'success') stages.push(t('dynamic.paleographic'));
+            if (stage3Status === 'success') stages.push(t('dynamic.philological'));
+            if (stages.length > 0) {
+                html += `
+                    <div class="validation-item pipeline-notice">
+                        <span class="status-dot status-info"></span>
+                        <span class="item-label">Pipeline</span>
+                        <span class="item-value text-xs">${stages.join(' + ')} ${t('dynamic.review')}</span>
+                    </div>
+                `;
+            }
+        }
 
         // Show fallback notice if a different model was used for validation
         if (llmResult.fallbackUsed) {
             html += `
                 <div class="validation-item fallback-notice">
                     <span class="status-dot status-info"></span>
-                    <span class="item-label">Fallback</span>
-                    <span class="item-value text-xs">${llmResult.fallbackUsed.name}</span>
+                    <span class="item-label">${t('dynamic.fallback')}</span>
+                    <span class="item-value text-xs">${escapeHtml(llmResult.fallbackUsed.name)}</span>
                 </div>
             `;
         }
 
         // Add issues with type badges
         if (llmResult.issues && llmResult.issues.length > 0) {
-            html += llmResult.issues.map(issue => this.renderIssueItem(issue)).join('');
+            const applicableCount = llmResult.issues.filter(issue => !!(issue?.suggestion || '').trim()).length;
+            if (applicableCount > 1) {
+                html += `
+                    <div class="llm-issues-toolbar">
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-sm llm-apply-all-btn"
+                            id="applyAllLlmIssuesBtn"
+                            title="${t('dynamic.applyAllTitle')}"
+                        >
+                            ${t('dynamic.applyAll', { count: applicableCount })}
+                        </button>
+                    </div>
+                `;
+            }
+            html += llmResult.issues.map((issue, index) => this.renderIssueItem(issue, index)).join('');
         }
 
         // Show analysis toggle if reasoning exists
@@ -768,11 +1008,11 @@ class ValidationPanel {
             html += `
                 <details class="ai-details">
                     <summary>
-                        <span class="ai-label">KI</span>
-                        Analyse anzeigen
+                        <span class="ai-label">LLM</span>
+                        ${t('dynamic.showRationale')}
                     </summary>
                     <div class="ai-reasoning-container">
-                        <p class="ai-reasoning">${llmResult.reasoning}</p>
+                        <p class="ai-reasoning">${escapeHtml(llmResult.reasoning)}</p>
                     </div>
                 </details>
             `;
@@ -785,33 +1025,57 @@ class ValidationPanel {
      * Render a single issue item with type badge
      * @param {object} issue - Issue from LLM validation
      */
-    renderIssueItem(issue) {
+    renderIssueItem(issue, index) {
         // Get issue type info from ISSUE_TYPES
         const typeInfo = ISSUE_TYPES[issue.type] || {
-            name: issue.type || 'Hinweis',
+            name: issue.type || 'Note',
             color: 'warning',
             description: ''
         };
-
-        // Map color to status class
-        const statusClass = {
-            warning: 'status-warning',
-            error: 'status-error',
-            info: 'status-info'
-        }[typeInfo.color] || 'status-warning';
+        const applyState = this.llmIssueApplyState.get(index) || null;
+        const issueClass = applyState?.status ? ` ${applyState.status}` : '';
+        const sourceText = issue.text || '';
+        const suggestion = issue.suggestion || '';
+        const hasSuggestion = suggestion.trim().length > 0;
+        const isMultilineSuggestion = suggestion.includes('\n');
 
         // Build issue HTML
         return `
-            <div class="validation-issue issue-${typeInfo.color}" ${issue.line ? `data-line="${issue.line}"` : ''}>
+            <div
+                class="validation-issue issue-${typeInfo.color}${issueClass}"
+                ${issue.line ? `data-line="${issue.line}"` : ''}
+                data-issue-index="${index}"
+                data-source-text="${escapeHtml(sourceText)}"
+                data-suggestion="${escapeHtml(suggestion)}"
+            >
                 <div class="issue-header">
-                    <span class="issue-type-badge badge-${typeInfo.color}" title="${typeInfo.description || ''}">${typeInfo.name}</span>
-                    ${issue.line ? `<span class="issue-line">Zeile ${issue.line}</span>` : ''}
+                    <span class="issue-type-badge badge-${typeInfo.color}" title="${escapeHtml(typeInfo.description || '')}">${escapeHtml(typeInfo.name)}</span>
+                    ${issue.stage ? `<span class="issue-stage-badge stage-${escapeHtml(issue.stage)}">${escapeHtml(issue.stage)}</span>` : ''}
+                    ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
                 </div>
                 <div class="issue-content">
-                    <span class="issue-text">${issue.text || ''}</span>
-                    ${issue.suggestion ? `<span class="issue-suggestion">→ ${issue.suggestion}</span>` : ''}
+                    <span class="issue-text">${escapeHtml(issue.text || '')}</span>
+                    ${issue.suggestion ? `<span class="issue-suggestion">&rarr; ${escapeHtml(issue.suggestion)}</span>` : ''}
                 </div>
-                ${issue.explanation ? `<p class="issue-explanation">${issue.explanation}</p>` : ''}
+                ${issue.explanation ? `<p class="issue-explanation">${escapeHtml(issue.explanation)}</p>` : ''}
+                ${hasSuggestion ? `
+                    <div class="issue-actions">
+                        ${isMultilineSuggestion
+                            ? `<span class="issue-apply-status ${applyState ? `status-${applyState.status}` : 'status-ambiguous'} issue-manual-note">${escapeHtml(applyState?.message || t('dynamic.multilineSuggestion'))}</span>`
+                            : `
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary btn-sm issue-apply-btn"
+                                    data-issue-index="${index}"
+                                    ${applyState?.status === 'applied' ? 'disabled' : ''}
+                                >
+                                    ${t('dynamic.apply')}
+                                </button>
+                                ${applyState ? `<span class="issue-apply-status status-${applyState.status}">${escapeHtml(applyState.message || applyState.status)}</span>` : ''}
+                            `
+                        }
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -837,6 +1101,192 @@ class ValidationPanel {
     }
 
     /**
+     * Keep per-issue apply status while the same LLM result is displayed.
+     * Reset the status map when a new LLM result arrives.
+     * @param {object|null} llmResult
+     */
+    syncIssueApplyState(llmResult) {
+        const signature = this.getIssueStateSignature(llmResult);
+        if (signature !== this.llmIssueStateSignature) {
+            this.llmIssueApplyState.clear();
+            this.llmIssueStateSignature = signature;
+        }
+    }
+
+    /**
+     * Build a stable signature for the current LLM issues.
+     * @param {object|null} llmResult
+     * @returns {string}
+     */
+    getIssueStateSignature(llmResult) {
+        if (!llmResult?.issues?.length) return '';
+        return llmResult.issues.map(issue => [
+            issue.line || '',
+            issue.type || '',
+            issue.text || '',
+            issue.suggestion || '',
+            issue.explanation || ''
+        ].join('|')).join('||');
+    }
+
+    /**
+     * Bind click handlers for LLM issue action buttons.
+     */
+    bindIssueActions() {
+        selectAll('.issue-apply-btn', this.panel).forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const issueIndex = Number.parseInt(btn.dataset.issueIndex, 10);
+                this.applyIssueCorrection(issueIndex);
+            });
+        });
+
+        const applyAllBtn = getById('applyAllLlmIssuesBtn');
+        if (applyAllBtn) {
+            applyAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.applyAllIssueCorrections();
+            });
+        }
+    }
+
+    /**
+     * Apply one LLM issue suggestion into the editor.
+     * @param {number} issueIndex
+     * @param {object} [options]
+     * @param {boolean} [options.silent=false]
+     * @returns {{status: 'applied'|'ambiguous'|'failed', message: string}}
+     */
+    applyIssueCorrection(issueIndex, options = {}) {
+        const { silent = false } = options;
+        const issue = appState.getState()?.validation?.llmJudge?.issues?.[issueIndex];
+        const issueElement = this.panel?.querySelector(`.validation-issue[data-issue-index="${issueIndex}"]`);
+
+        if (!issue) {
+            const result = { status: 'failed', message: 'Issue not found.' };
+            this.updateIssueApplyState(issueIndex, result, issueElement);
+            if (!silent) dialogManager.showToast(result.message, 'error');
+            return result;
+        }
+
+        const suggestion = (issue.suggestion || '').trim();
+        if (!suggestion) {
+            const result = { status: 'failed', message: 'No suggestion available for this issue.' };
+            this.updateIssueApplyState(issueIndex, result, issueElement);
+            if (!silent) dialogManager.showToast(result.message, 'warning');
+            return result;
+        }
+        if (suggestion.includes('\n')) {
+            const result = { status: 'failed', message: t('dynamic.multilineSuggestion') };
+            this.updateIssueApplyState(issueIndex, result, issueElement);
+            if (!silent) dialogManager.showToast(result.message, 'warning');
+            return result;
+        }
+
+        const result = applySuggestionAtLine({
+            line: issue.line,
+            sourceText: issue.text || '',
+            suggestion
+        });
+
+        this.updateIssueApplyState(issueIndex, result, issueElement);
+
+        const selectedLine = Number(result.line || issue.line);
+        if (result.status !== 'failed' && Number.isFinite(selectedLine) && selectedLine > 0) {
+            appState.setSelection(selectedLine);
+        }
+
+        if (!silent) {
+            const toastType = {
+                applied: 'success',
+                ambiguous: 'warning',
+                failed: 'error'
+            }[result.status] || 'warning';
+            dialogManager.showToast(result.message, toastType);
+        }
+
+        return result;
+    }
+
+    /**
+     * Apply all issues that include a textual suggestion.
+     */
+    applyAllIssueCorrections() {
+        const issues = appState.getState()?.validation?.llmJudge?.issues || [];
+        if (issues.length === 0) {
+            dialogManager.showToast(t('dynamic.noLlmIssues'), 'warning');
+            return;
+        }
+
+        const summary = { applied: 0, ambiguous: 0, failed: 0 };
+        let multilineSkipped = 0;
+
+        // Apply from bottom to top to reduce line-shift side effects.
+        const sortedTargets = issues
+            .map((issue, index) => ({ issue, index }))
+            .filter(({ issue }) => !!(issue?.suggestion || '').trim())
+            .sort((a, b) => {
+                const aLine = Number.isFinite(Number(a.issue?.line)) ? Number(a.issue.line) : 0;
+                const bLine = Number.isFinite(Number(b.issue?.line)) ? Number(b.issue.line) : 0;
+                if (bLine !== aLine) return bLine - aLine;
+                return b.index - a.index;
+            });
+
+        sortedTargets.forEach(({ issue, index }) => {
+            const suggestion = issue?.suggestion || '';
+            if (suggestion.includes('\n')) {
+                multilineSkipped++;
+                const result = {
+                    status: 'failed',
+                    message: t('dynamic.multilineSkipped')
+                };
+                const issueElement = this.panel?.querySelector(`.validation-issue[data-issue-index="${index}"]`);
+                this.updateIssueApplyState(index, result, issueElement);
+                summary.failed++;
+                return;
+            }
+
+            const result = this.applyIssueCorrection(index, { silent: true });
+            summary[result.status] = (summary[result.status] || 0) + 1;
+        });
+
+        const multilineInfo = multilineSkipped > 0
+            ? t('dynamic.multilineSkippedInfo', { count: multilineSkipped })
+            : '';
+        const message = t('dynamic.applyAllResult', { applied: summary.applied, ambiguous: summary.ambiguous, failed: summary.failed, multilineInfo });
+
+        dialogManager.showToast(message, summary.failed > 0 ? 'warning' : 'success');
+    }
+
+    /**
+     * Store and render apply status on an issue item.
+     * @param {number} issueIndex
+     * @param {{status:string, message:string}} result
+     * @param {HTMLElement|null} issueElement
+     */
+    updateIssueApplyState(issueIndex, result, issueElement) {
+        this.llmIssueApplyState.set(issueIndex, result);
+        if (!issueElement) return;
+
+        issueElement.classList.remove('applied', 'ambiguous', 'failed');
+        issueElement.classList.add(result.status);
+
+        const statusEl = issueElement.querySelector('.issue-apply-status');
+        if (statusEl) {
+            statusEl.textContent = result.message;
+            statusEl.className = `issue-apply-status status-${result.status}`;
+        }
+
+        const applyBtn = issueElement.querySelector('.issue-apply-btn');
+        if (applyBtn) {
+            applyBtn.disabled = result.status === 'applied';
+        }
+    }
+
+    /**
      * Bind click handlers for line navigation
      * Handles legacy .validation-card, compact .validation-item, and new .validation-issue elements
      */
@@ -848,6 +1298,8 @@ class ValidationPanel {
             element.addEventListener('click', (e) => {
                 // Don't navigate if clicking on details toggle
                 if (e.target.classList.contains('details-toggle')) return;
+                if (e.target.closest('.issue-actions')) return;
+                if (e.target.closest('.llm-issues-toolbar')) return;
 
                 const line = parseInt(element.dataset.line, 10);
                 if (!isNaN(line)) {

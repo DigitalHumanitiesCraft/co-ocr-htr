@@ -1,112 +1,115 @@
 # CLAUDE.md
 
-Projektkontext fuer Claude Code.
+Project context for Claude Code.
 
-## Projektziel
+## Project Goal
 
-**coOCR/HTR ist ein Editor-in-the-Loop Werkzeug zur OCR/HTR-Verifikation und -Korrektur.**
+**coOCR/HTR is an Editor-in-the-Loop tool for OCR/HTR verification and correction.**
 
-- **Input**: Bild (OCR erzeugen) ODER PAGE-XML (vorhandene Transkription korrigieren)
-- **Output**: Korrektes OCR/HTR in exportierbarem Format (PAGE-XML, TXT, JSON)
-- **Zielgruppe**: Fachexpert*innen (Digital Humanists, Archivar*innen, Historiker*innen)
+- **Input**: Image (generate OCR) OR PAGE-XML (correct existing transcription)
+- **Output**: Correct OCR/HTR in exportable format (PAGE-XML, TXT, JSON)
+- **Target audience**: Domain experts (Digital Humanists, archivists, historians)
 
-**Erfolgskriterien:**
-1. Selbsterklaerend (ohne Anleitung nutzbar)
-2. Vollstaendiger Workflow (Upload → Bearbeiten → Export)
-3. Workflow-Integration (Output in anderen Prozessen nutzbar)
+**Success Criteria:**
+1. Self-explanatory (usable without instructions)
+2. Complete workflow (Upload → Edit → Export)
+3. Workflow integration (output usable in downstream processes)
 
-Siehe [VISION.md](knowledge/VISION.md) fuer Details.
+See [VISION.md](knowledge/VISION.md) for details.
 
-## Technologie-Stack
+## Technology Stack
 
-| Komponente | Technologie |
-|------------|-------------|
+| Component | Technology |
+|-----------|------------|
 | Runtime | Vanilla JavaScript (ES6+) |
-| Dependencies | Keine (Tests: Vitest) |
-| Storage | LocalStorage |
-| API | Fetch API (Gemini, OpenAI, Anthropic, Ollama) |
+| Dependencies | None (Tests: Vitest) |
+| Storage | LocalStorage + IndexedDB (v2) |
+| API | Fetch API (Gemini, OpenAI, Anthropic, Mistral, Azure Mistral, Ollama) |
+| i18n | JSON dictionaries (DE/EN switchable) |
 | UI | Plain HTML/CSS, Dark Mode, Glass Morphism |
 | Hosting | GitHub Pages (`docs/` folder) |
 
-## Projektstruktur
+## Project Structure
 
 ```
 co-ocr-htr/
-├── README.md              # Projektübersicht (englisch)
-├── CLAUDE.md              # Dieses Dokument
-├── knowledge/             # Konsolidierte Wissensbasis (Obsidian Vault)
-│   ├── INDEX.md           # Navigation, Dokumentenmatrix
-│   ├── VISION.md          # Projektziel, Erfolgskriterien
-│   ├── METHODOLOGY.md     # Wissenschaftliche Grundlagen
-│   ├── MODEL-LANDSCAPE.md # OCR/HTR-Modellvergleich
-│   ├── DESIGN-SYSTEM.md   # UI/UX-Spezifikation
-│   ├── ARCHITECTURE.md    # Technische Architektur
-│   ├── VALIDATION.md      # Hybride Validierung
-│   ├── DATA-SCHEMA.md     # Datenstrukturen
-│   ├── IMPLEMENTATION-PLAN.md # Roadmap (abgeschlossen)
-│   └── JOURNAL.md         # Entwicklungslog
-├── docs/                  # GitHub Pages Deployment
-│   ├── index.html         # Hauptanwendung
-│   ├── css/               # Modulare CSS-Dateien
-│   │   ├── variables.css  # Design Tokens
-│   │   ├── base.css       # Reset, Typography
-│   │   ├── layout.css     # Grid, Header
-│   │   ├── components.css # Buttons, Cards
-│   │   ├── viewer.css     # Document Viewer
-│   │   ├── editor.css     # Transcription Editor
-│   │   ├── validation.css # Validation Panel
-│   │   └── dialogs.css    # Modal Dialogs
+├── README.md              # Project overview (English)
+├── CLAUDE.md              # This document
+├── knowledge/             # Consolidated knowledge base (Obsidian Vault)
+│   ├── INDEX.md           # Navigation, document matrix
+│   ├── VISION.md          # Project goal, success criteria
+│   ├── METHODOLOGY.md     # Scientific foundations
+│   ├── MODEL-LANDSCAPE.md # OCR/HTR model comparison
+│   ├── DESIGN-SYSTEM.md   # UI/UX specification
+│   ├── ARCHITECTURE.md    # Technical architecture
+│   ├── VALIDATION.md      # Hybrid validation
+│   ├── DATA-SCHEMA.md     # Data structures
+│   ├── IMPLEMENTATION-PLAN.md # Roadmap (completed)
+│   └── JOURNAL.md         # Development log
+├── docs/                  # GitHub Pages deployment
+│   ├── index.html         # Main application
+│   ├── css/               # Modular CSS files
+│   │   ├── variables.css  # Design tokens
+│   │   ├── base.css       # Reset, typography
+│   │   ├── layout.css     # Grid, header
+│   │   ├── components.css # Buttons, cards
+│   │   ├── viewer.css     # Document viewer
+│   │   ├── editor.css     # Transcription editor
+│   │   ├── validation.css # Validation panel
+│   │   └── dialogs.css    # Modal dialogs
 │   ├── js/
-│   │   ├── main.js        # Entry Point
-│   │   ├── state.js       # Central State (EventTarget)
-│   │   ├── viewer.js      # Document Viewer
-│   │   ├── editor.js      # Transcription Editor
-│   │   ├── components/    # UI Components
-│   │   └── services/      # LLM, Storage, Validation, Export
-│   ├── samples/           # Demo-Dokumente
-│   └── tests/             # Vitest Tests
-└── data/                  # Entwicklungsdaten (nicht deployed)
-    └── ocr-examples/      # Vollständige Datensätze
+│   │   ├── main.js        # Entry point
+│   │   ├── state.js       # Central state (EventTarget)
+│   │   ├── viewer.js      # Document viewer
+│   │   ├── editor.js      # Transcription editor
+│   │   ├── components/    # UI components
+│   │   ├── config/        # Prompt profiles
+│   │   └── services/      # LLM, i18n, Storage, Validation, Export
+│   ├── i18n/              # Translation dictionaries (en.json, de.json)
+│   ├── samples/           # Demo documents
+│   └── tests/             # Vitest tests (~574 tests)
+└── data/                  # Development data (not deployed)
+    └── ocr-examples/      # Complete datasets
 ```
 
-## Wissensbasis (knowledge/)
+## Knowledge Base (knowledge/)
 
-Alle Designentscheidungen sind in `knowledge/` dokumentiert und begruendet.
+All design decisions are documented and justified in `knowledge/`.
 
-| Frage | Dokument |
-|-------|----------|
-| Was ist das Ziel? | [VISION](knowledge/VISION.md) |
-| Warum kategorielle Konfidenz? | [METHODOLOGY](knowledge/METHODOLOGY.md) |
-| Welche Modelle? | [MODEL-LANDSCAPE](knowledge/MODEL-LANDSCAPE.md) |
-| Wie sieht das UI aus? | [DESIGN-SYSTEM](knowledge/DESIGN-SYSTEM.md) |
-| Wie ist es gebaut? | [ARCHITECTURE](knowledge/ARCHITECTURE.md) |
-| Wie funktioniert Validierung? | [VALIDATION](knowledge/VALIDATION.md) |
-| Welche Datenstrukturen? | [DATA-SCHEMA](knowledge/DATA-SCHEMA.md) |
+| Question | Document |
+|----------|----------|
+| What is the goal? | [VISION](knowledge/VISION.md) |
+| Why categorical confidence? | [METHODOLOGY](knowledge/METHODOLOGY.md) |
+| Which models? | [MODEL-LANDSCAPE](knowledge/MODEL-LANDSCAPE.md) |
+| What does the UI look like? | [DESIGN-SYSTEM](knowledge/DESIGN-SYSTEM.md) |
+| How is it built? | [ARCHITECTURE](knowledge/ARCHITECTURE.md) |
+| How does validation work? | [VALIDATION](knowledge/VALIDATION.md) |
+| Which data structures? | [DATA-SCHEMA](knowledge/DATA-SCHEMA.md) |
 
-## Entwicklungsmethodik: Promptotyping
+## Development Methodology: Promptotyping
 
-1. Dokumentation vor Code
-2. Iteration durch Dialog
-3. Frühe Validierung
-4. Minimaler, lesbarer Code
+1. Documentation before code
+2. Iteration through dialogue
+3. Early validation
+4. Minimal, readable code
 
-## Kernkonzepte
+## Core Concepts
 
-| Konzept | Bedeutung |
-|---------|-----------|
-| Critical Expert in the Loop | Mensch validiert, Maschine unterstützt |
-| Kategorielle Konfidenz | sicher/prüfenswert/problematisch (keine %) |
-| Hybride Validierung | Deterministische Regeln + LLM-Judge |
-| Custom Validation Prompt | Optionaler benutzerdefinierter Validierungsprompt |
+| Concept | Meaning |
+|---------|---------|
+| Critical Expert in the Loop | Human validates, machine assists |
+| Categorical Confidence | confident / uncertain / problematic (no percentages) |
+| Hybrid Validation | Deterministic rules + LLM-Judge |
+| Custom Validation Prompt | Optional user-defined validation prompt |
 
-## Konventionen
+## Conventions
 
-- Kein Build-Prozess
+- No build process
 - ES6 Modules (native)
-- CSS Custom Properties für Theming
-- Kommentare erklären "warum", Code erklärt "was"
-- **Keine Emojis** - Verwende stattdessen:
-  - `[x]` fuer abgeschlossen
-  - `[~]` fuer in Arbeit
-  - `[ ]` fuer geplant
-  - `(green)`, `(yellow)`, `(red)` fuer Statusfarben in Dokumentation
+- CSS Custom Properties for theming
+- Comments explain "why", code explains "what"
+- **No emojis** - Use instead:
+  - `[x]` for completed
+  - `[~]` for in progress
+  - `[ ]` for planned
+  - `(green)`, `(yellow)`, `(red)` for status colors in documentation

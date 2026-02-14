@@ -55,7 +55,7 @@ coOCR/HTR positions itself as an **Editor-in-the-Loop tool**:
 ### AI Support
 
 - **LLM Transcription**: For difficult documents where standard OCR fails
-- **Hybrid Validation**: Deterministic rules + AI judge for quality assessment
+- **Hybrid Validation**: Deterministic rules + LLM Review for quality assessment
 - **Visual Interface**: Synchronized view of image, text, and validation
 
 ## Target Audience
