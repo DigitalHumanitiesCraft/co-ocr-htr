@@ -37,7 +37,7 @@ Three expertise components for OCR/HTR validation:
 
 **Knowledge Hierarchy (AIL-ML Framework):** Research on Agent-in-the-Loop ML confirms a clear capability ordering: General Users < LLMs < Domain Experts. LLMs possess general knowledge plus their training corpus, but lack the specialized expert knowledge that domain specialists bring. This epistemic asymmetry is why coOCR/HTR positions the expert as final authority - the LLM generates, the expert authors.
 
-## LLM-Judge Bias
+## LLM Review Bias
 
 Empirical evidence against numerical confidence values:
 
@@ -56,7 +56,7 @@ Empirical evidence against numerical confidence values:
 |----------|-----------|
 | No numerical confidence values | Suggest precision that doesn't exist |
 | Categorical gradations | confident / uncertain / problematic |
-| Hybrid validation | LLM-Judge + deterministic rules |
+| Hybrid validation | LLM Review + deterministic Validation |
 | Visual distinction | Rule-based vs. AI-based recognizable |
 | Multi-judge option | Ensemble for critical documents |
 
@@ -249,7 +249,7 @@ coOCR/HTR deliberately positions itself in the **Computer-Aided** paradigm while
 - Related: Prompt-based Prototyping in Collaborative Teams (CHI 2025): https://dl.acm.org/doi/10.1145/3706598.3713166
 - Expert in the Loop: https://link.springer.com/article/10.1007/s10462-025-11255-1
 
-### LLM-Judge Bias Research
+### LLM Review Bias Research
 - Position Bias (ACL 2025): https://aclanthology.org/2025.ijcnlp-long.18/
 - Self-Preference Bias (NeurIPS 2024): https://proceedings.neurips.cc/paper_files/paper/2024/file/7f1f0218e45f5414c79c0679633e47bc-Paper-Conference.pdf
 - Self-Preference Bias (arXiv): https://arxiv.org/abs/2410.21819

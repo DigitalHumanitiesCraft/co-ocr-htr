@@ -1,54 +1,54 @@
 # Data Directory
 
-Beispieldaten für coOCR/HTR - historische Dokumente mit PAGE-XML Transkriptionen.
+Sample data for coOCR/HTR - historical documents with PAGE-XML transcriptions.
 
-## Verzeichnisstruktur
+## Directory Structure
 
 ```
 data/
-├── docta/                      # Transkribus-Export (vollständig)
-│   └── Raitbuch 2/             # Oberösterreichisches Rechnungsbuch
-│       ├── doc.xml             # Dokument-Metadaten (123 Seiten)
-│       ├── page/               # PAGE-XML Transkriptionen
-│       └── *.jpg               # Beispielbilder
-├── ocr-examples/               # Verschiedene OCR-Testdaten
-│   ├── 1617-wecker-*/          # Antidotarium (16. Jh.)
-│   ├── o_szd.*/                # Stefan Zweig Archiv
-│   ├── konvolute/              # Konvolut-Transkriptionen
+├── docta/                      # Transkribus export (complete)
+│   └── Raitbuch 2/             # Upper Austrian account book
+│       ├── doc.xml             # Document metadata (123 pages)
+│       ├── page/               # PAGE-XML transcriptions
+│       └── *.jpg               # Sample images
+├── ocr-examples/               # Various OCR test data
+│   ├── 1617-wecker-*/          # Antidotarium (16th c.)
+│   ├── o_szd.*/                # Stefan Zweig Archive
+│   ├── konvolute/              # Convolute transcriptions
 │   └── ...
-└── schliemann/                 # Archivbilder (ohne Transkription)
+└── schliemann/                 # Archive images (no transcription)
 ```
 
-## Datenformate
+## Data Formats
 
-### PAGE-XML (Primärformat)
+### PAGE-XML (Primary Format)
 
-Alle Transkriptionen verwenden den **PAGE-XML Standard** (PcGts - Page Content Ground Truth Schema).
+All transcriptions use the **PAGE-XML standard** (PcGts - Page Content Ground Truth Schema).
 
 **Namespace:** `http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15`
 
-**Hierarchie:**
+**Hierarchy:**
 ```
 PcGts
 └── Page (imageFilename, dimensions)
-    ├── PrintSpace (Textbereich)
-    ├── ReadingOrder (Lesereihenfolge)
-    ├── TextRegion (Absatz/Block)
-    │   └── TextLine (Zeile)
-    │       ├── Word (Wort mit Unicode)
-    │       └── Baseline (Grundlinie)
-    ├── GraphicRegion (Grafiken)
-    └── SeparatorRegion (Trennlinien)
+    ├── PrintSpace (text area)
+    ├── ReadingOrder (reading sequence)
+    ├── TextRegion (paragraph/block)
+    │   └── TextLine (line)
+    │       ├── Word (word with Unicode)
+    │       └── Baseline (baseline)
+    ├── GraphicRegion (graphics)
+    └── SeparatorRegion (separator lines)
 ```
 
-**Koordinatensystem:** Polygon-basiert (nicht rechteckig)
+**Coordinate system:** Polygon-based (not rectangular)
 ```xml
 <Coords points="x1,y1 x2,y2 x3,y3 x4,y4"/>
 ```
 
-### doc.xml (Transkribus-Format)
+### doc.xml (Transkribus Format)
 
-Dokument-Metadaten mit Seitenliste.
+Document metadata with page list.
 
 ```xml
 <trpDoc>
@@ -67,56 +67,56 @@ Dokument-Metadaten mit Seitenliste.
 </trpDoc>
 ```
 
-## Datensätze
+## Datasets
 
 ### 1. Raitbuch 2 (docta/)
 
-**Typ:** Oberösterreichisches Kirchenamt-Rechnungsbuch
-**Umfang:** 123 Seiten, vollständig transkribiert
-**Sprache:** Frühneuhochdeutsch (16./17. Jh.)
+**Type:** Upper Austrian church office account book
+**Scope:** 123 pages, fully transcribed
+**Language:** Early New High German (16th/17th c.)
 **Status:** FINAL (via PyLaia/Transkribus)
 
-| Metrik | Wert |
-|--------|------|
-| Seiten | 123 |
-| XML-Dateien | 123 |
-| Beispielbilder | 4 |
-| Bildauflösung | 5562×3824 px |
+| Metric | Value |
+|--------|-------|
+| Pages | 123 |
+| XML files | 123 |
+| Sample images | 4 |
+| Image resolution | 5562x3824 px |
 
-**Dateinamen-Konvention:** `OÖKAM Raitbuch 2, fol. XYv-Zr.jpg`
-- `fol.` = Folio (Blatt)
-- `v` = verso (Rückseite)
-- `r` = recto (Vorderseite)
+**Filename convention:** `OÖKAM Raitbuch 2, fol. XYv-Zr.jpg`
+- `fol.` = folio (leaf)
+- `v` = verso (back side)
+- `r` = recto (front side)
 
 ### 2. 1617-wecker (ocr-examples/)
 
-**Typ:** Medizinisches Fachbuch "Antidotarium" (1617)
-**Umfang:** 83 PAGE-XML Dateien
-**Sprache:** Lateinisch
-**Status:** Teilweise transkribiert
+**Type:** Medical reference book "Antidotarium" (1617)
+**Scope:** 83 PAGE-XML files
+**Language:** Latin
+**Status:** Partially transcribed
 
-### 3. Stefan Zweig Archiv (o_szd.*)
+### 3. Stefan Zweig Archive (o_szd.*)
 
-**Typ:** Handschriftliche Korrespondenz
-**Format:** METS-XML + Metadaten-JSON
-**Quelle:** Literaturarchiv Salzburg
+**Type:** Handwritten correspondence
+**Format:** METS-XML + metadata JSON
+**Source:** Literaturarchiv Salzburg
 
 ### 4. Schliemann (schliemann/)
 
-**Typ:** Archivbilder
-**Umfang:** 21 Bilder
-**Status:** Nur Bilder, keine Transkriptionen
+**Type:** Archive images
+**Scope:** 21 images
+**Status:** Images only, no transcriptions
 
-## Verwendung in coOCR/HTR
+## Usage in coOCR/HTR
 
 ### Import
 
-Die PAGE-XML Dateien können direkt in coOCR/HTR geladen werden:
+The PAGE-XML files can be loaded directly into coOCR/HTR:
 
-1. **Bild laden** → `*.jpg`
-2. **Transkription importieren** → `page/*.xml`
-3. **Bounding Boxes** aus `Coords points` extrahieren
-4. **Text** aus `TextEquiv/Unicode` extrahieren
+1. **Load image** → `*.jpg`
+2. **Import transcription** → `page/*.xml`
+3. **Extract bounding boxes** from `Coords points`
+4. **Extract text** from `TextEquiv/Unicode`
 
 ### Mapping PAGE-XML → coOCR/HTR
 
@@ -127,9 +127,9 @@ Die PAGE-XML Dateien können direkt in coOCR/HTR geladen werden:
 | `Metadata/TranskribusMetadata@status` | `confidence` |
 | `ReadingOrder` | `lineNumber` |
 
-### Koordinaten-Konvertierung
+### Coordinate Conversion
 
-PAGE-XML verwendet Polygone (4+ Punkte), coOCR/HTR verwendet Rechtecke:
+PAGE-XML uses polygons (4+ points), coOCR/HTR uses rectangles:
 
 ```javascript
 function polygonToBounds(points) {
@@ -148,9 +148,9 @@ function polygonToBounds(points) {
 }
 ```
 
-## Metadaten
+## Metadata
 
-### PAGE-XML Metadaten
+### PAGE-XML Metadata
 
 ```xml
 <Metadata>
@@ -160,28 +160,28 @@ function polygonToBounds(points) {
 </Metadata>
 ```
 
-### Transkriptionsstatus
+### Transcription Status
 
-| Status | Bedeutung |
-|--------|-----------|
-| `NEW` | Keine Transkription |
-| `IN_PROGRESS` | In Bearbeitung |
-| `FINAL` | Abgeschlossen |
+| Status | Meaning |
+|--------|---------|
+| `NEW` | No transcription |
+| `IN_PROGRESS` | In progress |
+| `FINAL` | Completed |
 
-## Demo-Samples für GitHub Pages
+## Demo Samples for GitHub Pages
 
-Ausgewählte Beispiele sind nach `docs/samples/` kopiert und über GitHub Pages erreichbar:
+Selected examples are copied to `docs/samples/` and accessible via GitHub Pages:
 
-| Sample | Ordner | Beschreibung | Daten |
-|--------|--------|--------------|-------|
-| Wecker Antidotarium | `docs/samples/wecker/` | Lateinisches Fachbuch (1617) | Bild + PAGE-XML |
-| Raitbuch 2 | `docs/samples/raitbuch/` | Frühneuhochdeutsches Rechnungsbuch | Nur Bild |
-| HSA Brief | `docs/samples/hsa-letter/` | Handschriftlicher Brief | Nur Bild |
-| Karteikarte | `docs/samples/karteikarte/` | Handschriftliche Karteikarte | Nur Bild |
+| Sample | Folder | Description | Data |
+|--------|--------|-------------|------|
+| Wecker Antidotarium | `docs/samples/wecker/` | Latin reference book (1617) | Image + PAGE-XML |
+| Raitbuch 2 | `docs/samples/raitbuch/` | Early New High German account book | Image only |
+| HSA Letter | `docs/samples/hsa-letter/` | Handwritten letter | Image only |
+| Index Card | `docs/samples/karteikarte/` | Handwritten index card | Image only |
 
-**Hinweis:** Nur das Wecker-Sample enthält vollständige PAGE-XML Transkription mit Linien-Koordinaten. Die anderen Samples sind zum Testen der LLM-Transkription.
+**Note:** Only the Wecker sample includes complete PAGE-XML transcription with line coordinates. The other samples are for testing LLM transcription.
 
-## Quellen
+## Sources
 
 - **Transkribus:** https://transkribus.eu/
 - **PAGE-XML Schema:** https://github.com/PRImA-Research-Lab/PAGE-XML
@@ -189,4 +189,4 @@ Ausgewählte Beispiele sind nach `docs/samples/` kopiert und über GitHub Pages 
 
 ---
 
-**Verweis:** [DATA-SCHEMA.md](../knowledge/DATA-SCHEMA.md) für coOCR/HTR interne Datenstrukturen
+**Reference:** [DATA-SCHEMA.md](../knowledge/DATA-SCHEMA.md) for coOCR/HTR internal data structures

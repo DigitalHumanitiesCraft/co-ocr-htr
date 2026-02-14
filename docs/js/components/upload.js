@@ -7,6 +7,7 @@
 
 import { appState } from '../state.js';
 import { dialogManager } from './dialogs.js';
+import { t } from '../services/i18n.js';
 import { metsXMLParser } from '../services/parsers/mets-xml.js';
 import { getById, select, hide } from '../utils/dom.js';
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from '../utils/constants.js';
@@ -30,6 +31,10 @@ class UploadManager {
      * Initialize upload functionality
      */
     init() {
+        // Guard against double-initialization (would accumulate listeners)
+        if (this._initialized) return;
+        this._initialized = true;
+
         this.createFileInput();
         this.bindEvents();
         this.setupDropZone();
@@ -101,7 +106,7 @@ class UploadManager {
 
         // Highlight drop zone when dragging over
         ['dragenter', 'dragover'].forEach(eventName => {
-            this.dropZone.addEventListener(eventName, (e) => {
+            this.dropZone.addEventListener(eventName, (_e) => {
                 if (!this.isDragging) {
                     this.isDragging = true;
                     this.showDropFeedback();
@@ -183,8 +188,8 @@ class UploadManager {
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                <p>Drop file to upload</p>
-                <span class="drop-hint">Images (JPG, PNG, TIFF), PAGE-XML, or METS-XML</span>
+                <p>${t('dynamic.dropFileToUpload')}</p>
+                <span class="drop-hint">${t('dynamic.dropHint')}</span>
             </div>
         `;
 
@@ -235,7 +240,7 @@ class UploadManager {
         }
 
         // Show loading state
-        appState.setLoading(true, 'Loading file...');
+        appState.setLoading(true, t('dynamic.loadingFile'));
 
         try {
             if (this.isImageFile(file)) {
@@ -245,7 +250,7 @@ class UploadManager {
             }
         } catch (error) {
             console.error('Error handling file:', error);
-            dialogManager.showToast(`Failed to load file: ${error.message}`, 'error');
+            dialogManager.showToast(t('toast.loadFileFailed', { message: error.message }), 'error');
         } finally {
             appState.setLoading(false);
         }
@@ -259,7 +264,7 @@ class UploadManager {
     validateFile(file) {
         // Check file size
         if (file.size > MAX_FILE_SIZE) {
-            return { valid: false, error: `File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.` };
+            return { valid: false, error: t('toast.fileTooLargeMax', { size: MAX_FILE_SIZE_MB }) };
         }
 
         // Check file type
@@ -267,7 +272,7 @@ class UploadManager {
         const isXML = this.isXMLFile(file);
 
         if (!isImage && !isXML) {
-            return { valid: false, error: 'Unsupported file type. Use JPG, PNG, TIFF, or PAGE-XML.' };
+            return { valid: false, error: t('toast.unsupportedFileType') };
         }
 
         return { valid: true };
@@ -304,24 +309,30 @@ class UploadManager {
 
                 // Get image dimensions
                 const img = new Image();
-                img.onload = () => {
-                    appState.setDocument(file, dataUrl);
-                    appState.setImageDimensions(img.width, img.height);
+                img.onload = async () => {
+                    try {
+                        // Ensure a project exists (auto-creates from filename)
+                        await appState.ensureProject(file.name);
+                        appState.setDocument(file, dataUrl);
+                        appState.setImageDimensions(img.width, img.height);
 
-                    // Hide demo indicator when user uploads their own file
-                    this.hideDemoIndicator();
+                        // Hide demo indicator when user uploads their own file
+                        this.hideDemoIndicator();
 
-                    dialogManager.showToast(`Loaded: ${file.name}`, 'success');
-                    resolve();
+                        dialogManager.showToast(t('toast.loadedFile', { name: file.name }), 'success');
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
                 };
                 img.onerror = () => {
-                    reject(new Error('Failed to load image'));
+                    reject(new Error(t('dynamic.failedLoadImage')));
                 };
                 img.src = dataUrl;
             };
 
             reader.onerror = () => {
-                reject(new Error('Failed to read file'));
+                reject(new Error(t('dynamic.failedReadFile')));
             };
 
             reader.readAsDataURL(file);
@@ -366,13 +377,13 @@ class UploadManager {
                         // Hide demo indicator when user uploads their own file
                         this.hideDemoIndicator();
 
-                        dialogManager.showToast(`Loaded PAGE-XML: ${file.name}`, 'success');
+                        dialogManager.showToast(t('toast.loadedPageXML', { name: file.name }), 'success');
                         resolve();
                         return;
                     }
 
                     // Unknown XML format
-                    dialogManager.showToast('Not a valid PAGE-XML or METS-XML file', 'warning');
+                    dialogManager.showToast(t('toast.notValidXML'), 'warning');
                     resolve();
                 } catch (error) {
                     reject(error);
@@ -380,7 +391,7 @@ class UploadManager {
             };
 
             reader.onerror = () => {
-                reject(new Error('Failed to read XML file'));
+                reject(new Error(t('dynamic.failedReadXML')));
             };
 
             reader.readAsText(file);
@@ -398,12 +409,12 @@ class UploadManager {
             const metsData = metsXMLParser.parse(xmlString);
 
             if (metsData.pages.length === 0) {
-                dialogManager.showToast('METS-XML contains no page references', 'warning');
+                dialogManager.showToast(t('toast.metsNoPages'), 'warning');
                 return;
             }
 
             // Set pages in state for multi-page navigation
-            const pages = metsData.pages.map((page, index) => ({
+            const pages = metsData.pages.map((page, _index) => ({
                 id: page.id,
                 order: page.order,
                 image: page.image,
@@ -412,6 +423,9 @@ class UploadManager {
                 height: page.height,
                 label: `Page ${page.order}`
             }));
+
+            // Ensure project exists for METS upload
+            await appState.ensureProject(metsData.metadata?.title || file.name);
 
             // Set pages in state
             appState.setPages(pages);
@@ -426,13 +440,13 @@ class UploadManager {
             this.hideDemoIndicator();
 
             dialogManager.showToast(
-                `Loaded METS: ${metsData.metadata.title || file.name} (${pages.length} pages)`,
+                t('toast.loadedMETS', { name: metsData.metadata.title || file.name, count: pages.length }),
                 'success'
             );
 
         } catch (error) {
             console.error('METS-XML parsing error:', error);
-            dialogManager.showToast(`Failed to parse METS-XML: ${error.message}`, 'error');
+            dialogManager.showToast(t('toast.metsParseFailed', { message: error.message }), 'error');
         }
     }
 }

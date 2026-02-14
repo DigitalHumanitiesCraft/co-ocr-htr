@@ -7,11 +7,11 @@ coOCR/HTR is a **purely client-side web application** without a backend. This ar
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     Browser                              │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
-│  │  index.html │    │   State     │    │  API Keys   │  │
-│  │  (UI)       │───▶│  (Memory)   │◀──▶│  (Memory)   │  │
-│  └─────────────┘    └─────────────┘    └──────┬──────┘  │
-│                                               │         │
+│  ┌─────────────┐    ┌─────────────┐    ┌──────────────┐ │
+│  │  index.html │    │   State     │    │  API Keys    │ │
+│  │  (UI)       │───▶│  (Memory)   │◀──▶│ Memory + IDB │ │
+│  └─────────────┘    └─────────────┘    └──────┬───────┘ │
+│                                                │         │
 └───────────────────────────────────────────────┼─────────┘
                                                 │
                     HTTPS                       ▼
@@ -27,21 +27,23 @@ coOCR/HTR is a **purely client-side web application** without a backend. This ar
 
 | Method | Status | Rationale |
 |--------|--------|-----------|
-| Browser Memory | Used | Volatile, deleted when tab closes |
-| localStorage | Not used | Persists across sessions, higher risk |
-| sessionStorage | Not used | Similar risk to localStorage |
+| Browser Memory | Used (default) | Immediate runtime usage without disk persistence |
+| IndexedDB (`apiKeys`) | Optional | Used only when user explicitly enables key persistence |
+| localStorage | Not used for API keys | Used only for non-sensitive settings and prompt fallbacks |
+| sessionStorage | Not used | Similar risk profile, no benefit over current model |
 | Cookies | Not used | Would send keys to server |
 
-**Implementation:** Keys are stored exclusively in JavaScript variables (`LLMService.providers[provider].apiKey`).
+**Implementation:** Runtime keys live in `LLMService.providers[provider].apiKey`; validation keys can be separated in `LLMService.validationApiKeys`. Optional long-term persistence is stored in IndexedDB (`apiKeys` object store).
 
 ### Lifecycle
 
 ```
 1. User enters key (Settings Dialog)
-2. Key is stored in memory
-3. Key is sent in header during API calls
-4. Close tab → Key gone (no persistence)
-5. Reload page → Key gone (must re-enter)
+2. Key is stored in memory for immediate use
+3. Optional: user enables persistence checkbox -> key is also written to IndexedDB
+4. Key is sent in request headers during API calls
+5. Close tab -> memory copy gone; IndexedDB copy remains only if persistence was enabled
+6. Reload page -> persisted keys are restored into memory if present
 ```
 
 ### Known Risks
@@ -51,6 +53,7 @@ coOCR/HTR is a **purely client-side web application** without a backend. This ar
 | Browser DevTools (Network Tab) | Medium | User awareness |
 | Browser DevTools (Memory/Debugger) | Medium | User awareness |
 | Malicious Browser Extensions | High | No technical solution possible |
+| Persistent local key storage on shared devices | High | Keep persistence disabled on untrusted devices |
 | XSS Attacks | High | Controlled data sources, no user-generated content |
 | Physical Device Access | High | User responsibility |
 
@@ -101,14 +104,14 @@ Anthropic is the only provider that blocks browser requests by default and requi
 ### Document Data
 
 ```
-Local File → Browser Memory → LLM API → Response → Browser Memory
-     │                                                      │
-     └──────────────── Never persisted ─────────────────────┘
+Local File -> Browser Memory -> LLM API -> Response -> Browser Memory
+     |                                                      |
+     +--------- Optional local persistence (IndexedDB) -----+
 ```
 
 - Documents are **not** sent to coOCR/HTR servers
 - Documents go **directly** to the chosen LLM provider
-- After closing tab: No local traces
+- Sessions/images can be persisted locally in IndexedDB for project resume
 
 ### What Is Sent to LLM Provider
 

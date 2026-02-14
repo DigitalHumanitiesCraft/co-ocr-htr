@@ -184,6 +184,14 @@ npm test
 
 See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
 
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to get involved.
+
+## Contributors
+
+- **[Robert Klugseder](https://github.com/rklugsederoeaw)** (OeAW) -- IndexedDB multi-project management, LLM Thinking Panel, LLM Review Apply, Mistral OCR integration, postprocessing pipeline, prompt profile architecture, validation persistence, description feature, codebase audit fixes, responsive UI improvements, and extensive test coverage. [Fork](https://github.com/rklugsederoeaw/co-ocr-htr-rk)
+
 ## License
 
 This work is licensed under a [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
