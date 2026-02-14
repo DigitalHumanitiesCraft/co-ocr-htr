@@ -219,7 +219,7 @@
 }
 
 /* ==========================================================================
-   AI ANALYSIS SECTION
+   LLM REVIEW SECTION
    ========================================================================== */
 
 .ai-analysis-header {
@@ -396,7 +396,7 @@
 }
 
 /* ==========================================================================
-   AI ANALYSIS DETAILS (Distinct AI-generated content styling)
+   LLM REVIEW DETAILS (Distinct LLM-generated content styling)
    ========================================================================== */
 
 .ai-details {
@@ -475,13 +475,13 @@
    AI SECTION TITLE STYLING
    ========================================================================== */
 
-.section-title-ai {
+.section-title-llm {
   border-left: 3px solid var(--ai-primary, #7c5cbf);
   padding-left: var(--space-2);
   margin-left: calc(-1 * var(--space-2));
 }
 
-.ai-badge {
+.llm-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -497,7 +497,7 @@
 }
 
 /* ==========================================================================
-   ISSUE TYPE BADGES (KI-Issue Typologie)
+   ISSUE TYPE BADGES (LLM-Issue Typologie)
    ========================================================================== */
 
 .validation-issue {
@@ -538,6 +538,19 @@
   border-left-color: var(--accent-primary);
 }
 
+.validation-issue.applied {
+  border-left-color: var(--confident);
+  background: rgba(var(--confident-rgb, 90, 170, 110), 0.08);
+}
+
+.validation-issue.ambiguous {
+  border-left-color: var(--uncertain);
+}
+
+.validation-issue.failed {
+  border-left-color: var(--problematic);
+}
+
 /* Issue Header */
 .issue-header {
   display: flex;
@@ -571,6 +584,37 @@
 .badge-info {
   background: rgba(var(--accent-primary-rgb, 106, 158, 142), 0.15);
   color: var(--accent-primary);
+}
+
+/* Issue Stage Badge */
+.issue-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.issue-stage-badge.stage-paleographic {
+  background: rgba(106, 158, 142, 0.12);
+  color: var(--accent-primary);
+}
+
+.issue-stage-badge.stage-philological {
+  background: rgba(124, 92, 191, 0.12);
+  color: var(--ai-primary, #7c5cbf);
+}
+
+/* Pipeline notice */
+.validation-item.pipeline-notice {
+  background: rgba(var(--accent-primary-rgb, 106, 158, 142), 0.06);
+  margin: var(--space-1) calc(-1 * var(--space-2));
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border-bottom: none;
 }
 
 /* Issue Line Reference */
@@ -607,6 +651,40 @@
   line-height: 1.5;
 }
 
+.llm-issues-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+.issue-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.issue-apply-status {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.issue-apply-status.status-applied {
+  color: var(--confident);
+}
+
+.issue-apply-status.status-ambiguous {
+  color: var(--uncertain);
+}
+
+.issue-apply-status.status-failed {
+  color: var(--problematic);
+}
+
+.issue-manual-note {
+  font-style: italic;
+}
+
 /* ==========================================================================
    BATCH PROGRESS BAR
    ========================================================================== */
@@ -630,4 +708,164 @@
 .loading-hint {
   font-size: var(--text-xs);
   color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   THINKING PANEL (LLM Reasoning Display)
+   ========================================================================== */
+
+.thinking-section {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-muted);
+  padding: var(--space-2) var(--space-3);
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  /* Stay above .validation-loading-overlay (z-index: 100) */
+  position: relative;
+  z-index: 101;
+}
+
+/* Collapsed state: hide content, shrink to header only */
+.thinking-section.thinking-collapsed .thinking-content {
+  display: none;
+}
+
+.thinking-section.thinking-collapsed {
+  max-height: none;
+}
+
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.thinking-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Collapse/expand button in thinking header */
+.thinking-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.thinking-collapse-btn:hover {
+  color: var(--accent-primary);
+  background: var(--surface-active);
+}
+
+.thinking-collapse-btn svg {
+  transition: transform var(--transition-fast);
+}
+
+/* Rotate chevron when collapsed */
+.thinking-collapsed .thinking-collapse-btn svg {
+  transform: rotate(180deg);
+}
+
+.thinking-active .thinking-icon {
+  animation: spin 2s linear infinite;
+}
+
+.thinking-content {
+  margin: 0;
+  padding: var(--space-2);
+  font-family: var(--font-mono, 'SF Mono', 'Fira Code', 'Fira Mono', monospace);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.thinking-active .thinking-content {
+  border-color: var(--ai-primary, #7c5cbf);
+}
+
+.thinking-complete .thinking-content {
+  opacity: 0.7;
+}
+
+.thinking-error .thinking-content {
+  border-color: var(--problematic);
+  opacity: 0.7;
+}
+
+.thinking-error .thinking-header {
+  color: var(--problematic);
+}
+
+/* ==========================================================================
+   VALIDATION SECTION VERTICAL RESIZE HANDLES
+   ========================================================================== */
+
+.validation-resize-handle {
+  flex-shrink: 0;
+  height: 8px;
+  cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+}
+
+.validation-resize-handle::after {
+  content: '';
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--border-default);
+  transition: all var(--transition-fast);
+}
+
+.validation-resize-handle:hover::after,
+.validation-resize-handle.dragging::after {
+  width: 48px;
+  background: var(--accent-primary);
+}
+
+.validation-resize-handle.dragging::after {
+  width: 100%;
+}
+
+/* Global cursor override during vertical drag */
+body.validation-resizing {
+  cursor: row-resize !important;
+  user-select: none !important;
+}
+
+body.validation-resizing * {
+  cursor: row-resize !important;
+  pointer-events: none !important;
+}
+
+body.validation-resizing .validation-resize-handle {
+  pointer-events: auto !important;
 }

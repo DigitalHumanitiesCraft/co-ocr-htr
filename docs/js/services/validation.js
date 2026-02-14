@@ -2,12 +2,13 @@
  * Validation Service
  *
  * Implements hybrid validation:
- * 1. Rule-based: Deterministic regex patterns for known formats
- * 2. LLM-Judge: AI-based validation from different perspectives
+ * 1. Rule-based Validation: deterministic regex patterns and stats
+ * 2. LLM Review: probabilistic review for plausibility and OCR errors
  */
 
 import { llmService } from './llm.js';
-import { appState } from '../state.js';
+import { runPostprocessing } from './postprocess.js';
+import { FEATURE_FLAGS } from '../utils/constants.js';
 
 // ============================================
 // Rule Categories
@@ -18,18 +19,18 @@ import { appState } from '../state.js';
  */
 const RULE_CATEGORIES = {
     markers: {
-        name: 'Transkriptions-Marker',
-        description: '[?], [illegible], Abkuerzungen',
+        name: 'Transcription Markers',
+        description: '[?], [illegible], Abbreviations',
         rules: ['uncertain_marker', 'illegible_marker', 'abbreviations']
     },
     stats: {
-        name: 'Text-Statistik',
-        description: 'Zeilen- und Zeichenanzahl',
+        name: 'Text Statistics',
+        description: 'Line and character count',
         rules: ['line_count', 'char_count']
     },
     artifacts: {
-        name: 'OCR-Artefakte',
-        description: 'Ungewoehnliche Zeichen, Kontrolzeichen',
+        name: 'OCR Artifacts',
+        description: 'Unusual characters, control characters',
         rules: ['special_chars', 'double_spaces', 'control_chars']
     }
 };
@@ -54,98 +55,99 @@ const VALIDATION_RULES = [
     // === MARKERS CATEGORY ===
     {
         id: 'uncertain_marker',
-        name: 'Unsichere Lesungen',
+        name: 'Uncertain Readings',
         category: 'markers',
-        description: 'Stellen, die mit [?] markiert wurden',
+        description: 'Places marked with [?]',
         regex: /\[\?\]/g,
         type: 'warning',
-        messagePass: (count) => `${count} unsichere Stelle(n) markiert`,
-        messageFail: 'Keine unsicheren Markierungen'
+        messagePass: (count) => `${count} uncertain place(s) marked`,
+        messageFail: 'No uncertain markers'
     },
     {
         id: 'illegible_marker',
-        name: 'Unleserliche Stellen',
+        name: 'Illegible Places',
         category: 'markers',
-        description: 'Stellen, die als [illegible] oder [...] markiert wurden',
+        description: 'Places marked as [illegible] or [...]',
         regex: /\[(illegible|\.\.\.)\]/gi,
         type: 'warning',
-        messagePass: (count) => `${count} unleserliche Stelle(n)`,
-        messageFail: 'Keine unleserlichen Stellen'
+        messagePass: (count) => `${count} illegible place(s)`,
+        messageFail: 'No illegible places'
     },
     {
         id: 'abbreviations',
-        name: 'Abkuerzungen',
+        name: 'Abbreviations',
         category: 'markers',
-        description: 'Erkannte Abkuerzungsmarkierungen wie wort[ergaenzung]',
+        description: 'Detected abbreviation markers like word[expansion]',
         regex: /\w+\[[\w]+\]/g,
         type: 'info',
-        messagePass: (count) => `${count} aufgeloeste Abkuerzung(en)`,
-        messageFail: 'Keine Abkuerzungen erkannt'
+        messagePass: (count) => `${count} resolved abbreviation(s)`,
+        messageFail: 'No abbreviations detected'
     },
 
     // === STATS CATEGORY ===
     {
         id: 'line_count',
-        name: 'Zeilenanzahl',
+        name: 'Line Count',
         category: 'stats',
-        description: 'Anzahl der transkribierten Zeilen',
+        description: 'Number of transcribed lines',
         validate: validateLineCount,
         type: 'info',
-        messagePass: (count) => `${count} Zeilen transkribiert`,
-        messageFail: 'Keine Zeilen gefunden'
+        messagePass: (count) => `${count} lines transcribed`,
+        messageFail: 'No lines found'
     },
     {
         id: 'char_count',
-        name: 'Zeichenanzahl',
+        name: 'Character Count',
         category: 'stats',
-        description: 'Gesamtzahl der Zeichen im Text',
+        description: 'Total number of characters in text',
         validate: validateCharCount,
         type: 'info',
-        messagePass: (count) => `${count} Zeichen`,
-        messageFail: 'Kein Text vorhanden'
+        messagePass: (count) => `${count} characters`,
+        messageFail: 'No text available'
     },
 
     // === ARTIFACTS CATEGORY ===
     {
         id: 'special_chars',
-        name: 'Sonderzeichen',
+        name: 'Special Characters',
         category: 'artifacts',
-        description: 'Ungewoehnliche Zeichen (moegl. OCR-Artefakte)',
+        description: 'Unusual characters (possible OCR artifacts)',
         // Exclude common chars: word chars, whitespace, punctuation, common accented chars
-        regex: /[^\w\s\.,;:!?\-\'\"\(\)\[\]\/\\\n\r\t°§†‡©®™€£¥¢äöüÄÖÜßàáâãåæçèéêëìíîïðñòóôõøùúûýÿœŒÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕØÙÚÛÝŸ]/g,
+        regex: /[^\w\s.,;:!?\-'"()\]{[/\\\n\r\t°§†‡©®™€£¥¢äöüÄÖÜßàáâãåæçèéêëìíîïðñòóôõøùúûýÿœŒÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕØÙÚÛÝŸ]/g,
         type: 'warning',
         messagePass: (count, matches) => {
             const uniqueChars = [...new Set(matches)].slice(0, 5).join(' ');
-            return `${count} Sonderzeichen: ${uniqueChars}${matches.length > 5 ? '...' : ''}`;
+            return `${count} special characters: ${uniqueChars}${matches.length > 5 ? '...' : ''}`;
         },
-        messageFail: 'Keine ungewoehnlichen Zeichen'
+        messageFail: 'No unusual characters'
     },
     {
         id: 'double_spaces',
-        name: 'Doppelte Leerzeichen',
+        name: 'Double Spaces',
         category: 'artifacts',
-        description: 'Mehrfache aufeinanderfolgende Leerzeichen',
+        description: 'Multiple consecutive spaces',
         regex: /  +/g,
         type: 'info',
-        messagePass: (count) => `${count} Stelle(n) mit mehrfachen Leerzeichen`,
-        messageFail: 'Keine doppelten Leerzeichen'
+        messagePass: (count) => `${count} place(s) with multiple spaces`,
+        messageFail: 'No double spaces'
     },
     {
         id: 'control_chars',
-        name: 'Steuerzeichen',
+        name: 'Control Characters',
         category: 'artifacts',
-        description: 'Nicht-druckbare Zeichen (ausser Zeilenumbruch)',
+        description: 'Non-printable characters (except line breaks)',
+        // eslint-disable-next-line no-control-regex -- intentional: detecting control chars
         regex: /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,
         type: 'error',
-        messagePass: (count) => `${count} nicht-druckbare(s) Zeichen gefunden`,
-        messageFail: 'Keine Steuerzeichen'
+        messagePass: (count) => `${count} non-printable character(s) found`,
+        messageFail: 'No control characters'
     }
 ];
 
 /**
  * Custom validator: Count transcribed lines
  */
-function validateLineCount(text, segments) {
+function validateLineCount(text, _segments) {
     const lines = text ? text.split('\n').filter(l => l.trim().length > 0) : [];
     const count = lines.length;
 
@@ -160,7 +162,7 @@ function validateLineCount(text, segments) {
 /**
  * Custom validator: Count characters
  */
-function validateCharCount(text, segments) {
+function validateCharCount(text, _segments) {
     const count = text ? text.length : 0;
 
     return {
@@ -303,14 +305,14 @@ class ValidationEngine {
     }
 
     /**
-     * Run LLM-Judge validation
+     * Run LLM Review
      * @param {string} text - Transcription text
      * @param {string} customPrompt - Optional custom validation prompt
      * @returns {Promise<object>} LLM validation result
      */
-    async validateWithLLM(text, customPrompt = '') {
+    async validateWithLLM(text, customPrompt = '', streamOptions = {}) {
         try {
-            const result = await llmService.validate(text, { customPrompt });
+            const result = await llmService.validate(text, { customPrompt, ...streamOptions });
             const validationResult = {
                 confidence: result.confidence,
                 reasoning: result.reasoning,
@@ -337,6 +339,42 @@ class ValidationEngine {
     }
 
     /**
+     * Run post-processing pipeline (Stage 2 + Stage 3) instead of single LLM Review.
+     * Falls back to single-call validateWithLLM if both stages fail.
+     * @param {string} text - Transcription text
+     * @param {object} options - Validation options
+     * @returns {Promise<object>} LLM validation result
+     */
+    async validateWithPostprocessing(text, options = {}) {
+        try {
+            const result = await runPostprocessing(text, {
+                contextDescription: options.contextDescription || '',
+                runStage2: options.runStage2 !== false,
+                runStage3: options.runStage3 !== false,
+                promptConfig: options.promptConfig || null,
+                signal: options.signal || null
+            });
+
+            // If orchestrator signals both-stage fallback, use single-call review
+            if (result.fallbackUsed) {
+                console.log('[Validation] Postprocessing failed, falling back to single LLM Review');
+                return await this.validateWithLLM(text, options.customPrompt || '');
+            }
+
+            return {
+                confidence: result.confidence,
+                reasoning: result.reasoning,
+                issues: result.issues || [],
+                summary: result.summary || result.reasoning,
+                pipeline: result.pipeline
+            };
+        } catch (error) {
+            console.error('[Validation] Postprocessing error, falling back:', error.message);
+            return await this.validateWithLLM(text, options.customPrompt || '');
+        }
+    }
+
+    /**
      * Run complete validation (rules + LLM) with options
      * @param {string} text - Transcription text
      * @param {Array} segments - Parsed segments
@@ -356,7 +394,9 @@ class ValidationEngine {
             checkStats = true,
             checkArtifacts = true,
             includeLLM = true,
-            customPrompt = ''
+            customPrompt = '',
+            stream,
+            onThinkingChunk
         } = options;
 
         // Run rule-based validation with category filtering
@@ -369,7 +409,15 @@ class ValidationEngine {
         // Run LLM validation (if requested and API key available)
         let llmResult = null;
         if (includeLLM && llmService.hasApiKey()) {
-            llmResult = await this.validateWithLLM(text, customPrompt);
+            // PPV1-203: Use post-processing pipeline if feature flag is enabled
+            // Build stream options to forward to LLM service
+            const streamOpts = stream ? { stream, onThinkingChunk } : {};
+
+            if (FEATURE_FLAGS.postprocessPipelineV1 && !customPrompt) {
+                llmResult = await this.validateWithPostprocessing(text, options);
+            } else {
+                llmResult = await this.validateWithLLM(text, customPrompt, streamOpts);
+            }
         }
 
         // Calculate summary

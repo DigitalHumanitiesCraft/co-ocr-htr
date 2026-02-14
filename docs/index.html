@@ -67,7 +67,8 @@
         </symbol>
     </svg>
 
-    <!-- Work in Progress Banner -->
+    <!-- Work in Progress Banner (deactivated) -->
+    <!--
     <div class="wip-banner" id="wipBanner">
         <span class="wip-badge">BETA</span>
         <span class="wip-text">Work in Progress - Developed with <a href="https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin" target="_blank" rel="noopener" class="wip-method-link">Promptotyping</a></span>
@@ -79,6 +80,7 @@
             </svg>
         </button>
     </div>
+    -->
 
     <!-- Mobile Warning -->
     <div class="mobile-warning">
@@ -108,10 +110,15 @@
                 coOCR/HTR
             </div>
 
-            <div class="header-doc-info" id="headerDocInfo" hidden>
-                <div class="status-indicator status-confident"></div>
+            <button class="header-doc-info" id="headerDocInfo" hidden title="Projekte anzeigen">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
                 <span id="headerFilename" class="header-filename"></span>
-            </div>
+                <svg class="icon-xs dropdown-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
 
             <!-- Demo Indicator (shown when demo data is loaded) -->
             <div class="demo-indicator" id="demoIndicator" hidden>
@@ -125,6 +132,11 @@
             </div>
 
             <div class="header-controls">
+                <button class="icon-btn icon-md" id="btnProjects" title="Projekte">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
                 <button class="icon-btn icon-md" title="Settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -133,19 +145,19 @@
                         </path>
                     </svg>
                 </button>
-                <a href="knowledge.html" class="icon-btn icon-md" title="Knowledge Base">
+                <a href="https://github.com/rklugsederoeaw/co-ocr-htr-rk" class="icon-btn icon-md" title="GitHub" target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                     </svg>
                 </a>
-                <a href="help.html" class="icon-btn icon-md" title="Help">
+                <button type="button" class="icon-btn icon-md" title="Help">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-                </a>
+                </button>
                 <a href="about.html" class="icon-btn icon-md" title="About">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -187,7 +199,7 @@
                                     <polyline points="17 8 12 3 7 8"></polyline>
                                     <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
-                                <span>Bild hochladen</span>
+                                <span>Upload Image</span>
                             </button>
                             <button class="upload-menu-item" id="btnUploadPageXML">
                                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -196,14 +208,14 @@
                                     <line x1="16" y1="13" x2="8" y2="13"></line>
                                     <line x1="16" y1="17" x2="8" y2="17"></line>
                                 </svg>
-                                <span>PAGE-XML importieren</span>
+                                <span>Import PAGE-XML</span>
                             </button>
                             <div class="upload-menu-divider"></div>
                             <button class="upload-menu-item" id="btnSamples">
                                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                                 </svg>
-                                <span>Demo laden</span>
+                                <span>Load Demo</span>
                             </button>
                             <button class="upload-menu-item" id="btnIIIF">
                                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -211,7 +223,7 @@
                                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
                                     <polyline points="21 15 16 10 5 21"></polyline>
                                 </svg>
-                                <span>IIIF laden</span>
+                                <span>Load IIIF</span>
                             </button>
                         </div>
                         <!-- Samples Submenu (shown when Demo is hovered/clicked) -->
@@ -249,10 +261,10 @@
                 <!-- Loading State (shown during IIIF loading) -->
                 <div class="viewer-loading-state" id="viewerLoadingState" hidden>
                     <div class="loading-spinner-large"></div>
-                    <h3 class="loading-title" id="loadingTitle">IIIF-Manifest wird geladen...</h3>
-                    <p class="loading-text" id="loadingText">Verbinde mit Repository</p>
+                    <h3 class="loading-title" id="loadingTitle">Loading IIIF Manifest...</h3>
+                    <p class="loading-text" id="loadingText">Connecting to repository</p>
                     <div class="loading-progress" id="loadingProgress" hidden>
-                        <span class="loading-progress-text" id="loadingProgressText">0 / 0 Seiten</span>
+                        <span class="loading-progress-text" id="loadingProgressText">0 / 0 pages</span>
                     </div>
                 </div>
 
@@ -330,27 +342,39 @@
         <!-- MIDDLE PANEL: EDITOR -->
         <section class="panel glass-panel panel-col-2">
             <div class="panel-header">
-                <span>Transcription</span>
+                <span>Description / Transcription</span>
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
-                        <div class="info-tooltip-title">Wie funktioniert es?</div>
-                        Das LLM erstellt einen ersten Entwurf, den du als Experte korrigierst und validierst.
+                        <div class="info-tooltip-title">How does it work?</div>
+                        <strong>1. Transcribe:</strong> The LLM creates an initial draft which you correct and validate as an expert.<br>
+                        <strong>2. Describe:</strong> As configured in the user prompt, the LLM generates a visual description of the document page.
                     </div>
                 </span>
                 <div class="flex-center gap-1 ml-auto">
-                    <span class="model-indicator" id="modelIndicator" title="Current LLM model">
-                        <span class="model-indicator-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
-                            </svg>
-                        </span>
+                    <span class="model-indicator" id="modelIndicator" title="LLM Configuration">
+                        <span class="model-indicator-label">LLM</span>
+                        <span class="model-indicator-sep">|</span>
                         <span class="model-indicator-text" id="modelIndicatorText">Gemini Flash</span>
                     </span>
                     <button class="btn btn-primary btn-sm" id="btnTranscribe" title="Transcribe document with LLM">
-                        <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
+                        <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                            <path d="m15 5 4 4"></path>
                         </svg>
                         <span class="btn-text">Transcribe</span>
+                        <span class="btn-spinner" hidden>
+                            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
+                            </svg>
+                        </span>
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="btnDescribe" title="Describe illuminated initials with Gemini">
+                        <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <span class="btn-text">Describe</span>
                         <span class="btn-spinner" hidden>
                             <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"></circle>
@@ -392,6 +416,33 @@
                 <span>Click "Transcribe" to process the document with AI. Double-click to edit.</span>
                 <button class="panel-hint-dismiss" data-dismiss-hint="editor">×</button>
             </div>
+            <!-- Description Panel (collapsible, outside editorContent to survive innerHTML rebuilds) -->
+            <details class="description-panel" id="descriptionPanel" hidden>
+                <summary class="description-summary" onclick="event.preventDefault()">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <span>Image Description</span>
+                    <span class="description-summary-badge" id="descriptionModelBadge">Gemini Pro</span>
+                    <button type="button" class="description-collapse-btn" id="descriptionCollapseBtn" title="Collapse description">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                    </button>
+                </summary>
+                <div class="description-content">
+                    <textarea id="descriptionTextarea" rows="12" placeholder="Description will appear here..."></textarea>
+                    <div class="description-footer">
+                        <span class="description-timestamp" id="descriptionTimestamp"></span>
+                        <button type="button" class="btn-link btn-sm" id="copyDescription">Copy</button>
+                    </div>
+                </div>
+            </details>
+            <div class="pane-resize-handle-vertical" id="descriptionResizeHandle"
+                 role="separator" aria-orientation="horizontal" tabindex="0"
+                 aria-label="Resize description and transcription panes" hidden></div>
             <div class="panel-content editor-container" id="editorContent">
                 <!-- Content injected by JS -->
             </div>
@@ -400,11 +451,13 @@
         <!-- RIGHT PANEL: VALIDATION -->
         <section class="panel glass-panel panel-col-3">
             <div class="panel-header">
-                <span>Validation</span>
+                <span>Validation / LLM Review</span>
                 <span class="info-tooltip">i
                     <div class="info-tooltip-content">
                         <div class="info-tooltip-title">Hybrid Validation</div>
-                        Combines deterministic rules with LLM-Judge. Categories: confident / uncertain / problematic (no percentages).
+                        Combines deterministic validation with LLM Review. Categories: confident / uncertain / problematic (no percentages).
+                        <div class="info-tooltip-title" style="margin-top: 8px;">Model Thinking</div>
+                        Watch the LLM's reasoning process in real time. This helps you understand how the model approaches your document and refine your prompts accordingly.
                     </div>
                 </span>
                 <div class="flex-center gap-2 ml-auto">
@@ -434,6 +487,28 @@
                 <button class="panel-hint-dismiss" data-dismiss-hint="validation">×</button>
             </div>
             <div class="panel-content" id="validationContent">
+                <!-- Thinking Section (hidden until LLM starts streaming) -->
+                <div class="thinking-section" id="thinkingSection" hidden>
+                    <div class="thinking-header">
+                        <svg class="icon-sm thinking-icon" id="thinkingIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <span class="thinking-label" id="thinkingHeader">LLM Thinking</span>
+                        <button type="button" class="thinking-collapse-btn" id="thinkingCollapseBtn" title="Collapse thinking panel">
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="18 15 12 9 6 15"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <pre class="thinking-content" id="thinkingContent"></pre>
+                </div>
+
+                <!-- Resize handle: Thinking <-> Validation -->
+                <div class="validation-resize-handle" role="separator" aria-orientation="horizontal"
+                     aria-label="Resize sections" tabindex="0"
+                     data-above-idx="0" data-below-idx="1" hidden></div>
+
                 <!-- Empty State -->
                 <div class="validation-empty-state" id="validationEmptyState">
                     <svg class="empty-state-icon validation-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -446,7 +521,7 @@
                     </p>
                 </div>
 
-                <!-- Rule-Based Section (hidden until content) -->
+                <!-- Validation Section (hidden until content) -->
                 <div class="validation-section" id="ruleBasedSection" hidden>
                     <div class="section-title">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -455,25 +530,30 @@
                                 d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
                             </path>
                         </svg>
-                        Rule-Based
+                        Validation
                     </div>
                     <div id="ruleBasedContent">
                         <!-- Content injected by JS -->
                     </div>
                 </div>
 
-                <!-- AI Assistant Section (hidden until content) -->
-                <div class="validation-section" id="aiAssistantSection" hidden>
-                    <div class="section-title section-title-ai">
-                        <span class="ai-badge">KI</span>
+                <!-- Resize handle: Validation <-> LLM Review -->
+                <div class="validation-resize-handle" role="separator" aria-orientation="horizontal"
+                     aria-label="Resize sections" tabindex="0"
+                     data-above-idx="1" data-below-idx="2" hidden></div>
+
+                <!-- LLM Review Section (hidden until content) -->
+                <div class="validation-section" id="llmReviewSection" hidden>
+                    <div class="section-title section-title-llm">
+                        <span class="llm-badge">LLM</span>
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path
                                 d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z">
                             </path>
                         </svg>
-                        AI Assistant
+                        LLM Review
                     </div>
-                    <div id="aiAssistantContent">
+                    <div id="llmReviewContent">
                         <!-- Content injected by JS -->
                     </div>
                 </div>
@@ -481,27 +561,60 @@
             </div>
         </section>
 
+        <!-- PANEL RESIZE HANDLES (positioned absolutely between panels) -->
+        <div class="panel-resize-handle" role="separator" aria-orientation="vertical"
+             aria-label="Resize panels" tabindex="0"
+             data-left-col="1" data-right-col="2"></div>
+        <div class="panel-resize-handle" role="separator" aria-orientation="vertical"
+             aria-label="Resize panels" tabindex="0"
+             data-left-col="2" data-right-col="3"></div>
+
         <!-- STATUS BAR -->
         <footer class="status-bar glass">
             <!-- Workflow Stepper -->
             <div class="workflow-stepper" id="workflowStepper">
                 <div class="workflow-step active" data-step="1">
                     <span class="workflow-step-number">I</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
                     <span>Load</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="2">
                     <span class="workflow-step-number">II</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                        <path d="m15 5 4 4"></path>
+                    </svg>
                     <span>Transcribe</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="3">
                     <span class="workflow-step-number">III</span>
-                    <span>Validate</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <span>Describe</span>
                 </div>
                 <span class="workflow-step-arrow">→</span>
                 <div class="workflow-step" data-step="4">
                     <span class="workflow-step-number">IV</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                    </svg>
+                    <span>Validate</span>
+                </div>
+                <span class="workflow-step-arrow">→</span>
+                <div class="workflow-step" data-step="5">
+                    <span class="workflow-step-number">V</span>
+                    <svg class="workflow-step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
                     <span>Export</span>
                 </div>
             </div>
@@ -519,7 +632,7 @@
     <!-- LLM Configuration Dialog -->
     <dialog id="apiKeyDialog" class="dialog dialog-xl">
         <div class="dialog-header">
-            <h2 class="dialog-title">LLM-Konfiguration</h2>
+            <h2 class="dialog-title">LLM Configuration</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -532,26 +645,30 @@
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
                 <div class="security-notice-content">
-                    <strong>Sicherheitshinweis:</strong>
+                    <strong>Security Notice:</strong>
                     <ul class="security-notice-list">
-                        <li>API-Keys werden <em>nicht</em> gespeichert - Eingabe bei jedem Besuch erforderlich</li>
-                        <li>Keys bleiben nur im Browser-Speicher, solange der Tab offen ist</li>
-                        <li>Teile deine API-Keys niemals mit anderen</li>
-                        <li>Fuer maximale Sicherheit: Ollama lokal nutzen (kein API-Key noetig)</li>
+                        <li>API Keys are <em>not</em> stored - entry required on each visit</li>
+                        <li>Keys remain only in browser memory while the tab is open</li>
+                        <li>Never share your API Keys with others</li>
+                        <li>For maximum security: Use Ollama locally (no API key needed)</li>
                     </ul>
                     <details class="security-details">
-                        <summary>Mehr erfahren</summary>
-                        <p>Browser-basierte Apps koennen API-Keys nicht vollstaendig schuetzen. Der Key ist waehrend der Nutzung im Arbeitsspeicher des Browsers. Wir empfehlen:</p>
+                        <summary>Learn more</summary>
+                        <p>Browser-based apps cannot fully protect API Keys. The key is in the browser's memory during use. We recommend:</p>
                         <ul>
-                            <li>Einen separaten API-Key nur fuer dieses Tool erstellen</li>
-                            <li>Spending Limits beim Anbieter setzen</li>
-                            <li>Bei sensiblen Dokumenten: Ollama lokal verwenden</li>
+                            <li>Create a separate API key only for this tool</li>
+                            <li>Set spending limits with your provider</li>
+                            <li>For sensitive documents: Use Ollama locally</li>
                         </ul>
-                        <p class="security-local-hint"><strong>Tipp fuer lokale Nutzung:</strong> Wenn du das Tool lokal ausfuehrst, kannst du eine <code>config.local.js</code> Datei erstellen (siehe <code>config.local.example.js</code>). Deine Keys werden dann automatisch geladen.</p>
+                        <p class="security-local-hint"><strong>Tip for local use:</strong> When running the tool locally, you can create a <code>config.local.js</code> file (see <code>config.local.example.js</code>). Your keys will then be loaded automatically.</p>
                     </details>
                     <label class="security-acknowledge">
                         <input type="checkbox" id="securityAcknowledge">
-                        <span>Ich verstehe, dass mein API-Key waehrend der Sitzung im Browser-Speicher liegt</span>
+                        <span>I understand that my API key will be stored in browser memory during the session</span>
+                    </label>
+                    <label class="security-acknowledge api-key-persist">
+                        <input type="checkbox" id="apiKeyPersist">
+                        <span>Store API key persistently (only on trusted devices)</span>
                     </label>
                 </div>
             </div>
@@ -559,27 +676,30 @@
             <div class="llm-config-fields">
                 <!-- Model Selection (primary) -->
                 <div class="input-wrapper">
-                    <label for="llmModel">Modell</label>
+                    <label for="llmModel">Model</label>
                     <div class="input-with-custom">
                         <select id="llmModel">
-                            <optgroup label="Gemini (empfohlen)">
-                                <option value="gemini-3-flash-preview" data-provider="gemini">Gemini 3 Flash - schnell, kosteneffizient</option>
-                                <option value="gemini-3-pro-preview" data-provider="gemini">Gemini 3 Pro - beste Qualitaet</option>
+                            <optgroup label="Gemini (recommended)">
+                                <option value="gemini-3-flash-preview" data-provider="gemini">Gemini 3 Flash - fast, cost-effective</option>
+                                <option value="gemini-3-pro-preview" data-provider="gemini">Gemini 3 Pro - best quality</option>
                             </optgroup>
-                            <optgroup label="Lokal (Ollama)">
-                                <option value="ollama:deepseek-ocr" data-provider="ollama">DeepSeek-OCR (lokal)</option>
-                                <option value="ollama:llava" data-provider="ollama">LLaVA (lokal)</option>
+                            <optgroup label="Mistral">
+                                <option value="mistral-ocr-latest" data-provider="mistral">Mistral OCR - specialized OCR</option>
                             </optgroup>
-                            <option value="custom">Eigenes Modell...</option>
+                            <optgroup label="Local (Ollama)">
+                                <option value="ollama:deepseek-ocr" data-provider="ollama">DeepSeek-OCR (local)</option>
+                                <option value="ollama:llava" data-provider="ollama">LLaVA (local)</option>
+                            </optgroup>
+                            <option value="custom">Custom model...</option>
                         </select>
-                        <input type="text" id="llmModelCustom" class="custom-input" placeholder="z.B. gpt-4o, claude-sonnet-4-5-20250514, gemini-..." style="display: none;">
+                        <input type="text" id="llmModelCustom" class="custom-input" placeholder="e.g. gpt-4o, claude-sonnet-4-5-20250514, gemini-..." style="display: none;">
                     </div>
-                    <span class="input-hint" id="llmModelHint">Gemini 3 Flash fuer schnelle Ergebnisse, Pro fuer komplexe Handschriften.</span>
+                    <span class="input-hint" id="llmModelHint">Gemini 3 Flash for fast results, Pro for complex handwriting.</span>
                 </div>
 
                 <!-- API Key (hidden for Ollama) -->
                 <div class="input-wrapper" id="apiKeyWrapper">
-                    <label for="llmApiKey">API-Key</label>
+                    <label for="llmApiKey">API Key</label>
                     <div class="input-with-toggle">
                         <input type="password" id="llmApiKey" placeholder="AIza..." autocomplete="off">
                         <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
@@ -588,7 +708,7 @@
                         </button>
                     </div>
                     <span class="input-hint" id="apiKeyHint">
-                        API-Key von <a href="https://aistudio.google.com/apikey" id="apiKeyLink" target="_blank" rel="noopener">Google AI Studio</a> holen.
+                        Get API key from <a href="https://aistudio.google.com/apikey" id="apiKeyLink" target="_blank" rel="noopener">Google AI Studio</a>.
                     </span>
                 </div>
 
@@ -597,21 +717,89 @@
                     <label for="ollamaEndpoint">Ollama Server-URL</label>
                     <div class="input-with-button">
                         <input type="text" id="ollamaEndpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
-                        <button type="button" class="btn btn-secondary btn-sm" id="ollamaRefreshModels">Modelle laden</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="ollamaRefreshModels">Load Models</button>
                     </div>
-                    <span class="input-hint">Ollama muss lokal laufen: <code>ollama serve</code></span>
+                    <span class="input-hint">Ollama must run locally: <code>ollama serve</code></span>
                 </div>
 
                 <!-- Hidden provider field for JS logic -->
                 <input type="hidden" id="llmProvider" value="gemini">
             </div>
+
+            <!-- Validation Provider Section (conditional - only for OCR-only models) -->
+            <div id="validationProviderSection" class="validation-provider-section" hidden>
+                <div class="section-divider">
+                    <span class="section-divider-text">Validation Configuration</span>
+                </div>
+
+                <div class="info-banner info-banner-warning">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <p>
+                        <strong>OCR-only model selected.</strong>
+                        This model cannot validate text. Select a language model for validation or leave empty to use automatic fallback.
+                    </p>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="validationModel">Validation Model (Optional)</label>
+                    <select id="validationModel">
+                        <option value="">-- Auto-detect fallback --</option>
+                        <optgroup label="Google Gemini">
+                            <option value="gemini-3-flash-preview" data-provider="gemini">Gemini 3 Flash (recommended)</option>
+                            <option value="gemini-3-pro-preview" data-provider="gemini">Gemini 3 Pro</option>
+                        </optgroup>
+                        <optgroup label="OpenAI">
+                            <option value="gpt-5.2" data-provider="openai">GPT-5.2</option>
+                            <option value="gpt-5.2-mini" data-provider="openai">GPT-5.2 Mini</option>
+                        </optgroup>
+                        <optgroup label="Anthropic">
+                            <option value="claude-sonnet-4-5-20250514" data-provider="anthropic">Claude 4.5 Sonnet</option>
+                            <option value="claude-haiku-4-5-20250514" data-provider="anthropic">Claude 4.5 Haiku</option>
+                        </optgroup>
+                        <optgroup label="Ollama (local)">
+                            <option value="ollama:llama3.2" data-provider="ollama">Llama 3.2</option>
+                            <option value="ollama:mistral" data-provider="ollama">Mistral</option>
+                            <option value="ollama:phi3" data-provider="ollama">Phi-3</option>
+                        </optgroup>
+                    </select>
+                    <span class="input-hint">Leave empty to use automatic fallback detection</span>
+                </div>
+
+                <!-- Validation API Key (hidden for Ollama) -->
+                <div id="validationApiKeyWrapper" class="input-wrapper">
+                    <label for="validationApiKey">Validation API Key</label>
+                    <div class="input-with-toggle">
+                        <input type="password" id="validationApiKey" placeholder="Enter API key" autocomplete="off">
+                        <button type="button" class="toggle-visibility" data-toggle-password aria-label="Toggle visibility">
+                            <svg class="icon-show"><use href="#icon-eye-show"></use></svg>
+                            <svg class="icon-hide" hidden><use href="#icon-eye-hide"></use></svg>
+                        </button>
+                    </div>
+                    <span class="input-hint">
+                        Get your API key: <a href="#" id="validationApiKeyLink" target="_blank" rel="noopener">Provider</a>
+                    </span>
+                </div>
+
+                <!-- Persist checkbox -->
+                <label class="security-acknowledge">
+                    <input type="checkbox" id="validationApiKeyPersist">
+                    <span>Store validation API key permanently</span>
+                </label>
+            </div>
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" id="testApiConnection">Verbindung testen</button>
+            <div class="test-connection-group">
+                <button type="button" class="btn btn-secondary" id="testApiConnection">Test Connection</button>
+                <span id="testConnectionStatus" class="test-status" hidden></span>
+            </div>
             <div class="dialog-actions">
-                <button type="button" class="btn btn-secondary" data-close-dialog>Abbrechen</button>
-                <button type="button" class="btn btn-primary" id="saveApiKeys">Speichern</button>
+                <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveApiKeys">Save</button>
             </div>
         </div>
     </dialog>
@@ -619,7 +807,7 @@
     <!-- Transcription Dialog (combined context + transcribe) -->
     <dialog id="transcribeDialog" class="dialog dialog-xl">
         <div class="dialog-header">
-            <h2 class="dialog-title">Transkription starten</h2>
+            <h2 class="dialog-title">Start Transcription</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -629,49 +817,139 @@
             <!-- Context Section (collapsible) -->
             <details class="context-details" id="contextDetails">
                 <summary class="context-summary">
-                    <span class="context-summary-title">Dokumentkontext (optional)</span>
-                    <span class="context-summary-hint">Zusaetzliche Informationen zum Dokument</span>
+                    <span class="context-summary-title">Document Context (optional)</span>
+                    <span class="context-summary-hint">Additional document information</span>
                 </summary>
                 <div class="context-fields">
-                    <p class="context-explanation">Optionale Angaben zum Dokument, die bei der Transkription beruecksichtigt werden.</p>
+                    <p class="context-explanation">Optional information about the document that will be considered during transcription.</p>
                     <!-- Document Type with custom option -->
                     <div class="input-wrapper">
-                        <label for="contextDocType">Dokumenttyp</label>
+                        <label for="contextDocType">Document Type</label>
                         <div class="input-with-custom">
                             <select id="contextDocType">
-                                <option value="">-- Auswählen --</option>
-                                <option value="letter">Brief / Korrespondenz</option>
-                                <option value="account_book">Rechnungsbuch / Kassabuch</option>
-                                <option value="diary">Tagebuch / Journal</option>
-                                <option value="register">Register / Liste</option>
-                                <option value="protocol">Protokoll / Sitzungsnotizen</option>
-                                <option value="contract">Vertrag / Rechtsdokument</option>
-                                <option value="inventory">Inventar</option>
-                                <option value="manuscript">Manuskript / Handschrift</option>
-                                <option value="certificate">Urkunde / Zertifikat</option>
-                                <option value="custom">Eigene Angabe...</option>
+                                <option value="">-- Select --</option>
+                                <option value="letter">Letter / Correspondence</option>
+                                <option value="account_book">Account Book / Ledger</option>
+                                <option value="diary">Diary / Journal</option>
+                                <option value="register">Register / List</option>
+                                <option value="protocol">Minutes / Notes</option>
+                                <option value="contract">Contract / Legal Document</option>
+                                <option value="inventory">Inventory</option>
+                                <option value="manuscript">Manuscript / Handwriting</option>
+                                <option value="certificate">Certificate / Deed</option>
+                                <option value="custom">Custom...</option>
                             </select>
-                            <input type="text" id="contextDocTypeCustom" class="custom-input" placeholder="Dokumenttyp eingeben..." style="display: none;">
+                            <input type="text" id="contextDocTypeCustom" class="custom-input" placeholder="Enter document type..." style="display: none;">
                         </div>
                     </div>
 
                     <!-- Period and Language -->
                     <div class="input-row">
                         <div class="input-wrapper">
-                            <label for="contextPeriod">Zeitraum</label>
-                            <input type="text" id="contextPeriod" placeholder="z.B. 1880-1920, 19. Jh.">
+                            <label for="contextPeriod">Period</label>
+                            <input type="text" id="contextPeriod" placeholder="e.g. 1880-1920, 19th century">
                         </div>
                         <div class="input-wrapper">
-                            <label for="contextLanguage">Sprache(n)</label>
-                            <input type="text" id="contextLanguage" placeholder="z.B. Deutsch, Französisch">
+                            <label for="contextLanguage">Language(s)</label>
+                            <input type="text" id="contextLanguage" placeholder="e.g. German, French">
                         </div>
+                    </div>
+
+                    <!-- Script Type and Century -->
+                    <div class="input-row">
+                        <div class="input-wrapper">
+                            <label for="contextScriptType">Script Type</label>
+                            <select id="contextScriptType">
+                                <option value="">-- Select --</option>
+                                <option value="textura">Textura (Gothic Bookhand)</option>
+                                <option value="cursiva">Cursiva (Gothic Cursive)</option>
+                                <option value="bastarda">Bastarda (Hybrid)</option>
+                                <option value="humanistica">Humanistica</option>
+                                <option value="carolingian">Caroline Minuscule</option>
+                                <option value="uncial">Uncial / Half-Uncial</option>
+                                <option value="insular">Insular Script</option>
+                                <option value="kurrent">Kurrent / Suetterlin</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                            <input type="text" id="contextScriptTypeCustom" class="custom-input" placeholder="Enter script type..." style="display: none;">
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="contextCentury">Century</label>
+                            <input type="text" id="contextCentury" placeholder="e.g. 14, 15th">
+                        </div>
+                    </div>
+
+                    <!-- Region and Text Type -->
+                    <div class="input-row">
+                        <div class="input-wrapper">
+                            <label for="contextRegion">Region</label>
+                            <select id="contextRegion">
+                                <option value="">-- Select --</option>
+                                <option value="german">German-speaking</option>
+                                <option value="french">French-speaking</option>
+                                <option value="english">English-speaking</option>
+                                <option value="italian">Italian-speaking</option>
+                                <option value="spanish">Spanish-speaking</option>
+                                <option value="dutch">Dutch-speaking</option>
+                                <option value="scandinavian">Scandinavian</option>
+                                <option value="bohemian">Bohemian / Czech</option>
+                                <option value="polish">Polish</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                            <input type="text" id="contextRegionCustom" class="custom-input" placeholder="Enter region..." style="display: none;">
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="contextTextType">Text Type</label>
+                            <select id="contextTextType">
+                                <option value="">-- Select --</option>
+                                <option value="liturgical">Liturgical</option>
+                                <option value="legal">Legal / Charter</option>
+                                <option value="chronicle">Chronicle / Historiographic</option>
+                                <option value="scientific">Scientific / Academic</option>
+                                <option value="literary">Literary</option>
+                                <option value="administrative">Administrative</option>
+                                <option value="theological">Theological</option>
+                                <option value="medical">Medical</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                            <input type="text" id="contextTextTypeCustom" class="custom-input" placeholder="Enter text type..." style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Known Text -->
+                    <div class="input-wrapper">
+                        <label for="contextKnownText">Known Source Text</label>
+                        <input type="text" id="contextKnownText" placeholder="e.g. Psalter, Sachsenspiegel, Vulgate">
+                        <span class="input-hint">If the source text is known, name it here for better correction proposals.</span>
                     </div>
 
                     <!-- Context Information -->
                     <div class="input-wrapper">
-                        <label for="contextDescription">Kontextinformation</label>
-                        <textarea id="contextDescription" rows="4" placeholder="z.B. Brief aus dem Nachlass von Hugo Schuchardt an einen Kollegen. Handschrift teilweise schwer lesbar, enthält Fachbegriffe aus der Linguistik."></textarea>
-                        <span class="input-hint">Beschreibe Herkunft, Verfasser, Besonderheiten oder andere hilfreiche Informationen.</span>
+                        <label for="contextDescription">Context Information</label>
+                        <textarea id="contextDescription" rows="4" placeholder="e.g. Letter from the estate of Hugo Schuchardt to a colleague. Handwriting partially difficult to read, contains linguistic terminology."></textarea>
+                        <span class="input-hint">Describe origin, author, special features or other helpful information.</span>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Prompt Profile Section (Stage 1) -->
+            <details class="context-details" id="promptConfigDetailsTranscribe">
+                <summary class="context-summary">
+                    <span class="context-summary-title">Prompt Profile (optional)</span>
+                    <span class="context-summary-hint">Scenario profile and Stage 1 override</span>
+                </summary>
+                <div class="context-fields">
+                    <div class="input-wrapper">
+                        <label for="promptProfileSelectTranscribe">Scenario Profile</label>
+                        <select id="promptProfileSelectTranscribe"></select>
+                        <span class="input-hint">Select a document scenario. You can still override prompts manually.</span>
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="promptOverrideStage1">Stage 1 Override (Transcription)</label>
+                        <textarea id="promptOverrideStage1" rows="5" placeholder="Optional custom prompt for Stage 1. Leave empty to use selected profile/default."></textarea>
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage1">Reset Stage 1 Override</button>
+                        </div>
                     </div>
                 </div>
             </details>
@@ -684,18 +962,18 @@
             <!-- Page Selection (for multi-page documents) -->
             <div class="transcribe-page-selection" id="transcribePageSelection" hidden>
                 <div class="page-selection-header">
-                    <span class="page-selection-title">Seiten transkribieren</span>
+                    <span class="page-selection-title">Transcribe Pages</span>
                     <span class="page-selection-count" id="pageSelectionCount"></span>
                 </div>
                 <div class="page-selection-options">
                     <label class="page-selection-option">
                         <input type="radio" name="pageSelection" value="current" checked>
-                        <span class="option-label">Nur aktuelle Seite</span>
-                        <span class="option-hint">Schnell, empfohlen zum Testen</span>
+                        <span class="option-label">Current page only</span>
+                        <span class="option-hint">Fast, recommended for testing</span>
                     </label>
                     <label class="page-selection-option">
                         <input type="radio" name="pageSelection" value="all">
-                        <span class="option-label">Alle Seiten</span>
+                        <span class="option-label">All pages</span>
                         <span class="option-hint" id="allPagesHint"><!-- Filled by JS --></span>
                     </label>
                 </div>
@@ -707,20 +985,79 @@
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                     <div class="batch-warning-text">
-                        <strong>Hinweis:</strong> Die Transkription aller Seiten kann mehrere Minuten dauern und verbraucht API-Tokens.
-                        Bei <span id="batchPageCount">0</span> Seiten entstehen ca. <span id="batchTokenEstimate">~</span> Token-Kosten.
+                        <strong>Note:</strong> Transcribing all pages may take several minutes and will consume API tokens.
+                        For <span id="batchPageCount">0</span> pages, approximately <span id="batchTokenEstimate">~</span> token costs will be incurred.
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" data-close-dialog>Abbrechen</button>
+            <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
             <button type="button" class="btn btn-primary" id="startTranscription">
                 <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
                 </svg>
-                Transkribieren
+                Transcribe
+            </button>
+        </div>
+    </dialog>
+
+    <!-- Describe Dialog -->
+    <dialog id="describeDialog" class="dialog dialog-lg">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Describe Illuminated Initials</h2>
+            <button class="dialog-close" data-close-dialog aria-label="Close">
+                <svg class="icon-md"><use href="#icon-close"></use></svg>
+            </button>
+        </div>
+
+        <div class="dialog-body">
+            <!-- Custom Prompt Section -->
+            <div class="description-prompt-section">
+                <label for="descriptionPrompt">Analysis Prompt</label>
+                <textarea id="descriptionPrompt" rows="8" placeholder="Enter custom prompt or use default..."></textarea>
+                <button type="button" class="btn-link btn-sm" id="loadDefaultPrompt">
+                    Load Default Prompt
+                </button>
+            </div>
+
+            <!-- Model Info (Gemini only) -->
+            <div class="description-model-info">
+                <span>Using <strong id="descriptionModelName">Gemini 3 Pro</strong> for image analysis</span>
+                <button type="button" class="btn-link" id="changeDescriptionModel">change</button>
+            </div>
+
+            <!-- Page Selection (multi-page) -->
+            <div class="description-page-selection" id="descriptionPageSelection" hidden>
+                <div class="page-selection-header">
+                    <span class="page-selection-title">Describe Pages</span>
+                    <span class="page-selection-count" id="descriptionPageCount"></span>
+                </div>
+                <div class="page-selection-options">
+                    <label class="page-selection-option">
+                        <input type="radio" name="descriptionPageSelection" value="current" checked>
+                        <span class="option-label">Current page only</span>
+                        <span class="option-hint">Fast, recommended</span>
+                    </label>
+                    <label class="page-selection-option">
+                        <input type="radio" name="descriptionPageSelection" value="all">
+                        <span class="option-label">All pages</span>
+                        <span class="option-hint" id="descriptionAllPagesHint"><!-- Filled by JS --></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+            <button type="button" class="btn btn-primary" id="startDescription">
+                <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Describe
             </button>
         </div>
     </dialog>
@@ -728,51 +1065,96 @@
     <!-- Validate Dialog -->
     <dialog id="validateDialog" class="dialog">
         <div class="dialog-header">
-            <h2 class="dialog-title">Validierung starten</h2>
+            <h2 class="dialog-title">Start Validation</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
         </div>
 
         <div class="dialog-body">
-            <!-- Regelbasierte Checks -->
+            <!-- Rule-based Checks -->
             <div class="validate-options-section">
-                <h4 class="validate-section-title">Regelbasiert</h4>
-                <p class="validate-section-hint">Lokale, schnelle Pruefungen ohne API-Calls</p>
+                <h4 class="validate-section-title">Validation</h4>
+                <p class="validate-section-hint">Local, fast checks without API calls</p>
                 <div class="validate-checkbox-group">
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="checkMarkers" checked>
-                        <span class="checkbox-label">Transkriptions-Marker</span>
-                        <span class="checkbox-hint">[?], [illegible], Abkuerzungen</span>
+                        <span class="checkbox-label">Transcription Markers</span>
+                        <span class="checkbox-hint">[?], [illegible], Abbreviations</span>
                     </label>
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="checkStats" checked>
-                        <span class="checkbox-label">Text-Statistik</span>
-                        <span class="checkbox-hint">Zeilen- und Zeichenanzahl</span>
+                        <span class="checkbox-label">Text Statistics</span>
+                        <span class="checkbox-hint">Line and character count</span>
                     </label>
                     <label class="validate-checkbox-option">
                         <input type="checkbox" id="checkArtifacts" checked>
-                        <span class="checkbox-label">OCR-Artefakte</span>
-                        <span class="checkbox-hint">Ungewoehnliche Zeichen, Kontrolzeichen</span>
+                        <span class="checkbox-label">OCR Artifacts</span>
+                        <span class="checkbox-hint">Unusual characters, control characters</span>
                     </label>
                 </div>
             </div>
 
-            <!-- KI-Analyse -->
+            <!-- LLM Review -->
             <div class="validate-options-section" id="llmModeItem">
                 <div class="validate-section-header">
-                    <h4 class="validate-section-title">KI-Analyse</h4>
+                    <h4 class="validate-section-title">LLM Review</h4>
                     <label class="validate-toggle">
                         <input type="checkbox" id="enableLLM" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
-                <p class="validate-section-hint" id="llmModeHint">API-Call pro Seite</p>
+                <p class="validate-section-hint" id="llmModeHint">One API call per page</p>
                 <details class="custom-prompt-details">
-                    <summary class="custom-prompt-toggle">Eigenen Prompt verwenden (optional)</summary>
+                    <summary class="custom-prompt-toggle">Use custom prompt (optional)</summary>
                     <div class="custom-prompt-content">
-                        <p class="custom-prompt-hint">Ueberschreibt den Standard-Validierungsprompt. Nutze {text} als Platzhalter fuer die Transkription.</p>
-                        <textarea id="customValidationPrompt" class="custom-prompt-textarea" rows="6" placeholder="Analysiere den folgenden Text auf Transkriptionsfehler...&#10;&#10;{text}&#10;&#10;Antworte im JSON-Format mit confidence, issues und summary."></textarea>
+                        <p class="custom-prompt-hint">Overrides the default LLM Review prompt. Use {text} as placeholder for the transcription.</p>
+                        <textarea id="customValidationPrompt" class="custom-prompt-textarea" rows="6" placeholder="Analyze the following text for transcription errors...&#10;&#10;{text}&#10;&#10;Respond in JSON format with confidence, issues and summary."></textarea>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Post-Processing Stage Toggles (only visible when pipeline feature flag is ON) -->
+            <div class="validate-options-section" id="stageTogglesSection" hidden>
+                <h4 class="validate-section-title">Post-Processing Stages</h4>
+                <p class="validate-section-hint">Select which review stages to run</p>
+                <div class="validate-checkbox-group">
+                    <label class="validate-checkbox-option">
+                        <input type="checkbox" id="enableStage2" checked>
+                        <span class="checkbox-label">Paleographic Review</span>
+                        <span class="checkbox-hint">Minim disambiguation, letter confusion, abbreviation signs</span>
+                    </label>
+                    <label class="validate-checkbox-option">
+                        <input type="checkbox" id="enableStage3" checked>
+                        <span class="checkbox-label">Philological Review</span>
+                        <span class="checkbox-hint">Morphology, syntax, formulaic patterns, lexical plausibility</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Prompt Profile Section -->
+            <div class="validate-options-section" id="promptProfileSection">
+                <h4 class="validate-section-title">Prompt Profile</h4>
+                <p class="validate-section-hint">Choose a document scenario profile for Stage 1/2/3 prompts.</p>
+                <div class="input-wrapper">
+                    <label for="promptProfileSelectValidate">Scenario Profile</label>
+                    <select id="promptProfileSelectValidate"></select>
+                </div>
+                <details class="custom-prompt-details">
+                    <summary class="custom-prompt-toggle">Advanced stage overrides (optional)</summary>
+                    <div class="custom-prompt-content">
+                        <p class="custom-prompt-hint">If filled, overrides replace profile/default prompts for the stage.</p>
+                        <label for="promptOverrideStage2">Stage 2 Override (Paleographic Review)</label>
+                        <textarea id="promptOverrideStage2" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 2"></textarea>
+                        <div style="margin-top: 8px; margin-bottom: 12px;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage2">Reset Stage 2 Override</button>
+                        </div>
+
+                        <label for="promptOverrideStage3">Stage 3 Override (Philological Review)</label>
+                        <textarea id="promptOverrideStage3" class="custom-prompt-textarea" rows="5" placeholder="Optional custom prompt for Stage 3"></textarea>
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetPromptStage3">Reset Stage 3 Override</button>
+                        </div>
                     </div>
                 </details>
             </div>
@@ -780,18 +1162,18 @@
             <!-- Page Selection for Multi-Page -->
             <div class="validate-page-selection" id="validatePageSelection" hidden>
                 <div class="page-selection-header">
-                    <span class="page-selection-title">Seiten validieren</span>
+                    <span class="page-selection-title">Validate Pages</span>
                     <span class="page-selection-count" id="validatePageCount"></span>
                 </div>
                 <div class="page-selection-options">
                     <label class="page-selection-option">
                         <input type="radio" name="validatePageSelection" value="current" checked>
-                        <span class="option-label">Nur aktuelle Seite</span>
-                        <span class="option-hint">Schnell, empfohlen zum Testen</span>
+                        <span class="option-label">Current page only</span>
+                        <span class="option-hint">Fast, recommended for testing</span>
                     </label>
                     <label class="page-selection-option">
                         <input type="radio" name="validatePageSelection" value="all">
-                        <span class="option-label">Alle Seiten</span>
+                        <span class="option-label">All pages</span>
                         <span class="option-hint" id="validateAllPagesHint"><!-- Filled by JS --></span>
                     </label>
                 </div>
@@ -803,21 +1185,21 @@
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                     <div class="batch-warning-text">
-                        <strong>Hinweis:</strong> Die KI-Validierung aller Seiten kann mehrere Minuten dauern.
-                        Bei <span id="validateBatchPageCount">0</span> Seiten werden mehrere API-Calls durchgeführt.
+                        <strong>Note:</strong> LLM Review for all pages may take several minutes.
+                        For <span id="validateBatchPageCount">0</span> pages, multiple API calls will be made.
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="dialog-footer">
-            <button type="button" class="btn btn-secondary" data-close-dialog>Abbrechen</button>
+            <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
             <button type="button" class="btn btn-primary" id="startValidation">
                 <svg class="icon-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M9 11l3 3L22 4"></path>
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                 </svg>
-                Validieren
+                Validate
             </button>
         </div>
     </dialog>
@@ -908,8 +1290,8 @@
                 <div class="export-scope" id="exportScope" hidden>
                     <div class="form-label">Umfang</div>
                     <div class="btn-group export-scope-btns">
-                        <button type="button" class="btn btn-secondary btn-sm active" data-scope="current">Aktuelle Seite</button>
-                        <button type="button" class="btn btn-secondary btn-sm" data-scope="all">Alle Seiten (ZIP)</button>
+                        <button type="button" class="btn btn-secondary btn-sm active" data-scope="current">Current Page</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-scope="all">All Pages (ZIP)</button>
                     </div>
                     <p class="export-scope-hint text-muted text-xs" id="exportScopeHint"></p>
                 </div>
@@ -989,6 +1371,21 @@
                 </label>
             </div>
 
+            <!-- Storage Quota -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">Storage</h3>
+                <div class="storage-quota-display" id="storageQuotaDisplay">
+                    <div class="quota-bar">
+                        <div class="quota-bar-fill" id="quotaBarFill"></div>
+                    </div>
+                    <div class="quota-info">
+                        <span class="quota-text" id="quotaText">Loading...</span>
+                        <button type="button" class="btn-link" id="btnRefreshQuota">Refresh</button>
+                    </div>
+                    <p class="quota-hint">Images and transcriptions are stored in browser storage.</p>
+                </div>
+            </div>
+
             <!-- Data Management -->
             <div class="settings-section">
                 <h3 class="settings-section-title">Data</h3>
@@ -998,7 +1395,14 @@
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                         </svg>
-                        Clear Session
+                        Delete Project
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btnDeleteApiKeys">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Delete Saved API Keys
                     </button>
                     <button type="button" class="btn btn-secondary" id="btnResetSettings">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-btn-label">
@@ -1022,7 +1426,7 @@
     <!-- Help Dialog -->
     <dialog id="helpDialog" class="dialog dialog-wide">
         <div class="dialog-header">
-            <h2 class="dialog-title">Help & Documentation</h2>
+            <h2 class="dialog-title">Help</h2>
             <button class="dialog-close" data-close-dialog aria-label="Close">
                 <svg class="icon-md"><use href="#icon-close"></use></svg>
             </button>
@@ -1041,7 +1445,8 @@
                 <ol class="help-steps">
                     <li><strong>Load</strong> – Upload an image or load a demo document</li>
                     <li><strong>Transcribe</strong> – Click "Transcribe" to process with AI</li>
-                    <li><strong>Validate</strong> – Review rule-based and AI suggestions</li>
+                    <li><strong>Describe</strong> – Generate an image description for initials and iconography</li>
+                    <li><strong>Validate</strong> – Review Validation and LLM Review results</li>
                     <li><strong>Export</strong> – Download as TXT, JSON, or Markdown</li>
                 </ol>
             </div>
@@ -1118,7 +1523,7 @@
                 </p>
             </div>
 
-            <!-- About -->
+            <!-- About 
             <div class="help-section help-about">
                 <div class="about-banner">
                     <img src="assets/logo.png" alt="coOCR/HTR" class="about-logo-wide">
@@ -1130,9 +1535,9 @@
                     </div>
                 </div>
                 <p class="about-tagline">Expert-in-the-loop validation for historical document transcription</p>
-            </div>
+            </div> -->
 
-            <!-- Resources -->
+            <!-- Resources
             <div class="help-section">
                 <h3 class="help-section-title">
                     <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1165,6 +1570,7 @@
                     </a>
                 </div>
             </div>
+            -->
         </div>
 
         <div class="dialog-footer">

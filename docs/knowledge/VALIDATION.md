@@ -2,7 +2,7 @@
 type: knowledge
 created: 2026-01-16
 updated: 2026-02-03
-tags: [coocr-htr, validation, llm-judge, navigation]
+tags: [coocr-htr, validation, llm-review, navigation]
 status: complete
 version: 2.1
 ---
@@ -35,7 +35,7 @@ Combination of deterministic rules and LLM assessments.
               └─────────────────┘
 ```
 
-## Rule-Based Validation
+## Validation
 
 Generic rules applicable to all document types (letters, diaries, account books, etc.).
 
@@ -71,7 +71,7 @@ Generic rules applicable to all document types (letters, diaries, account books,
 | Structure | Abbreviations [expanded] | Info |
 | Statistics | Line count, Special characters | Info |
 
-## LLM Validation (v2.1)
+## LLM Review (v2.1)
 
 Generic validation prompt covering all relevant aspects:
 
@@ -136,18 +136,18 @@ Each validation result contains:
 ┌─────────────────────────────────────────────────┐
 │ VALIDATION            [Validate]    1 Issue     │
 ├─────────────────────────────────────────────────┤
-│ RULE-BASED                                      │
+│ VALIDATION                                      │
 │ ● Uncertain Readings   No markers found         │
 │ ● Illegible Passages   1 illegible passage      │
 │ ● Abbreviations        1 expanded               │
 │ ● Line Count           36 lines transcribed     │
 │ ● Special Characters   None unusual             │
 ├─────────────────────────────────────────────────┤
-│ AI ASSISTANT                                    │
+│ LLM REVIEW                                      │
 │ ● Confidence           Medium Confidence        │
 │ ● Line 5               Le prix lorem ipsum      │
 │ ● Line 16              admi[illegible]trateurs  │
-│ > Show Analysis                                 │
+│ > Show LLM Review                               │
 └─────────────────────────────────────────────────┘
 ```
 

@@ -7,9 +7,18 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "serve": "npx serve ."
+    "lint": "eslint js/ tests/",
+    "lint:fix": "eslint js/ tests/ --fix",
+    "serve": "npx serve .",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.58.2",
+    "eslint": "^10.0.0",
+    "fake-indexeddb": "^6.2.5",
+    "globals": "^17.3.0",
     "jsdom": "^27.4.0",
     "vitest": "^2.0.0"
   },

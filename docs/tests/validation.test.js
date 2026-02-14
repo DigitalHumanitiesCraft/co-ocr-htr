@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ValidationEngine, VALIDATION_RULES, RULE_CATEGORIES } from '../js/services/validation.js';
+import { ValidationEngine, RULE_CATEGORIES } from '../js/services/validation.js';
 
 // Mock LLM service
 vi.mock('../js/services/llm.js', () => ({
@@ -27,7 +27,19 @@ vi.mock('../js/state.js', () => ({
   }
 }));
 
+vi.mock('../js/services/postprocess.js', () => ({
+  runPostprocessing: vi.fn()
+}));
+
+vi.mock('../js/utils/constants.js', () => ({
+  FEATURE_FLAGS: {
+    postprocessPipelineV1: false
+  }
+}));
+
 import { llmService } from '../js/services/llm.js';
+import { runPostprocessing } from '../js/services/postprocess.js';
+import { FEATURE_FLAGS } from '../js/utils/constants.js';
 
 describe('ValidationEngine', () => {
   let engine;
@@ -35,6 +47,7 @@ describe('ValidationEngine', () => {
   beforeEach(() => {
     engine = new ValidationEngine();
     vi.clearAllMocks();
+    FEATURE_FLAGS.postprocessPipelineV1 = false;
   });
 
   describe('Rule Definitions', () => {
@@ -413,6 +426,86 @@ describe('ValidationEngine', () => {
       expect(result.rules).toBeDefined();
       expect(result.llmJudge).toBeNull();
     });
+
+    it('should route to postprocessing when feature flag is enabled and no custom prompt is set', async () => {
+      FEATURE_FLAGS.postprocessPipelineV1 = true;
+      llmService.hasApiKey.mockReturnValue(true);
+      runPostprocessing.mockResolvedValue({
+        confidence: 'likely',
+        reasoning: 'pipeline reasoning',
+        issues: [],
+        summary: 'pipeline summary',
+        pipeline: {
+          stage2: { status: 'success', duration: 900 },
+          stage3: { status: 'success', duration: 700 },
+          duration: 1600
+        }
+      });
+
+      const result = await engine.validate('Test text', [], {
+        includeLLM: true,
+        customPrompt: '',
+        contextDescription: 'Script type: Textura.',
+        runStage2: true,
+        runStage3: false,
+        promptConfig: {
+          profileId: 'medieval_latin_manuscript',
+          overrides: { stage1: '', stage2: 'Custom Stage 2', stage3: '' }
+        }
+      });
+
+      expect(runPostprocessing).toHaveBeenCalledWith('Test text', expect.objectContaining({
+        contextDescription: 'Script type: Textura.',
+        runStage2: true,
+        runStage3: false,
+        promptConfig: {
+          profileId: 'medieval_latin_manuscript',
+          overrides: { stage1: '', stage2: 'Custom Stage 2', stage3: '' }
+        }
+      }));
+      expect(result.llmJudge.pipeline.stage2.status).toBe('success');
+      expect(result.llmJudge.pipeline.stage3.status).toBe('success');
+      expect(llmService.validate).not.toHaveBeenCalled();
+    });
+
+    it('should bypass postprocessing when custom prompt is provided', async () => {
+      FEATURE_FLAGS.postprocessPipelineV1 = true;
+      llmService.hasApiKey.mockReturnValue(true);
+      llmService.validate.mockResolvedValue({
+        confidence: 'confident',
+        reasoning: 'custom prompt path',
+        issues: []
+      });
+
+      await engine.validate('Test text', [], {
+        includeLLM: true,
+        customPrompt: 'Use this exact judge prompt: {text}'
+      });
+
+      expect(runPostprocessing).not.toHaveBeenCalled();
+      expect(llmService.validate).toHaveBeenCalledWith('Test text', {
+        customPrompt: 'Use this exact judge prompt: {text}'
+      });
+    });
+
+    it('should fall back to single-call LLM when postprocessing reports fallbackUsed', async () => {
+      FEATURE_FLAGS.postprocessPipelineV1 = true;
+      llmService.hasApiKey.mockReturnValue(true);
+      runPostprocessing.mockResolvedValue({ fallbackUsed: true });
+      llmService.validate.mockResolvedValue({
+        confidence: 'likely',
+        reasoning: 'single-call fallback',
+        issues: []
+      });
+
+      const result = await engine.validate('Fallback text', [], {
+        includeLLM: true
+      });
+
+      expect(runPostprocessing).toHaveBeenCalledTimes(1);
+      expect(llmService.validate).toHaveBeenCalledWith('Fallback text', { customPrompt: '' });
+      expect(result.llmJudge.confidence).toBe('likely');
+    });
   });
 
   describe('Summary Calculation', () => {
@@ -482,7 +575,7 @@ describe('ValidationEngine', () => {
 
       const markers = categories.find(c => c.id === 'markers');
       expect(markers).toBeDefined();
-      expect(markers.name).toBe('Transkriptions-Marker');
+      expect(markers.name).toBe('Transcription Markers');
       expect(markers.ruleCount).toBeGreaterThan(0);
     });
   });

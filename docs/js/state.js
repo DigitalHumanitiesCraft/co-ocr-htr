@@ -6,14 +6,10 @@
 import { storage } from './services/storage.js';
 
 /**
- * Generate a simple UUID v4
+ * Generate a UUID v4
  */
 function generateId() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  return crypto.randomUUID();
 }
 
 /**
@@ -25,6 +21,12 @@ class AppState extends EventTarget {
     super();
 
     this.data = {
+      // Active project
+      project: {
+        id: null,
+        name: ''
+      },
+
       // Document info (current page)
       document: {
         id: null,
@@ -63,11 +65,31 @@ class AppState extends EventTarget {
         lines: []           // Markdown table lines (generated from segments)
       },
 
+      // Description data (illuminated initials analysis, current page)
+      description: {
+        id: null,
+        provider: 'gemini', // Always 'gemini' for descriptions
+        model: '',          // e.g., 'gemini-3-pro-preview'
+        customPrompt: '',   // User's custom analysis prompt
+        raw: '',            // LLM response text
+        timestamp: null     // ISO timestamp
+      },
+
+      // Per-page descriptions: { [pageId]: {...}, ... }
+      pageDescriptions: {},
+
+      // Batch descriptions (all pages)
+      batchDescriptions: [],  // Array of description results per page
+
       // Validation state
       validation: {
         status: 'idle',     // idle | running | complete | error
         rules: [],          // Rule-based validation results
-        llmJudge: null      // LLM-judge validation result
+        llmJudge: null,     // LLM Review result
+        summary: null,      // Validation summary (totalIssues, etc.)
+        timestamp: null,    // ISO timestamp of last validation
+        customPrompt: '',   // User-defined expert validation prompt
+        pipeline: null      // Post-processing pipeline metadata (stage2/stage3 status, duration)
       },
 
       // Corrections made by user
@@ -79,7 +101,7 @@ class AppState extends EventTarget {
 
       // Batch operation state
       batch: {
-        operation: null,      // 'transcription' | 'validation' | null
+        operation: null,      // 'transcription' | 'validation' | 'description' | null
         status: 'idle',       // 'idle' | 'running' | 'complete' | 'aborted'
         currentIndex: 0,
         total: 0,
@@ -96,6 +118,16 @@ class AppState extends EventTarget {
         loadingMessage: '',
         activeDialog: null,  // null | 'apiKey' | 'upload' | 'export' | 'settings'
         error: null
+      },
+
+      // Prompt configuration (profile + per-stage user overrides)
+      promptConfig: {
+        profileId: 'generic_default',
+        overrides: {
+          stage1: '',
+          stage2: '',
+          stage3: ''
+        }
       },
 
       // Session metadata
@@ -149,13 +181,63 @@ class AppState extends EventTarget {
   // ============================================
 
   /**
+   * Reset document/transcription state for a fresh project.
+   * Preserves UI settings but clears all document data.
+   */
+  _resetState() {
+    if (this._autoSaveTimer) {
+      clearTimeout(this._autoSaveTimer);
+      this._autoSaveTimer = null;
+    }
+    this.data.project = { id: null, name: '' };
+    this.data.document = { id: null, filename: '', mimeType: '', dataUrl: '', width: 0, height: 0 };
+    this.data.pages = [];
+    this.data.currentPageIndex = 0;
+    this.data.pageTranscriptions = {};
+    this.data.image = { url: '', width: 0, height: 0 };
+    this.data.regions = [];
+    this.data.transcription = { id: null, provider: '', model: '', raw: '', segments: [], columns: [], lines: [] };
+    this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
+    this.data.pageDescriptions = {};
+    this.data.batchDescriptions = [];
+    this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '', pipeline: null };
+    this.data.corrections = [];
+    this.data.batchTranscriptions = [];
+    this.data.batchValidations = [];
+    this.data.context = null;
+    this.data.promptConfig = {
+      profileId: 'generic_default',
+      overrides: { stage1: '', stage2: '', stage3: '' }
+    };
+    this.data.meta = { createdAt: null, updatedAt: null };
+  }
+
+  /**
+   * Ensure a project exists. Auto-creates one from filename if needed.
+   * Called before document upload to guarantee project context for IDB saves.
+   * @param {string} filename - Used as project name if auto-creating
+   * @returns {Promise<string>} The project ID
+   */
+  async ensureProject(filename) {
+    // If a project is already active, save it and create a new one
+    if (this.data.project.id) {
+      await this._saveSession();
+      this._resetState();
+    }
+    const project = await this.createProject(filename || 'New Project');
+    return project.id;
+  }
+
+  /**
    * Set document from uploaded file
    * @param {File} file - The uploaded file
    * @param {string} dataUrl - Base64 data URL
    */
   setDocument(file, dataUrl) {
+    const docId = generateId();
+
     this.data.document = {
-      id: generateId(),
+      id: docId,
       filename: file.name,
       mimeType: file.type,
       dataUrl: dataUrl,
@@ -192,7 +274,11 @@ class AppState extends EventTarget {
     this.data.validation = {
       status: 'idle',
       rules: [],
-      llmJudge: null
+      llmJudge: null,
+      summary: null,
+      timestamp: null,
+      customPrompt: '',
+      pipeline: null
     };
     this.data.corrections = [];
 
@@ -205,6 +291,14 @@ class AppState extends EventTarget {
       mimeType: file.type
     });
     this._emit('imageChanged', { url: dataUrl });
+
+    // Save image to IndexedDB (fire-and-forget)
+    if (this.data.project.id && dataUrl) {
+      storage.saveImage(this.data.project.id, docId, dataUrl).catch(err =>
+        console.warn('[State] Failed to save image to IDB:', err.message)
+      );
+    }
+
     this._scheduleAutoSave();
   }
 
@@ -256,6 +350,18 @@ class AppState extends EventTarget {
       count: this.data.pages.length,
       pages: this.data.pages.map(p => ({ id: p.id, filename: p.filename }))
     });
+
+    // Save all page images to IndexedDB (fire-and-forget)
+    if (this.data.project.id) {
+      const imagesToSave = this.data.pages
+        .filter(p => p.dataUrl)
+        .map(p => ({ pageId: p.id, dataUrl: p.dataUrl }));
+      if (imagesToSave.length > 0) {
+        storage.saveImages(this.data.project.id, imagesToSave).catch(err =>
+          console.warn('[State] Failed to save page images to IDB:', err.message)
+        );
+      }
+    }
   }
 
   /**
@@ -266,8 +372,13 @@ class AppState extends EventTarget {
     if (index < 0 || index >= this.data.pages.length) return;
     if (index === this.data.currentPageIndex) return;
 
-    // Save current page transcription and validation
+    // Allow components to flush pending state (e.g. debounced textarea edits)
+    // before we snapshot the current page. dispatchEvent is synchronous.
+    this.dispatchEvent(new CustomEvent('beforePageChange'));
+
+    // Save current page transcription, description, and validation
     this._saveCurrentPageTranscription();
+    this._saveCurrentPageDescription();
     this._saveCurrentPageValidation();
 
     // Load new page
@@ -359,18 +470,50 @@ class AppState extends EventTarget {
     // Load validation for this page if exists
     const savedValidation = this.data.batchValidations.find(v => v.pageIndex === index);
     if (savedValidation?.success && savedValidation?.validation) {
+      const normalizedPipeline = this._normalizePipelineMetadata(savedValidation.validation.pipeline || null);
       this.data.validation = {
         status: 'complete',
         rules: savedValidation.validation.rules || [],
-        llmJudge: savedValidation.validation.llmJudge || null,
-        summary: savedValidation.validation.summary || null
+        llmJudge: savedValidation.validation.llmJudge
+          ? {
+            ...savedValidation.validation.llmJudge,
+            pipeline: normalizedPipeline
+          }
+          : null,
+        summary: savedValidation.validation.summary || null,
+        timestamp: savedValidation.validation.timestamp || null,
+        customPrompt: savedValidation.validation.customPrompt || '',
+        pipeline: normalizedPipeline
       };
     } else {
       // Reset validation for page without results
       this.data.validation = {
         status: 'idle',
         rules: [],
-        llmJudge: null
+        llmJudge: null,
+        summary: null,
+        timestamp: null,
+        customPrompt: '',
+        pipeline: null
+      };
+    }
+
+    // Load description for this page if exists
+    const savedDescription = this.data.pageDescriptions[page.id];
+    if (savedDescription) {
+      this.data.description = {
+        ...this.data.description,
+        ...savedDescription
+      };
+    } else {
+      // Reset description for new page
+      this.data.description = {
+        id: null,
+        provider: 'gemini',
+        model: '',
+        customPrompt: '',
+        raw: '',
+        timestamp: null
       };
     }
 
@@ -390,15 +533,44 @@ class AppState extends EventTarget {
     const page = this.data.pages[this.data.currentPageIndex];
     if (!page) return;
 
-    if (this.data.transcription.segments?.length > 0) {
+    const hasSegments = this.data.transcription.segments?.length > 0;
+    const hasRaw = this.data.transcription.raw?.trim().length > 0;
+    if (hasSegments || hasRaw) {
       this.data.pageTranscriptions[page.id] = {
         segments: this.data.transcription.segments,
         columns: this.data.transcription.columns,
+        raw: this.data.transcription.raw,
         provider: this.data.transcription.provider,
         model: this.data.transcription.model,
         regions: this.data.regions
       };
+    } else {
+      // Delete empty transcriptions to prevent stale data on page switch
+      delete this.data.pageTranscriptions[page.id];
     }
+  }
+
+  /**
+   * Internal: Save current page description to pageDescriptions
+   */
+  _saveCurrentPageDescription() {
+    const page = this.data.pages[this.data.currentPageIndex];
+    if (!page) return;
+
+    const hasRaw = this.data.description.raw?.trim().length > 0;
+    if (hasRaw) {
+      this.data.pageDescriptions[page.id] = {
+        id: this.data.description.id,
+        provider: this.data.description.provider,
+        model: this.data.description.model,
+        customPrompt: this.data.description.customPrompt,
+        raw: this.data.description.raw,
+        timestamp: this.data.description.timestamp
+      };
+    }
+    // Note: Unlike transcriptions, we do NOT delete existing pageDescriptions
+    // when description.raw is empty. The user may have cleared the current
+    // description view without intending to delete a previously saved one.
   }
 
   /**
@@ -422,7 +594,10 @@ class AppState extends EventTarget {
       validation: {
         rules: this.data.validation.rules,
         llmJudge: this.data.validation.llmJudge,
-        summary: this.data.validation.summary
+        summary: this.data.validation.summary,
+        timestamp: this.data.validation.timestamp,
+        customPrompt: this.data.validation.customPrompt,
+        pipeline: this.data.validation.pipeline
       }
     };
 
@@ -465,12 +640,20 @@ class AppState extends EventTarget {
    * @param {object} data - Transcription data
    */
   setTranscription(data) {
+    const segments = data.segments || [];
+    const columns = data.columns || [];
+    // Derive raw from segments if not provided
+    const raw = data.raw || segments.map(s => s.text || '').join('\n') || '';
+
     this.data.transcription = {
       ...this.data.transcription,
       id: generateId(),
       provider: data.provider || '',
       model: data.model || '',
-      raw: data.raw || ''
+      raw,
+      segments,
+      columns,
+      lines: this._segmentsToLines(segments)
     };
 
     this.data.meta.updatedAt = new Date().toISOString();
@@ -484,9 +667,17 @@ class AppState extends EventTarget {
   /**
    * Update raw transcription text (from editor changes)
    * @param {string} text - The updated transcription text
+   * @param {object} [options] - Update options
+   * @param {boolean} [options.syncSegments=false] - Rebuild segments from raw text
    */
-  setTranscriptionRaw(text) {
+  setTranscriptionRaw(text, options = {}) {
+    const { syncSegments = false } = options;
     this.data.transcription.raw = text;
+
+    if (syncSegments) {
+      this._syncTranscriptionSegmentsFromRaw(text);
+    }
+
     this.data.meta.updatedAt = new Date().toISOString();
     this._scheduleAutoSave();
   }
@@ -531,6 +722,83 @@ class AppState extends EventTarget {
       successful: results.filter(r => r.success).length
     });
     this._scheduleAutoSave();
+  }
+
+  // ============================================
+  // Description (Illuminated Initials Analysis)
+  // ============================================
+
+  /**
+   * Set description data from LLM response
+   * @param {object} data - Description data
+   */
+  setDescription(data) {
+    this.data.description = {
+      ...this.data.description,
+      id: generateId(),
+      provider: 'gemini',
+      model: data.model || '',
+      customPrompt: data.customPrompt || '',
+      raw: data.raw || '',
+      timestamp: new Date().toISOString()
+    };
+
+    this.data.meta.updatedAt = new Date().toISOString();
+
+    this._emit('descriptionComplete', {
+      provider: 'gemini',
+      model: data.model
+    });
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Update raw description text (from user edits)
+   * @param {string} text - The updated description text
+   */
+  setDescriptionRaw(text) {
+    this.data.description.raw = text;
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Set batch descriptions for all pages
+   * @param {Array} results - Array of description results per page
+   */
+  setBatchDescriptions(results) {
+    // Store in simple array for easy access
+    this.data.batchDescriptions = results;
+
+    // Also store in per-page lookup
+    for (const result of results) {
+      if (result.success && result.description) {
+        this.data.pageDescriptions[result.pageId] = {
+          ...result.description,
+          id: generateId(),
+          timestamp: new Date().toISOString()
+        };
+      }
+    }
+
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('batchDescriptionComplete', {
+      total: results.length,
+      successful: results.filter(r => r.success).length
+    });
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Get description for a specific page (or current page if not specified)
+   * @param {string} pageId - Optional page ID (defaults to current page)
+   * @returns {object|null} Description or null
+   */
+  getDescription(pageId = null) {
+    if (pageId) {
+      return this.data.pageDescriptions[pageId] || null;
+    }
+    return this.data.description;
   }
 
   // ============================================
@@ -618,6 +886,13 @@ class AppState extends EventTarget {
       period: context.period || '',
       language: context.language || '',
       description: context.description || '',
+      // Extended structured context fields (PPV1-101)
+      scriptType: context.scriptType || '',
+      century: context.century || '',
+      region: context.region || '',
+      languages: Array.isArray(context.languages) ? context.languages : [],
+      textType: context.textType || '',
+      knownText: context.knownText || '',
       timestamp: new Date().toISOString()
     };
     this.data.meta.updatedAt = new Date().toISOString();
@@ -640,6 +915,58 @@ class AppState extends EventTarget {
     this.data.context = null;
     this._emit('contextChanged', null);
     this._scheduleAutoSave();
+  }
+
+  /**
+   * Get prompt configuration for 3-stage processing.
+   * @returns {{profileId:string, overrides:{stage1:string, stage2:string, stage3:string}}}
+   */
+  getPromptConfig() {
+    return this._normalizePromptConfig(this.data.promptConfig);
+  }
+
+  /**
+   * Set the selected prompt profile.
+   * @param {string} profileId
+   */
+  setPromptProfile(profileId) {
+    const next = this._normalizePromptConfig({
+      ...this.data.promptConfig,
+      profileId
+    });
+    this.data.promptConfig = next;
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('promptConfigChanged', next);
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Set user override prompt for a stage.
+   * @param {'stage1'|'stage2'|'stage3'} stage
+   * @param {string} prompt
+   */
+  setPromptOverride(stage, prompt) {
+    if (!['stage1', 'stage2', 'stage3'].includes(stage)) return;
+    const current = this._normalizePromptConfig(this.data.promptConfig);
+    const next = {
+      ...current,
+      overrides: {
+        ...current.overrides,
+        [stage]: typeof prompt === 'string' ? prompt : ''
+      }
+    };
+    this.data.promptConfig = next;
+    this.data.meta.updatedAt = new Date().toISOString();
+    this._emit('promptConfigChanged', next);
+    this._scheduleAutoSave();
+  }
+
+  /**
+   * Clear user override prompt for a stage.
+   * @param {'stage1'|'stage2'|'stage3'} stage
+   */
+  clearPromptOverride(stage) {
+    this.setPromptOverride(stage, '');
   }
 
   /**
@@ -705,6 +1032,90 @@ class AppState extends EventTarget {
     return lines;
   }
 
+  /**
+   * Rebuild transcription segments from raw text to keep exports in sync.
+   * Keeps non-text metadata where possible (id/confidence/polygon/baseline).
+   * @private
+   * @param {string} text
+   */
+  _syncTranscriptionSegmentsFromRaw(text) {
+    const rawLines = (text || '').split('\n');
+    const previousSegments = this.data.transcription.segments || [];
+
+    this.data.transcription.segments = rawLines.map((lineText, index) => {
+      const previous = previousSegments[index] || {};
+      const next = {
+        lineNumber: index + 1,
+        text: lineText
+      };
+
+      if (previous.id) next.id = previous.id;
+      if (previous.confidence) next.confidence = previous.confidence;
+      if (previous.polygon) next.polygon = previous.polygon;
+      if (previous.baseline) next.baseline = previous.baseline;
+
+      return next;
+    });
+
+    this.data.transcription.lines = this._segmentsToLines(this.data.transcription.segments);
+  }
+
+  /**
+   * Normalize pipeline metadata into canonical object schema.
+   * Supports legacy string schema for backward compatibility.
+   * @private
+   * @param {object|null} pipeline
+   * @returns {object|null}
+   */
+  _normalizePipelineMetadata(pipeline) {
+    if (!pipeline || typeof pipeline !== 'object') return null;
+
+    const normalizeStage = (stage) => {
+      if (typeof stage === 'string') {
+        return { status: stage };
+      }
+      if (stage && typeof stage === 'object' && typeof stage.status === 'string') {
+        const normalized = { status: stage.status };
+        if (typeof stage.duration === 'number' && Number.isFinite(stage.duration)) {
+          normalized.duration = stage.duration;
+        }
+        if (typeof stage.reason === 'string' && stage.reason.trim()) {
+          normalized.reason = stage.reason;
+        }
+        return normalized;
+      }
+      return { status: 'skipped' };
+    };
+
+    const normalized = {
+      stage2: normalizeStage(pipeline.stage2),
+      stage3: normalizeStage(pipeline.stage3)
+    };
+    if (typeof pipeline.duration === 'number' && Number.isFinite(pipeline.duration)) {
+      normalized.duration = pipeline.duration;
+    }
+    return normalized;
+  }
+
+  /**
+   * Normalize prompt config into canonical schema.
+   * @private
+   * @param {object|null} promptConfig
+   * @returns {{profileId:string, overrides:{stage1:string, stage2:string, stage3:string}}}
+   */
+  _normalizePromptConfig(promptConfig) {
+    const cfg = (promptConfig && typeof promptConfig === 'object') ? promptConfig : {};
+    const overrides = (cfg.overrides && typeof cfg.overrides === 'object') ? cfg.overrides : {};
+    return {
+      profileId: (cfg.profileId || 'generic_default').toString().trim() || 'generic_default',
+      overrides: {
+        stage1: typeof overrides.stage1 === 'string' ? overrides.stage1 : '',
+        stage2: typeof overrides.stage2 === 'string' ? overrides.stage2 : '',
+        stage3: typeof overrides.stage3 === 'string' ? overrides.stage3 : ''
+      }
+    };
+  }
+
   // ============================================
   // Validation
   // ============================================
@@ -715,8 +1126,20 @@ class AppState extends EventTarget {
   }
 
   setValidationResults(results) {
+    const normalizedPipeline = this._normalizePipelineMetadata(results.llmJudge?.pipeline || null);
+    const normalizedLlmJudge = results.llmJudge
+      ? {
+        ...results.llmJudge,
+        pipeline: normalizedPipeline
+      }
+      : null;
+
     this.data.validation.rules = results.rules || [];
-    this.data.validation.llmJudge = results.llmJudge || null;
+    this.data.validation.llmJudge = normalizedLlmJudge;
+    this.data.validation.summary = results.summary || null;
+    this.data.validation.timestamp = results.timestamp || new Date().toISOString();
+    this.data.validation.customPrompt = results.customPrompt || this.data.validation.customPrompt || '';
+    this.data.validation.pipeline = normalizedPipeline;
     this.data.validation.status = 'complete';
     this.data.meta.updatedAt = new Date().toISOString();
     this._emit('validationComplete', results);
@@ -766,7 +1189,59 @@ class AppState extends EventTarget {
   }
 
   // ============================================
-  // Session Management
+  // Thinking (LLM Reasoning Display)
+  // ============================================
+
+  emitThinkingStart(detail) { this._emit('thinkingStart', detail); }
+  emitThinkingChunk(detail) { this._emit('thinkingChunk', detail); }
+  emitThinkingComplete(detail) { this._emit('thinkingComplete', detail); }
+  emitThinkingError(detail) { this._emit('thinkingError', detail); }
+
+  // ============================================
+  // Project Management
+  // ============================================
+
+  /**
+   * Create a new project and set it as active
+   * @param {string} name - Project name
+   * @returns {Promise<object>} The created project
+   */
+  async createProject(name) {
+    const id = generateId();
+    const now = new Date().toISOString();
+    const project = {
+      id,
+      name,
+      filename: '',
+      pageCount: 0,
+      hasTranscription: false,
+      createdAt: now,
+      updatedAt: now
+    };
+    await storage.createProject(project);
+    storage.setActiveProjectId(id);
+    this.data.project = { id, name };
+    this._emit('projectChanged', { id, name });
+    return project;
+  }
+
+  /**
+   * Switch to a different project (saves current, loads new)
+   * @param {string} projectId
+   */
+  async switchProject(projectId) {
+    // Save current project if active
+    if (this.data.project.id) {
+      await this._saveSession();
+    }
+
+    // Load new project
+    await this.restoreSession(projectId);
+    storage.setActiveProjectId(projectId);
+  }
+
+  // ============================================
+  // Session Management (async -- IndexedDB)
   // ============================================
 
   _scheduleAutoSave() {
@@ -778,87 +1253,208 @@ class AppState extends EventTarget {
     }
 
     this._autoSaveTimer = setTimeout(() => {
-      this._saveSession();
+      this._saveSession().catch(err =>
+        console.warn('[State] Auto-save failed:', err.message)
+      );
     }, this._autoSaveDelay);
   }
 
-  _saveSession() {
+  async _saveSession() {
+    const projectId = this.data.project.id;
+    if (!projectId) return;
+
     // Save current page data before session save
     this._saveCurrentPageTranscription();
+    this._saveCurrentPageDescription();
     this._saveCurrentPageValidation();
 
-    storage.saveSession({
-      document: this.data.document,
-      transcription: this.data.transcription,
-      validation: this.data.validation,
-      corrections: this.data.corrections,
-      regions: this.data.regions,
-      meta: this.data.meta,
-      // Multi-page data
-      pages: this.data.pages,
-      currentPageIndex: this.data.currentPageIndex,
-      pageTranscriptions: this.data.pageTranscriptions,
-      batchTranscriptions: this.data.batchTranscriptions,
-      batchValidations: this.data.batchValidations
-    });
-    this._emit('sessionSaved');
-  }
+    // Session data -- images are stored separately in IDB images store
+    const { dataUrl: _docImg, ...documentWithoutImage } = this.data.document;
+    const pagesWithoutImages = this.data.pages.map(({ dataUrl: _pageImg, ...rest }) => rest);
 
-  /**
-   * Check if a saved session exists
-   * @returns {object|null} Session info (timestamp, filename) or null
-   */
-  hasSavedSession() {
-    const session = storage.loadSession();
-    if (session?.data?.document?.filename) {
-      return {
-        timestamp: session.timestamp,
-        filename: session.data.document.filename,
-        hasTranscription: session.data.transcription?.segments?.length > 0
-      };
+    try {
+      await storage.saveSession(projectId, {
+        document: documentWithoutImage,
+        transcription: this.data.transcription,
+        description: this.data.description,
+        pageDescriptions: this.data.pageDescriptions,
+        batchDescriptions: this.data.batchDescriptions,
+        validation: this.data.validation,
+        corrections: this.data.corrections,
+        regions: this.data.regions,
+        context: this.data.context || null,
+        promptConfig: this.data.promptConfig || {
+          profileId: 'generic_default',
+          overrides: { stage1: '', stage2: '', stage3: '' }
+        },
+        meta: this.data.meta,
+        pages: pagesWithoutImages,
+        currentPageIndex: this.data.currentPageIndex,
+        pageTranscriptions: this.data.pageTranscriptions,
+        batchTranscriptions: this.data.batchTranscriptions,
+        batchValidations: this.data.batchValidations
+      });
+
+      // Update project metadata
+      const hasTranscription = this.data.transcription?.segments?.length > 0 ||
+        this.data.transcription?.raw?.trim().length > 0 ||
+        Object.keys(this.data.pageTranscriptions).length > 0;
+
+      await storage.updateProject(projectId, {
+        filename: this.data.document.filename || this.data.pages[0]?.filename || '',
+        pageCount: Math.max(1, this.data.pages.length),
+        hasTranscription
+      });
+
+      this._emit('sessionSaved');
+    } catch (error) {
+      console.error('[State] Save session failed:', error.message);
+      throw error; // Re-throw to let callers handle the error
     }
-    return null;
   }
 
   /**
-   * Restore session from storage (called after user confirmation)
+   * Restore session from IndexedDB for a project
+   * @param {string} projectId
+   * @returns {Promise<boolean>} true if restored
    */
-  restoreSession() {
-    const session = storage.loadSession();
-    if (session?.data) {
+  async restoreSession(projectId) {
+    const project = await storage.getProject(projectId);
+    if (!project) return false;
+
+    const session = await storage.loadSession(projectId);
+
+    // Set project info
+    this.data.project = { id: project.id, name: project.name };
+    storage.setActiveProjectId(projectId);
+
+    if (session) {
       // Restore data
-      if (session.data.document) this.data.document = session.data.document;
-      if (session.data.transcription) this.data.transcription = session.data.transcription;
-      if (session.data.validation) this.data.validation = session.data.validation;
-      if (session.data.corrections) this.data.corrections = session.data.corrections;
-      if (session.data.regions) this.data.regions = session.data.regions;
-      if (session.data.meta) this.data.meta = session.data.meta;
+      if (session.document) this.data.document = { ...this.data.document, ...session.document };
+      if (session.transcription) this.data.transcription = session.transcription;
+      if (session.description) this.data.description = session.description;
+      if (session.validation) {
+        this.data.validation = {
+          status: 'idle',
+          rules: [],
+          llmJudge: null,
+          summary: null,
+          timestamp: null,
+          customPrompt: '',
+          pipeline: null,
+          ...session.validation
+        };
+      }
+      if (session.corrections) this.data.corrections = session.corrections;
+      if (session.regions) this.data.regions = session.regions;
+      if (session.context !== undefined) this.data.context = session.context;
+      this.data.promptConfig = this._normalizePromptConfig(session.promptConfig);
+      if (session.meta) this.data.meta = session.meta;
 
       // Restore multi-page data
-      if (session.data.pages) this.data.pages = session.data.pages;
-      if (session.data.currentPageIndex !== undefined) this.data.currentPageIndex = session.data.currentPageIndex;
-      if (session.data.pageTranscriptions) this.data.pageTranscriptions = session.data.pageTranscriptions;
-      if (session.data.batchTranscriptions) this.data.batchTranscriptions = session.data.batchTranscriptions;
-      if (session.data.batchValidations) this.data.batchValidations = session.data.batchValidations;
-
-      // Update legacy image
-      if (session.data.document?.dataUrl) {
-        this.data.image.url = session.data.document.dataUrl;
-      }
-
-      this._emit('sessionRestored', { timestamp: session.timestamp });
-      this._emit('documentLoaded', { filename: session.data.document.filename });
-      return true;
+      if (session.pages) this.data.pages = session.pages;
+      if (session.currentPageIndex !== undefined) this.data.currentPageIndex = session.currentPageIndex;
+      if (session.pageTranscriptions) this.data.pageTranscriptions = session.pageTranscriptions;
+      if (session.pageDescriptions) this.data.pageDescriptions = session.pageDescriptions;
+      if (session.batchTranscriptions) this.data.batchTranscriptions = session.batchTranscriptions;
+      if (session.batchDescriptions) this.data.batchDescriptions = session.batchDescriptions;
+      if (session.batchValidations) this.data.batchValidations = session.batchValidations;
+    } else {
+      // Reset to empty state when no session exists (prevents stale data from previous project)
+      this.data.document = { id: null, filename: '', mimeType: '', dataUrl: '', width: 0, height: 0 };
+      this.data.image = { url: '', width: 0, height: 0 };
+      this.data.transcription = { id: null, provider: '', model: '', raw: '', segments: [], columns: [], lines: [] };
+      this.data.description = { id: null, provider: 'gemini', model: '', customPrompt: '', raw: '', timestamp: null };
+      this.data.pageDescriptions = {};
+      this.data.batchDescriptions = [];
+      this.data.validation = { status: 'idle', rules: [], llmJudge: null, summary: null, timestamp: null, customPrompt: '', pipeline: null };
+      this.data.corrections = [];
+      this.data.regions = [];
+      this.data.context = null;
+      this.data.promptConfig = {
+        profileId: 'generic_default',
+        overrides: { stage1: '', stage2: '', stage3: '' }
+      };
+      this.data.meta = { createdAt: null, updatedAt: null };
+      this.data.pages = [];
+      this.data.currentPageIndex = 0;
+      this.data.pageTranscriptions = {};
+      this.data.batchTranscriptions = [];
+      this.data.batchValidations = [];
+      this.data.batch = {
+        operation: null,
+        status: 'idle',
+        currentIndex: 0,
+        total: 0,
+        successCount: 0,
+        errorCount: 0,
+        abortRequested: false
+      };
     }
-    return false;
+
+    // Restore images from IDB
+    const images = await storage.loadAllImages(projectId);
+    if (Object.keys(images).length > 0) {
+      // Restore single-doc image
+      if (this.data.document.id && images[this.data.document.id]) {
+        this.data.document.dataUrl = images[this.data.document.id];
+        this.data.image.url = this.data.document.dataUrl;
+      }
+      // Restore page images
+      for (const page of this.data.pages) {
+        if (images[page.id]) {
+          page.dataUrl = images[page.id];
+        }
+      }
+      // If on a specific page, update current doc/image
+      const currentPage = this.data.pages[this.data.currentPageIndex];
+      if (currentPage?.dataUrl) {
+        this.data.document.dataUrl = currentPage.dataUrl;
+        this.data.image.url = currentPage.dataUrl;
+      }
+    }
+
+    this._emit('projectChanged', { id: project.id, name: project.name });
+    this._emit('sessionRestored', { projectId });
+    this._emit('documentLoaded', {
+      filename: this.data.document.filename || '',
+      mimeType: this.data.document.mimeType || ''
+    });
+    if (this.data.document.dataUrl) {
+      this._emit('imageChanged', { url: this.data.document.dataUrl });
+    }
+    if (this.data.pages.length > 0) {
+      this._emit('pagesLoaded', {
+        count: this.data.pages.length,
+        pages: this.data.pages.map(p => ({ id: p.id, filename: p.filename }))
+      });
+    }
+    if (this.data.description?.raw) {
+      this._emit('descriptionComplete', {
+        provider: this.data.description.provider,
+        model: this.data.description.model
+      });
+    }
+    if (this.data.validation?.status === 'complete') {
+      this._emit('validationComplete', {
+        rules: this.data.validation.rules,
+        llmJudge: this.data.validation.llmJudge,
+        summary: this.data.validation.summary
+      });
+    }
+
+    return true;
   }
 
-  saveSessionNow() {
-    this._saveSession();
+  async saveSessionNow() {
+    await this._saveSession();
   }
 
-  clearSession() {
-    storage.clearSession();
+  async clearSession() {
+    const projectId = this.data.project.id;
+    if (projectId) {
+      await storage.clearSession(projectId);
+    }
     this._emit('sessionCleared');
   }
 

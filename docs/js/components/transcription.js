@@ -12,9 +12,12 @@
 
 import { llmService } from '../services/llm.js';
 import { appState } from '../state.js';
+import { FEATURE_FLAGS } from '../utils/constants.js';
 import { dialogManager } from './dialogs.js';
 import { contextManager } from './context.js';
 import { batchProgress } from './batch-progress.js';
+import { escapeHtml } from '../utils/textFormatting.js';
+import { listPromptProfiles } from '../config/promptProfiles.js';
 
 /**
  * Transcription Manager
@@ -25,6 +28,7 @@ class TranscriptionManager {
         this.transcribeDialog = null;
         this.startBtn = null;
         this.isTranscribing = false;
+        this._isSyncingPromptControls = false;
     }
 
     /**
@@ -41,6 +45,7 @@ class TranscriptionManager {
         }
 
         this.bindEvents();
+        this.initPromptProfileControls();
     }
 
     /**
@@ -73,6 +78,10 @@ class TranscriptionManager {
             this.setLoading(false);
             this.showEditorLoading(false);
         });
+
+        appState.addEventListener('promptConfigChanged', () => {
+            this.syncPromptProfileControls();
+        });
     }
 
     /**
@@ -84,7 +93,7 @@ class TranscriptionManager {
         // Validate document is loaded
         const state = appState.getState();
         if (!state.document.dataUrl && state.image.url === 'assets/mock-document.jpg') {
-            dialogManager.showToast('Bitte zuerst ein Dokument laden', 'warning');
+            dialogManager.showToast('Please load a document first', 'warning');
             return;
         }
 
@@ -99,6 +108,7 @@ class TranscriptionManager {
 
         // Update model info display
         this.updateModelInfo();
+        this.syncPromptProfileControls();
 
         // Update page selection UI
         this.updatePageSelectionUI();
@@ -127,7 +137,7 @@ class TranscriptionManager {
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
-                    <span>Modell: <strong>${model}</strong> (${provider})</span>
+                    <span>Modell: <strong>${escapeHtml(model)}</strong> (${escapeHtml(provider)})</span>
                     <button type="button" class="btn-link" id="changeModelBtn">ändern</button>
                 </div>
             `;
@@ -147,8 +157,8 @@ class TranscriptionManager {
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    <span>API-Key für <strong>${provider}</strong> erforderlich</span>
-                    <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">Konfigurieren</button>
+                    <span>API key for <strong>${escapeHtml(provider)}</strong> required</span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="configureApiBtn">Configure</button>
                 </div>
             `;
             // Bind configure button
@@ -175,7 +185,7 @@ class TranscriptionManager {
         if (!llmService.hasApiKey()) {
             const provider = llmService.activeProvider;
             if (provider !== 'ollama') {
-                dialogManager.showToast(`Bitte ${provider} API-Key konfigurieren`, 'warning');
+                dialogManager.showToast(`Please configure ${provider} API key`, 'warning');
                 this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
                 return;
@@ -202,6 +212,10 @@ class TranscriptionManager {
         this.setLoading(true);
         this.showEditorLoading(true);
 
+        // Thinking panel support (declared outside try for catch access)
+        const supportsThinking = FEATURE_FLAGS.thinkingPanel &&
+            llmService._supportsThinking(llmService.activeProvider);
+
         try {
             // Get image as base64 (without data URL prefix)
             // For multi-page, use current page's dataUrl
@@ -218,10 +232,32 @@ class TranscriptionManager {
             // Get context from expert (if provided)
             const contextDescription = contextManager.buildPromptContext();
 
-            // Call LLM service with context
+            if (supportsThinking) {
+                appState.emitThinkingStart({
+                    operation: 'transcription',
+                    provider: llmService.activeProvider,
+                    model: llmService.getCurrentModel()
+                });
+            }
+            const thinkingStartTime = Date.now();
+
+            // Call LLM service with context (including structured context for script hints)
             const result = await llmService.transcribe(base64, {
-                context: contextDescription
+                context: contextDescription,
+                structuredContext: appState.getDocumentContext(),
+                promptConfig: this.getPromptConfigSafe(),
+                stream: supportsThinking,
+                onThinkingChunk: supportsThinking
+                    ? (text) => appState.emitThinkingChunk({ text, operation: 'transcription' })
+                    : undefined
             });
+
+            if (supportsThinking) {
+                appState.emitThinkingComplete({
+                    operation: 'transcription',
+                    duration: Date.now() - thinkingStartTime
+                });
+            }
 
             // Update state with transcription
             appState.setTranscription({
@@ -230,26 +266,34 @@ class TranscriptionManager {
                 raw: result.raw
             });
 
+            this.setLoading(false);
             this.showEditorLoading(false);
             dialogManager.showToast(
-                `Transkription abgeschlossen (${result.provider})`,
+                `Transcription complete (${result.provider})`,
                 'success'
             );
 
         } catch (error) {
             console.error('Transcription error:', error);
 
+            if (supportsThinking) {
+                appState.emitThinkingError({
+                    operation: 'transcription',
+                    message: error.message
+                });
+            }
+
             // Handle specific error types
             if (error.type === 'auth') {
-                dialogManager.showToast('Ungültiger API-Key. Bitte Konfiguration prüfen.', 'error');
+                dialogManager.showToast('Invalid API key. Please check configuration.', 'error');
                 this.transcribeDialog.close();
                 dialogManager.openDialog('apiKey');
             } else if (error.type === 'rate_limit') {
-                dialogManager.showToast('Rate-Limit erreicht. Bitte warten und erneut versuchen.', 'warning');
+                dialogManager.showToast('Rate limit reached. Please wait and try again.', 'warning');
             } else if (error.type === 'network') {
-                dialogManager.showToast('Netzwerkfehler. Bitte Verbindung prüfen.', 'error');
+                dialogManager.showToast('Network error. Please check connection.', 'error');
             } else {
-                dialogManager.showToast(`Transkription fehlgeschlagen: ${error.message}`, 'error');
+                dialogManager.showToast(`Transcription failed: ${error.message}`, 'error');
             }
 
             this.setLoading(false);
@@ -275,8 +319,8 @@ class TranscriptionManager {
                 overlay.innerHTML = `
                     <div class="loading-content">
                         <div class="loading-spinner-large"></div>
-                        <span>Transkription läuft...</span>
-                        <span class="loading-hint">Das kann einige Sekunden dauern</span>
+                        <span>Transcribing...</span>
+                        <span class="loading-hint">This may take a few seconds</span>
                     </div>
                 `;
                 editorPanel.style.position = 'relative';
@@ -308,17 +352,21 @@ class TranscriptionManager {
             img.crossOrigin = 'anonymous';
 
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
 
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
 
-                // Get base64 (without data URL prefix)
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                const base64 = dataUrl.split(',')[1];
-                resolve(base64);
+                    // Get base64 (without data URL prefix)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    const base64 = dataUrl.split(',')[1];
+                    resolve(base64);
+                } catch (err) {
+                    reject(new Error(`Canvas conversion failed: ${err.message}`));
+                }
             };
 
             img.onerror = () => {
@@ -397,11 +445,11 @@ class TranscriptionManager {
 
             // Update counts
             if (pageCountEl) {
-                pageCountEl.textContent = `Seite ${currentPage} von ${totalPages}`;
+                pageCountEl.textContent = `Page ${currentPage} of ${totalPages}`;
             }
 
             if (allPagesHintEl) {
-                allPagesHintEl.textContent = `${totalPages} Seiten, kann mehrere Minuten dauern`;
+                allPagesHintEl.textContent = `${totalPages} pages, may take several minutes`;
             }
 
             if (batchPageCountEl) {
@@ -447,7 +495,7 @@ class TranscriptionManager {
         const pages = state.pages || [];
 
         if (pages.length === 0) {
-            dialogManager.showToast('Keine Seiten zum Transkribieren', 'warning');
+            dialogManager.showToast('No pages to transcribe', 'warning');
             return;
         }
 
@@ -477,9 +525,11 @@ class TranscriptionManager {
                 // Get context
                 const contextDescription = contextManager.buildPromptContext();
 
-                // Call LLM service
+                // Call LLM service with context (including structured context for script hints)
                 const result = await llmService.transcribe(base64, {
-                    context: contextDescription
+                    context: contextDescription,
+                    structuredContext: appState.getDocumentContext(),
+                    promptConfig: this.getPromptConfigSafe()
                 });
 
                 // Store result for this page
@@ -514,13 +564,13 @@ class TranscriptionManager {
 
                 // If auth error, stop the batch
                 if (error.type === 'auth') {
-                    dialogManager.showToast('API-Key ungültig. Batch abgebrochen.', 'error');
+                    dialogManager.showToast('Invalid API key. Batch aborted.', 'error');
                     break;
                 }
 
                 // If rate limit, wait longer and continue
                 if (error.type === 'rate_limit') {
-                    dialogManager.showToast('Rate-Limit erreicht. Warte 30 Sekunden...', 'warning');
+                    dialogManager.showToast('Rate limit reached. Waiting 30 seconds...', 'warning');
                     await this._delay(30000);
                 }
             }
@@ -545,7 +595,12 @@ class TranscriptionManager {
         batchProgress.showComplete(successCount, errorCount, status === 'aborted');
 
         // Trigger session save for persistence
-        appState.saveSessionNow();
+        try {
+            await appState.saveSessionNow();
+        } catch (error) {
+            console.warn('[Transcription] Failed to save batch session:', error.message);
+            dialogManager.showToast('Batch complete, but saving failed', 'warning');
+        }
     }
 
     /**
@@ -553,6 +608,58 @@ class TranscriptionManager {
      */
     _delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    getPromptConfigSafe() {
+        if (typeof appState.getPromptConfig === 'function') {
+            return appState.getPromptConfig();
+        }
+        return {
+            profileId: 'generic_default',
+            overrides: { stage1: '', stage2: '', stage3: '' }
+        };
+    }
+
+    initPromptProfileControls() {
+        const profileSelect = document.getElementById('promptProfileSelectTranscribe');
+        const stage1Input = document.getElementById('promptOverrideStage1');
+        const resetStage1 = document.getElementById('resetPromptStage1');
+
+        if (profileSelect) {
+            const profiles = listPromptProfiles();
+            profileSelect.innerHTML = profiles
+                .map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.label)}</option>`)
+                .join('');
+
+            profileSelect.addEventListener('change', () => {
+                if (this._isSyncingPromptControls) return;
+                appState.setPromptProfile?.(profileSelect.value);
+            });
+        }
+
+        if (stage1Input) {
+            stage1Input.addEventListener('input', () => {
+                if (this._isSyncingPromptControls) return;
+                appState.setPromptOverride?.('stage1', stage1Input.value);
+            });
+        }
+
+        if (resetStage1) {
+            resetStage1.addEventListener('click', () => appState.clearPromptOverride?.('stage1'));
+        }
+
+        this.syncPromptProfileControls();
+    }
+
+    syncPromptProfileControls() {
+        const profileSelect = document.getElementById('promptProfileSelectTranscribe');
+        const stage1Input = document.getElementById('promptOverrideStage1');
+        const promptConfig = this.getPromptConfigSafe();
+
+        this._isSyncingPromptControls = true;
+        if (profileSelect) profileSelect.value = promptConfig.profileId || 'generic_default';
+        if (stage1Input) stage1Input.value = promptConfig.overrides?.stage1 || '';
+        this._isSyncingPromptControls = false;
     }
 
     /**
@@ -577,8 +684,8 @@ class TranscriptionManager {
         overlay.innerHTML = `
             <div class="loading-content">
                 <div class="loading-spinner-large"></div>
-                <span>Transkription läuft...</span>
-                <span class="loading-hint">Seite ${current} von ${total} (${percent}%)</span>
+                <span>Transcribing...</span>
+                <span class="loading-hint">Page ${current} of ${total} (${percent}%)</span>
                 ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
                 <div class="batch-progress-bar">
                     <div class="batch-progress-fill" style="width: ${percent}%"></div>
