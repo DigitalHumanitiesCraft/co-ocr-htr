@@ -17,7 +17,7 @@ This project is developed using **[Promptotyping](https://lisa.gerda-henkel-stif
 
 The [knowledge/](knowledge/) folder contains a complete knowledge base (Obsidian-compatible) documenting the project's methodology, architecture, and development history. See also [METHODOLOGY.md](knowledge/METHODOLOGY.md) for the scientific background.
 
-**Built with:** [Claude Code](https://claude.ai/code) powered by Claude Opus 4.5 (Anthropic)
+**Built with:** [Claude Code](https://claude.ai/code) powered by Claude Opus 4.6 (Anthropic)
 
 ## Why coOCR/HTR?
 
@@ -31,17 +31,21 @@ coOCR/HTR provides:
 
 ## Features
 
-- **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, Ollama (local with DeepSeek-OCR)
+- **Multi-provider LLM Integration**: Gemini 3, OpenAI, Anthropic, Mistral OCR, Azure Mistral OCR, Ollama (local with DeepSeek-OCR)
 - **Hybrid Validation**: Deterministic rules + LLM-as-judge (with optional custom prompt)
 - **Validation Fallback**: Automatic cloud fallback for OCR-only models (local transcription + cloud validation)
 - **Expert-in-the-Loop**: Critical expert validation workflow
 - **Flexible Document Types**: Letters, diaries, account books, inventories (lines/grid modes)
+- **Document Context**: 10 metadata fields (script type, period, language, region, etc.) for prompt enrichment
+- **Project Rules**: Markdown-based transcription rules applied to all pages in a project
 - **Document Viewer**: Pan, zoom, fit controls with keyboard shortcuts
 - **IIIF Support**: Load documents from IIIF-compatible repositories (Internet Archive, Bodleian, etc.)
 - **RTL Script Support**: Automatic detection and display for Arabic, Hebrew, and other RTL scripts
 - **Batch Processing**: Transcribe and validate single pages or entire multi-page documents
 - **PAGE-XML Import**: Compatible with Transkribus exports
 - **METS-XML Support**: Parse multi-page documents from METS metadata
+- **Internationalization**: German/English UI with runtime language switching
+- **Welcome Overlay**: First-visit onboarding with workflow overview
 - **Guided Workflow**: Step-by-step hints and progress tracking
 - **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15), TEI-XML, ZIP (multi-page)
 - **PWA Support**: Works offline after first load
@@ -85,28 +89,47 @@ docs/
 │   ├── layout.css          # Grid, header
 │   ├── components.css      # Buttons, cards
 │   ├── viewer.css          # Document viewer
-│   ├── editor.css          # Transcription table
+│   ├── editor.css          # Transcription editor
 │   ├── validation.css      # Validation panel
 │   └── dialogs.css         # Modal dialogs
+├── i18n/                   # Internationalization
+│   ├── en.json             # English translations
+│   └── de.json             # German translations
 ├── js/
 │   ├── main.js             # Entry point
 │   ├── state.js            # Central state (EventTarget)
 │   ├── viewer.js           # Document viewer
 │   ├── editor.js           # Transcription editor
+│   ├── ui.js               # UI utilities
+│   ├── pwa.js              # Service worker registration
 │   ├── components/
 │   │   ├── dialogs.js      # Modal dialogs
 │   │   ├── upload.js       # File upload
 │   │   ├── transcription.js# LLM transcription
 │   │   ├── validation.js   # Validation panel
+│   │   ├── context.js      # Document context form
+│   │   ├── description.js  # Document description
+│   │   ├── thinking.js     # LLM thinking panel
 │   │   └── batch-progress.js # Batch progress panel
-│   └── services/
-│       ├── llm.js          # LLM provider abstraction
-│       ├── storage.js      # LocalStorage wrapper
-│       ├── validation.js   # Validation engine
-│       └── parsers/
-│           ├── page-xml.js # PAGE-XML import
-│           └── mets-xml.js # METS-XML import
-└── tests/                  # Vitest tests
+│   ├── services/
+│   │   ├── llm.js          # LLM provider abstraction
+│   │   ├── storage.js      # LocalStorage wrapper
+│   │   ├── validation.js   # Validation engine
+│   │   ├── export.js       # Multi-format export
+│   │   ├── i18n.js         # Internationalization service
+│   │   ├── postprocess.js  # LLM review pipeline
+│   │   ├── samples.js      # Demo data loader
+│   │   └── parsers/
+│   │       ├── page-xml.js # PAGE-XML import
+│   │       └── mets-xml.js # METS-XML import
+│   └── utils/              # Shared utilities
+│       ├── constants.js    # App constants
+│       ├── dom.js          # DOM helpers
+│       ├── textFormatting.js # Text normalization
+│       ├── tooltips.js     # Tooltip system
+│       ├── panelResize.js  # Panel resize handles
+│       └── validationResize.js # Validation panel resize
+└── tests/                  # Vitest tests (567 tests)
 ```
 
 ## Supported Providers
@@ -115,7 +138,9 @@ docs/
 |----------|----------------|--------|
 | Gemini | gemini-3-flash, gemini-3-pro | Yes |
 | OpenAI | gpt-5.2, gpt-5.2-mini | Yes |
-| Anthropic | claude-4.5-sonnet, claude-4.5-haiku, claude-4.5-opus | Yes |
+| Anthropic | claude-sonnet-4-5, claude-haiku-4-5, claude-opus-4-5 | Yes |
+| Mistral | mistral-ocr-latest | Yes (OCR-only) |
+| Mistral OCR (Azure) | mistral-ocr-latest | Yes (OCR-only) |
 | Ollama (local) | deepseek-ocr, llava, llama3.2-vision | Yes |
 
 > **Note:** Model lists change frequently. Use "Custom model..." in the UI to enter any model ID. Check provider docs for current models.
@@ -163,7 +188,7 @@ npm test
 ### Project Status
 
 **Phase 1-2: Core Application** - Complete
-- LLM Integration (4 cloud + 1 local provider), Gemini 3 optimization
+- LLM Integration (5 cloud + 1 local provider), Gemini 3 optimization
 - Document Viewer (OpenSeadragon), Transcription Editor, Hybrid Validation
 - PAGE-XML/METS-XML Import & Export
 - Multi-page navigation, IIIF support, Help & About pages
@@ -175,12 +200,23 @@ npm test
 - ZIP export for multi-page documents
 
 **Phase 4: Polish & Release** - Complete
-- 276 unit tests passing (state, storage, export, validation, llm, page-xml, textFormatting)
+- 567 unit tests passing across 18 test files
 - Simplified API configuration dialog with clickable model indicator
 - Document context for enhanced transcription
 - Undo/Redo, Diff view, Line numbers
 - Upload dropdown with demo badges (OCR/HTR, IIIF, XML, page count)
 - Validation fallback for OCR-only models (hybrid local+cloud workflow)
+
+**Phase 5: Internationalization** - Complete
+- German/English UI with runtime language switching (250+ i18n keys)
+- Language switcher in header, persisted in localStorage
+
+**Phase 6: Community Integration & Stabilization** - Complete
+- Fork integration (Robert Klugseder, 67 commits) with full attribution
+- Azure Mistral OCR provider with configurable endpoint
+- Markdown-based project rules (transcription guidelines)
+- Welcome overlay with first-visit onboarding
+- Two-layer prompt enrichment: Transcription Rules (project) + Document Context (page)
 
 See [IMPLEMENTATION-PLAN.md](knowledge/IMPLEMENTATION-PLAN.md) for details.
 
@@ -190,7 +226,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines 
 
 ## Contributors
 
-- **[Robert Klugseder](https://github.com/rklugsederoeaw)** (OeAW) -- IndexedDB multi-project management, LLM Thinking Panel, LLM Review Apply, Mistral OCR integration, postprocessing pipeline, prompt profile architecture, validation persistence, description feature, codebase audit fixes, responsive UI improvements, and extensive test coverage. [Fork](https://github.com/rklugsederoeaw/co-ocr-htr-rk)
+- **[Robert Klugseder](https://github.com/rklugsederoeaw)** (OeAW) -- IndexedDB multi-project management, LLM Thinking Panel, LLM Review Apply, Mistral OCR integration, postprocessing pipeline, validation persistence, description feature, codebase audit fixes, responsive UI improvements, and extensive test coverage. [Fork](https://github.com/rklugsederoeaw/co-ocr-htr-rk)
 
 ## License
 
