@@ -953,3 +953,36 @@ UX improvements and documentation update.
 1. **Markdown over structured fields**: Free-form Markdown gives experts full flexibility for transcription rules; LLMs understand Markdown natively
 2. **Dual context injection**: Project Markdown rules are concatenated with per-session ContextManager output, keeping both systems independent
 3. **Welcome overlay pattern**: Reuses existing `<dialog>` + glass-panel pattern, dismissal via localStorage settings
+
+---
+
+## Session 35: Simplification & Bug Fixes (2026-02-14)
+
+### Changes
+
+**Welcome Overlay Design Refinement**
+- Replaced cold blue accents (`--accent-primary`) with warm brand gold (`--brand-gold`) throughout Welcome Overlay
+- Step number circles, card highlights, SVG icons, header/footer borders now use warm editorial palette
+- Cards use `--bg-secondary` + `--shadow-sm` for subtle depth instead of flat `--bg-tertiary`
+
+**Prompt Profile Removal (Architecture Simplification)**
+- Deleted `promptProfiles.js` (240 lines, 3 profiles x 3 stages)
+- Cleaned 13 code files + 4 knowledge docs (-809 lines, +64 lines = net -745 lines)
+- Simplified prompt engine: `buildTranscriptionPrompt()`, `buildPaleographicReviewPrompt()`, `buildPhilologicalReviewPrompt()` now use hardcoded base templates directly
+- Removed `promptConfig` from state, session persistence, project rules, and all UI dialogs
+- Removed 32 i18n keys (16 per language) and 7 profile-specific tests
+- Two-layer architecture: Transcription Rules (project-level Markdown) + Document Context (per-page form fields)
+
+**TEI/XML Export UTF-8 BOM Fix**
+- Added UTF-8 BOM (`\uFEFF`) to all text/XML exports (single-file and ZIP)
+- Fixes encoding detection in Windows editors that default to Latin-1 without BOM
+- XML spec (Section 4.3.3) explicitly allows BOM before `<?xml` declaration
+
+### Test Results
+
+567 tests across 18 test files (7 profile tests removed)
+
+### Key Decisions
+
+1. **Two-layer prompt architecture**: Prompt Profiles were redundant with Document Context (overlapping script hints, document type info). Simplified to: Transcription Rules (project scope) + Document Context (page scope)
+2. **UTF-8 BOM for exports**: Pragmatic fix for Windows tool compatibility; XML spec allows it

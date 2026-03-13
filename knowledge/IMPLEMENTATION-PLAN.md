@@ -123,7 +123,7 @@ status: complete
 | Task | Status | Description |
 |------|--------|-------------|
 | PAGE-XML Export | [x] | PAGE 2019-07-15 Schema |
-| Vitest Unit Tests | [x] | 574 tests across 18 test files |
+| Vitest Unit Tests | [x] | 567 tests across 18 test files |
 | Editor Simplification | [x] | Textarea with line numbers, diff view |
 | Undo/Redo Buttons | [x] | Visible buttons with feedback |
 | API Dialog Redesign | [x] | Unified form instead of tabs |

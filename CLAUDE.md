@@ -63,11 +63,11 @@ co-ocr-htr/
 │   │   ├── viewer.js      # Document viewer
 │   │   ├── editor.js      # Transcription editor
 │   │   ├── components/    # UI components
-│   │   ├── config/        # Prompt profiles
+│   │   ├── utils/         # Shared utilities
 │   │   └── services/      # LLM, i18n, Storage, Validation, Export
 │   ├── i18n/              # Translation dictionaries (en.json, de.json)
 │   ├── samples/           # Demo documents
-│   └── tests/             # Vitest tests (~574 tests)
+│   └── tests/             # Vitest tests (567 tests)
 └── data/                  # Development data (not deployed)
     └── ocr-examples/      # Complete datasets
 ```
