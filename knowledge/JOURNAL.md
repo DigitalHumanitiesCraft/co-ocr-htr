@@ -986,3 +986,57 @@ UX improvements and documentation update.
 
 1. **Two-layer prompt architecture**: Prompt Profiles were redundant with Document Context (overlapping script hints, document type info). Simplified to: Transcription Rules (project scope) + Document Context (page scope)
 2. **UTF-8 BOM for exports**: Pragmatic fix for Windows tool compatibility; XML spec allows it
+
+---
+
+## Session 36: Backburner Freeze (2026-06-21)
+
+No code changes. This entry freezes the project at a clean checkpoint and names the open
+strategic agenda so work can resume without re-discovery. Git anchor: `main`, HEAD `8e7d7d1`,
+working tree clean, synchronized with origin.
+
+### Frozen State
+
+Phases 1-6 complete and shipped. Live demo at [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr).
+Six LLM providers (Gemini, OpenAI, Anthropic, Mistral OCR, Azure Mistral OCR, Ollama/DeepSeek-OCR),
+hybrid validation (deterministic rules + LLM-as-judge with cloud fallback for OCR-only models),
+IIIF loading, PAGE-XML / METS-XML import, PAGE-XML / TEI-XML export, i18n (DE/EN), 567 tests.
+The tool has reached its core feature goal as a generic, browser-only, editor-in-the-loop
+component. What remains is not feature work but three strategic questions, none of which the lane
+resolves autonomously while resting.
+
+### Three Open Strategic Points
+
+1. **Empirical evaluation.** The validation and model-selection claims (categorical confidence,
+   hybrid validation, model fitness per document type) are argued methodologically but not yet
+   measured against a ground-truth corpus. There is no CER/WER baseline and no held-out gold set in
+   the repo. Blocked on the availability of a ground-truth corpus; this is also the primary wakeup
+   trigger. Until then the tool's quality assertions remain design rationale, not evidence.
+
+2. **Terminology consolidation.** The human-steering concept appears under four labels across the
+   knowledge base and UI — "Editor-in-the-Loop", "Expert-in-the-Loop", "Critical Expert in the
+   Loop", "Human-in-the-Loop" (README, VISION, VALIDATION, METHODOLOGY, INDEX). They denote the same
+   paradigm but read as distinct terms. One canonical term should be chosen and the others aligned
+   (or explicitly subordinated) before external citation. Self-contained, low-risk, deferred to the
+   next active round rather than done piecemeal during freeze.
+
+3. **Institutional integration.** ZBZ (Zentralbibliothek Zürich) adopted coOCR/HTR as the generic
+   open-source component inside the broader zbz-ocr-tei pipeline (Jeanne Hersch edition, 289 docs /
+   7,200 pages; see entry "First Institutional Adoption: ZBZ", 2026-02-14). The architecture already
+   supports institutional deployment (browser-only, static serving, IIIF). Open is whether the ZBZ
+   fork returns concrete integration requirements that feed back into this generic tool — the second
+   wakeup trigger.
+
+### Wakeup Point
+
+Reactivate when (a) a ground-truth corpus becomes available for empirical evaluation, or (b) the ZBZ
+fork delivers concrete integration requirements. Terminology consolidation can ride along with
+whichever round wakes the lane.
+
+### Coherence Note (not fixing while frozen)
+
+The published mirror `docs/knowledge/` is stale relative to the canonical `knowledge/` tree
+(`docs/knowledge/JOURNAL.md` 822 lines vs. canonical 988; INDEX also diverges) — it lacks
+Sessions 33-36. The canonical root `knowledge/` is the source of truth and is coherent. Resyncing
+the mirror is build work, deferred to the next active round; flagged here so it is not mistaken for a
+regression introduced during freeze.
