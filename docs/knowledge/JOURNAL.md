@@ -70,7 +70,7 @@ Significant improvement over v1: Modular (322 HTML + 260 JS) instead of monolith
 
 Three datasets with PAGE-XML standard: Raitbuch 2 (account book of the Oberösterreichische Kammer in Innsbruck, 1462-1464, 123 pages, PAGE-XML skeletons without transcribed text), 1617-wecker (medical book Latin, 83 pages, partial), o_szd (Stefan Zweig letters, 12 pages, METS-XML). Plus Schliemann archive images (21 JPG).
 
-> **Correction 2026-08-19:** This session entry originally described Raitbuch 2 as an Upper Austrian account book of the 16th/17th c. with status FINAL. A material check of the images, of `doc.xml` and of all 123 PAGE-XML files disproved both statements. The dataset is a Tyrolean chamber account book of 1462-1464, and all its PAGE-XML files are empty skeletons with `status NEW`. The FINAL status and the PyLaia creator string belong to the neighbouring Wecker dataset. See [data/README.md](../../data/README.md).
+> **Correction 2026-08-19:** This session entry originally described Raitbuch 2 as an Upper Austrian account book of the 16th/17th c. with status FINAL. A material check of the images, of `doc.xml` and of all 123 PAGE-XML files disproved both statements. The dataset is a Tyrolean chamber account book of 1462-1464, and all its PAGE-XML files are empty skeletons with `status NEW`. The FINAL status and the PyLaia creator string belong to the neighbouring Wecker dataset. See [data/README.md](../../data/README.md). By operator decision of 2026-08-19 the archival shelfmark is not obtained and is no longer carried as an open point.
 
 **PAGE-XML mapping to coOCR/HTR:** TextLine/Coords@points → bounds (Polygon→BoundingBox), TextLine/TextEquiv/Unicode → text, TranskribusMetadata@status → confidence.
 
