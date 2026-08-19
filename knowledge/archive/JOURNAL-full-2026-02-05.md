@@ -321,6 +321,8 @@ coocr-htr/
 | **o_szd** | Stefan Zweig letters | 12 | METS-XML + JSON | Metadata |
 | **Schliemann** | Archive images | 21 | JPG only | - |
 
+> **Correction 2026-08-19:** The description of Raitbuch 2 in this historical entry is wrong on two counts. The dataset is an account book of the Oberösterreichische Kammer, the Habsburg territorial finance authority seated in Innsbruck, dated 1462-1464, and all 123 of its PAGE-XML files are empty skeletons with `status NEW`. The status FINAL belongs to the Wecker dataset. The text above is left unchanged as a record of the state at the time. Current description in `data/README.md`.
+
 ### PAGE-XML Format Documented
 
 **Insights:**
@@ -719,6 +721,8 @@ docs/
   ]
 }
 ```
+
+> **Correction 2026-08-19:** The description of Raitbuch 2 in this historical entry is wrong on two counts. The dataset is an account book of the Oberösterreichische Kammer, the Habsburg territorial finance authority seated in Innsbruck, dated 1462-1464, and all 123 of its PAGE-XML files are empty skeletons with `status NEW`. The status FINAL belongs to the Wecker dataset. The text above is left unchanged as a record of the state at the time. Current description in `data/README.md`.
 
 ### UI Extensions
 

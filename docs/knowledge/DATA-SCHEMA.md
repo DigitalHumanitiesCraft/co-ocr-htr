@@ -211,7 +211,7 @@ Available in `data/`:
 
 | Dataset | Pages | Status | Format |
 |---------|-------|--------|--------|
-| Raitbuch 2 | 123 | FINAL | PAGE-XML |
+| Raitbuch 2 | 123 | None (empty PAGE-XML skeletons, `status NEW`) | PAGE-XML |
 | 1617-wecker | 83 | Partial | PAGE-XML |
 | o_szd.* | 12 | Metadata | METS-XML |
 | Schliemann | 21 | Images only | JPG |

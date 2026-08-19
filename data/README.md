@@ -7,9 +7,9 @@ Sample data for coOCR/HTR - historical documents with PAGE-XML transcriptions.
 ```
 data/
 ├── docta/                      # Transkribus export (complete)
-│   └── Raitbuch 2/             # Upper Austrian account book
-│       ├── doc.xml             # Document metadata (123 pages)
-│       ├── page/               # PAGE-XML transcriptions
+│   └── Raitbuch 2/             # Tyrolean chamber account book (1462-1464)
+│       ├── doc.xml             # Document metadata (123 pages, all status NEW)
+│       ├── page/               # PAGE-XML skeletons, no transcribed text
 │       └── *.jpg               # Sample images
 ├── ocr-examples/               # Various OCR test data
 │   ├── 1617-wecker-*/          # Antidotarium (16th c.)
@@ -71,22 +71,28 @@ Document metadata with page list.
 
 ### 1. Raitbuch 2 (docta/)
 
-**Type:** Upper Austrian church office account book
-**Scope:** 123 pages, fully transcribed
-**Language:** Early New High German (16th/17th c.)
-**Status:** FINAL (via PyLaia/Transkribus)
+**Type:** *Raitbuch* (account book) of the *Oberösterreichische Kammer*, the territorial finance authority of the Habsburg lands seated in Innsbruck. In Habsburg administrative usage *Oberösterreich* denotes the historical unit of Tyrol and the Vorlande. It does not refer to the present-day Austrian province of Upper Austria, and the abbreviation OÖKAM in the filenames resolves accordingly.
+**Repository:** Tiroler Landesarchiv, Innsbruck. The archival shelfmark is not recorded anywhere in this repository and still has to be added.
+**Dating:** 1462–1464, read from the dating clauses on the sample images. Fol. 3v carries *an [S]ontag nach sannd Johanns tag Decollacionis, anno domini etc. lxij* (Sunday after the Decollation of St John, 29 August 1462), fol. 4v carries *am freytag nach Epyphania anno domini etc. lxiiij* (Friday after Epiphany, January 1464).
+**Context:** The court of Sigmund of Tyrol (1427–1496). The path metadata in `doc.xml` points to a project source collection named *Sigmundiana*.
+**Language and script:** Early New High German, written in a late Gothic business cursive (*Geschäftskursive*) with Roman minuscule numerals for the accounting entries.
+**Scope:** 123 pages registered in `doc.xml`, 4 sample images in this repository.
+**Transcription status:** None. All 123 PAGE-XML files are empty skeletons of about 650 bytes each, written by the Transkribus LocalDocReader on 2025-11-28. Each file holds a `Metadata` block and a self-closing `Page` element, without `TextRegion`, `TextLine` or `Unicode`. In `doc.xml` every page carries `status NEW` and `nrOfTranscribedLines 0`. The dataset serves as image material and as a PAGE-XML skeleton. It carries no ground truth and is unsuitable for accuracy measurement.
 
 | Metric | Value |
 |--------|-------|
 | Pages | 123 |
-| XML files | 123 |
+| PAGE-XML files | 123, all empty skeletons (0 with `TextLine`, 0 with `Unicode`) |
 | Sample images | 4 |
-| Image resolution | 5562x3824 px |
+| Image resolution | 5562x3824 px (fol. 0v-1r, 1v-2r), 5582x3904 px (fol. 3v-4r, 4v-5r) |
 
 **Filename convention:** `OÖKAM Raitbuch 2, fol. XYv-Zr.jpg`
+- `OÖKAM` = *Oberösterreichische Kammer*
 - `fol.` = folio (leaf)
 - `v` = verso (back side)
 - `r` = recto (front side)
+
+The JPG files as stored on disk use the ASCII spelling `OOEKAM`, while `doc.xml` and the PAGE-XML filenames use `OÖKAM`. Code that resolves an image path from the metadata has to account for that difference.
 
 ### 2. 1617-wecker (ocr-examples/)
 
@@ -152,12 +158,25 @@ function polygonToBounds(points) {
 
 ### PAGE-XML Metadata
 
+Example from the Wecker Antidotarium dataset (`ocr-examples/1617-wecker-antidotiarum-001-150_pdf/page/0002_p002.xml`), the only dataset in this repository that was run through an HTR model and closed with status `FINAL`:
+
 ```xml
 <Metadata>
   <Creator>prov=READ-COOP:name=PyLaia@TranskribusPlatform:version=0.7.5</Creator>
   <Created>2022-09-23T18:01:30.795+02:00</Created>
   <TranskribusMetadata docId="1164174" pageId="47630219" status="FINAL"/>
 </Metadata>
+```
+
+The Raitbuch 2 files look different. They carry `Creator` `Transkribus` with no model string, no `TranskribusMetadata` element and no text content:
+
+```xml
+<Metadata>
+  <Creator>Transkribus</Creator>
+  <Created>2025-11-28T10:23:58.661+01:00</Created>
+  <LastChange>2025-11-28T10:23:58.661+01:00</LastChange>
+</Metadata>
+<Page imageFilename="OÖKAM Raitbuch 2, fol. 0v-1r.jpg" imageWidth="5562" imageHeight="3824"/>
 ```
 
 ### Transcription Status
@@ -168,6 +187,8 @@ function polygonToBounds(points) {
 | `IN_PROGRESS` | In progress |
 | `FINAL` | Completed |
 
+Across the datasets in `data/`, `FINAL` occurs only in the Wecker Antidotarium. Raitbuch 2 stands at `NEW` throughout.
+
 ## Demo Samples for GitHub Pages
 
 Selected examples are copied to `docs/samples/` and accessible via GitHub Pages:
@@ -175,7 +196,7 @@ Selected examples are copied to `docs/samples/` and accessible via GitHub Pages:
 | Sample | Folder | Description | Data |
 |--------|--------|-------------|------|
 | Wecker Antidotarium | `docs/samples/wecker/` | Latin reference book (1617) | Image + PAGE-XML |
-| Raitbuch 2 | `docs/samples/raitbuch/` | Early New High German account book | Image only |
+| Raitbuch 2 | `docs/samples/raitbuch/` | Early New High German account book, 15th c. | Image only |
 | HSA Letter | `docs/samples/hsa-letter/` | Handwritten letter | Image only |
 | Index Card | `docs/samples/karteikarte/` | Handwritten index card | Image only |
 
@@ -186,6 +207,7 @@ Selected examples are copied to `docs/samples/` and accessible via GitHub Pages:
 - **Transkribus:** https://transkribus.eu/
 - **PAGE-XML Schema:** https://github.com/PRImA-Research-Lab/PAGE-XML
 - **Literaturarchiv Salzburg:** https://www.literaturarchiv.at/
+- **Tiroler Landesarchiv:** https://www.tirol.gv.at/kunst-kultur/landesarchiv/ (holding institution of Raitbuch 2, shelfmark to be added)
 
 ---
 
