@@ -72,7 +72,7 @@ Document metadata with page list.
 ### 1. Raitbuch 2 (docta/)
 
 **Type:** *Raitbuch* (account book) of the *Oberösterreichische Kammer*, the territorial finance authority of the Habsburg lands seated in Innsbruck. In Habsburg administrative usage *Oberösterreich* denotes the historical unit of Tyrol and the Vorlande. It does not refer to the present-day Austrian province of Upper Austria, and the abbreviation OÖKAM in the filenames resolves accordingly.
-**Repository:** Tiroler Landesarchiv, Innsbruck. The archival shelfmark is not recorded anywhere in this repository and still has to be added.
+**Repository:** Tiroler Landesarchiv, Innsbruck.
 **Dating:** 1462–1464, read from the dating clauses on the sample images. Fol. 3v carries *an [S]ontag nach sannd Johanns tag Decollacionis, anno domini etc. lxij* (Sunday after the Decollation of St John, 29 August 1462), fol. 4v carries *am freytag nach Epyphania anno domini etc. lxiiij* (Friday after Epiphany, January 1464).
 **Context:** The court of Sigmund of Tyrol (1427–1496). The path metadata in `doc.xml` points to a project source collection named *Sigmundiana*.
 **Language and script:** Early New High German, written in a late Gothic business cursive (*Geschäftskursive*) with Roman minuscule numerals for the accounting entries.
@@ -207,7 +207,7 @@ Selected examples are copied to `docs/samples/` and accessible via GitHub Pages:
 - **Transkribus:** https://transkribus.eu/
 - **PAGE-XML Schema:** https://github.com/PRImA-Research-Lab/PAGE-XML
 - **Literaturarchiv Salzburg:** https://www.literaturarchiv.at/
-- **Tiroler Landesarchiv:** https://www.tirol.gv.at/kunst-kultur/landesarchiv/ (holding institution of Raitbuch 2, shelfmark to be added)
+- **Tiroler Landesarchiv:** https://www.tirol.gv.at/kunst-kultur/landesarchiv/ (holding institution of Raitbuch 2)
 
 ---
 
