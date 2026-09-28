@@ -608,6 +608,13 @@ docs/
 
 ## Changelog
 
+### v2.4 (2026-02-14)
+- Added Welcome Overlay component (glass-panel dialog with workflow pills, action cards, dismiss checkbox)
+- Added Thinking Panel component (collapsible reasoning display below editor)
+- Added Markdown Editor for project transcription rules (monospace textarea, preview toggle, .md upload)
+- Added i18n language switch (DE/EN toggle in header)
+- Added panel resize drag handles between viewer/editor/validation panels
+
 ### v2.3 (2026-02-03)
 - Removed perspective icons (paleographic, linguistic, structural, domain)
 - Validation now uses generic prompt + optional custom prompt

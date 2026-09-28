@@ -1042,3 +1042,22 @@ The published mirror `docs/knowledge/` is stale relative to the canonical `knowl
 Sessions 33-36. The canonical root `knowledge/` is the source of truth and is coherent. Resyncing
 the mirror is build work, deferred to the next active round; flagged here so it is not mistaken for a
 regression introduced during freeze.
+
+---
+
+## Session 37: Knowledge Projection for the Public Page (2026-09-28)
+
+Resolves the coherence note of Session 36. `docs/knowledge/` is now a generated projection of
+`knowledge/` instead of a hand-maintained mirror.
+
+- `docs/scripts/sync-knowledge.js` reads the `data-doc` entries of `docs/knowledge.html` and copies
+  exactly those documents from `knowledge/` into `docs/knowledge/`. The page therefore stays the
+  single place that decides what is published.
+- `docs/tests/knowledge-projection.test.js` runs with the regular Vitest suite and fails when the
+  projection is missing a document, differs byte-wise from the source, or contains a file the page
+  does not offer. `npm run check:knowledge` gives the same result from the command line.
+- The stale copies of INDEX, IMPROVEMENTS, SECURITY and TESTING were removed from
+  `docs/knowledge/`. The page offers none of them and no link in the repository points to them.
+  They remain canonical in `knowledge/` and are reachable on GitHub.
+
+Edits go to `knowledge/` only, followed by `npm run sync:knowledge` in `docs/`. INDEX records the same rule.

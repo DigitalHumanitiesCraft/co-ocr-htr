@@ -70,7 +70,7 @@ Significant improvement over v1: Modular (322 HTML + 260 JS) instead of monolith
 
 Three datasets with PAGE-XML standard: Raitbuch 2 (account book of the Oberösterreichische Kammer in Innsbruck, 1462-1464, 123 pages, PAGE-XML skeletons without transcribed text), 1617-wecker (medical book Latin, 83 pages, partial), o_szd (Stefan Zweig letters, 12 pages, METS-XML). Plus Schliemann archive images (21 JPG).
 
-> **Correction 2026-08-19:** This session entry originally described Raitbuch 2 as an Upper Austrian account book of the 16th/17th c. with status FINAL. A material check of the images, of `doc.xml` and of all 123 PAGE-XML files disproved both statements. The dataset is a Tyrolean chamber account book of 1462-1464, and all its PAGE-XML files are empty skeletons with `status NEW`. The FINAL status and the PyLaia creator string belong to the neighbouring Wecker dataset. See [data/README.md](../../data/README.md). By operator decision of 2026-08-19 the archival shelfmark is not obtained and is no longer carried as an open point.
+> **Correction 2026-08-19:** This session entry originally described Raitbuch 2 as an Upper Austrian account book of the 16th/17th c. with status FINAL. A material check of the images, of `doc.xml` and of all 123 PAGE-XML files disproved both statements. The dataset is a Tyrolean chamber account book of 1462-1464, and all its PAGE-XML files are empty skeletons with `status NEW`. The FINAL status and the PyLaia creator string belong to the neighbouring Wecker dataset. See [data/README.md](../data/README.md). By operator decision of 2026-08-19 the archival shelfmark is not obtained and is no longer carried as an open point.
 
 **PAGE-XML mapping to coOCR/HTR:** TextLine/Coords@points → bounds (Polygon→BoundingBox), TextLine/TextEquiv/Unicode → text, TranskribusMetadata@status → confidence.
 
@@ -822,3 +822,242 @@ TEI-XML export had UTF-8 encoding issues (Umlauts displayed as `Ã¼`).
 const charset = mimeType.includes('xml') ? '; charset=utf-8' : '';
 const blob = new Blob([content], { type: mimeType + charset });
 ```
+
+
+---
+
+## 2026-02-14 | First Institutional Adoption: ZBZ
+
+### Context
+
+The Zentralbibliothek Zürich (ZBZ) has confirmed their commission for the Jeanne Hersch digital edition project (289 documents, 7,200 pages). coOCR/HTR is positioned as the generic open-source component within the broader zbz-ocr-tei pipeline.
+
+### Relevance for coOCR/HTR
+
+| Aspect | Implication |
+|--------|-------------|
+| Institutional fork | ZBZ will fork co-ocr-htr to GitLab Uni Zürich |
+| Deployment | Podman (daemonless Docker alternative), OCI-compatible |
+| LLM access | Azure-based (Mistral OCR 3, Claude, Gemini) |
+| Team | Anouschka (editions and informatics background) as primary user |
+| Community reference | Klugseder (ÖAW) fork for medieval music manuscripts |
+
+### Open Development Vision
+
+coOCR/HTR explicitly communicated to ZBZ as a community project:
+
+- **Community of Experts**: Domain experts as peer reviewers of LLM output
+- **LLM-assisted code review**: Contributors get AI-assisted review of their contributions
+- **Institutional forks**: Each institution adapts to their needs, contributes back
+- **Promptotyping methodology**: Iterative development through AI dialogue
+
+### Architecture Implications
+
+The ZBZ deployment validates key architectural decisions:
+
+1. **No backend**: Browser-only works for institutional deployment (Podman serves static files)
+2. **Configurable API endpoints**: Essential for Azure vs. direct API switching
+3. **PAGE-XML export**: Required for integration with TEI transformation pipeline
+4. **IIIF support**: Relevant for ZBZ's digital library infrastructure
+
+### No Code Changes
+
+This entry documents the adoption context only. No code changes required — the existing architecture already supports institutional deployment.
+
+---
+
+## Session 33 (2026-02-14): Community Integration + Major Extensions
+
+### Context
+
+Integration of Robert Klugseder's substantial fork (67 commits, +15,819 lines, 90 files) plus three major extensions: i18n system, project rules, and Azure Mistral OCR.
+
+### What Was Done
+
+**Phase 0: Merge + Attribution**
+- Merged Robert's fork via `--no-ff` into `integration/robert-merge` branch
+- Created `CONTRIBUTING.md` with contribution guidelines
+- Added Contributors section to `README.md`
+- Cleaned fork-specific files
+
+**Phase 1: i18n System (DE/EN switchable)**
+- Created `I18nService` (`docs/js/services/i18n.js`) with EventTarget pattern
+- Built ~250 translation keys across 14 namespaces in `en.json` and `de.json`
+- Annotated ~150 HTML elements with `data-i18n` attributes
+- Replaced ~100 hardcoded strings across 8 JS files with `t()` calls
+- Added language switcher toggle (DE/EN) in header
+- All 574 tests passing
+
+**Phase 2: Project Rules**
+- IndexedDB schema migration v1 -> v2 with versioned upgrade handler
+- Project rules schema: editionModel, xmlSchema, transcription details, validation config
+- Rules dialog with full CRUD (create, edit, export/import as JSON)
+- Auto-populate context from project rules on session restore
+- Prompt profile mapping from project rules
+
+**Phase 3: Azure Mistral OCR**
+- Added `azure-mistral` provider with `api-key` header authentication
+- User-configurable endpoint URL for institutional Azure deployments
+- OCR-only detection for validation fallback
+- Endpoint field visibility toggle in LLM config dialog
+
+**Phase 4: Integration and Stabilization**
+- Replaced remaining hardcoded error strings with i18n `t()` calls
+- Fixed test expectations for i18n key returns
+- Updated ARCHITECTURE.md, DATA-SCHEMA.md, JOURNAL.md
+
+### Key Decisions
+
+1. **`--no-ff` merge**: Preserves Robert's contribution history as a visible block in `git log --first-parent`
+2. **Lazy IDB migration**: Existing projects get `rules: null` on read rather than forcing schema update
+3. **i18n fallback chain**: current lang -> EN -> key string itself (graceful degradation)
+4. **Azure auth**: Uses `api-key` header (Azure convention) vs `Authorization: Bearer` (native Mistral)
+
+---
+
+## Session 34 (2026-02-14)
+
+UX improvements and documentation update.
+
+### What Was Done
+
+**Welcome Overlay**
+- Added first-visit onboarding dialog with logo, tagline, 5-step workflow overview, and action cards (New Project, Try Demo, Upload File, Open Project)
+- "Don't show again" checkbox saving `welcome_dismissed` to localStorage settings
+- Startup flow routing: active project -> restore dialog, first visit -> welcome overlay, dismissed + projects -> project list
+
+**Umlaut Fix**
+- Replaced 164 ASCII Umlaut substitutions (ae/oe/ue/ss) with real Unicode characters (ae->a, oe->o, ue->u, ss->ss) in de.json
+
+**Editor Panel Title Fix**
+- Shortened "Beschreibung / Transkription" to "Editor" (was wrapping on multiple lines)
+- Added CSS `white-space: nowrap` safeguard to panel headers
+
+**Markdown Transcription Rules Editor**
+- Replaced 5 structured form fields (scriptType, language, period, paleographicHints, specialCharacters) with single Markdown textarea
+- Added .md file upload button and preview toggle
+- Backward compatibility migration: old structured format auto-converts to Markdown headings
+- Markdown passed directly to LLM prompts as context (stored as `transcriptionRulesMarkdown` in state)
+
+**Knowledge Vault Update**
+- Updated 8 of 15 knowledge files to reflect current codebase state
+- IMPLEMENTATION-PLAN.md: Phase 5 (i18n) marked complete, Phase 6 added and completed
+- TESTING.md: Test count updated from 363 to 574
+- ARCHITECTURE.md: File tree, providers, new sections (Post-Processing, Thinking Panel, Welcome Overlay, Prompt Profiles)
+- DATA-SCHEMA.md: Transcription rules schema updated to Markdown format
+- INDEX.md: New features added, version 2.3
+- DESIGN-SYSTEM.md: v2.4 changelog
+- IMPROVEMENTS.md: Completed items marked
+- JOURNAL.md: Session 34 entry
+
+### Key Decisions
+
+1. **Markdown over structured fields**: Free-form Markdown gives experts full flexibility for transcription rules; LLMs understand Markdown natively
+2. **Dual context injection**: Project Markdown rules are concatenated with per-session ContextManager output, keeping both systems independent
+3. **Welcome overlay pattern**: Reuses existing `<dialog>` + glass-panel pattern, dismissal via localStorage settings
+
+---
+
+## Session 35: Simplification & Bug Fixes (2026-02-14)
+
+### Changes
+
+**Welcome Overlay Design Refinement**
+- Replaced cold blue accents (`--accent-primary`) with warm brand gold (`--brand-gold`) throughout Welcome Overlay
+- Step number circles, card highlights, SVG icons, header/footer borders now use warm editorial palette
+- Cards use `--bg-secondary` + `--shadow-sm` for subtle depth instead of flat `--bg-tertiary`
+
+**Prompt Profile Removal (Architecture Simplification)**
+- Deleted `promptProfiles.js` (240 lines, 3 profiles x 3 stages)
+- Cleaned 13 code files + 4 knowledge docs (-809 lines, +64 lines = net -745 lines)
+- Simplified prompt engine: `buildTranscriptionPrompt()`, `buildPaleographicReviewPrompt()`, `buildPhilologicalReviewPrompt()` now use hardcoded base templates directly
+- Removed `promptConfig` from state, session persistence, project rules, and all UI dialogs
+- Removed 32 i18n keys (16 per language) and 7 profile-specific tests
+- Two-layer architecture: Transcription Rules (project-level Markdown) + Document Context (per-page form fields)
+
+**TEI/XML Export UTF-8 BOM Fix**
+- Added UTF-8 BOM (`\uFEFF`) to all text/XML exports (single-file and ZIP)
+- Fixes encoding detection in Windows editors that default to Latin-1 without BOM
+- XML spec (Section 4.3.3) explicitly allows BOM before `<?xml` declaration
+
+### Test Results
+
+567 tests across 18 test files (7 profile tests removed)
+
+### Key Decisions
+
+1. **Two-layer prompt architecture**: Prompt Profiles were redundant with Document Context (overlapping script hints, document type info). Simplified to: Transcription Rules (project scope) + Document Context (page scope)
+2. **UTF-8 BOM for exports**: Pragmatic fix for Windows tool compatibility; XML spec allows it
+
+---
+
+## Session 36: Backburner Freeze (2026-06-21)
+
+No code changes. This entry freezes the project at a clean checkpoint and names the open
+strategic agenda so work can resume without re-discovery. Git anchor: `main`, HEAD `8e7d7d1`,
+working tree clean, synchronized with origin.
+
+### Frozen State
+
+Phases 1-6 complete and shipped. Live demo at [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr).
+Six LLM providers (Gemini, OpenAI, Anthropic, Mistral OCR, Azure Mistral OCR, Ollama/DeepSeek-OCR),
+hybrid validation (deterministic rules + LLM-as-judge with cloud fallback for OCR-only models),
+IIIF loading, PAGE-XML / METS-XML import, PAGE-XML / TEI-XML export, i18n (DE/EN), 567 tests.
+The tool has reached its core feature goal as a generic, browser-only, editor-in-the-loop
+component. What remains is not feature work but three strategic questions, none of which the lane
+resolves autonomously while resting.
+
+### Three Open Strategic Points
+
+1. **Empirical evaluation.** The validation and model-selection claims (categorical confidence,
+   hybrid validation, model fitness per document type) are argued methodologically but not yet
+   measured against a ground-truth corpus. There is no CER/WER baseline and no held-out gold set in
+   the repo. Blocked on the availability of a ground-truth corpus; this is also the primary wakeup
+   trigger. Until then the tool's quality assertions remain design rationale, not evidence.
+
+2. **Terminology consolidation.** The human-steering concept appears under four labels across the
+   knowledge base and UI — "Editor-in-the-Loop", "Expert-in-the-Loop", "Critical Expert in the
+   Loop", "Human-in-the-Loop" (README, VISION, VALIDATION, METHODOLOGY, INDEX). They denote the same
+   paradigm but read as distinct terms. One canonical term should be chosen and the others aligned
+   (or explicitly subordinated) before external citation. Self-contained, low-risk, deferred to the
+   next active round rather than done piecemeal during freeze.
+
+3. **Institutional integration.** ZBZ (Zentralbibliothek Zürich) adopted coOCR/HTR as the generic
+   open-source component inside the broader zbz-ocr-tei pipeline (Jeanne Hersch edition, 289 docs /
+   7,200 pages; see entry "First Institutional Adoption: ZBZ", 2026-02-14). The architecture already
+   supports institutional deployment (browser-only, static serving, IIIF). Open is whether the ZBZ
+   fork returns concrete integration requirements that feed back into this generic tool — the second
+   wakeup trigger.
+
+### Wakeup Point
+
+Reactivate when (a) a ground-truth corpus becomes available for empirical evaluation, or (b) the ZBZ
+fork delivers concrete integration requirements. Terminology consolidation can ride along with
+whichever round wakes the lane.
+
+### Coherence Note (not fixing while frozen)
+
+The published mirror `docs/knowledge/` is stale relative to the canonical `knowledge/` tree
+(`docs/knowledge/JOURNAL.md` 822 lines vs. canonical 988; INDEX also diverges) — it lacks
+Sessions 33-36. The canonical root `knowledge/` is the source of truth and is coherent. Resyncing
+the mirror is build work, deferred to the next active round; flagged here so it is not mistaken for a
+regression introduced during freeze.
+
+---
+
+## Session 37: Knowledge Projection for the Public Page (2026-09-28)
+
+Resolves the coherence note of Session 36. `docs/knowledge/` is now a generated projection of
+`knowledge/` instead of a hand-maintained mirror.
+
+- `docs/scripts/sync-knowledge.js` reads the `data-doc` entries of `docs/knowledge.html` and copies
+  exactly those documents from `knowledge/` into `docs/knowledge/`. The page therefore stays the
+  single place that decides what is published.
+- `docs/tests/knowledge-projection.test.js` runs with the regular Vitest suite and fails when the
+  projection is missing a document, differs byte-wise from the source, or contains a file the page
+  does not offer. `npm run check:knowledge` gives the same result from the command line.
+- The stale copies of INDEX, IMPROVEMENTS, SECURITY and TESTING were removed from
+  `docs/knowledge/`. The page offers none of them and no link in the repository points to them.
+  They remain canonical in `knowledge/` and are reachable on GitHub.
+
+Edits go to `knowledge/` only, followed by `npm run sync:knowledge` in `docs/`. INDEX records the same rule.
