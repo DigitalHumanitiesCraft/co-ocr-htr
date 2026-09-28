@@ -49,6 +49,9 @@ System design for coOCR/HTR. Client-only, no backend.
 |  +----------+ +----------+ +----------+ +----------+        |
 |  |  Gemini  | |  OpenAI  | | Anthropic| |  Ollama  |        |
 |  +----------+ +----------+ +----------+ +----------+        |
+|  +----------+ +------------------+                          |
+|  |  Mistral | | Azure Mistral    |                          |
+|  +----------+ +------------------+                          |
 +-------------------------------------------------------------+
 ```
 
@@ -71,34 +74,52 @@ docs/
 │   ├── viewer.css          # OpenSeadragon viewer styles
 │   └── validation.css      # Validation panel
 ├── js/
-│   ├── main.js             # Initialization, Workflow (~300 LOC)
-│   ├── state.js            # Central State with EventTarget (~450 LOC)
+│   ├── main.js             # Initialization, Workflow, Welcome Overlay (~1100 LOC)
+│   ├── state.js            # Central State with EventTarget (~1500 LOC)
 │   ├── viewer.js           # OpenSeadragon Viewer (~520 LOC)
 │   ├── editor.js           # Flexible Editor (lines/grid)
 │   ├── ui.js               # UI Interactions
+│   ├── pwa.js              # Progressive Web App service worker
 │   ├── components/
-│   │   ├── dialogs.js      # Dialog Manager
+│   │   ├── dialogs.js      # Dialog Manager (~1950 LOC)
 │   │   ├── upload.js       # Upload Component
 │   │   ├── transcription.js# Transcription UI
 │   │   ├── validation.js   # Validation Panel
+│   │   ├── description.js  # Image Description (Gemini)
+│   │   ├── context.js      # Context Manager (structured document context)
+│   │   ├── thinking.js     # LLM Reasoning/Thinking Panel
 │   │   └── batch-progress.js # Batch Progress Panel
+│   ├── utils/
+│   │   ├── constants.js    # Feature flags, magic numbers
+│   │   ├── dom.js          # DOM utilities (getById, show, hide)
+│   │   ├── textFormatting.js # Markers, HTML escaping, confidence
+│   │   ├── panelResize.js  # Panel resize with drag handles
+│   │   ├── validationResize.js # Validation panel resize
+│   │   └── tooltips.js     # Tooltip positioning system
 │   └── services/
-│       ├── llm.js          # Multi-Provider LLM Service
-│       ├── storage.js      # localStorage + IndexedDB storage service
+│       ├── llm.js          # Multi-Provider LLM Service (~1900 LOC)
+│       ├── i18n.js         # Internationalization Service (DE/EN)
+│       ├── storage.js      # localStorage + IndexedDB v2 storage service
 │       ├── validation.js   # Validation Engine
-│       ├── export.js       # Export Service (incl. PAGE-XML, ZIP)
+│       ├── export.js       # Export Service (TXT, JSON, MD, PAGE-XML, TEI, ZIP)
+│       ├── postprocess.js  # Post-Processing Pipeline (Stage 2/3)
 │       ├── samples.js      # Demo Loader
 │       └── parsers/
 │           ├── page-xml.js # PAGE-XML Parser
 │           └── mets-xml.js # METS-XML Parser
+├── i18n/
+│   ├── en.json             # English translation dictionary (~250 keys)
+│   └── de.json             # German translation dictionary (~250 keys)
 ├── samples/
 │   ├── index.json          # Sample Manifest
 │   └── raitbuch/           # Demo Data
-└── tests/
-    ├── llm.test.js
-    ├── page-xml.test.js
-    ├── export.test.js
-    └── validation.test.js
+└── tests/                  # 567 tests across 18 files
+    ├── llm.test.js         # 103 tests
+    ├── state.test.js       # 85 tests
+    ├── export.test.js      # 55 tests
+    ├── i18n.test.js        # 24 tests
+    ├── postprocess.test.js # 25 tests
+    └── ...                 # See TESTING.md for full list
 ```
 
 ## Core Modules
@@ -179,12 +200,14 @@ Abstraction layer for multiple LLM providers with unified API.
 - `getValidationFallback()` finds alternative provider for validation
 
 **Supported Providers:**
-| Provider | Endpoint | Default Model | Vision |
-|----------|----------|---------------|--------|
-| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes |
-| OpenAI | api.openai.com | gpt-5.2 | Yes |
-| Anthropic | api.anthropic.com | claude-sonnet-4-5 | Yes |
-| Ollama | localhost:11434 | deepseek-ocr | Yes |
+| Provider | Endpoint | Default Model | Vision | Auth |
+|----------|----------|---------------|--------|------|
+| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes | URL param |
+| OpenAI | api.openai.com | gpt-5.2 | Yes | Bearer token |
+| Anthropic | api.anthropic.com | claude-sonnet-4-5-20250514 | Yes | x-api-key |
+| Mistral | api.mistral.ai | mistral-ocr-latest | Yes | Bearer token |
+| Azure Mistral | User-configured | mistral-ocr-latest | Yes | api-key header |
+| Ollama | localhost:11434 | deepseek-ocr | Yes | None (local) |
 
 **Validation Fallback (OCR-only Models):**
 
@@ -399,6 +422,96 @@ localStorage is not used for API key material.
 ### Content Security Policy
 
 CSP restricts connections to known LLM API endpoints (Gemini, OpenAI, Anthropic) plus localhost for Ollama. Scripts and styles limited to same-origin.
+
+## Internationalization (i18n)
+
+**Implementation:** [i18n.js](../docs/js/services/i18n.js), [en.json](../docs/i18n/en.json), [de.json](../docs/i18n/de.json)
+
+The i18n system provides switchable DE/EN translations for all UI text.
+
+**Architecture:**
+- `I18nService extends EventTarget` (same pattern as other services)
+- JSON dictionaries loaded via `fetch()` at startup
+- Translation function `t(key, params)` with `{paramName}` interpolation
+- Fallback chain: current language -> EN -> key string itself
+- Language stored in `localStorage` (`coocr:lang`), default: `en`
+- DOM elements annotated with `data-i18n`, `data-i18n-title`, `data-i18n-placeholder`
+- Language switch fires `languageChanged` event, all `[data-i18n]` elements updated
+
+**Key Namespaces:** `app`, `header`, `viewer`, `editor`, `validation`, `dialog`, `toast`, `batch`, `confirm`, `dynamic`, `language`
+
+## Project Rules
+
+Projects can define transcription and validation rules that are persisted in IndexedDB.
+
+**Schema (IndexedDB v2):**
+```
+rules: {
+  editionModel: 'diplomatic' | 'normalized' | 'critical',
+  xmlSchema: 'page-xml-2019' | 'tei-p5',
+  transcription: {
+    markdown: string   // Free-form Markdown transcription rules
+  },
+  validation: {
+    autoValidate, customPrompt
+  }
+}
+```
+
+**Transcription Rules (Markdown Editor):**
+- Free-form Markdown textarea replaces the former 5 structured fields (scriptType, language, period, paleographicHints, specialCharacters)
+- Users can upload `.md` files with their transcription rules
+- Preview toggle renders basic Markdown (h2, h3, bold, italic, lists, code)
+- Markdown is passed directly to LLM prompts as context (LLMs understand Markdown natively)
+- Backward compatibility: old structured format auto-migrated to Markdown on first read
+
+**Integration:**
+- Rules dialog accessible from project list (gear icon)
+- Markdown rules stored as `state.data.transcriptionRulesMarkdown` on session restore
+- Rules injected into LLM prompts alongside per-session context from ContextManager
+- Rules exportable/importable as JSON for institutional sharing
+
+**IDB Migration:** Version-based upgrade handler. Existing v1 projects get `rules: null` (lazy migration on read).
+
+## Post-Processing Pipeline
+
+Feature-flagged 3-stage post-processing for transcription quality improvement.
+
+**Implementation:** [postprocess.js](../docs/js/services/postprocess.js)
+
+**Feature Flag:** `FEATURE_FLAGS.postprocessPipelineV1` (default: `false`)
+
+| Stage | Purpose | Provider |
+|-------|---------|----------|
+| Stage 1 | Vision transcription | Active LLM provider |
+| Stage 2 | Paleographic review (letterform analysis) | Text-only LLM |
+| Stage 3 | Philological review (linguistic plausibility) | Text-only LLM |
+
+**Details:** See [HTR-POSTPROCESSING.md](HTR-POSTPROCESSING.md) for full specification.
+
+## Thinking Panel
+
+Displays LLM reasoning tokens (extended thinking) during transcription and description.
+
+**Implementation:** [thinking.js](../docs/js/components/thinking.js)
+
+**Feature Flag:** `FEATURE_FLAGS.thinkingPanel` (default: `true`)
+
+Shows real-time thinking chunks from Gemini and Anthropic models that support extended thinking. Collapsible panel appears below the editor during LLM operations.
+
+## Welcome Overlay
+
+First-visit onboarding dialog shown when no projects exist and welcome has not been dismissed.
+
+**Implementation:** `showWelcomeOverlay()` in [main.js](../docs/js/main.js)
+
+**Startup Flow (`handleStartup()`):**
+1. Active project ID exists -> restore dialog (existing behavior)
+2. `welcome_dismissed` is false -> show welcome overlay
+3. `welcome_dismissed` is true + projects exist -> show project list
+4. Otherwise -> empty app
+
+**Content:** Logo, tagline, 5-step workflow overview, action cards (New Project, Try Demo, Upload File, Open Project), "Don't show again" checkbox.
 
 ## Technology Decisions
 

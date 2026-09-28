@@ -11,7 +11,9 @@
     "lint:fix": "eslint js/ tests/ --fix",
     "serve": "npx serve .",
     "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "sync:knowledge": "node scripts/sync-knowledge.js",
+    "check:knowledge": "node scripts/sync-knowledge.js --check"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
