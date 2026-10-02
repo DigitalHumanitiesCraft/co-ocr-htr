@@ -239,6 +239,8 @@ PAGE-XML is the standard format from tools like Transkribus and PyLaia. The pars
 
 PAGE-XML uses polygon coordinates (four corner points). These are converted to bounding boxes by calculating min/max X and Y values. The conversion is implemented in the page-xml parser.
 
+Each segment also keeps the original polygon, baseline and line id, and the PAGE-XML export writes them back unchanged. When an edit changes the number of lines, the new text is aligned with the previous version by a line diff ([lineAlign.js](../docs/js/utils/lineAlign.js)). Unchanged and in-place corrected lines keep their geometry, while lines in a region where lines were inserted or deleted lose it, so geometry never moves onto a different line. The export writes no `Coords` for a line without geometry instead of estimating a position, which means such a file does not validate against the PAGE schema, where `TextLine/Coords` is required.
+
 ---
 
 ## Example Data

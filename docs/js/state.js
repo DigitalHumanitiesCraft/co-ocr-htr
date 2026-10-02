@@ -5,6 +5,7 @@
 
 import { storage } from './services/storage.js';
 import { t } from './services/i18n.js';
+import { alignLines } from './utils/lineAlign.js';
 
 /**
  * Generate a UUID v4
@@ -980,9 +981,10 @@ class AppState extends EventTarget {
   _syncTranscriptionSegmentsFromRaw(text) {
     const rawLines = (text || '').split('\n');
     const previousSegments = this.data.transcription.segments || [];
+    const origin = alignLines(previousSegments.map(seg => seg.text || ''), rawLines);
 
     this.data.transcription.segments = rawLines.map((lineText, index) => {
-      const previous = previousSegments[index] || {};
+      const previous = previousSegments[origin[index]] || {};
       const next = {
         lineNumber: index + 1,
         text: lineText
@@ -997,6 +999,18 @@ class AppState extends EventTarget {
     });
 
     this.data.transcription.lines = this._segmentsToLines(this.data.transcription.segments);
+
+    // Viewer regions are keyed by line number and must follow their line, not its old position
+    const shifted = origin.length !== previousSegments.length || origin.some((from, to) => from !== to);
+    if (shifted && this.data.regions.length > 0) {
+      const regionByLine = new Map(this.data.regions.map(region => [region.line, region]));
+      const regions = [];
+      origin.forEach((from, to) => {
+        const region = from >= 0 ? regionByLine.get(from + 1) : null;
+        if (region) regions.push({ ...region, line: to + 1 });
+      });
+      this.setRegions(regions);
+    }
   }
 
   /**

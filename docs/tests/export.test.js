@@ -247,11 +247,24 @@ describe('ExportService', () => {
       expect(result.content).toContain('conf="0.5"');  // uncertain
     });
 
-    it('should generate coordinates from regions', () => {
+    it('should write imported polygons and no invented Coords for lines without geometry', () => {
+      mockState.transcription.segments[0].polygon = '50,150 950,150 950,270 50,270';
       const result = service.export('xml');
-      // Region 1: x=5%, y=10%, w=90%, h=8% of 1000x1500
-      // x1=50, y1=150, x2=950, y2=270
+
       expect(result.content).toContain('<Coords points="50,150 950,150 950,270 50,270"/>');
+      // Only the region and the one line with a polygon carry Coords
+      expect(result.content.match(/<Coords /g)).toHaveLength(2);
+    });
+
+    it('should not reuse an existing line id for a line without id', () => {
+      mockState.transcription.segments = [
+        { lineNumber: 1, text: 'kept', id: 'line_2' },
+        { lineNumber: 2, text: 'inserted' }
+      ];
+      const result = service.export('xml');
+
+      expect(result.content.match(/id="line_2"/g)).toHaveLength(1);
+      expect(result.content).toContain('<TextLine id="line_2_new">');
     });
 
     it('should handle pagexml alias', () => {
