@@ -10,6 +10,7 @@
  */
 
 import { appState } from '../state.js';
+import { alignLines } from '../utils/lineAlign.js';
 import { URL_REVOKE_DELAY } from '../utils/constants.js';
 
 /**
@@ -323,7 +324,6 @@ class ExportService {
         const timestamp = new Date().toISOString();
         const filename = state.document.filename || 'unknown';
         const segments = this.getConsistentSegments(state.transcription);
-        const regions = state.regions || [];
 
         // Try to get image dimensions from state
         const imageWidth = state.image?.naturalWidth || state.document?.width || 0;
@@ -344,37 +344,28 @@ class ExportService {
             '      <Coords points="0,0 ' + imageWidth + ',0 ' + imageWidth + ',' + imageHeight + ' 0,' + imageHeight + '"/>',
         ];
 
+        // Kept ids stay, generated ids must not collide with them (e.g. a re-imported line_3)
+        const usedIds = new Set(segments.map(seg => seg.id).filter(Boolean));
+
         // Add text lines
         segments.forEach((segment, index) => {
-            const lineId = segment.id || `line_${index + 1}`;
-            const region = regions[index];
-
-            // Generate coordinates
-            let coordsPoints;
-            if (region && !region.synthetic && imageWidth > 0 && imageHeight > 0) {
-                // Convert percentage to absolute coordinates
-                const x1 = Math.round((region.x / 100) * imageWidth);
-                const y1 = Math.round((region.y / 100) * imageHeight);
-                const x2 = Math.round(((region.x + region.w) / 100) * imageWidth);
-                const y2 = Math.round(((region.y + region.h) / 100) * imageHeight);
-                coordsPoints = `${x1},${y1} ${x2},${y1} ${x2},${y2} ${x1},${y2}`;
-            } else if (segment.polygon) {
-                // Use existing polygon from import
-                coordsPoints = segment.polygon;
-            } else {
-                // Fallback: estimate based on line number
-                const lineHeight = imageHeight / Math.max(segments.length, 1);
-                const y1 = Math.round(index * lineHeight);
-                const y2 = Math.round((index + 1) * lineHeight);
-                coordsPoints = `0,${y1} ${imageWidth},${y1} ${imageWidth},${y2} 0,${y2}`;
+            let lineId = segment.id;
+            if (!lineId) {
+                lineId = `line_${index + 1}`;
+                while (usedIds.has(lineId)) lineId += '_new';
+                usedIds.add(lineId);
             }
 
-            lines.push(`      <TextLine id="${lineId}">`);
-            lines.push(`        <Coords points="${coordsPoints}"/>`);
+            lines.push(`      <TextLine id="${this.escapeXml(lineId)}">`);
+            // Only real geometry is written. A line without a polygon (LLM output, inserted
+            // in the editor) gets no Coords rather than an invented position on the page.
+            if (segment.polygon) {
+                lines.push(`        <Coords points="${this.escapeXml(segment.polygon)}"/>`);
+            }
 
             // Add baseline if available
             if (segment.baseline) {
-                lines.push(`        <Baseline points="${segment.baseline}"/>`);
+                lines.push(`        <Baseline points="${this.escapeXml(segment.baseline)}"/>`);
             }
 
             // Add text content
@@ -545,8 +536,9 @@ ${bodyLines.join('\n')}
             return segments;
         }
 
+        const origin = alignLines(segmentTexts, rawLines);
         return rawLines.map((line, index) => {
-            const previous = segments[index] || {};
+            const previous = segments[origin[index]] || {};
             return {
                 ...previous,
                 lineNumber: index + 1,

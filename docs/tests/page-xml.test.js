@@ -236,39 +236,6 @@ describe('PageXMLParser', () => {
     });
   });
 
-  describe('serialize', () => {
-    it('should serialize data back to PAGE-XML', () => {
-      const data = {
-        imageFilename: 'output.jpg',
-        pageDimensions: { width: 1000, height: 1500 },
-        segments: [
-          { id: 'line_1', text: 'First line', polygon: '0,0 100,0 100,50 0,50' },
-          { id: 'line_2', text: 'Second line' }
-        ]
-      };
-
-      const xml = parser.serialize(data);
-
-      expect(xml).toContain('<?xml version="1.0"');
-      expect(xml).toContain('PcGts');
-      expect(xml).toContain('imageFilename="output.jpg"');
-      expect(xml).toContain('<Unicode>First line</Unicode>');
-      expect(xml).toContain('<Unicode>Second line</Unicode>');
-    });
-
-    it('should escape special characters', () => {
-      const data = {
-        segments: [{ id: 'l1', text: 'Text with <special> & "chars"' }]
-      };
-
-      const xml = parser.serialize(data);
-
-      expect(xml).toContain('&lt;special&gt;');
-      expect(xml).toContain('&amp;');
-      expect(xml).toContain('&quot;');
-    });
-  });
-
   describe('baseline extraction', () => {
     it('should extract baseline points when present', () => {
       const result = parser.parse(SAMPLE_PAGE_XML);

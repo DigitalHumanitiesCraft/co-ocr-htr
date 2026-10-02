@@ -369,61 +369,6 @@ class PageXMLParser {
         els = parent.getElementsByTagName(localName);
         return Array.from(els);
     }
-
-    /**
-     * Serialize parsed data back to PAGE-XML
-     * @param {object} data - Parsed data
-     * @returns {string} PAGE-XML string
-     */
-    serialize(data) {
-        // Basic serialization - for future export functionality
-        const lines = [
-            '<?xml version="1.0" encoding="UTF-8"?>',
-            `<PcGts xmlns="${PAGE_NS}">`,
-            '  <Metadata>',
-            `    <Creator>coOCR/HTR</Creator>`,
-            `    <Created>${new Date().toISOString()}</Created>`,
-            '  </Metadata>',
-            `  <Page imageFilename="${data.imageFilename || ''}" imageWidth="${data.pageDimensions?.width || 0}" imageHeight="${data.pageDimensions?.height || 0}">`,
-            '    <TextRegion id="region_0">',
-            '      <Coords points="0,0 100,0 100,100 0,100"/>',
-        ];
-
-        // Add text lines
-        data.segments?.forEach((segment, index) => {
-            lines.push(`      <TextLine id="${segment.id || `line_${index}`}">`);
-            if (segment.polygon) {
-                lines.push(`        <Coords points="${segment.polygon}"/>`);
-            }
-            if (segment.baseline) {
-                lines.push(`        <Baseline points="${segment.baseline}"/>`);
-            }
-            lines.push('        <TextEquiv>');
-            lines.push(`          <Unicode>${this.escapeXml(segment.text)}</Unicode>`);
-            lines.push('        </TextEquiv>');
-            lines.push('      </TextLine>');
-        });
-
-        lines.push('    </TextRegion>');
-        lines.push('  </Page>');
-        lines.push('</PcGts>');
-
-        return lines.join('\n');
-    }
-
-    /**
-     * Escape XML special characters
-     * @param {string} text - Text to escape
-     * @returns {string} Escaped text
-     */
-    escapeXml(text) {
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&apos;');
-    }
 }
 
 // Export singleton instance
