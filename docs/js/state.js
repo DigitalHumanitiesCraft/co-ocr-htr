@@ -4,6 +4,7 @@
  */
 
 import { storage } from './services/storage.js';
+import { t } from './services/i18n.js';
 
 /**
  * Generate a UUID v4
@@ -1171,11 +1172,25 @@ class AppState extends EventTarget {
       clearTimeout(this._autoSaveTimer);
     }
 
-    this._autoSaveTimer = setTimeout(() => {
-      this._saveSession().catch(err =>
-        console.warn('[State] Auto-save failed:', err.message)
-      );
-    }, this._autoSaveDelay);
+    this._autoSaveTimer = setTimeout(() => this._runAutoSave(), this._autoSaveDelay);
+  }
+
+  _runAutoSave() {
+    this._autoSaveTimer = null;
+    return this._saveSession().catch(err => {
+      console.warn('[State] Auto-save failed:', err.message);
+      this.showToast(t('toast.autoSaveFailed', { message: err.message }), 'error', 6000);
+    });
+  }
+
+  /**
+   * Save immediately if an auto-save is pending. Called on pagehide, where the
+   * 30s timer would otherwise be dropped together with the unsaved edits.
+   */
+  flushAutoSave() {
+    if (!this._autoSaveTimer) return null;
+    clearTimeout(this._autoSaveTimer);
+    return this._runAutoSave();
   }
 
   async _saveSession() {

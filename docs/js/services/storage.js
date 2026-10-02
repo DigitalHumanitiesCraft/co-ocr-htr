@@ -90,18 +90,13 @@ class StorageService {
     const db = await this._initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, mode);
-      const store = tx.objectStore(storeName);
-      const result = callback(store);
+      const request = callback(tx.objectStore(storeName));
 
-      // If callback returns an IDBRequest, resolve with its result
-      if (result && typeof result.onsuccess !== 'undefined') {
-        result.onsuccess = () => resolve(result.result);
-        result.onerror = () => reject(result.error);
-      } else {
-        // For put/delete that don't need a return value
-        tx.oncomplete = () => resolve(undefined);
-        tx.onerror = () => reject(tx.error);
-      }
+      // A request's success event precedes the commit, and a quota error can still abort
+      // the transaction afterwards, so only oncomplete means the data is stored
+      tx.oncomplete = () => resolve(request?.result);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
     });
   }
 
@@ -386,6 +381,7 @@ class StorageService {
       }
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
     });
   }
 
@@ -442,6 +438,7 @@ class StorageService {
       };
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
     });
   }
 

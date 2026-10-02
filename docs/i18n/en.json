@@ -426,6 +426,7 @@
     "projectsLoadFailed": "Projects could not be loaded",
     "noProjectsYet": "No projects available yet",
     "saveFailed": "Latest changes could not be saved before opening projects",
+    "autoSaveFailed": "Auto-save failed, latest changes are not stored: {message}",
     "deletionError": "Error during deletion",
     "apiKeyValid": "API key valid, connection OK",
     "unknownProvider": "Unknown provider",
