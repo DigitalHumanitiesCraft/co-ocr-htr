@@ -174,12 +174,28 @@ describe('LLMService', () => {
       expect(result.reasoning).toBe('Some issues found');
     });
 
-    it('should handle malformed validation response', () => {
+    it('should mark a non-JSON validation response as uncertain parse error', () => {
       const mockResponse = `The text looks plausible but needs review.`;
 
       const result = service._parseValidationResponse(mockResponse);
 
-      expect(result.confidence).toBe('likely'); // "plausible" in text
+      expect(result.confidence).toBe('uncertain');
+      expect(result.parseError).toBe(true);
+      expect(result.reasoning).toBe(mockResponse);
+    });
+
+    it('should never read confidence from free text when JSON is broken', () => {
+      const result = service._parseValidationResponse('{"confidence": "confident", "issues": [ broken');
+
+      expect(result.confidence).toBe('uncertain');
+      expect(result.parseError).toBe(true);
+      expect(result.issues).toEqual([]);
+    });
+
+    it('should not flag parseError for valid JSON', () => {
+      const result = service._parseValidationResponse('{"confidence": "confident", "issues": []}');
+
+      expect(result.parseError).toBeUndefined();
     });
 
     it('should parse issues from validation response', () => {
@@ -355,42 +371,6 @@ describe('LLMService', () => {
     });
   });
 
-  describe('Confidence Extraction from Raw Text (_extractConfidenceFromText)', () => {
-    it('should extract "sure" from raw text as confident', () => {
-      expect(service._extractConfidenceFromText('The reading is "sure" overall.')).toBe('confident');
-    });
-
-    it('should extract "check-worthy" from raw text as likely', () => {
-      expect(service._extractConfidenceFromText('The confidence is "check-worthy".')).toBe('likely');
-    });
-
-    it('should extract "confident" from raw text', () => {
-      expect(service._extractConfidenceFromText('Overall assessment: "confident".')).toBe('confident');
-    });
-
-    it('should extract "certain" from raw text as confident', () => {
-      expect(service._extractConfidenceFromText('The text looks "certain".')).toBe('confident');
-    });
-
-    it('should extract "likely" from raw text', () => {
-      expect(service._extractConfidenceFromText('Assessment: "likely" correct.')).toBe('likely');
-    });
-
-    it('should detect "plausible" (unquoted) in raw text as likely', () => {
-      expect(service._extractConfidenceFromText('The text is plausible but needs review.')).toBe('likely');
-    });
-
-    it('should default to uncertain for raw text without confidence keywords', () => {
-      expect(service._extractConfidenceFromText('Some random text without keywords.')).toBe('uncertain');
-    });
-
-    it('should return uncertain for null/undefined/empty input', () => {
-      expect(service._extractConfidenceFromText(null)).toBe('uncertain');
-      expect(service._extractConfidenceFromText(undefined)).toBe('uncertain');
-      expect(service._extractConfidenceFromText('')).toBe('uncertain');
-    });
-  });
-
   describe('Canonical Marker Normalization in _normalizeIssue (PPV1-302)', () => {
     it('should normalize [uncertain] to [?] in issue text', () => {
       const issue = service._normalizeIssue({
@@ -506,10 +486,32 @@ describe('LLMService', () => {
       expect(result.reasoning).toBe('Looks good');
     });
 
-    it('should return fallback for non-JSON response', () => {
+    it('should return uncertain fallback for non-JSON response even if it says confident', () => {
       const result = service._parseValidationResponse('The text looks "confident" overall.');
-      expect(result.confidence).toBe('confident');
+      expect(result.confidence).toBe('uncertain');
+      expect(result.parseError).toBe(true);
       expect(result.issues).toEqual([]);
+    });
+  });
+
+  describe('Validation prompt text substitution', () => {
+    const validJson = '{"confidence": "likely", "issues": []}';
+
+    beforeEach(() => {
+      service.setApiKey('gemini', 'test-key');
+      service._callGemini = vi.fn().mockResolvedValue(validJson);
+    });
+
+    const sentPrompt = () => service._callGemini.mock.calls[0][2];
+
+    it('should insert text containing $& and $1 literally', async () => {
+      await service.validate('Summe $& und $1 Gulden', { customPrompt: 'Check this:\n{text}\nEnd.' });
+      expect(sentPrompt()).toBe('Check this:\nSumme $& und $1 Gulden\nEnd.');
+    });
+
+    it('should append the text when a custom prompt has no {text} placeholder', async () => {
+      await service.validate('Zeile eins', { customPrompt: 'Check abbreviations.' });
+      expect(sentPrompt()).toBe('Check abbreviations.\n\nZeile eins');
     });
   });
 
