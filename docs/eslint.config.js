@@ -64,8 +64,27 @@ export default [
         },
     },
 
+    // Service worker: classic script in the worker global scope
+    {
+        files: ['sw.js'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'script',
+            globals: {
+                ...globals.serviceworker,
+            },
+        },
+        rules: {
+            'eqeqeq': ['error', 'always'],
+            'no-unused-vars': 'warn',
+            'no-undef': 'error',
+            'prefer-const': 'warn',
+            'no-var': 'error',
+        },
+    },
+
     // Ignore non-source files
     {
-        ignores: ['node_modules/', 'config.local.js', 'sw.js', 'tests/e2e/'],
+        ignores: ['node_modules/', 'config.local.js', 'tests/e2e/'],
     },
 ];

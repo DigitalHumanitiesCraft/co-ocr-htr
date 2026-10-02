@@ -51,3 +51,6 @@ nul
 .claude/
 .playwright-mcp/
 start_server.sh
+# Playwright output
+docs/test-results/
+docs/playwright-report/

@@ -158,7 +158,7 @@ class I18nService extends EventTarget {
         const parts = key.split('.');
         let current = dict;
         for (const part of parts) {
-            if (current == null || typeof current !== 'object') return null;
+            if (current === null || typeof current !== 'object') return null;
             current = current[part];
         }
         return typeof current === 'string' ? current : null;

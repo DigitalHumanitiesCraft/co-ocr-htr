@@ -13,7 +13,14 @@ import { test, expect } from '@playwright/test';
  * Load the wecker-p015 sample so the validation panel area is visible.
  */
 async function loadSampleAndWait(page) {
+    // Without this, the startup dialogs (welcome overlay, restore prompt) race
+    // the sample load and can end up as a modal over the controls under test.
+    await page.addInitScript(() => {
+        localStorage.setItem('coocr:settings', JSON.stringify({ welcome_dismissed: true }));
+    });
+    const initialized = page.waitForEvent('console', msg => msg.text() === 'coOCR/HTR: Initialized');
     await page.goto('/');
+    await initialized;
     await page.waitForSelector('#btnUpload');
 
     await page.evaluate(async () => {
@@ -69,8 +76,8 @@ test.describe('Thinking Panel', () => {
 
         // Header should show operation + provider info
         const header = page.locator('#thinkingHeader');
-        await expect(header).toContainText('Transcription');
-        await expect(header).toContainText('gemini');
+        // The header names the operation only, the model was dropped deliberately (89b3595)
+        await expect(header).toHaveText('Transcription -- LLM Thinking');
     });
 
     test('thinking chunks appear in the content area', async ({ page }) => {

@@ -64,20 +64,12 @@ const localStorageMock = (() => {
 Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
 describe('I18nService', () => {
-    let I18nService, i18n, t;
+    let i18n, t;
 
     beforeEach(async () => {
         // Reset localStorage mock
         localStorageMock.clear();
         vi.clearAllMocks();
-
-        // Fresh import each time (reset module state)
-        // We need to create a new instance since the module exports a singleton
-        const { I18nService: Cls } = await import('../js/services/i18n.js')
-            .catch(() => {
-                // Fallback: construct inline for testing
-                return { I18nService: null };
-            });
 
         // Create fresh instance for testing
         class TestI18n extends EventTarget {
@@ -143,7 +135,7 @@ describe('I18nService', () => {
                 const parts = key.split('.');
                 let current = dict;
                 for (const part of parts) {
-                    if (current == null || typeof current !== 'object') return null;
+                    if (current === null || typeof current !== 'object') return null;
                     current = current[part];
                 }
                 return typeof current === 'string' ? current : null;
@@ -155,7 +147,7 @@ describe('I18nService', () => {
                     const response = await fetch(`./i18n/${lang}.json`);
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     this._dictionaries[lang] = await response.json();
-                } catch (err) {
+                } catch (_err) {
                     this._dictionaries[lang] = {};
                 }
             }
