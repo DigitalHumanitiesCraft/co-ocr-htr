@@ -48,7 +48,14 @@ const MOCK_VALIDATION_RESULTS = {
  * This sample has PAGE-XML, so it populates the editor with text.
  */
 async function loadSampleAndWait(page) {
+    // Without this, the startup dialogs (welcome overlay, restore prompt) race
+    // the sample load and can end up as a modal over the controls under test.
+    await page.addInitScript(() => {
+        localStorage.setItem('coocr:settings', JSON.stringify({ welcome_dismissed: true }));
+    });
+    const initialized = page.waitForEvent('console', msg => msg.text() === 'coOCR/HTR: Initialized');
     await page.goto('/');
+    await initialized;
 
     // Wait for the app to initialize
     await page.waitForSelector('#btnUpload');
