@@ -150,6 +150,14 @@ describe('ExportService', () => {
       expect(parsed.metadata.document.filename).toBe('test-document.jpg');
       expect(parsed.metadata.transcription.provider).toBe('gemini');
     });
+
+    it('should not claim a correction history it does not record', () => {
+      mockState.corrections = [];
+      const result = service.export('json', { includeMetadata: true });
+      const parsed = JSON.parse(result.content);
+
+      expect(parsed.metadata).not.toHaveProperty('corrections');
+    });
   });
 
   describe('Markdown Export', () => {

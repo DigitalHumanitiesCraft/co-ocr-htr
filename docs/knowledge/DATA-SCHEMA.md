@@ -32,7 +32,7 @@ coOCR/HTR supports various historical document types with flexible editor render
 
 ## Main Schema: Transcription
 
-The central data structure contains document metadata, transcription content, validation results, and correction history.
+The central data structure contains document metadata, transcription content and validation results.
 
 ### Top-Level Structure
 
@@ -45,7 +45,7 @@ The central data structure contains document metadata, transcription content, va
 | transcription | Object | OCR/HTR results |
 | description | Object | Image description data (current page) |
 | validation | Object | Quality assessment |
-| corrections | Array | Edit history |
+| corrections | Array | Unused. Nothing in the application writes to it, and exports do not contain it |
 | batch | Object | Batch operation state (operation/status/progress) |
 | batchTranscriptions | Array | Batch transcription results per page |
 | batchValidations | Array | Batch validation results per page |
@@ -86,15 +86,6 @@ Each line of transcribed text is stored as a segment:
 | timestamp | ISO 8601/null | Validation timestamp |
 | customPrompt | String | User-defined expert prompt |
 
-### Correction Entry
-
-| Field | Type | Description |
-|-------|------|-------------|
-| lineNumber | Number | Which line was corrected |
-| original | String | Text before edit |
-| corrected | String | Text after edit |
-| timestamp | ISO 8601 | When the edit occurred |
-
 ## Example: Account Book Entry
 
 A typical tabular document (Rechnungsbuch 1842, page 15) demonstrates the data structure:
@@ -116,8 +107,6 @@ A typical tabular document (Rechnungsbuch 1842, page 15) demonstrates the data s
 - Currency format check: passed (Taler recognized)
 - Uncertain marker check: failed (line 4 has [?])
 - LLM Review: "The name could be Mueller or Moeller. The handwriting shows a ligature that allows both readings."
-
-**Correction History:** Line 2 was reviewed but marker retained as reading remains uncertain.
 
 ## Storage Schemas
 
