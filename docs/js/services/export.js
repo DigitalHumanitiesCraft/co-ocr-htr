@@ -188,8 +188,7 @@ class ExportService {
                     provider: state.transcription.provider,
                     model: state.transcription.model
                 },
-                timestamp: new Date().toISOString(),
-                corrections: state.corrections || []
+                timestamp: new Date().toISOString()
             };
         }
 

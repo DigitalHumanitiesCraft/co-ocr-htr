@@ -156,7 +156,7 @@ Two gaps that interface design must bridge:
 
 ### Analytic Provenance
 
-Traceability of all steps: model, corrections, timestamp.
+Traceability of all steps. The export records provider, model and export timestamp. Line-level correction history (model reading against expert reading) is not recorded, because the model output is not stored separately from the edited text.
 
 ## Summary: Design Principles
 
@@ -236,7 +236,7 @@ coOCR/HTR deliberately positions itself in the **Computer-Aided** paradigm while
 | AI as tool | LLM provides draft, validation hints - never final output |
 | Transparency | Clear distinction between AI-generated and human-edited |
 | Control | Abort, undo, override at every step |
-| Accountability | Export includes provenance (model, corrections, timestamp) |
+| Accountability | Export includes provenance (provider, model, timestamp), without line-level correction history |
 
 **Reference:** Fogg, B.J. (2003). *Persuasive Technology: Using Computers to Change What We Think and Do*. Chapter 2: The Functional Triad.
 
