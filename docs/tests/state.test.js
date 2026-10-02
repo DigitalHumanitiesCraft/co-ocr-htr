@@ -1062,6 +1062,39 @@ describe('AppState', () => {
       expect(appState.data.transcriptionRulesMarkdown).toBe('## Language\nLatin\n\n## Period\n1617');
     });
 
+    it('should show an error toast when auto-save fails', async () => {
+      vi.useFakeTimers();
+      try {
+        storage.loadSettings.mockReturnValue({ autoSave: true });
+        storage.saveSession.mockRejectedValueOnce(new Error('QuotaExceededError'));
+        appState.data.project = { id: 'proj-1', name: 'Project 1' };
+        const toast = vi.fn();
+        appState.addEventListener('toastRequested', toast);
+
+        appState._scheduleAutoSave();
+        await vi.runAllTimersAsync();
+
+        expect(toast).toHaveBeenCalledTimes(1);
+        expect(toast.mock.calls[0][0].detail.type).toBe('error');
+      } finally {
+        storage.loadSettings.mockReturnValue({ autoSave: false });
+        vi.useRealTimers();
+      }
+    });
+
+    it('should save a pending auto-save immediately on flush', async () => {
+      storage.loadSettings.mockReturnValue({ autoSave: true });
+      appState.data.project = { id: 'proj-1', name: 'Project 1' };
+      appState._scheduleAutoSave();
+      storage.loadSettings.mockReturnValue({ autoSave: false });
+
+      await appState.flushAutoSave();
+
+      expect(storage.saveSession).toHaveBeenCalledTimes(1);
+      expect(appState._autoSaveTimer).toBeNull();
+      expect(appState.flushAutoSave()).toBeNull();
+    });
+
     it('should clear transcription rules when a new project is started', async () => {
       appState.data.project = { id: 'proj-1', name: 'With Rules' };
       appState.data.transcriptionRulesMarkdown = '## Script\nKurrent';

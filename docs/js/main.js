@@ -164,6 +164,9 @@ async function initApp() {
         dialogManager.showToast(t('toast.errorOccurred'), 'error');
     });
 
+    // The auto-save timer does not survive closing the tab, so write pending edits now
+    window.addEventListener('pagehide', () => appState.flushAutoSave());
+
     // Toast event handler - allows modules to show toasts without importing dialogManager
     appState.addEventListener('toastRequested', (event) => {
         const { message, type, duration } = event.detail;

@@ -232,6 +232,24 @@ describe('StorageService', () => {
       const loaded = await storage.loadSession('proj1');
       expect(loaded.document.filename).toBe('new.jpg');
     });
+
+    it('should reject a write whose transaction aborts after the request succeeded', async () => {
+      // Simulates a commit failure such as QuotaExceededError, which surfaces as an abort
+      const write = storage._withStore('sessions', 'readwrite', (store) => {
+        const request = store.put({ projectId: 'proj1', document: { filename: 'lost.jpg' } });
+        request.addEventListener('success', () => store.transaction.abort());
+        return request;
+      });
+
+      await expect(write).rejects.toThrow();
+      expect(await storage.loadSession('proj1')).toBeUndefined();
+    });
+
+    it('should resolve a read with the request result after the transaction completes', async () => {
+      await storage.saveSession('proj1', { document: { filename: 'kept.jpg' } });
+      const loaded = await storage._withStore('sessions', 'readonly', (store) => store.get('proj1'));
+      expect(loaded.document.filename).toBe('kept.jpg');
+    });
   });
 
   describe('Images (IndexedDB)', () => {

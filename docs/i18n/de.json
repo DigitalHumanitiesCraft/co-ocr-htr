@@ -426,6 +426,7 @@
     "projectsLoadFailed": "Projekte konnten nicht geladen werden",
     "noProjectsYet": "Noch keine Projekte verfügbar",
     "saveFailed": "Änderungen konnten vor dem Öffnen der Projekte nicht gespeichert werden",
+    "autoSaveFailed": "Automatisches Speichern fehlgeschlagen, letzte Änderungen sind nicht gesichert: {message}",
     "deletionError": "Fehler beim Löschen",
     "apiKeyValid": "API-Schlüssel gültig, Verbindung OK",
     "unknownProvider": "Unbekannter Anbieter",
