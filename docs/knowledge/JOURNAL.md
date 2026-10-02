@@ -1061,3 +1061,33 @@ Resolves the coherence note of Session 36. `docs/knowledge/` is now a generated 
   They remain canonical in `knowledge/` and are reachable on GitHub.
 
 Edits go to `knowledge/` only, followed by `npm run sync:knowledge` in `docs/`. INDEX records the same rule.
+
+---
+
+## Session 38: Defect Fixes from the Read-Only Review (2026-10-02)
+
+A prior read-only review listed defects in data integrity and honesty of results. This round fixes them
+without new features.
+
+- Gates. ESLint is clean and covers `sw.js`. The two failing e2e specs were test defects, a stale
+  header expectation and a race between the startup dialogs and the sample load.
+- Project rules. Switching to a project without rules clears the transcription rules, and saving the
+  rules dialog applies them without reload. One migration function for the old structured format
+  remains in `state.js`.
+- LLM review. An unparseable review response yields `uncertain` with `parseError` instead of a
+  confidence read from free text, and the post-processing pipeline counts it as a failed stage.
+  The validation prompt inserts the transcription literally and appends it when a custom prompt has
+  no `{text}` placeholder.
+- Storage. IndexedDB writes resolve only on transaction commit, a failed auto-save shows an error
+  toast, and pending edits are saved on `pagehide`.
+- PAGE-XML geometry. Editor changes are aligned with the previous lines by a line diff, so polygons,
+  baselines, ids and viewer regions stay with their own line. The export no longer invents
+  coordinates for lines without geometry and therefore omits `Coords` for them, which the PAGE
+  schema does not allow.
+- Correction provenance. The exported `corrections` field was always empty, because the model output
+  is not stored separately from the edited text. The field was removed from the export and
+  METHODOLOGY and DATA-SCHEMA no longer claim a correction history.
+
+Open: whether lines without geometry should get a schema-valid placeholder instead of no `Coords`,
+and whether the model output should be stored per page so that a real correction history becomes
+possible.
