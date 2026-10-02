@@ -351,7 +351,7 @@ function buildPhilologicalReviewPrompt(text, contextDescription = '', previousIs
  */
 function buildValidationPrompt(text, customPrompt = '') {
     const basePrompt = customPrompt.trim() || DEFAULT_VALIDATION_PROMPT;
-    return basePrompt.replace('{text}', text);
+    return applyTokenOrAppend(basePrompt, '{text}', text || '');
 }
 
 // ============================================
@@ -2024,11 +2024,10 @@ class LLMService {
       console.warn('[LLM] JSON parse failed in validation response:', e.message);
     }
 
-    // Fallback: extract confidence from text keywords
-    const confidence = this._extractConfidenceFromText(raw);
-
+    // An unparseable review is not evidence about the transcription, so it must never read as confident
     return {
-      confidence,
+      confidence: 'uncertain',
+      parseError: true,
       reasoning: raw,
       summary: '',
       issues: [],
@@ -2047,17 +2046,6 @@ class LLMService {
     if (lower === 'confident' || lower === 'certain' || lower === 'sure' || lower === 'high') return 'confident';
     if (lower === 'likely' || lower === 'check-worthy' || lower === 'medium') return 'likely';
     if (lower === 'uncertain' || lower === 'problematic' || lower === 'low') return 'uncertain';
-    return 'uncertain';
-  }
-
-  /**
-   * Extract confidence from raw text when JSON parsing fails.
-   */
-  _extractConfidenceFromText(raw) {
-    if (!raw || typeof raw !== 'string') return 'uncertain';
-    const lower = raw.toLowerCase();
-    if (lower.includes('"confident"') || lower.includes('"certain"') || lower.includes('"sure"')) return 'confident';
-    if (lower.includes('"likely"') || lower.includes('"check-worthy"') || lower.includes('plausible')) return 'likely';
     return 'uncertain';
   }
 

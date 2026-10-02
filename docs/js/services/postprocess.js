@@ -248,6 +248,9 @@ async function callWithGuardrails(prompt, signal, pageStart, callBudget) {
         timeoutPromise(POSTPROCESS_CALL_TIMEOUT_MS)
       ]);
 
+      if (result?.parseError) {
+        throw new Error('Review response was not valid JSON');
+      }
       return result;
     } catch (error) {
       lastError = error;
@@ -320,7 +323,9 @@ function isNonRetryable(error) {
          msg.includes('401') ||
          msg.includes('Unauthorized') ||
          msg.includes('not implemented') ||
-         msg.includes('aborted');
+         msg.includes('aborted') ||
+         // A malformed review counts as a failed stage, not a transient error worth another paid call
+         msg.includes('not valid JSON');
 }
 
 function sleep(ms) {

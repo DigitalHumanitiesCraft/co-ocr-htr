@@ -237,6 +237,24 @@ describe('runPostprocessing', () => {
     expect(result.pipeline.stage3.status).toBe('error');
   });
 
+  it('should treat an unparseable review response as a failed stage', async () => {
+    vi.spyOn(llmService, 'validate')
+      .mockResolvedValueOnce({ confidence: 'uncertain', parseError: true, reasoning: 'not json', issues: [] })
+      .mockResolvedValueOnce({
+        confidence: 'likely',
+        reasoning: 'stage3 ok',
+        issues: []
+      });
+
+    const result = await runPostprocessing('text', { maxCalls: 2 });
+
+    expect(result.pipeline.apiCallsUsed).toBe(2);
+    expect(result.pipeline.stage2.status).toBe('error');
+    expect(result.pipeline.stage2.reason).toContain('not valid JSON');
+    expect(result.pipeline.stage3.status).toBe('success');
+    expect(result.confidence).toBe('likely');
+  });
+
   it('should enforce max stage calls per page', async () => {
     const validateSpy = vi.spyOn(llmService, 'validate')
       .mockResolvedValueOnce({
