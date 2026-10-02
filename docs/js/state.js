@@ -198,6 +198,7 @@ class AppState extends EventTarget {
     this.data.batchTranscriptions = [];
     this.data.batchValidations = [];
     this.data.context = null;
+    this.data.transcriptionRulesMarkdown = '';
     this.data.meta = { createdAt: null, updatedAt: null };
   }
 
@@ -1301,22 +1302,8 @@ class AppState extends EventTarget {
       };
     }
 
-    // Apply project transcription rules as Markdown context
-    if (project.rules?.transcription) {
-      const tr = project.rules.transcription;
-      if (typeof tr.markdown === 'string') {
-        this.data.transcriptionRulesMarkdown = tr.markdown;
-      } else if (typeof tr === 'object') {
-        // Migrate old structured format
-        const parts = [];
-        if (tr.scriptType) parts.push(`## Script Type\n${tr.scriptType}`);
-        if (tr.language) parts.push(`## Language\n${tr.language}`);
-        if (tr.period) parts.push(`## Period\n${tr.period}`);
-        if (tr.paleographicHints) parts.push(`## Paleographic Hints\n${tr.paleographicHints}`);
-        if (tr.specialCharacters) parts.push(`## Special Characters\n${tr.specialCharacters}`);
-        this.data.transcriptionRulesMarkdown = parts.join('\n\n');
-      }
-    }
+    // Always assign, so a project without rules does not inherit the previous project's rules
+    this.data.transcriptionRulesMarkdown = migrateTranscriptionRules(project.rules?.transcription).markdown;
 
     // Restore images from IDB
     const images = await storage.loadAllImages(projectId);
@@ -1394,4 +1381,25 @@ class AppState extends EventTarget {
 }
 
 // Export singleton instance
+/**
+ * Migrate old structured transcription rules to the Markdown format.
+ * Old format: { scriptType, language, period, paleographicHints, specialCharacters }
+ * New format: { markdown: string }
+ * @param {object|null|undefined} transcription
+ * @returns {{ markdown: string }}
+ */
+export function migrateTranscriptionRules(transcription) {
+  if (typeof transcription?.markdown === 'string') return transcription;
+  if (transcription && typeof transcription === 'object') {
+    const parts = [];
+    if (transcription.scriptType) parts.push(`## Script Type\n${transcription.scriptType}`);
+    if (transcription.language) parts.push(`## Language\n${transcription.language}`);
+    if (transcription.period) parts.push(`## Period\n${transcription.period}`);
+    if (transcription.paleographicHints) parts.push(`## Paleographic Hints\n${transcription.paleographicHints}`);
+    if (transcription.specialCharacters) parts.push(`## Special Characters\n${transcription.specialCharacters}`);
+    return { markdown: parts.join('\n\n') };
+  }
+  return { markdown: '' };
+}
+
 export const appState = new AppState();

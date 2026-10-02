@@ -27,7 +27,7 @@ import { exportService } from './services/export.js';
 // eslint-disable-next-line no-unused-vars -- side-effect: registers pageXMLLoaded handler
 import { pageXMLParser } from './services/parsers/page-xml.js';
 import { samplesService } from './services/samples.js';
-import { appState } from './state.js';
+import { appState, migrateTranscriptionRules } from './state.js';
 import { escapeHtml } from './utils/textFormatting.js';
 // Side-effect import: initializes tooltip positioning
 import './utils/tooltips.js';
@@ -637,27 +637,6 @@ async function showProjectListDialog(projects) {
 }
 
 /**
- * Migrate old structured transcription rules to new Markdown format.
- * Old format: { scriptType, language, period, paleographicHints, specialCharacters }
- * New format: { markdown: string }
- * @param {object|null|undefined} transcription
- * @returns {{ markdown: string }}
- */
-function migrateTranscriptionRules(transcription) {
-    if (typeof transcription?.markdown === 'string') return transcription;
-    if (transcription && typeof transcription === 'object') {
-        const parts = [];
-        if (transcription.scriptType) parts.push(`## Script Type\n${transcription.scriptType}`);
-        if (transcription.language) parts.push(`## Language\n${transcription.language}`);
-        if (transcription.period) parts.push(`## Period\n${transcription.period}`);
-        if (transcription.paleographicHints) parts.push(`## Paleographic Hints\n${transcription.paleographicHints}`);
-        if (transcription.specialCharacters) parts.push(`## Special Characters\n${transcription.specialCharacters}`);
-        return { markdown: parts.join('\n\n') };
-    }
-    return { markdown: '' };
-}
-
-/**
  * Render simple Markdown to HTML (no external dependencies).
  * Supports: h2, h3, bold, italic, inline code, unordered lists, paragraphs.
  * @param {string} md
@@ -811,6 +790,9 @@ async function showProjectRulesDialog(projectId) {
                 }
             };
             await storage.updateProjectRules(projectId, newRules);
+            if (projectId === appState.data.project.id) {
+                appState.data.transcriptionRulesMarkdown = newRules.transcription.markdown;
+            }
             dialogManager.showToast(t('dialog.rules.rulesSaved'), 'success');
             dialog.close();
             dialog.remove();
