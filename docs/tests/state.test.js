@@ -1041,6 +1041,35 @@ describe('AppState', () => {
 
       expect(listener).not.toHaveBeenCalled();
     });
+
+    it('should clear transcription rules when switching to a project without rules', async () => {
+      storage.getProject.mockResolvedValueOnce({
+        id: 'proj-1', name: 'With Rules', rules: { transcription: { markdown: '## Script\nKurrent' } }
+      });
+      await appState.restoreSession('proj-1');
+      expect(appState.data.transcriptionRulesMarkdown).toBe('## Script\nKurrent');
+
+      storage.getProject.mockResolvedValueOnce({ id: 'proj-2', name: 'No Rules', rules: null });
+      await appState.restoreSession('proj-2');
+      expect(appState.data.transcriptionRulesMarkdown).toBe('');
+    });
+
+    it('should migrate old structured transcription rules on restore', async () => {
+      storage.getProject.mockResolvedValueOnce({
+        id: 'proj-1', name: 'Legacy', rules: { transcription: { language: 'Latin', period: '1617' } }
+      });
+      await appState.restoreSession('proj-1');
+      expect(appState.data.transcriptionRulesMarkdown).toBe('## Language\nLatin\n\n## Period\n1617');
+    });
+
+    it('should clear transcription rules when a new project is started', async () => {
+      appState.data.project = { id: 'proj-1', name: 'With Rules' };
+      appState.data.transcriptionRulesMarkdown = '## Script\nKurrent';
+
+      await appState.ensureProject('fresh.jpg');
+
+      expect(appState.data.transcriptionRulesMarkdown).toBe('');
+    });
   });
 
   describe('Segment Updates', () => {
