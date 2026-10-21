@@ -102,7 +102,6 @@ status: complete
 | Wecker Single Page | Single | 1 | [x] |
 | Raitbuch | Single | 1 | [x] |
 | HSA Letter | Single | 1 | [x] |
-| Index Card | Single | 1 | [x] |
 
 ---
 

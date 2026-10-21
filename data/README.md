@@ -198,7 +198,6 @@ Selected examples are copied to `docs/samples/` and accessible via GitHub Pages:
 | Wecker Antidotarium | `docs/samples/wecker/` | Latin reference book (1617) | Image + PAGE-XML |
 | Raitbuch 2 | `docs/samples/raitbuch/` | Early New High German account book, 15th c. | Image only |
 | HSA Letter | `docs/samples/hsa-letter/` | Handwritten letter | Image only |
-| Index Card | `docs/samples/karteikarte/` | Handwritten index card | Image only |
 
 **Note:** Only the Wecker sample includes complete PAGE-XML transcription with line coordinates. The other samples are for testing LLM transcription.
 

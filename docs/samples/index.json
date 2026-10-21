@@ -81,14 +81,6 @@
       "language": "German/French",
       "type": "letter",
       "image": "hsa-letter/image.jpg"
-    },
-    {
-      "id": "karteikarte-1",
-      "name": "Index Card",
-      "description": "Handwritten index card - image only",
-      "language": "German",
-      "type": "card",
-      "image": "karteikarte/image.jpg"
     }
   ]
 }

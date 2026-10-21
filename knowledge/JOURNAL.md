@@ -1091,3 +1091,11 @@ without new features.
 Open: whether lines without geometry should get a schema-valid placeholder instead of no `Coords`,
 and whether the model output should be stored per page so that a real correction history becomes
 possible.
+
+
+## Session 39: Card Images Removed (2026-10-21)
+
+The card photos under `data/ocr-examples/karteikarten/` and the demo sample `docs/samples/karteikarte/`
+were removed from the repository and from its history. They showed registration cards of Displaced
+Persons with religion and origin and an option card, without documented provenance or terms of use.
+The demo sample list no longer offers an index card. The generic `card` sample type stays in the code.
