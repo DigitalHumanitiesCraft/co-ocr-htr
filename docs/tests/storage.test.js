@@ -392,7 +392,14 @@ describe('StorageService', () => {
       expect(DEFAULT_SETTINGS.theme).toBe('dark');
       expect(DEFAULT_SETTINGS.defaultProvider).toBe('gemini');
       expect(DEFAULT_SETTINGS.autoSave).toBe(true);
-      expect(DEFAULT_SETTINGS.autoValidate).toBe(true);
+      expect(DEFAULT_SETTINGS).not.toHaveProperty('autoValidate');
+    });
+
+    it('should drop stored values of removed settings on load', () => {
+      localStorage.setItem('coocr:settings', JSON.stringify({ showLineNumbers: false, autoSave: false }));
+      const settings = new StorageService().loadSettings();
+      expect(settings).not.toHaveProperty('showLineNumbers');
+      expect(settings.autoSave).toBe(false);
     });
   });
 });

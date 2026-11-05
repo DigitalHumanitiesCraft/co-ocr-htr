@@ -955,21 +955,7 @@ class DialogManager {
 
         // Editor settings
         const autoSave = document.getElementById('settingAutoSave');
-        const showLineNumbers = document.getElementById('settingShowLineNumbers');
-        const highlightUncertain = document.getElementById('settingHighlightUncertain');
-
         if (autoSave) autoSave.checked = settings.autoSave !== false;
-        if (showLineNumbers) showLineNumbers.checked = settings.showLineNumbers !== false;
-        if (highlightUncertain) highlightUncertain.checked = settings.highlightUncertain !== false;
-
-        // Validation settings
-        const autoValidate = document.getElementById('settingAutoValidate');
-        const defaultPerspective = document.getElementById('settingDefaultPerspective');
-
-        if (autoValidate) autoValidate.checked = settings.autoValidate === true;
-        if (defaultPerspective && settings.defaultPerspective) {
-            defaultPerspective.value = settings.defaultPerspective;
-        }
 
         // Display settings
         const showHints = document.getElementById('settingShowHints');
@@ -990,12 +976,6 @@ class DialogManager {
 
         // Editor settings
         settings.autoSave = document.getElementById('settingAutoSave')?.checked ?? true;
-        settings.showLineNumbers = document.getElementById('settingShowLineNumbers')?.checked ?? true;
-        settings.highlightUncertain = document.getElementById('settingHighlightUncertain')?.checked ?? true;
-
-        // Validation settings
-        settings.autoValidate = document.getElementById('settingAutoValidate')?.checked ?? false;
-        settings.defaultPerspective = document.getElementById('settingDefaultPerspective')?.value || 'paleographic';
 
         // Display settings
         settings.showHints = document.getElementById('settingShowHints')?.checked ?? true;
@@ -1024,10 +1004,6 @@ class DialogManager {
     resetSettings() {
         const defaultSettings = {
             autoSave: true,
-            showLineNumbers: true,
-            highlightUncertain: true,
-            autoValidate: false,
-            defaultPerspective: 'paleographic',
             showHints: true,
             showWorkflow: true
         };

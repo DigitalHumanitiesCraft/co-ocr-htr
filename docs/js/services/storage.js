@@ -12,10 +12,11 @@ const STORAGE_PREFIX = 'coocr:';
 const DEFAULT_SETTINGS = {
   theme: 'dark',
   defaultProvider: 'gemini',
-  defaultPerspective: 'paleographic',
-  autoSave: true,
-  autoValidate: true
+  autoSave: true
 };
+
+// Settings that no code read; removed from the dialog in November 2026
+const REMOVED_SETTINGS = ['showLineNumbers', 'highlightUncertain', 'autoValidate', 'defaultPerspective'];
 
 /**
  * Storage Service class
@@ -123,7 +124,10 @@ class StorageService {
     try {
       const stored = localStorage.getItem(`${this.prefix}settings`);
       if (!stored) return { ...DEFAULT_SETTINGS };
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+      const settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+      // Values of removed settings would otherwise survive every merge in saveSettings
+      for (const key of REMOVED_SETTINGS) delete settings[key];
+      return settings;
     } catch {
       return { ...DEFAULT_SETTINGS };
     }
