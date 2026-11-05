@@ -215,23 +215,37 @@ class SamplesService {
         // Set pages in state
         appState.setPages(pages);
 
-        // Load transcription for first page if PAGE-XML available
-        const firstPage = pages[0];
-        if (firstPage.pageXmlContent) {
+        // Every page carries its own PAGE-XML. The first page becomes the live
+        // transcription, the others are stored per page and load on navigation.
+        pages.forEach((page, index) => {
+            if (!page.pageXmlContent) return;
             try {
-                const parsed = pageXMLParser.parse(firstPage.pageXmlContent);
-                if (parsed.segments?.length > 0) {
-                    appState.setTranscription({
-                        segments: parsed.segments,
-                        columns: parsed.columns || [],
-                        provider: 'PAGE-XML Import',
-                        model: 'Transkribus'
-                    });
+                const parsed = pageXMLParser.parse(page.pageXmlContent);
+                if (!parsed.segments?.length) return;
+                const transcription = {
+                    segments: parsed.segments,
+                    columns: parsed.columns || [],
+                    raw: parsed.segments.map(seg => seg.text || '').join('\n'),
+                    provider: 'PAGE-XML Import',
+                    model: 'Transkribus'
+                };
+                const regions = parsed.segments.map(seg => ({
+                    line: seg.lineNumber,
+                    x: seg.bounds.x,
+                    y: seg.bounds.y,
+                    w: seg.bounds.width,
+                    h: seg.bounds.height
+                }));
+                if (index === 0) {
+                    appState.setTranscription(transcription);
+                    appState.setRegions(regions);
+                } else {
+                    appState.setPageTranscription(page.id, { ...transcription, regions });
                 }
             } catch (error) {
-                console.warn('Failed to parse PAGE-XML for first page:', error);
+                console.warn(`Failed to parse PAGE-XML for page ${index + 1}:`, error);
             }
-        }
+        });
 
         return sample;
     }

@@ -519,6 +519,24 @@ class AppState extends EventTarget {
   }
 
   /**
+   * Store the transcription of a page that is not currently shown
+   * (e.g. the PAGE-XML of later pages in a multi-page sample).
+   * @param {string} pageId - Page id as set by setPages
+   * @param {object} transcription - { segments, columns, raw, provider, model, regions }
+   */
+  setPageTranscription(pageId, transcription) {
+    this.data.pageTranscriptions[pageId] = {
+      segments: transcription.segments || [],
+      columns: transcription.columns || [],
+      raw: transcription.raw || '',
+      provider: transcription.provider || '',
+      model: transcription.model || '',
+      regions: transcription.regions || []
+    };
+    this._scheduleAutoSave();
+  }
+
+  /**
    * Internal: Save current page transcription
    */
   _saveCurrentPageTranscription() {
