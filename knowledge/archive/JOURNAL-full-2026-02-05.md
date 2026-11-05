@@ -3149,7 +3149,7 @@ knowledge/
 **Task:** Add TEI-XML export format for Digital Humanities integration.
 
 **Implementation:**
-- Added `exportTei()` method to [export.js](../docs/js/services/export.js)
+- Added `exportTei()` method to [export.js](../../docs/js/services/export.js)
 - TEI P5 minimal schema with proper header structure
 - Marker conversion to TEI elements:
   - `[word]?` → `<unclear>word</unclear>`
@@ -3161,11 +3161,11 @@ knowledge/
 - Schema reference for validation
 
 **UI Changes:**
-- Added TEI option to export dialog in [index.html](../docs/index.html)
+- Added TEI option to export dialog in [index.html](../../docs/index.html)
 - Format: `.tei.xml` extension
 
 **Tests Added:**
-- 18 new tests in [export.test.js](../docs/tests/export.test.js)
+- 18 new tests in [export.test.js](../../docs/tests/export.test.js)
 - Coverage: structure, markers, escaping, edge cases
 
 **Test Results:**
@@ -3178,8 +3178,8 @@ knowledge/
 **Task:** Add comprehensive tests for state.js and storage.js.
 
 **New Test Files:**
-- [state.test.js](../docs/tests/state.test.js) - 61 tests
-- [storage.test.js](../docs/tests/storage.test.js) - 23 tests
+- [state.test.js](../../docs/tests/state.test.js) - 61 tests
+- [storage.test.js](../../docs/tests/storage.test.js) - 23 tests
 
 **Test Coverage:**
 
@@ -3223,9 +3223,9 @@ knowledge/
 **Task:** Add Progressive Web App support for offline functionality and installation.
 
 **New Files:**
-- [manifest.json](../docs/manifest.json) - Web App Manifest
-- [sw.js](../docs/sw.js) - Service Worker
-- [pwa.js](../docs/js/pwa.js) - PWA initialization and offline indicator
+- [manifest.json](../../docs/manifest.json) - Web App Manifest
+- [sw.js](../../docs/sw.js) - Service Worker
+- [pwa.js](../../docs/js/pwa.js) - PWA initialization and offline indicator
 
 **Implementation:**
 
@@ -3251,7 +3251,7 @@ knowledge/
 - Update notification for new versions
 
 **UI Changes:**
-- Added manifest link in [index.html](../docs/index.html) head
+- Added manifest link in [index.html](../../docs/index.html) head
 - Added meta tags for PWA (theme-color, apple-mobile-web-app)
 - Added offline indicator in header
 - Added CSS for offline indicator with animation
@@ -3289,9 +3289,9 @@ knowledge/
 - Removed separate upload button, consolidated all options
 
 **Files Changed:**
-- [index.html](../docs/index.html) - Upload dropdown structure
-- [components.css](../docs/css/components.css) - Dropdown and badge styles
-- [main.js](../docs/js/main.js) - Menu initialization and event handling
+- [index.html](../../docs/index.html) - Upload dropdown structure
+- [components.css](../../docs/css/components.css) - Dropdown and badge styles
+- [main.js](../../docs/js/main.js) - Menu initialization and event handling
 
 ### Part 2: Demo Sample Badge System
 
@@ -3328,9 +3328,9 @@ knowledge/
 - Local models show "(lokal)" suffix
 
 **Files Changed:**
-- [index.html](../docs/index.html) - Model indicator HTML
-- [editor.css](../docs/css/editor.css) - Model indicator styles
-- [dialogs.js](../docs/js/components/dialogs.js) - `updateModelIndicator()` function, click handler
+- [index.html](../../docs/index.html) - Model indicator HTML
+- [editor.css](../../docs/css/editor.css) - Model indicator styles
+- [dialogs.js](../../docs/js/components/dialogs.js) - `updateModelIndicator()` function, click handler
 
 ### Part 4: Header Cleanup
 
@@ -3369,7 +3369,7 @@ knowledge/
 - Keep `/api/generate` for text-only requests
 
 **Files Changed:**
-- [llm.js](../docs/js/services/llm.js) - `_callOllama()` method with vision model detection
+- [llm.js](../../docs/js/services/llm.js) - `_callOllama()` method with vision model detection
 
 ### Part 2: Validation Fallback for OCR-only Models
 
@@ -3393,10 +3393,10 @@ Validation: Gemini/OpenAI/Anthropic (cloud fallback)
 - UI shows "Fallback: Google Gemini" when fallback is used
 
 **Files Changed:**
-- [llm.js](../docs/js/services/llm.js) - Fallback detection and execution
-- [validation.js](../docs/js/services/validation.js) - Pass through fallbackUsed info
-- [validation.js](../docs/js/components/validation.js) - Display fallback notice
-- [validation.css](../docs/css/validation.css) - Fallback notice styling
+- [llm.js](../../docs/js/services/llm.js) - Fallback detection and execution
+- [validation.js](../../docs/js/services/validation.js) - Pass through fallbackUsed info
+- [validation.js](../../docs/js/components/validation.js) - Display fallback notice
+- [validation.css](../../docs/css/validation.css) - Fallback notice styling
 
 ### Part 3: Export Button Fix
 

@@ -1,18 +1,16 @@
 ---
 type: knowledge
 created: 2026-01-16
-updated: 2026-02-14
+updated: 2026-11-05
 tags: [coocr-htr, roadmap, milestones]
 status: complete
 ---
 
 # Implementation Plan
 
-**Status:** Phase 1-6 Complete
+The six phases of the original roadmap are complete. Later rounds (defect fixes, workshop hardening, operator decisions) are recorded in [JOURNAL.md](JOURNAL.md), and all open work lives in [IMPROVEMENTS.md](IMPROVEMENTS.md). This document keeps the phase record and is not extended with new phases.
 
-**Live Demo:** [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr)
-
-**Architecture:** See [ARCHITECTURE.md](ARCHITECTURE.md) for project structure and module details.
+GitHub Pages serves the application at [dhcraft.org/co-ocr-htr](http://dhcraft.org/co-ocr-htr) from `docs/` on `main` of the GitHub repository. [ARCHITECTURE.md](ARCHITECTURE.md) holds the current project structure and module details.
 
 ---
 
@@ -51,9 +49,9 @@ status: complete
 |------|--------|------|
 | Create `help.html` | [x] | `docs/help.html` |
 | Create `about.html` | [x] | `docs/about.html` |
-| Create `knowledge.html` | [x] | `docs/knowledge.html` |
+| Create `knowledge.html` | [x], removed in Session 42 | knowledge folder linked on GitHub instead |
 | `pages.css` Shared Styles | [x] | `docs/css/pages.css` |
-| Header Links (Help/About/Knowledge) | [x] | `docs/index.html` |
+| Header Links | [x] | `docs/index.html` |
 | Scroll Fix for Subpages | [x] | `docs/css/pages.css` |
 
 ### 2.2 Multi-Page Navigation [x] COMPLETE
@@ -122,13 +120,13 @@ status: complete
 | Task | Status | Description |
 |------|--------|-------------|
 | PAGE-XML Export | [x] | PAGE 2019-07-15 Schema |
-| Vitest Unit Tests | [x] | 567 tests across 18 test files |
+| Vitest Unit Tests | [x] | `docs/tests/`, see [TESTING.md](TESTING.md) |
 | Editor Simplification | [x] | Textarea with line numbers, diff view |
 | Undo/Redo Buttons | [x] | Visible buttons with feedback |
 | API Dialog Redesign | [x] | Unified form instead of tabs |
 | Document Context | [x] | Integrated in transcription dialog |
 | DeepSeek-OCR Integration | [x] | As local Ollama model |
-| E2E Test | [ ] | Complete workflow test (optional) |
+| E2E Tests | [x] | Playwright specs under `docs/tests/e2e/`, started in February 2026 and extended in Sessions 38-42 |
 | Performance Audit | [ ] | Lighthouse, large documents (optional) |
 
 ---
@@ -138,13 +136,11 @@ status: complete
 | Task | Status | Description |
 |------|--------|-------------|
 | i18n Service | [x] | `js/services/i18n.js` with `t()` function, EventTarget |
-| Translation Dictionaries | [x] | `i18n/en.json` + `i18n/de.json` (~250 keys each) |
-| HTML Migration | [x] | `data-i18n` attributes on ~200 elements |
+| Translation Dictionaries | [x] | `i18n/en.json` + `i18n/de.json` |
+| HTML Migration | [x] | `data-i18n` attributes on the static interface |
 | JS Migration | [x] | `t()` calls in all components and services |
 | Language Switcher | [x] | DE/EN toggle in header, persisted in localStorage |
-| Testing | [x] | 24 unit tests (i18n.test.js) |
-
-**Actual Scope:** 250+ i18n keys, 2 languages (EN/DE), ~1200 LOC
+| Testing | [x] | `i18n.test.js`, `i18n-dom.test.js` |
 
 ---
 
@@ -152,13 +148,13 @@ status: complete
 
 | Task | Status | Description |
 |------|--------|-------------|
-| Fork Integration | [x] | Robert Klugseder's fork (67 commits) merged with full attribution |
+| Fork Integration | [x] | Fork of an external contributor at the Austrian Academy of Sciences merged with full attribution (README, Contributors) |
 | Azure Mistral OCR | [x] | New provider with configurable endpoint, `api-key` auth header |
 | Project Rules (IDB v2) | [x] | Edition model, XML schema, transcription rules, validation config |
 | Markdown Rules Editor | [x] | Free-form Markdown replaces 5 structured fields, .md upload |
 | Welcome Overlay | [x] | First-visit onboarding dialog with workflow overview and action cards |
 | i18n Stabilization | [x] | All remaining hardcoded strings replaced with `t()` calls |
-| Umlaut Fix | [x] | 164 ASCII Umlaut substitutions replaced with Unicode in de.json |
+| Umlaut Fix | [x] | ASCII Umlaut substitutions replaced with Unicode in de.json |
 | Documentation Update | [x] | ARCHITECTURE.md, DATA-SCHEMA.md, JOURNAL.md updated |
 
 ---

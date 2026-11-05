@@ -25,11 +25,13 @@ knowledge/
 ├── IMPROVEMENTS.md        ← Planned improvements
 ├── SECURITY.md            ← Security considerations
 ├── TESTING.md             ← Testing strategy (unit and e2e)
-├── IMPLEMENTATION-PLAN.md ← Roadmap (Phase 1-6 complete)
-└── JOURNAL.md             ← Development log
+├── IMPLEMENTATION-PLAN.md ← Phase record of the original roadmap (complete)
+├── JOURNAL.md             ← Development log
+└── archive/
+    └── JOURNAL-full-2026-02-05.md ← Unabridged journal as of 2026-02-05
 ```
 
-`knowledge/` is the only place to edit. It is not served on the GitHub Pages site; readers reach it in the repository on GitHub, which the about and help pages link.
+`knowledge/` is the only place to edit. `docs/` holds no copy of it, which `docs/tests/publication.test.js` checks, so the Pages build contains no knowledge documents. Readers reach the folder in the repository on GitHub, which the about page links.
 
 ## Document Matrix
 
@@ -42,7 +44,9 @@ knowledge/
 | [ARCHITECTURE](ARCHITECTURE.md) | How is it built? | Development | METHODOLOGY |
 | [VALIDATION](VALIDATION.md) | How is it verified? | Development | METHODOLOGY, ARCHITECTURE |
 | [DATA-SCHEMA](DATA-SCHEMA.md) | What data? | Development | ARCHITECTURE |
-| [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | Project roadmap | Development | ARCHITECTURE |
+| [HTR-POSTPROCESSING](HTR-POSTPROCESSING.md) | How do the paleographic and philological review stages work? | Development | VALIDATION, MODEL-LANDSCAPE |
+| [IMPROVEMENTS](IMPROVEMENTS.md) | What is open, and what waits for the operator? | Development | ARCHITECTURE |
+| [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | Which roadmap phases were built? | Development | ARCHITECTURE |
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
 | [SECURITY](SECURITY.md) | How is it secured? | Everyone | ARCHITECTURE |
 | [TESTING](TESTING.md) | How is it tested? | Development | ARCHITECTURE |
@@ -108,22 +112,3 @@ METHODOLOGY ──────────────────────�
     │                                             │
     └──→ All design decisions justified ←─────────┘
 ```
-
-## Version History
-
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-01-16 | Initial consolidation from docs/ and new_knowledge/ |
-| 1.1 | 2026-01-16 | UI mockup analysis integrated: triple sync, table structure, panel layout |
-| 1.2 | 2026-01-16 | Prototype v2 analysis: AppState with EventTarget, modular JS architecture, IMPLEMENTATION-PLAN.md |
-| 1.3 | 2026-01-16 | Translated to English |
-| 1.4 | 2026-01-16 | Added REQUIREMENTS.md with feature status, bugs, and requirements |
-| 1.5 | 2026-01-18 | Added IIIF Integration, OpenSeadragon viewer, IIIF Dialog |
-| 1.6 | 2026-02-03 | Added VISION.md with project goals and success criteria |
-| 1.7 | 2026-02-03 | Added MODEL-LANDSCAPE.md with OCR/HTR model comparison and external validation |
-| 1.8 | 2026-02-03 | Simplified validation: removed perspectives, added custom prompt option |
-| 1.9 | 2026-02-04 | Added validation fallback for OCR-only models, hybrid OCR workflow |
-| 2.0 | 2026-02-04 | Phase 3 complete: Batch processing, page status indicators, ZIP export |
-| 2.1 | 2026-02-04 | Phase 5 planned: i18n (German/English UI) with ~400 strings |
-| 2.2 | 2026-02-14 | Adoption context: ZBZ as institutional fork, Open Development, Mistral OCR 3 |
-| 2.3 | 2026-02-14 | Phase 5-6 complete: i18n, Project Rules, Azure Mistral, Welcome Overlay, Markdown Rules Editor. 567 tests. |

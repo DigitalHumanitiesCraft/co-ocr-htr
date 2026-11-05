@@ -58,7 +58,7 @@ The central data structure contains document metadata, transcription content and
 |-------|------|-------------|
 | id | String | Internal document/page identifier |
 | filename | String | Original file name |
-| mimeType | String | image/jpeg, image/png, image/tiff, application/pdf |
+| mimeType | String | Type of the uploaded file; uploads accept image/jpeg, image/png and image/webp (`SUPPORTED_IMAGE_TYPES` in `components/upload.js`), pages without a type default to image/jpeg |
 | dataUrl | String (optional) | Base64 encoded image |
 | width | Number | Image width in pixels |
 | height | Number | Image height in pixels |
@@ -155,6 +155,8 @@ Four object stores for persistent data:
   }
 }
 ```
+
+Of these fields only `transcription.markdown` is applied, as `state.data.transcriptionRulesMarkdown`; the others are stored and exported without effect ([IMPROVEMENTS](IMPROVEMENTS.md)).
 
 ### i18n Translation Schema
 

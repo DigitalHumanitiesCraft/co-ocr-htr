@@ -1,7 +1,7 @@
 ---
 type: knowledge
 created: 2026-01-16
-updated: 2026-02-03
+updated: 2026-11-05
 tags: [coocr-htr, design-system, ui-ux]
 status: complete
 version: 2.3
@@ -545,15 +545,7 @@ All interactive elements show visible focus: 2px outline in `--accent-primary`, 
 
 ### Contrast Ratios
 
-All text meets WCAG AA (4.5:1 minimum).
-
-| Element | Foreground | Background | Ratio |
-|---------|------------|------------|-------|
-| Body text | #e6edf3 | #0d1117 | 14.2:1 |
-| Secondary text | #8b949e | #0d1117 | 6.4:1 |
-| Confident status | #2d8659 | #161b22 | 4.8:1 |
-| Uncertain status | #b8860b | #161b22 | 4.6:1 |
-| Problematic status | #a84432 | #161b22 | 5.1:1 |
+Text tokens meet WCAG 2.2 AA (4.5:1) on every light background token. `docs/tests/contrast.test.js` computes the ratios from `css/variables.css` for `--text-primary`, `--text-secondary` and the status text tokens `--confident-text`, `--uncertain-text` and `--problematic-text` against `--bg-primary`, `--bg-secondary`, `--bg-tertiary` and `--bg-viewer`, so the test is the source of truth for the current values.
 
 ### Triple Coding
 

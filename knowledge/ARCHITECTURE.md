@@ -61,65 +61,67 @@ System design for coOCR/HTR. Client-only, no backend.
 
 ```
 docs/
-├── index.html              # Entry Point
-├── favicon.png
+├── index.html              # Application entry point
+├── help.html, about.html   # Help and about pages; the about page links the knowledge folder on GitHub
+├── favicon.svg, manifest.json, sw.js  # Icon, PWA manifest, network-first service worker
+├── config.local.example.js # Template for the gitignored local key file
+├── assets/                 # Logo and mock document image
 ├── css/
-│   ├── variables.css       # Design System Tokens (60+ vars)
+│   ├── variables.css       # Design system tokens
 │   ├── styles.css          # Entry point with @imports
 │   ├── base.css            # Reset, typography
-│   ├── layout.css          # Grid, panels, header
+│   ├── layout.css          # Grid, panels, header, container queries
 │   ├── components.css      # Buttons, inputs
 │   ├── dialogs.css         # Dialog system
 │   ├── editor.css          # Transcription editor
 │   ├── viewer.css          # OpenSeadragon viewer styles
-│   └── validation.css      # Validation panel
+│   ├── validation.css      # Validation panel
+│   └── pages.css           # Help and about pages
 ├── js/
-│   ├── main.js             # Initialization, Workflow, Welcome Overlay (~1100 LOC)
-│   ├── state.js            # Central State with EventTarget (~1500 LOC)
-│   ├── viewer.js           # OpenSeadragon Viewer (~520 LOC)
-│   ├── editor.js           # Flexible Editor (lines/grid)
-│   ├── ui.js               # UI Interactions
-│   ├── pwa.js              # Progressive Web App service worker
+│   ├── main.js             # Initialization, workflow, welcome overlay, project rules dialog
+│   ├── state.js            # Central state with EventTarget, auto-save
+│   ├── viewer.js           # OpenSeadragon viewer
+│   ├── editor.js           # Flexible editor (lines/grid), diff view, undo
+│   ├── ui.js               # UI interactions
+│   ├── pwa.js              # Service worker registration, offline indicator
 │   ├── components/
-│   │   ├── dialogs.js      # Dialog Manager (~1950 LOC)
-│   │   ├── upload.js       # Upload Component
+│   │   ├── dialogs.js      # Dialog manager
+│   │   ├── upload.js       # Upload component (JPG, PNG, WebP, PAGE-XML)
 │   │   ├── transcription.js# Transcription UI
-│   │   ├── validation.js   # Validation Panel
-│   │   ├── description.js  # Image Description (Gemini)
-│   │   ├── context.js      # Context Manager (structured document context)
-│   │   ├── thinking.js     # LLM Reasoning/Thinking Panel
-│   │   └── batch-progress.js # Batch Progress Panel
+│   │   ├── validation.js   # Validation panel
+│   │   ├── description.js  # Image description (Gemini)
+│   │   ├── context.js      # Context manager (structured document context)
+│   │   ├── thinking.js     # LLM reasoning/thinking panel
+│   │   └── batch-progress.js # Batch progress panel
 │   ├── utils/
 │   │   ├── constants.js    # Feature flags, magic numbers
 │   │   ├── dom.js          # DOM utilities (getById, show, hide)
 │   │   ├── textFormatting.js # Markers, HTML escaping, confidence
+│   │   ├── lineAlign.js    # Line alignment for diff view and PAGE-XML geometry
+│   │   ├── iiifLabel.js    # IIIF Presentation 2 and 3 labels as display text
+│   │   ├── osdSvgOverlay.js # SVG layer on the OpenSeadragon viewport
 │   │   ├── panelResize.js  # Panel resize with drag handles
 │   │   ├── validationResize.js # Validation panel resize
 │   │   └── tooltips.js     # Tooltip positioning system
 │   └── services/
-│       ├── llm.js          # Multi-Provider LLM Service (~1900 LOC)
-│       ├── i18n.js         # Internationalization Service (DE/EN)
+│       ├── llm.js          # Multi-provider LLM service
+│       ├── i18n.js         # Internationalization service (DE/EN)
 │       ├── storage.js      # localStorage + IndexedDB v2 storage service
-│       ├── validation.js   # Validation Engine
-│       ├── export.js       # Export Service (TXT, JSON, MD, PAGE-XML, TEI, ZIP)
-│       ├── postprocess.js  # Post-Processing Pipeline (Stage 2/3)
-│       ├── samples.js      # Demo Loader
+│       ├── validation.js   # Validation engine
+│       ├── export.js       # Export service (TXT, JSON, MD, PAGE-XML, TEI, ZIP)
+│       ├── postprocess.js  # Post-processing pipeline (Stage 2/3)
+│       ├── samples.js      # Demo loader
 │       └── parsers/
-│           ├── page-xml.js # PAGE-XML Parser
-│           └── mets-xml.js # METS-XML Parser
+│           ├── page-xml.js # PAGE-XML parser
+│           └── mets-xml.js # METS-XML parser
+├── vendor/                 # OpenSeadragon and JSZip from npm, VERSIONS.txt with licences and SHA-256
 ├── i18n/
-│   ├── en.json             # English translation dictionary (~250 keys)
-│   └── de.json             # German translation dictionary (~250 keys)
+│   ├── en.json             # English translation dictionary
+│   └── de.json             # German translation dictionary
 ├── samples/
-│   ├── index.json          # Sample Manifest
-│   └── raitbuch/           # Demo Data
-└── tests/                  # Vitest unit tests, e2e/ Playwright specs
-    ├── llm.test.js         # 103 tests
-    ├── state.test.js       # 85 tests
-    ├── export.test.js      # 55 tests
-    ├── i18n.test.js        # 24 tests
-    ├── postprocess.test.js # 25 tests
-    └── ...                 # See TESTING.md for full list
+│   ├── index.json          # Sample manifest
+│   └── <sample>/           # Demo data, one folder per sample
+└── tests/                  # Vitest unit tests, e2e/ Playwright specs (see TESTING.md)
 ```
 
 ## Core Modules
@@ -198,11 +200,12 @@ Abstraction layer for multiple LLM providers with unified API.
 - `validate(text, options)` requests LLM Review (options: `{ customPrompt }`)
 - `isOcrOnlyModel()` detects OCR-specific models (e.g., DeepSeek-OCR)
 - `getValidationFallback()` finds alternative provider for validation
+- `cancelRequests()` aborts every request in flight; each request carries a signal (`_signal()`) that combines the provider timeout with a shared `AbortController`, and the cancel button of a single-page transcription or validation calls it
 
 **Supported Providers:**
 | Provider | Endpoint | Default Model | Vision | Auth |
 |----------|----------|---------------|--------|------|
-| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes | URL param |
+| Gemini | generativelanguage.googleapis.com | gemini-3-flash-preview | Yes | `x-goog-api-key` header |
 | OpenAI | api.openai.com | gpt-5.2 | Yes | Bearer token |
 | Anthropic | api.anthropic.com | claude-sonnet-4-5-20250514 | Yes | x-api-key |
 | Mistral | api.mistral.ai | mistral-ocr-latest | Yes | Bearer token |
@@ -392,22 +395,25 @@ All provider-specific API calls are implemented in [llm.js](../docs/js/services/
 **Provider Specifics:**
 | Provider | Auth Method | Image Format | Max Tokens |
 |----------|-------------|--------------|------------|
-| Gemini | URL parameter | inline_data | 8192 |
+| Gemini | `x-goog-api-key` header | inline_data | 8192 |
 | OpenAI | Bearer token | image_url (data URI) | 4096 |
 | Anthropic | x-api-key header | base64 in content | 4096 |
 | Ollama | None (local) | base64 | Varies |
 
 ## Error Handling
 
-| Error Type | Cause | Handling |
-|------------|-------|----------|
-| NetworkError | No connection | Retry with backoff |
-| AuthError | Invalid API Key | Dialog for key entry |
-| RateLimitError | Too many requests | Wait, countdown |
-| QuotaError | Quota exhausted | Alternative provider |
-| StorageError | IndexedDB/localStorage quota reached | Show warning, cleanup option |
+Provider failures become an `LLMError` with a `type` (`_handleError()` in `llm.js`). The HTTP status decides first, the message text only where no status is available.
 
-**Retry Strategy:** Exponential backoff (1s, 2s, 4s) with max 3 attempts. Respects `retryAfter` header from rate-limited responses.
+| Type | Cause | Handling |
+|------|-------|----------|
+| `auth` | HTTP 401 or 403, or 400 with "API key" (Gemini's invalid-key answer) | Error message naming the configuration |
+| `rate_limit` | HTTP 429, or a rate-limit or quota message | Error message asking to wait |
+| `timeout` | Provider timeout of the request signal | Error message |
+| `cancelled` | User pressed cancel | Message "Operation cancelled. Nothing was changed." |
+| `network` | Failed fetch, CORS | Error message |
+| `unknown` | Anything else | Provider message shown |
+
+An empty or blocked answer counts as an error and keeps the existing transcription. A streaming request is repeated once without streaming only when streaming itself failed (`isStreamSpecificFailure()`); an HTTP error, a timeout or a network failure is not retried. Retries with exponential backoff exist only in the post-processing pipeline (`postprocess.js`). A failed auto-save to IndexedDB shows an error toast.
 
 ## Security
 
@@ -417,11 +423,11 @@ Keys are always used in memory during runtime.
 Optional persistence (trusted devices only) stores keys in IndexedDB `apiKeys`.
 localStorage is not used for API key material.
 
-**Warning in UI:** "Do not use this tool on public computers."
+The persistence checkbox in the settings dialog reads "Store API key persistently (only on trusted devices)". Unticking it and saving deletes a stored key.
 
 ### Content Security Policy
 
-CSP restricts connections to known LLM API endpoints (Gemini, OpenAI, Anthropic) plus localhost for Ollama. Scripts and styles limited to same-origin.
+No Content Security Policy is set. `index.html` carries no CSP `meta` element, and GitHub Pages sends no custom headers. All scripts load from the same origin, including the vendored libraries under `docs/vendor/`.
 
 ## Internationalization (i18n)
 
@@ -465,10 +471,12 @@ rules: {
 - Markdown is passed directly to LLM prompts as context (LLMs understand Markdown natively)
 - Backward compatibility: old structured format auto-migrated to Markdown on first read
 
+**Effect:** Only the Markdown transcription rules reach the prompts. Edition model, XML schema, auto-validate and the custom validation prompt of the rules are stored and exported, but no code path reads them (open item in [IMPROVEMENTS](IMPROVEMENTS.md)).
+
 **Integration:**
 - Rules dialog accessible from project list (gear icon)
 - Markdown rules stored as `state.data.transcriptionRulesMarkdown` on session restore
-- Rules injected into LLM prompts alongside per-session context from ContextManager
+- Markdown rules injected into LLM prompts alongside per-session context from ContextManager
 - Rules exportable/importable as JSON for institutional sharing
 
 **IDB Migration:** Version-based upgrade handler. Existing v1 projects get `rules: null` (lazy migration on read).

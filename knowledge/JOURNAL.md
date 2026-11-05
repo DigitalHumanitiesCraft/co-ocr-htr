@@ -1175,3 +1175,34 @@ as recommended, with a test that fails without it.
   switch for all LLM requests.
 
 Open: the four points under "Waiting for the operator" in IMPROVEMENTS.
+
+
+## Session 43: Knowledge Curation against the Code (2026-11-05)
+
+A curation round compared the knowledge base with the code at `a6eadcf`, before the 23 local
+commits since `4e1d949` are pushed. Vitest and ESLint were green. No code was changed.
+
+- IMPROVEMENTS records two open findings, not implemented. The empty states diverge from
+  DESIGN-SYSTEM. The viewer lacks the "Load Demo" and "Load IIIF" buttons, three hint bars repeat
+  the panels' empty states, and the editor hint names a "Transcribe" button whose label the
+  editor header hides up to 750 px container width. The project rules dialog stores edition model,
+  XML schema, auto-validate and a validation prompt that no code reads.
+- In ARCHITECTURE the file map follows `docs/` (vendor folder, the new utils, pages, service worker)
+  without line or test counts. The Gemini key travels as header, the error table follows
+  `_handleError()` instead of a retry scheme that exists only in the post-processing pipeline,
+  the Content Security Policy section states that none is set, and the cancel switch is described.
+- INDEX lists HTR-POSTPROCESSING, IMPROVEMENTS and the archived full journal, drops the version
+  history (Git and this journal carry it, and it named a REQUIREMENTS.md that no longer exists),
+  and says that the about page links the knowledge folder, while the help page does not link
+  it, contrary to the Session 42 entry. The links of the archived journal to `docs/` resolve again
+  from its folder.
+- IMPLEMENTATION-PLAN is a closed phase record that points to IMPROVEMENTS for open work, with
+  counts made qualitative and the removed `knowledge.html` and the Playwright layer recorded.
+- DATA-SCHEMA, DESIGN-SYSTEM, TESTING and SECURITY now state the upload types without TIFF and PDF,
+  the effect of project rules, contrast values through `contrast.test.js`, the newer e2e specs and
+  paths relative to the repository root.
+
+Points outside `knowledge/` are only reported. `CLAUDE.md` still lists "Dependencies: None" and an outdated
+project tree, the footers of `about.html` and `help.html` and the about dialog in `index.html` use
+the middle dot as separator, and the knowledge file names do not follow the lowercase naming of the
+Promptotyping convention. The operator points in IMPROVEMENTS are unchanged.
