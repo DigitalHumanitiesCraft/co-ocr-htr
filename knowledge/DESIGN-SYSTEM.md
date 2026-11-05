@@ -287,7 +287,7 @@ The app container uses CSS Grid with three rows (header 56px, main content flexi
 | Mode | Use Case | Layout |
 |------|----------|--------|
 | `lines` | Prose text (letters, diaries) | Line numbers + full-width text |
-| `grid` | Tabular data (account books) | Columns detected from PAGE-XML or pipes |
+| `grid` | Tabular data (account books) | Columns from a Markdown table in the LLM response |
 
 **Lines Mode:**
 ```

@@ -1099,3 +1099,30 @@ The card photos under `data/ocr-examples/karteikarten/` and the demo sample `doc
 were removed from the repository and from its history. They showed registration cards of Displaced
 Persons with religion and origin and an option card, without documented provenance or terms of use.
 The demo sample list no longer offers an index card. The generic `card` sample type stays in the code.
+
+
+## Session 40: Workshop Hardening after the Browser Audit (2026-11-05)
+
+A read-only audit with two independent Playwright click-throughs (live site and a local copy, LLM
+calls mocked) found defects in the five status-bar steps. This round fixes those rated high and
+curates the knowledge base against the code. Each fix has a test that fails without it.
+
+- Export. The ZIP archive was downloaded as the text `[object Blob]`. JSON exports carry no BOM, and
+  XML exports drop characters XML 1.0 forbids.
+- PAGE-XML import. The parser no longer guesses table cells from `|` or tabs, which had turned line
+  text into tab-separated cells. Multi-page samples load the PAGE-XML of every page.
+- Persistence. Auto-save runs 1.5 s after a change instead of 30 s, because the `pagehide` flush does
+  not finish before unload. Unticking "store persistently" deletes a stored transcription key.
+- LLM results. An empty or blocked answer is an error and keeps the existing text, a new
+  transcription asks before replacing one, errors are classified by HTTP status, and a stream is
+  retried without streaming only when streaming itself failed. A failed LLM review shows as an
+  error instead of "low confidence".
+- Delivery. The service worker serves network-first with a new cache version, so returning visitors
+  get current code. At 1200 px or less the validation panel moves below viewer and editor, and the
+  export format radios take keyboard focus.
+- Knowledge. TESTING, IMPROVEMENTS and SECURITY were rewritten against the code. SECURITY now treats
+  LLM output and imported files as untrusted input.
+
+Open: the live knowledge page fetches `knowledge/*.md`, which GitHub Pages turns into HTML because
+`docs/` has no `.nojekyll`. Whether the page and the journal stay public is undecided. The remaining
+audit findings are listed in IMPROVEMENTS.

@@ -24,7 +24,7 @@ knowledge/
 ├── HTR-POSTPROCESSING.md   ← Post-processing pipeline
 ├── IMPROVEMENTS.md        ← Planned improvements
 ├── SECURITY.md            ← Security considerations
-├── TESTING.md             ← Testing strategy (567 tests)
+├── TESTING.md             ← Testing strategy (unit and e2e)
 ├── IMPLEMENTATION-PLAN.md ← Roadmap (Phase 1-6 complete)
 └── JOURNAL.md             ← Development log
 ```

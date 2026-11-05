@@ -129,7 +129,7 @@ docs/
 │       ├── tooltips.js     # Tooltip system
 │       ├── panelResize.js  # Panel resize handles
 │       └── validationResize.js # Validation panel resize
-└── tests/                  # Vitest tests (567 tests)
+└── tests/                  # Vitest unit tests, e2e/ Playwright specs
 ```
 
 ## Supported Providers
@@ -200,7 +200,7 @@ npm test
 - ZIP export for multi-page documents
 
 **Phase 4: Polish & Release** - Complete
-- 567 unit tests passing across 18 test files
+- Vitest unit tests and Playwright end-to-end specs (see knowledge/TESTING.md)
 - Simplified API configuration dialog with clickable model indicator
 - Document context for enhanced transcription
 - Undo/Redo, Diff view, Line numbers

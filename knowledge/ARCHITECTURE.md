@@ -113,7 +113,7 @@ docs/
 ├── samples/
 │   ├── index.json          # Sample Manifest
 │   └── raitbuch/           # Demo Data
-└── tests/                  # 567 tests across 18 files
+└── tests/                  # Vitest unit tests, e2e/ Playwright specs
     ├── llm.test.js         # 103 tests
     ├── state.test.js       # 85 tests
     ├── export.test.js      # 55 tests

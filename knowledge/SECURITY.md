@@ -40,11 +40,14 @@ coOCR/HTR is a **purely client-side web application** without a backend. This ar
 ```
 1. User enters key (Settings Dialog)
 2. Key is stored in memory for immediate use
-3. Optional: user enables persistence checkbox -> key is also written to IndexedDB
-4. Key is sent in request headers during API calls
-5. Close tab -> memory copy gone; IndexedDB copy remains only if persistence was enabled
-6. Reload page -> persisted keys are restored into memory if present
+3. Optional: user enables persistence checkbox -> key is also written to IndexedDB, unencrypted
+4. Key is sent with every API call (request header; Gemini still as URL query parameter)
+5. Saving the dialog with the checkbox unticked deletes a previously persisted key
+6. Close tab -> memory copy gone; IndexedDB copy remains only if persistence was enabled
+7. Reload page -> persisted keys are restored into memory if present
 ```
+
+The Gemini key in the query string can appear in proxy logs and browser history tools. Moving it to the `x-goog-api-key` header is listed in [IMPROVEMENTS.md](IMPROVEMENTS.md).
 
 ### Known Risks
 
@@ -54,7 +57,8 @@ coOCR/HTR is a **purely client-side web application** without a backend. This ar
 | Browser DevTools (Memory/Debugger) | Medium | User awareness |
 | Malicious Browser Extensions | High | No technical solution possible |
 | Persistent local key storage on shared devices | High | Keep persistence disabled on untrusted devices |
-| XSS Attacks | High | Controlled data sources, no user-generated content |
+| XSS Attacks | High | All external text is escaped before it enters `innerHTML` (see XSS Prevention) |
+| Third-party scripts | High | OpenSeadragon, its SVG overlay and JSZip load from CDNs without integrity attributes; vendoring is planned |
 | Physical Device Access | High | User responsibility |
 
 ### Recommendations for Users
@@ -126,27 +130,18 @@ Local File -> Browser Memory -> LLM API -> Response -> Browser Memory
 
 ## XSS Prevention
 
-### Controlled Data Sources
+### Untrusted Input
 
-The app uses `innerHTML` in several places, but only with controlled data:
+Two inputs are under outside control and must be treated as hostile:
 
-| Source | Risk | Rationale |
-|--------|------|-----------|
-| `samples/index.json` | Low | Local, versioned file |
-| LLM Responses | Low | Structured JSON responses |
-| PAGE-XML Import | Low | Validated XML format |
+- LLM responses. A document image can carry text that steers the model (prompt injection), so transcription, validation, description and thinking output may contain markup.
+- Imported files. PAGE-XML text, ids and file names come from third parties.
 
-### Utility Function
+`samples/index.json` and the i18n dictionaries are versioned in the repository and count as trusted.
 
-For dynamic content, `escapeHtml()` exists in `utils/dom.js`:
+### Escaping
 
-```javascript
-export function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-```
+Every untrusted string passes through `escapeHtml()` in `utils/textFormatting.js` before it is interpolated into `innerHTML`. The editor shows text in a `textarea`, and the XML exports escape through `ExportService.escapeXml()`, which also drops characters XML 1.0 forbids. A Playwright sweep in November 2026 fed script and event-handler payloads through PAGE-XML, file names and mocked LLM answers and found no rendered markup. The Markdown export passes text through unchanged, so a downstream Markdown renderer would display embedded HTML.
 
 ## Local Development
 

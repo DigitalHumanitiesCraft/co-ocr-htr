@@ -67,7 +67,7 @@ co-ocr-htr/
 │   │   └── services/      # LLM, i18n, Storage, Validation, Export
 │   ├── i18n/              # Translation dictionaries (en.json, de.json)
 │   ├── samples/           # Demo documents
-│   └── tests/             # Vitest tests (567 tests)
+│   └── tests/             # Vitest unit tests, e2e/ Playwright specs
 └── data/                  # Development data (not deployed)
     └── ocr-examples/      # Complete datasets
 ```

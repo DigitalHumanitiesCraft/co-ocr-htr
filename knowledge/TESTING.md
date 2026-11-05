@@ -1,170 +1,44 @@
 # Testing Strategy
 
-Status: 2026-02-14
+coOCR/HTR has two test layers. Vitest unit tests under `docs/tests/` cover services, parsers, state and selected component logic in jsdom. Playwright specs under `docs/tests/e2e/` drive the real page in Chromium for flows that depend on layout, focus or the interplay of components. The test files themselves are the source of truth for what is covered; `npx vitest run` reports the current count.
 
-## Overview
-
-coOCR/HTR uses **Vitest** for unit tests. The testing strategy prioritizes logic tests over UI tests.
-
-## Test Runner
+## Running the tests
 
 ```bash
 cd docs
-npm test        # Watch mode
-npm run test    # Single run
-npx vitest run  # CI mode
+npx vitest run        # unit tests, single run
+npm test              # unit tests, watch mode
+npm run lint          # ESLint over js/, tests/ and sw.js
+npm run test:e2e      # Playwright specs
 ```
 
-## Test Coverage by Module
+The Playwright configuration in `docs/playwright.config.js` serves `docs/` itself. On a developer machine that folder may hold a gitignored `config.local.js` with real API keys, which the app loads on start. The specs mock every LLM call, so no key leaves the browser, but a run against a copy of `docs/` without that file is the safer default. No CI workflow is configured, so both layers run locally before a commit.
 
-### Tested (Services & Utils)
+## Unit tests
 
-| Module | Tests | Description |
-|--------|-------|-------------|
-| `llm.js` | 103 | LLM provider abstraction, API calls, prompt building, streaming |
-| `state.js` | 85 | Central state management, EventTarget, persistence flows |
-| `export.js` | 55 | Export formats (TXT, JSON, MD, PAGE-XML, TEI, validation metadata) |
-| `textFormatting.js` | 50 | Markers, HTML escaping, confidence |
-| `validation.js` | 43 | Validation engine, rules, LLM Review |
-| `storage.js` | 40 | localStorage + IndexedDB wrappers, projects/sessions/apiKeys |
-| `description.js` | 37 | Description feature prompt/result handling |
-| `llm-streaming.js` | 32 | Streaming transcription, chunk parsing |
-| `page-xml.js` | 26 | PAGE-XML parser |
-| `postprocess.js` | 25 | Post-processing pipeline (Stage 2/3), retries, fallbacks |
-| `i18n.js` | 24 | i18n service, `t()` function, language switching |
-| `thinking.js` | 16 | Thinking/reasoning panel display |
-| `llm-validation-provider.js` | 14 | Explicit validation provider priority/fallback logic |
-| `editor.js` | 7 | Editor state, line numbering |
-| `context-manager.js` | 2 | Document context manager |
-| `validation-apply.js` | 6 | Apply validation suggestions |
-| `dialogs-validation-persistence.js` | 1 | Regression for validation key persistence behavior |
-| `apply-export-integration.js` | 1 | Integration: apply + export workflow |
+Unit tests target pure functions, business logic and parsers, where a test is cheap and stable:
 
-**Total: 567 Tests (18 test files)**
+- LLM provider abstraction, prompt building, streaming parsers and error classification (`llm.test.js`, `llm-streaming.test.js`, `llm-validation-provider.test.js`)
+- central state, page handling and auto-save (`state.test.js`)
+- export formats, BOM and XML escaping, PAGE-XML round trip (`export.test.js`, `page-xml.test.js`, `page-xml-roundtrip.test.js`, `apply-export-integration.test.js`)
+- validation rules, LLM review and applying suggestions (`validation.test.js`, `validation-apply.test.js`, `postprocess.test.js`)
+- storage, i18n, text formatting, line alignment, samples loading and the service worker fetch strategy
+- regression tests for single component behaviours that can run in jsdom with mocked dependencies, such as key persistence in the settings dialog and the overwrite confirmation before a new transcription
+- the projection of `knowledge/` into `docs/knowledge/` (`knowledge-projection.test.js`)
 
-### Not Fully Tested (UI Components)
+Every defect fix adds a test that fails without the fix.
 
-| Module | Lines | Rationale |
-|--------|-------|-----------|
-| `dialogs.js` | ~1900 | DOM-intensive, only selective regression tests exist |
-| `editor.js` | ~700 | Complex DOM manipulation |
-| `viewer.js` | ~600 | OpenSeadragon integration, external dependency |
-| `upload.js` | ~500 | File API, Drag & Drop |
-| `transcription.js` | ~700 | UI + LLM combined |
-| `validation.js` (Component) | ~900 | UI rendering and multi-page batch workflow |
+## End-to-end tests
 
-## Testing Strategy
+The Playwright specs load a demo sample or inject state into `appState`, then check the human-in-the-loop flow (validate, apply, diff, undo, export), the thinking panel, the narrow-screen layout and keyboard selection of the export format. LLM responses are mocked or injected, never requested from a provider.
 
-### What We Test
+Still without automated coverage are the upload paths (file picker, drag and drop, IIIF dialog), the viewer with OpenSeadragon, batch operations over all pages, offline behaviour and an accessibility audit. A useful next set of specs walks the five steps of the status bar with mocked providers, including the error responses 401, 429 and 500 and an empty answer.
 
-1. **Pure Functions** - No side effects, deterministic
-   - `textFormatting.js`: `escapeHtml()`, `applyMarkers()`, etc.
+## Known pitfall: global regex state
 
-2. **Business Logic** - Core functionality
-   - `state.js`: State transitions, event dispatching
-   - `validation.js`: Rule-based validation
-   - `export.js`: Format conversion
-
-3. **Parsers** - Data processing
-   - `page-xml.js`: XML parsing
-   - `llm.js`: Response parsing
-
-### What We Don't Test
-
-1. **UI Components** - DOM manipulation with many side effects
-   - High effort for fragile tests
-   - Better covered by manual testing
-
-2. **External Dependencies** - OpenSeadragon, File API
-   - Would require mocks
-   - Integration better tested manually
-
-3. **Visual Aspects** - CSS, Layout
-   - No visual regression tests
-
-4. **Trivial Wrappers** - DOM utilities like `getById()`, `show()`, `hide()`
-   - Only test browser APIs, not our own logic
-   - No value over manual testing
-
-## Test Patterns
-
-### Service Tests
-
-```javascript
-// Example: llm.test.js
-describe('LLMService', () => {
-  let service;
-
-  beforeEach(() => {
-    service = new LLMService();
-  });
-
-  it('should return default model', () => {
-    expect(service.getCurrentModel()).toBe('gemini-3-flash-preview');
-  });
-});
-```
-
-### Pure Function Tests
-
-```javascript
-// Example: textFormatting.test.js
-describe('escapeHtml', () => {
-  it('should escape angle brackets', () => {
-    expect(escapeHtml('<script>')).toBe('&lt;script&gt;');
-  });
-
-  it('should handle null input', () => {
-    expect(escapeHtml(null)).toBe('');
-  });
-});
-```
-
-## Known Limitations
-
-### Global Regex with /g Flag
-
-JavaScript regex with global flag have `lastIndex` state. With multiple `test()` calls, `lastIndex` must be reset:
-
-```javascript
-// Problem: lastIndex not reset
-const PATTERN = /\[\?\]/g;
-PATTERN.test('[?]'); // true
-PATTERN.test('[?]'); // false (!)
-
-// Solution: reset lastIndex before test()
-PATTERN.lastIndex = 0;
-PATTERN.test('[?]'); // true
-```
-
-This bug was found and fixed in `textFormatting.js`.
-
-## CI/CD
-
-Tests run on every push via GitHub Actions (if configured):
-
-```yaml
-- name: Run tests
-  run: |
-    cd docs
-    npm ci
-    npm test
-```
-
-## Adding New Tests
-
-1. Create file in `docs/tests/`: `modulename.test.js`
-2. Vitest imports:
-   ```javascript
-   import { describe, it, expect, beforeEach } from 'vitest';
-   ```
-3. Import modules:
-   ```javascript
-   import { functionToTest } from '../js/path/to/module.js';
-   ```
-4. Write tests with `describe`/`it`/`expect`
+A regular expression with the `g` flag keeps `lastIndex` between `test()` calls, so a second call on the same pattern can fail. Reset `lastIndex` before reuse or build a fresh pattern. This bug occurred once in `textFormatting.js`.
 
 ## Related Documents
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Module structure
-- [SECURITY.md](SECURITY.md) - Security tests (XSS)
+- [ARCHITECTURE.md](ARCHITECTURE.md) for the module structure
+- [SECURITY.md](SECURITY.md) for escaping and key handling
