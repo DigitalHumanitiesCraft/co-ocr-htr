@@ -5,6 +5,7 @@
 import { appState } from './state.js';
 import { getById, show, hide, setText, setDisabled, addClass, removeClass, selectAll, select } from './utils/dom.js';
 import { IIIF_CONTEXT_V3, IIIF_VERSION } from './utils/constants.js';
+import { iiifLabel } from './utils/iiifLabel.js';
 
 let viewer = null;
 let svgOverlay = null;
@@ -483,7 +484,9 @@ export async function loadIIIFManifest(manifestUrl) {
             return {
                 index,
                 id: canvas['@id'] || canvas.id,
-                label: canvas.label || `Page ${index + 1}`,
+                label: iiifLabel(canvas.label, `Page ${index + 1}`),
+                // setPages names pages by filename; without it IIIF pages became "page-1"
+                filename: iiifLabel(canvas.label, `Page ${index + 1}`),
                 dataUrl: imageUrl,
                 width: canvas.width,
                 height: canvas.height
@@ -494,7 +497,7 @@ export async function loadIIIFManifest(manifestUrl) {
         if (loadingState) loadingState.hidden = true;
 
         // Ensure project exists for IIIF manifest
-        await appState.ensureProject(manifest.label || 'IIIF Document');
+        await appState.ensureProject(iiifLabel(manifest.label, 'IIIF Document'));
 
         // Update state
         appState.setPages(pages);

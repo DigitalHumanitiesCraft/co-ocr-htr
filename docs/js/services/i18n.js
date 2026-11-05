@@ -99,8 +99,9 @@ class I18nService extends EventTarget {
      * @returns {string} Translated string
      */
     t(key, params) {
-        const value = this._resolve(key, this._lang)
-            || this._resolve(key, 'en')
+        const count = params?.count;
+        const value = this._resolve(key, this._lang, count)
+            || this._resolve(key, 'en', count)
             || key;
 
         if (!params) return value;
@@ -154,9 +155,10 @@ class I18nService extends EventTarget {
      * Resolve a dot-notation key from a dictionary.
      * @param {string} key - e.g., 'editor.transcribe'
      * @param {string} lang - Language code
+     * @param {number} [count] - Selects the plural form of a { one, other } entry
      * @returns {string|null}
      */
-    _resolve(key, lang) {
+    _resolve(key, lang, count) {
         const dict = this._dictionaries[lang];
         if (!dict) return null;
 
@@ -165,6 +167,12 @@ class I18nService extends EventTarget {
         for (const part of parts) {
             if (current === null || typeof current !== 'object') return null;
             current = current[part];
+        }
+        // Plural entries per CLDR category: an appended English "s" produced
+        // German forms like "2 Zeiles" or "vor 2 Tags"
+        if (current && typeof current === 'object' && typeof current.other === 'string') {
+            const form = new Intl.PluralRules(lang).select(Number(count ?? 0));
+            return current[form] || current.other;
         }
         return typeof current === 'string' ? current : null;
     }

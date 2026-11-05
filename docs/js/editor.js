@@ -595,7 +595,7 @@ function updateChangeStats() {
     const changes = diffLines(originalText.split('\n'), currentText.split('\n'))
         .filter(row => row.type !== 'same').length;
 
-    statsEl.textContent = t('dynamic.linesChanged', { count: changes, plural: changes !== 1 ? 's' : '' });
+    statsEl.textContent = t('dynamic.linesChanged', { count: changes });
     statsEl.className = 'change-stats has-changes';
 }
 

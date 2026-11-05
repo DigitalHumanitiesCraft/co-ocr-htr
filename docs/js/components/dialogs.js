@@ -12,6 +12,7 @@ import { appState } from '../state.js';
 import { loadIIIFManifest } from '../viewer.js';
 import { getById, select, selectAll, show, hide } from '../utils/dom.js';
 import { escapeHtml } from '../utils/textFormatting.js';
+import { iiifLabel } from '../utils/iiifLabel.js';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../utils/constants.js';
 
 // Model-to-provider mapping for simplified UI
@@ -678,9 +679,7 @@ class DialogManager {
             }
 
             // Extract title
-            const title = version === 3
-                ? (manifest.label?.en?.[0] || manifest.label?.de?.[0] || manifest.label || 'Untitled')
-                : (manifest.label || 'Untitled');
+            const title = iiifLabel(manifest.label, 'Untitled');
 
             // Store manifest data for loading
             this.iiifManifestData = {
@@ -721,7 +720,7 @@ class DialogManager {
         if (previewEl) previewEl.style.display = 'block';
         if (versionEl) versionEl.textContent = `v${this.iiifManifestData.version}`;
         if (titleEl) titleEl.textContent = this.iiifManifestData.title;
-        if (infoEl) infoEl.textContent = t('dynamic.iiifPageCount', { count: this.iiifManifestData.pageCount, plural: this.iiifManifestData.pageCount !== 1 ? 's' : '' });
+        if (infoEl) infoEl.textContent = t('dynamic.iiifPageCount', { count: this.iiifManifestData.pageCount });
 
         // Show first few page labels if available
         if (pagesEl && this.iiifManifestData.manifest) {

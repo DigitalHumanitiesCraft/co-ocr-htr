@@ -515,7 +515,7 @@ async function showProjectListDialog(projects) {
                     </div>
                     <div class="project-card-meta">
                         ${p.filename ? `<span>${escapeHtml(p.filename)}</span>` : ''}
-                        <span>${t('dynamic.pagesCount', { count: pc, plural: pc === 1 ? '' : 's' })}</span>
+                        <span>${t('dynamic.pagesCount', { count: pc })}</span>
                         <span>${time}</span>
                         <span class="${p.hasTranscription ? 'status-success' : 'status-neutral'}">${p.hasTranscription ? t('dynamic.transcribed') : t('dynamic.withoutTranscription')}</span>
                     </div>
@@ -957,9 +957,9 @@ function formatSessionTime(date) {
 
     // Recent: relative time
     if (diffMins < 1) return t('dynamic.justNow');
-    if (diffMins < 60) return t('dynamic.minutesAgo', { count: diffMins, plural: diffMins === 1 ? '' : 's' });
-    if (diffHours < 24) return t('dynamic.hoursAgo', { count: diffHours, plural: diffHours === 1 ? '' : 's' });
-    if (diffDays < 7) return t('dynamic.daysAgo', { count: diffDays, plural: diffDays === 1 ? '' : 's' });
+    if (diffMins < 60) return t('dynamic.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('dynamic.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('dynamic.daysAgo', { count: diffDays });
 
     // Older: show date in locale format
     const locale = i18n.getLang() === 'de' ? 'de-DE' : 'en-US';

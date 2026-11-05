@@ -220,9 +220,8 @@ class DescriptionManager {
 
         // Check if Gemini is configured
         const hasGeminiKey = this._isGeminiConfigured();
-        const currentModel = llmService.activeProvider === 'gemini'
-            ? llmService.getCurrentModel()
-            : (llmService.providers.gemini?.defaultModel || 'Gemini 3 Pro');
+        // Show the model describe() actually calls, not the transcription model
+        const currentModel = llmService.providers.gemini?.defaultModel || 'gemini-3-pro-preview';
 
         modelInfo.textContent = currentModel;
 

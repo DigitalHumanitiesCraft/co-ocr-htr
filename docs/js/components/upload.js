@@ -2,7 +2,7 @@
  * Upload Component
  *
  * Handles file uploads via button click and drag & drop.
- * Supports images (JPG, PNG, TIFF), PAGE-XML, and METS-XML files.
+ * Supports images (JPG, PNG, WebP), PAGE-XML, and METS-XML files.
  */
 
 import { appState } from '../state.js';
@@ -13,7 +13,8 @@ import { getById, select, hide } from '../utils/dom.js';
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from '../utils/constants.js';
 
 // Supported file types
-const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/tiff', 'image/webp'];
+// No TIFF: browsers other than Safari cannot decode it, so it failed after upload
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const SUPPORTED_XML_TYPES = ['text/xml', 'application/xml'];
 
 /**
@@ -284,7 +285,7 @@ class UploadManager {
      */
     isImageFile(file) {
         return SUPPORTED_IMAGE_TYPES.includes(file.type) ||
-            /\.(jpg|jpeg|png|tiff?|webp)$/i.test(file.name);
+            /\.(jpg|jpeg|png|webp)$/i.test(file.name);
     }
 
     /**
@@ -374,10 +375,9 @@ class UploadManager {
                         });
                         document.dispatchEvent(event);
 
-                        // Hide demo indicator when user uploads their own file
+                        // Hide demo indicator when user uploads their own file.
+                        // The PAGE-XML import reports success or failure itself.
                         this.hideDemoIndicator();
-
-                        dialogManager.showToast(t('toast.loadedPageXML', { name: file.name }), 'success');
                         resolve();
                         return;
                     }

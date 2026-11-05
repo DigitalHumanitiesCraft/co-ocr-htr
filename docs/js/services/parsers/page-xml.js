@@ -9,6 +9,7 @@
 
 import { appState } from '../../state.js';
 import { dialogManager } from '../../components/dialogs.js';
+import { t } from '../i18n.js';
 
 // Namespace for PAGE-XML
 const PAGE_NS = 'http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15';
@@ -351,48 +352,60 @@ export const pageXMLParser = new PageXMLParser();
  */
 function initPageXMLHandler() {
     document.addEventListener('pageXMLLoaded', (event) => {
-        const { filename: _filename, content } = event.detail;
-
-        try {
-            const parsed = pageXMLParser.parse(content);
-
-            // Generate raw transcription text from segments (not XML content)
-            const rawText = parsed.segments.map(seg => seg.text).join('\n');
-
-            // Update state with parsed data
-            appState.setTranscription({
-                provider: 'page-xml',
-                model: 'import',
-                raw: rawText,
-                segments: parsed.segments,
-                columns: [] // Will be auto-detected
-            });
-
-            // Update regions
-            if (parsed.segments.length > 0) {
-                const regions = parsed.segments.map(seg => ({
-                    line: seg.lineNumber,
-                    x: seg.bounds.x,
-                    y: seg.bounds.y,
-                    w: seg.bounds.width,
-                    h: seg.bounds.height
-                }));
-                appState.setRegions(regions);
-            }
-
-            // Store metadata
-            appState.data.meta.pageXML = parsed.metadata;
-
-            if (dialogManager) {
-                dialogManager.showToast(`Imported ${parsed.segments.length} lines from PAGE-XML`, 'success');
-            }
-        } catch (error) {
-            console.error('PAGE-XML parsing error:', error);
-            if (dialogManager) {
-                dialogManager.showToast(`Failed to parse PAGE-XML: ${error.message}`, 'error');
-            }
-        }
+        importPageXML(event.detail.content, event.detail.filename);
     });
+}
+
+/**
+ * Import an uploaded PAGE-XML file into the current document. This is the only
+ * place that reports the outcome, so a broken file yields one error message
+ * and no success message.
+ * @param {string} content - XML text
+ * @param {string} filename - Uploaded file name, for messages
+ * @returns {boolean} true when the file was imported
+ */
+export function importPageXML(content, filename = '') {
+    let parsed;
+    try {
+        parsed = pageXMLParser.parse(content);
+    } catch (error) {
+        console.error('PAGE-XML parsing error:', error);
+        dialogManager?.showToast(t('toast.pageXmlInvalid', { name: filename }), 'error');
+        return false;
+    }
+
+    // The PAGE-XML names the image it describes; attaching it to another
+    // image would put every line box in the wrong place
+    const currentImage = appState.getState().document?.filename || '';
+    const describedImage = parsed.imageFilename.split(/[\\/]/).pop();
+    if (currentImage && describedImage && currentImage !== describedImage) {
+        dialogManager?.showToast(
+            t('toast.pageXmlImageMismatch', { xmlImage: describedImage, image: currentImage }),
+            'warning'
+        );
+    }
+
+    appState.setTranscription({
+        provider: 'page-xml',
+        model: 'import',
+        raw: parsed.segments.map(seg => seg.text).join('\n'),
+        segments: parsed.segments,
+        columns: []
+    });
+
+    if (parsed.segments.length > 0) {
+        appState.setRegions(parsed.segments.map(seg => ({
+            line: seg.lineNumber,
+            x: seg.bounds.x,
+            y: seg.bounds.y,
+            w: seg.bounds.width,
+            h: seg.bounds.height
+        })));
+    }
+
+    appState.data.meta.pageXML = parsed.metadata;
+    dialogManager?.showToast(t('toast.loadedPageXML', { name: filename }), 'success');
+    return true;
 }
 
 // Auto-initialize
