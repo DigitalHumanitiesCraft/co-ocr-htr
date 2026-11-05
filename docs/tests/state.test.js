@@ -1082,6 +1082,35 @@ describe('AppState', () => {
       }
     });
 
+    it('should auto-save an edit within a few seconds, before a likely reload', async () => {
+      vi.useFakeTimers();
+      try {
+        storage.loadSettings.mockReturnValue({ autoSave: true });
+        appState.data.project = { id: 'proj-1', name: 'Project 1' };
+        storage.saveSession.mockClear();
+
+        appState.setTranscriptionRaw('edited line');
+        await vi.advanceTimersByTimeAsync(3000);
+
+        expect(storage.saveSession).toHaveBeenCalledTimes(1);
+      } finally {
+        storage.loadSettings.mockReturnValue({ autoSave: false });
+        vi.useRealTimers();
+      }
+    });
+
+    it('should schedule an auto-save when pages are loaded', () => {
+      storage.loadSettings.mockReturnValue({ autoSave: true });
+      try {
+        appState.setPages([{ id: 'p1', filename: 'a.jpg', dataUrl: 'data:,' }]);
+        expect(appState._autoSaveTimer).not.toBeNull();
+      } finally {
+        clearTimeout(appState._autoSaveTimer);
+        appState._autoSaveTimer = null;
+        storage.loadSettings.mockReturnValue({ autoSave: false });
+      }
+    });
+
     it('should save a pending auto-save immediately on flush', async () => {
       storage.loadSettings.mockReturnValue({ autoSave: true });
       appState.data.project = { id: 'proj-1', name: 'Project 1' };

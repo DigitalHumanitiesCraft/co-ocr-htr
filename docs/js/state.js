@@ -134,7 +134,9 @@ class AppState extends EventTarget {
 
     // Auto-save timer
     this._autoSaveTimer = null;
-    this._autoSaveDelay = 30000; // 30 seconds
+    // Short debounce: the pagehide flush writes IndexedDB asynchronously and
+    // often does not finish before unload, so a long delay lost fresh work.
+    this._autoSaveDelay = 1500;
 
     // Don't auto-restore - let main.js handle the confirmation dialog
   }
@@ -342,6 +344,7 @@ class AppState extends EventTarget {
       count: this.data.pages.length,
       pages: this.data.pages.map(p => ({ id: p.id, filename: p.filename }))
     });
+    this._scheduleAutoSave();
 
     // Save all page images to IndexedDB (fire-and-forget)
     if (this.data.project.id) {
