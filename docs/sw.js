@@ -3,7 +3,8 @@
  * Enables offline functionality by caching static assets
  */
 
-const CACHE_VERSION = 'coocr-v1';
+// Bumping the version makes browsers install this worker and drop the old cache.
+const CACHE_VERSION = 'coocr-v2';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -109,7 +110,7 @@ self.addEventListener('activate', event => {
 });
 
 /**
- * Fetch event - serve from cache, fallback to network
+ * Fetch event - serve from network, fall back to cache when offline
  */
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
@@ -129,38 +130,25 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // Network first, cache only as offline fallback. Cache-first kept serving
+    // the modules of the first visit after every later deploy.
     event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                if (cachedResponse) {
-                    // Return cached version
-                    return cachedResponse;
+        fetch(event.request)
+            .then(networkResponse => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_VERSION)
+                        .then(cache => cache.put(event.request, responseToCache));
                 }
-
-                // Not in cache - fetch from network
-                return fetch(event.request)
-                    .then(networkResponse => {
-                        // Don't cache if not successful
-                        if (!networkResponse || networkResponse.status !== 200) {
-                            return networkResponse;
-                        }
-
-                        // Cache the new resource for future use
-                        const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_VERSION)
-                            .then(cache => {
-                                cache.put(event.request, responseToCache);
-                            });
-
-                        return networkResponse;
-                    });
+                return networkResponse;
             })
-            .catch(() => {
-                // Network failed and not in cache
-                // Return offline fallback for HTML pages
-                if (event.request.headers.get('accept').includes('text/html')) {
+            .catch(async () => {
+                const cached = await caches.match(event.request);
+                if (cached) return cached;
+                if (event.request.headers.get('accept')?.includes('text/html')) {
                     return caches.match('./index.html');
                 }
+                return Response.error();
             })
     );
 });
