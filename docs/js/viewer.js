@@ -6,6 +6,7 @@ import { appState } from './state.js';
 import { getById, show, hide, setText, setDisabled, addClass, removeClass, selectAll, select } from './utils/dom.js';
 import { IIIF_CONTEXT_V3, IIIF_VERSION } from './utils/constants.js';
 import { iiifLabel } from './utils/iiifLabel.js';
+import { createSvgOverlay } from './utils/osdSvgOverlay.js';
 
 let viewer = null;
 let svgOverlay = null;
@@ -27,7 +28,7 @@ export function initViewer() {
     // Initialize OpenSeadragon
     viewer = OpenSeadragon({
         id: 'osd-viewer',
-        prefixUrl: 'https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/images/',
+        prefixUrl: 'vendor/openseadragon/images/',
 
         // No initial image
         tileSources: [],
@@ -61,7 +62,7 @@ export function initViewer() {
     });
 
     // Initialize SVG Overlay
-    svgOverlay = viewer.svgOverlay();
+    svgOverlay = createSvgOverlay(viewer);
 
     // Setup toolbar controls
     setupToolbarControls();

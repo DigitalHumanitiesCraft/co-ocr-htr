@@ -103,6 +103,6 @@ export default [
 
     // Ignore non-source files
     {
-        ignores: ['node_modules/', 'config.local.js', 'test-results/', 'playwright-report/', 'knowledge/'],
+        ignores: ['node_modules/', 'config.local.js', 'test-results/', 'playwright-report/', 'vendor/'],
     },
 ];

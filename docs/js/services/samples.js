@@ -14,6 +14,17 @@ const SAMPLES_BASE = 'samples/';
 /** Timeout for sample fetch operations (15 seconds) */
 const FETCH_TIMEOUT_MS = 15_000;
 
+/** Viewer regions (one box per line) from parsed PAGE-XML segments */
+function segmentsToRegions(segments) {
+    return segments.map(seg => ({
+        line: seg.lineNumber,
+        x: seg.bounds.x,
+        y: seg.bounds.y,
+        w: seg.bounds.width,
+        h: seg.bounds.height
+    }));
+}
+
 /**
  * Sample Loader Service
  */
@@ -139,6 +150,8 @@ class SamplesService {
                             provider: 'PAGE-XML Import',
                             model: 'Transkribus'
                         });
+                        // Without regions the viewer showed no line boxes for the demo
+                        appState.setRegions(segmentsToRegions(parsed.segments));
                     }
                 }
             } catch (error) {
@@ -229,13 +242,7 @@ class SamplesService {
                     provider: 'PAGE-XML Import',
                     model: 'Transkribus'
                 };
-                const regions = parsed.segments.map(seg => ({
-                    line: seg.lineNumber,
-                    x: seg.bounds.x,
-                    y: seg.bounds.y,
-                    w: seg.bounds.width,
-                    h: seg.bounds.height
-                }));
+                const regions = segmentsToRegions(parsed.segments);
                 if (index === 0) {
                     appState.setTranscription(transcription);
                     appState.setRegions(regions);

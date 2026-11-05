@@ -1,0 +1,21 @@
+Vendored third-party libraries, loaded locally instead of from a CDN at runtime.
+Each was taken unmodified from the npm registry package named below.
+
+openseadragon/
+  Package:  openseadragon 4.1.1 (npm, published 2024-04-01)
+  Files:    build/openseadragon/openseadragon.min.js, build/openseadragon/images/
+  Licence:  BSD-3-Clause, see openseadragon/LICENSE.txt
+  SHA-256:  7fdfdc04f10db24346c574104d74d442dadc80881912b3447d695397c629dc0c  openseadragon.min.js
+
+jszip/
+  Package:  jszip 3.10.2 (npm, published 2026-09-08)
+  Files:    dist/jszip.min.js
+  Licence:  MIT or GPL-3.0-or-later (dual), used under MIT, see jszip/LICENSE.markdown
+  SHA-256:  7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1  jszip.min.js
+
+The OpenSeadragon SVG overlay plugin is not published on npm and is no longer
+loaded. Its single use (an SVG layer that follows the viewport) is implemented
+in js/utils/osdSvgOverlay.js.
+
+To update: npm pack <package>@<version>, copy the files listed above, update
+this file and the SHA-256 sums, and run the unit and e2e tests.
