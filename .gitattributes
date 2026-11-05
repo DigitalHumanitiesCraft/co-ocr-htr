@@ -1,0 +1,2 @@
+# Vendored files stay byte-identical to their npm packages (checksums in docs/vendor/VERSIONS.txt)
+docs/vendor/** -text
