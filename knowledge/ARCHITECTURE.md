@@ -61,7 +61,7 @@ System design for coOCR/HTR. Client-only, no backend.
 
 ```
 docs/
-├── index.html              # Entry Point + OpenSeadragon CDN
+├── index.html              # Entry Point
 ├── favicon.png
 ├── css/
 │   ├── variables.css       # Design System Tokens (60+ vars)
@@ -237,7 +237,7 @@ IIIF-compatible image viewer with SVG overlay for region synchronization.
 
 **Implementation:** [viewer.js](../docs/js/viewer.js)
 
-**Dependencies:** OpenSeadragon 4.1 + SVG Overlay Plugin (loaded via CDN)
+**Dependencies:** OpenSeadragon 4.1.1, vendored in `docs/vendor/` (versions and checksums in `docs/vendor/VERSIONS.txt`); the SVG layer for regions is `js/utils/osdSvgOverlay.js`
 
 **Key Features:**
 | Feature | Description |

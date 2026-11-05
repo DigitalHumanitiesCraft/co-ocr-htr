@@ -245,7 +245,7 @@ The app container uses CSS Grid with three rows (header 56px, main content flexi
 
 **Purpose:** Display document image with interactive bounding boxes.
 
-**Implementation:** OpenSeadragon with SVG Overlay plugin.
+**Implementation:** OpenSeadragon with an SVG layer that follows the viewport (`js/utils/osdSvgOverlay.js`).
 
 **Empty State:**
 - Light gray background

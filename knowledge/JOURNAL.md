@@ -1152,3 +1152,26 @@ are researched in IMPROVEMENTS with two options, a recommendation and evidence.
 
 Open: the operator decisions listed in IMPROVEMENTS, among them the public knowledge page, vendoring
 the CDN scripts and the settings without effect.
+
+
+## Session 42: Operator Decisions Implemented (2026-11-05)
+
+The operator delegated the technical and reversible decisions from Session 41; each was implemented
+as recommended, with a test that fails without it.
+
+- Publication. `knowledge.html`, the projection `docs/knowledge/` and its sync script are gone; the
+  about and help pages link the knowledge folder on GitHub, and a test keeps Markdown out of `docs/`.
+- Vendoring. OpenSeadragon 4.1.1 and JSZip 3.10.2 come from npm into `docs/vendor/`, with licences,
+  versions and SHA-256 sums in `VERSIONS.txt` and `-text` in `.gitattributes`. The svg-overlay
+  plugin is not on npm, so its one use is a small module of its own; region boxes were checked in
+  normal, rotated and flipped views. The single-page PAGE-XML demo now draws its line boxes.
+- Settings. Line numbers, uncertain highlighting, auto-validate and default perspective are removed,
+  and their stored values are dropped on load.
+- Contrast. `--text-secondary` and text variants of the status colours reach WCAG AA on all light
+  backgrounds; a test checks every text token against every background.
+- Export. A PAGE-XML export with lines lacking coordinates warns and names them instead of
+  inventing geometry.
+- Cancel. Single-page transcription and validation have a cancel button backed by a shared abort
+  switch for all LLM requests.
+
+Open: the four points under "Waiting for the operator" in IMPROVEMENTS.

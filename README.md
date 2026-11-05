@@ -49,7 +49,7 @@ coOCR/HTR provides:
 - **Guided Workflow**: Step-by-step hints and progress tracking
 - **Export Formats**: Plain text, JSON, Markdown, PAGE-XML (2019-07-15), TEI-XML, ZIP (multi-page)
 - **PWA Support**: Works offline after first load
-- **No npm Dependencies**: Vanilla JavaScript (OpenSeadragon via CDN), runs in any modern browser
+- **No build step**: Vanilla JavaScript with OpenSeadragon and JSZip vendored in `docs/vendor/`, runs in any modern browser
 
 ## Quick Start
 

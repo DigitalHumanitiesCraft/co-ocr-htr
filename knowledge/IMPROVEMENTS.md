@@ -1,6 +1,6 @@
 # Improvement Plan coOCR/HTR
 
-Open work in two parts. The technical backlog can be implemented without a policy or design decision. The operator decisions need an answer first; each names two options, a recommendation and the evidence. Completed items leave this document; their history is in [JOURNAL.md](JOURNAL.md) and Git.
+Open work in two parts. The technical backlog can be implemented without a policy or design decision. The points waiting for the operator need an action or decision only the operator can take. Completed items leave this document; their history is in [JOURNAL.md](JOURNAL.md) and Git.
 
 ## Technical backlog
 
@@ -11,77 +11,25 @@ Open work in two parts. The technical backlog can be implemented without a polic
 - [ ] `tests/i18n.test.js` tests a copy of the i18n class defined inside the test file instead of `js/services/i18n.js`. `tests/i18n-dom.test.js` tests the real module; the copy should be replaced by tests of the real module.
 - [ ] Containerfile for static serving (Podman/Docker) and a short deployment note covering GitHub Pages, container and local use, for the planned institutional fork.
 
-## Operator decisions
+## Waiting for the operator
 
-### Public knowledge page
-
-`docs/knowledge.html` loads `knowledge/*.md`, but GitHub Pages runs Jekyll on `docs/` (no `.nojekyll`) and serves those files as `.html`, so the page is broken on the live site (`/co-ocr-htr/knowledge/VISION.md` returns 404, `VISION.html` returns 200). The projection also publishes `JOURNAL.md` and `IMPLEMENTATION-PLAN.md`.
-
-- Option A: remove `knowledge.html`, `docs/knowledge/` and `scripts/sync-knowledge.js`, and link the knowledge folder on GitHub from the about page.
-- Option B: add `docs/.nojekyll` and keep the page, limited to reader-facing documents (VISION, METHODOLOGY, MODEL-LANDSCAPE, DESIGN-SYSTEM, ARCHITECTURE, VALIDATION, DATA-SCHEMA) by dropping JOURNAL and IMPLEMENTATION-PLAN from its `data-doc` list.
-- Recommendation: A. The global publication rule keeps `knowledge/` off served pages even in public repositories, the repository already shows the documents rendered, and A removes a sync script and its test.
-
-### Third-party scripts from CDNs
-
-OpenSeadragon (`openseadragon@4.1`, floating minor version) and its SVG overlay (unversioned, from `openseadragon.github.io`) load in `docs/index.html`, JSZip 3.10.1 loads at export time in `docs/js/services/export.js`. None carries an integrity attribute, in a page that holds API keys, and ZIP export fails offline.
-
-- Option A: vendor the three files into `docs/vendor/` with their licences and load them locally.
-- Option B: keep the CDNs, pin exact versions and add `integrity` and `crossorigin` attributes.
-- Recommendation: A. The house rule for static DH applications asks for vendored libraries and no runtime CDN, and it also fixes offline ZIP export. It needs the authorisation to download the three files from npm.
-
-### Settings without effect
-
-The settings dialog stores options that no code reads. A code search finds no reader outside `docs/js/components/dialogs.js` for "Show line numbers", "Highlight uncertain readings" and "Default perspective"; the perspectives feature was removed in February 2026. "Auto-validate after transcription" is stored but never triggers a validation.
-
-- Option A: remove the four controls and their storage keys.
-- Option B: implement them.
-- Recommendation: A. None is part of the five-step workflow, and controls without effect mislead users in a workshop.
-
-### Contrast of secondary text and the amber status colour
-
-`--text-secondary` (#8a7e72) reaches 3.5 to 4.0:1 on the light backgrounds and `--uncertain` (#c4973a) 2.5 to 2.7:1, below the 4.5:1 that WCAG 2.2 AA requires for normal text. axe-core counted these as the largest group of violations.
-
-- Option A: darken the tokens in `docs/css/variables.css`, for example `--text-secondary: #6f6459` (5.2 to 5.8:1) and, for amber text, `#7d5f17` (5.3 to 6.0:1), keeping the lighter amber for dots and borders.
-- Option B: keep the palette and accept the AA violations.
-- Recommendation: A. It is a two-token change; the visual impression changes slightly, which is a design call.
-
-### Inserted lines without geometry
-
-Lines added in the editor have no coordinates and are exported without `Coords`, which the PAGE 2019 schema requires for `TextLine`. Tools such as Transkribus may reject the file.
-
-- Option A: export them with a degenerate placeholder polygon and mark them in a `custom` attribute.
-- Option B: keep omitting `Coords` and show a warning in the export dialog naming the affected lines.
-- Recommendation: B. It invents no geometry, which the project ruled out in October 2026, and makes the schema gap visible before the file is used downstream.
-
-### Cancel for single-page operations
-
-A hung provider blocks single-page transcription and validation until the request times out (240 s, `CLOUD_TIMEOUT_MS` in `docs/js/services/llm.js`). Batch operations already have an abort control.
-
-- Option A: add a cancel button to the loading overlay, wired to an `AbortController`.
-- Option B: shorten the timeout instead.
-- Recommendation: A. Large documents legitimately need long requests, so a shorter timeout would break real work.
+These points need an action or decision only the operator can take. Each carries its evidence and a recommendation.
 
 ### Anthropic model list
 
-The model list in `docs/index.html` offers `claude-sonnet-4-5-20250514` and `claude-haiku-4-5-20250514`; these dated identifiers do not match the published Claude 4.5 releases, and the current family is Claude 5 (`claude-sonnet-5-5`, `claude-haiku-5-5`). The OpenAI and Gemini entries were not checked against current provider lists.
+The model list in `docs/index.html` offers `claude-sonnet-4-5-20250514` and `claude-haiku-4-5-20250514`; these dated identifiers do not match the published Claude 4.5 releases, and the current family is Claude 5 (`claude-sonnet-5-5`, `claude-haiku-5-5`). The OpenAI and Gemini entries were not checked against current provider lists. Recommendation: replace the two entries with current identifiers after a test call with a real key, which only the operator can make.
 
-- Option A: replace the two entries with current identifiers after a test call with a real key.
-- Option B: remove the Anthropic entries until someone verifies them.
-- Recommendation: A, with the test call made by the operator, since only a real key shows availability.
+### Local API key
 
-### Phone screens
+The gitignored `docs/config.local.js` holds a real Gemini key that the app loads on every local start. The e2e fixture blocks the file, so tests do not use it. Recommendation: replace it with a key that has a spending limit.
 
-Below 768 px the app shows only "Desktop recommended" with no way to continue.
+### File `nul` in the repository root
 
-- Option A: keep the block.
-- Option B: add a "Continue anyway" link.
-- Recommendation: A for the workshop, which runs on laptops; the three-panel layout is not usable on a phone.
+It contains the output of a ping command and is ignored by Git. Recommendation: delete it with `del \?\<repository path>\nul`, since `nul` is a reserved name on Windows.
 
-### Repository housekeeping
+### Licence field in `docs/package.json`
 
-- The local `docs/config.local.js` holds a real Gemini key. It is gitignored and the e2e fixture now blocks it, but a key with a spending limit or a test project key is safer. Recommendation: replace it with a restricted key.
-- The file `nul` in the repository root contains the output of a ping command; it is ignored by Git. Recommendation: delete it (`del \\?\C:\...\co-ocr-htr\nul`, since `nul` is a reserved name on Windows).
-- `docs/package.json` declares `"license": "MIT"` while the code is published under CC BY 4.0 after an external contribution under CC BY. Recommendation: set the field to `CC-BY-4.0` so that package metadata matches the licence decision.
+The field says `MIT`, which matches the global rule for code. The repository licence was changed to CC BY 4.0 after an external contribution under CC BY. Whether code stays MIT, moves to CC BY 4.0, or the contribution is separated is the operator's decision; the field then follows it.
 
 ## Not Implementing
 
@@ -89,4 +37,5 @@ Below 768 px the app shows only "Desktop recommended" with no way to continue.
 |------|-----------|
 | Backend for API calls | Would add hosting complexity; Ollama covers sensitive documents |
 | TypeScript migration | Contradicts the no-build vanilla JavaScript approach |
+| Phone layout | Below 768 px the app shows "Desktop recommended"; the three-panel workflow is not usable on a phone (decided November 2026) |
 | Replacing every `innerHTML` | Escaping through `escapeHtml()` is applied consistently; a full rewrite costs more than it protects |

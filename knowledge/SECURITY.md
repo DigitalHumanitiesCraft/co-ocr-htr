@@ -56,7 +56,7 @@ coOCR/HTR is a **purely client-side web application** without a backend. This ar
 | Malicious Browser Extensions | High | No technical solution possible |
 | Persistent local key storage on shared devices | High | Keep persistence disabled on untrusted devices |
 | XSS Attacks | High | All external text is escaped before it enters `innerHTML` (see XSS Prevention) |
-| Third-party scripts | High | OpenSeadragon, its SVG overlay and JSZip load from CDNs without integrity attributes; vendoring is planned |
+| Third-party scripts | Medium | OpenSeadragon and JSZip are vendored from their npm packages with recorded SHA-256 sums; no script loads from a CDN (checked by `tests/e2e/vendor.spec.js`) |
 | Physical Device Access | High | User responsibility |
 
 ### Recommendations for Users
