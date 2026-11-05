@@ -565,6 +565,45 @@ describe('LLMService', () => {
         .rejects.toThrow(/No API key configured|noApiKeyFor/);
     });
   });
+
+  describe('Provider failures', () => {
+    const respond = (status, body) => ({
+      ok: status < 400,
+      status,
+      text: async () => body,
+      json: async () => JSON.parse(body)
+    });
+
+    beforeEach(() => {
+      service.setApiKey('gemini', 'test-key');
+    });
+
+    it('should classify Gemini 400 "API key not valid" as auth and not retry without streaming', async () => {
+      globalThis.fetch = vi.fn(async () =>
+        respond(400, JSON.stringify({ error: { message: 'API key not valid. Please pass a valid API key.' } })));
+
+      const error = await service.transcribe('img', { stream: true }).catch(e => e);
+      expect(error.type).toBe('auth');
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should report an HTML error page by status, not as a JSON parser error', async () => {
+      globalThis.fetch = vi.fn(async () => respond(500, '<html><body>Server Error</body></html>'));
+
+      const error = await service.transcribe('img').catch(e => e);
+      expect(error.message).toMatch(/500/);
+      expect(error.message).not.toMatch(/JSON|Unexpected token/);
+    });
+
+    it('should reject an empty answer instead of returning it as a transcription', async () => {
+      globalThis.fetch = vi.fn(async () =>
+        respond(200, JSON.stringify({ candidates: [{ finishReason: 'SAFETY' }] })));
+
+      const error = await service.transcribe('img').catch(e => e);
+      expect(error).toBeInstanceOf(LLMError);
+      expect(error.type).toBe('empty');
+    });
+  });
 });
 
 describe('LLMError', () => {

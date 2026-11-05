@@ -442,6 +442,7 @@
     "rateLimitReached": "Rate-Limit erreicht. Bitte warten und erneut versuchen.",
     "networkError": "Netzwerkfehler. Bitte Verbindung prüfen.",
     "transcriptionFailed": "Transkription fehlgeschlagen: {message}",
+    "emptyResponse": "Das Modell hat keinen Text geliefert (möglicherweise vom Sicherheitsfilter blockiert). Die vorhandene Transkription bleibt erhalten.",
     "descriptionFailed": "Beschreibung fehlgeschlagen: {message}",
     "validationFailed": "Validierung fehlgeschlagen: {message}",
     "invalidApiKeyBatch": "Ungültiger API-Schlüssel. Batch abgebrochen.",
@@ -483,6 +484,9 @@
     "allSuccess": "{success} Seiten erfolgreich"
   },
   "confirm": {
+    "overwriteTranscription": "Aktuelle Transkription ersetzen?",
+    "overwriteTranscriptionText": "Diese Seite hat bereits eine Transkription samt Ihren Korrekturen. Eine neue Transkription ersetzt sie.",
+    "overwrite": "Ersetzen",
     "restoreSession": "Projekt fortsetzen?",
     "restoreInfo": "Eine gespeicherte Sitzung von {time} wurde gefunden.",
     "restore": "Fortsetzen",

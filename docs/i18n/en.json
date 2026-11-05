@@ -442,6 +442,7 @@
     "rateLimitReached": "Rate limit reached. Please wait and try again.",
     "networkError": "Network error. Please check connection.",
     "transcriptionFailed": "Transcription failed: {message}",
+    "emptyResponse": "The model returned no text (possibly blocked by a safety filter). The existing transcription was kept.",
     "descriptionFailed": "Description failed: {message}",
     "validationFailed": "Validation failed: {message}",
     "invalidApiKeyBatch": "Invalid API key. Batch aborted.",
@@ -483,6 +484,9 @@
     "allSuccess": "{success} pages successful"
   },
   "confirm": {
+    "overwriteTranscription": "Replace the current transcription?",
+    "overwriteTranscriptionText": "This page already has a transcription, including your corrections. A new transcription replaces it.",
+    "overwrite": "Replace",
     "restoreSession": "Continue project?",
     "restoreInfo": "A saved session was found from {time}.",
     "restore": "Continue",

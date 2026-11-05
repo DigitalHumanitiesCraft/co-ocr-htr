@@ -21,6 +21,35 @@ const CLOUD_TIMEOUT_MS = 240_000;
 /** Timeout for local Ollama calls (480 seconds -- local inference is significantly slower) */
 const OLLAMA_TIMEOUT_MS = 480_000;
 
+/**
+ * Build an Error from a failed provider response. The body may be JSON or an
+ * HTML error page; the HTTP status travels along so errors can be classified
+ * by status instead of by message wording.
+ */
+async function apiError(response, label) {
+  let detail = '';
+  try {
+    const json = JSON.parse(await response.text());
+    detail = json.error?.message || json.message || '';
+  } catch {
+    // Unreadable or non-JSON body (e.g. an HTML error page): fall back to the status
+  }
+  const error = new Error(detail || `${label}: ${response.status}`);
+  error.status = response.status;
+  return error;
+}
+
+/**
+ * A streaming call is retried without streaming only when streaming itself
+ * failed. An HTTP error, a timeout or a network failure would fail the same way
+ * again and only double the requests and the waiting time.
+ */
+function isStreamSpecificFailure(error) {
+  if (error?.status) return false;
+  if (error?.name === 'TimeoutError' || error?.name === 'AbortError') return false;
+  return !/failed to fetch|networkerror|load failed|network/i.test(error?.message || '');
+}
+
 // ============================================
 // Prompts
 // ============================================
@@ -735,6 +764,7 @@ class LLMService {
                 timeoutMs: options.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Gemini] Stream fallback in transcribe():', streamError.message);
               options.onStreamError?.(streamError);
               response = await this._callGemini(apiKey, model, prompt, imageBase64);
@@ -754,6 +784,7 @@ class LLMService {
                 timeoutMs: options.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Anthropic] Stream fallback in transcribe():', streamError.message);
               options.onStreamError?.(streamError);
               response = await this._callAnthropic(apiKey, model, prompt, imageBase64);
@@ -776,6 +807,7 @@ class LLMService {
                 timeoutMs: options.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Ollama] Stream fallback in transcribe():', streamError.message);
               options.onStreamError?.(streamError);
               response = await this._callOllama(model, prompt, imageBase64);
@@ -788,6 +820,11 @@ class LLMService {
           throw new Error(`Provider ${this.activeProvider} not implemented`);
       }
 
+      // An empty answer (safety block, unparseable stream) must not replace the
+      // existing transcription as if it were a result.
+      if (!response || !String(response).trim()) {
+        throw new LLMError('empty', t('toast.emptyResponse'));
+      }
       console.log(`[LLM] transcribe() OK, length=${response.length} chars`);
       return {
         provider: this.activeProvider,
@@ -834,6 +871,7 @@ class LLMService {
             timeoutMs: options.timeoutMs
           });
         } catch (streamError) {
+          if (!isStreamSpecificFailure(streamError)) throw streamError;
           console.warn('[Gemini] Stream fallback in describe():', streamError.message);
           options.onStreamError?.(streamError);
           response = await this._callGemini(apiKey, model, prompt, imageBase64);
@@ -842,6 +880,9 @@ class LLMService {
         response = await this._callGemini(apiKey, model, prompt, imageBase64);
       }
 
+      if (!response || !String(response).trim()) {
+        throw new LLMError('empty', t('toast.emptyResponse'));
+      }
       console.log(`[LLM] describe() OK, length=${response.length} chars`);
       return {
         provider: 'gemini',
@@ -934,6 +975,7 @@ class LLMService {
                 timeoutMs: streamOpts.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Gemini] Stream fallback in validate():', streamError.message);
               streamOpts.onStreamError?.(streamError);
               response = await this._callGemini(apiKey, model, prompt, null, {
@@ -958,6 +1000,7 @@ class LLMService {
                 timeoutMs: streamOpts.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Anthropic] Stream fallback in validate():', streamError.message);
               streamOpts.onStreamError?.(streamError);
               response = await this._callAnthropic(apiKey, model, prompt);
@@ -974,6 +1017,7 @@ class LLMService {
                 timeoutMs: streamOpts.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Ollama] Stream fallback in validate():', streamError.message);
               streamOpts.onStreamError?.(streamError);
               response = await this._callOllama(model, prompt);
@@ -1025,6 +1069,7 @@ class LLMService {
               timeoutMs: streamOpts.timeoutMs
             });
           } catch (streamError) {
+            if (!isStreamSpecificFailure(streamError)) throw streamError;
             console.warn('[Gemini] Stream fallback in explicit validate():', streamError.message);
             response = await this._callGemini(apiKey, model, prompt, null, {
               useThinking: true, thinkingLevel: 'high'
@@ -1047,6 +1092,7 @@ class LLMService {
               timeoutMs: streamOpts.timeoutMs
             });
           } catch (streamError) {
+            if (!isStreamSpecificFailure(streamError)) throw streamError;
             console.warn('[Anthropic] Stream fallback in explicit validate():', streamError.message);
             response = await this._callAnthropic(apiKey, model, prompt);
           }
@@ -1062,6 +1108,7 @@ class LLMService {
               timeoutMs: streamOpts.timeoutMs
             });
           } catch (streamError) {
+            if (!isStreamSpecificFailure(streamError)) throw streamError;
             console.warn('[Ollama] Stream fallback in explicit validate():', streamError.message);
             response = await this._callOllama(model, prompt);
           }
@@ -1107,6 +1154,7 @@ class LLMService {
                 timeoutMs: streamOpts.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Gemini] Stream fallback in _validateWithFallback():', streamError.message);
               response = await this._callGemini(apiKey, model, prompt, null, {
                 useThinking: true, thinkingLevel: 'high'
@@ -1133,6 +1181,7 @@ class LLMService {
                 timeoutMs: streamOpts.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Anthropic] Stream fallback in _validateWithFallback():', streamError.message);
               response = await this._callAnthropic(apiKey, model, prompt);
             }
@@ -1149,6 +1198,7 @@ class LLMService {
                 timeoutMs: streamOpts.timeoutMs
               });
             } catch (streamError) {
+              if (!isStreamSpecificFailure(streamError)) throw streamError;
               console.warn('[Ollama] Stream fallback in _validateWithFallback():', streamError.message);
               response = await this._callOllama(model, prompt);
             }
@@ -1239,9 +1289,7 @@ class LLMService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error(`[Gemini] API error: ${response.status}`, error.error?.message);
-      throw new Error(error.error?.message || `Gemini API error: ${response.status}`);
+      throw await apiError(response, 'Gemini API error');
     }
 
     const data = await response.json();
@@ -1301,8 +1349,7 @@ class LLMService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || `Gemini streaming error: ${response.status}`);
+      throw await apiError(response, 'Gemini streaming error');
     }
 
     return this._parseGeminiSSE(response.body, options.onThinkingChunk);
@@ -1412,8 +1459,7 @@ class LLMService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || `Anthropic streaming error: ${response.status}`);
+      throw await apiError(response, 'Anthropic streaming error');
     }
 
     return this._parseAnthropicSSE(response.body, options.onThinkingChunk);
@@ -1694,8 +1740,7 @@ class LLMService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || `OpenAI API error: ${response.status}`);
+      throw await apiError(response, 'OpenAI API error');
     }
 
     const data = await response.json();
@@ -1733,8 +1778,7 @@ class LLMService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || `Anthropic API error: ${response.status}`);
+      throw await apiError(response, 'Anthropic API error');
     }
 
     const data = await response.json();
@@ -2125,7 +2169,21 @@ class LLMService {
   // ============================================
 
   _handleError(error) {
+    if (error instanceof LLMError) return error;
     const message = error.message || 'Unknown error';
+    const status = error.status;
+
+    // Classify by HTTP status first; Gemini reports an invalid key as 400
+    // "API key not valid", which the message checks below never matched.
+    if (status === 401 || status === 403 || (status === 400 && /api key/i.test(message))) {
+      return new LLMError('auth', 'Invalid API key. Please check your configuration.');
+    }
+    if (status === 429) {
+      return new LLMError('rate_limit', 'Rate limit exceeded. Please wait and try again.');
+    }
+    if (error.name === 'TimeoutError') {
+      return new LLMError('timeout', 'Request timed out. Please try again.');
+    }
 
     // Categorize error
     if (message.includes('401') || message.includes('Unauthorized') || message.includes('invalid_api_key')) {

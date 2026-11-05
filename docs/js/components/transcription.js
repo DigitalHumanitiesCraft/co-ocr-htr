@@ -202,7 +202,19 @@ class TranscriptionManager {
             return;
         }
 
-        // Single page transcription (current page)
+        // Single page transcription (current page). Corrections are not under
+        // undo once a new transcription arrives, so ask before replacing them.
+        if (state.transcription?.raw?.trim()) {
+            const replace = await dialogManager.showConfirm(
+                t('confirm.overwriteTranscription'),
+                t('confirm.overwriteTranscriptionText'),
+                t('confirm.overwrite'),
+                t('dialog.cancel'),
+                { icon: 'warning' }
+            );
+            if (!replace) return;
+        }
+
         this.setLoading(true);
         this.showEditorLoading(true);
 
@@ -286,6 +298,8 @@ class TranscriptionManager {
                 dialogManager.showToast(t('toast.rateLimitReached'), 'warning');
             } else if (error.type === 'network') {
                 dialogManager.showToast(t('toast.networkError'), 'error');
+            } else if (error.type === 'empty') {
+                dialogManager.showToast(error.message, 'warning');
             } else {
                 dialogManager.showToast(t('toast.transcriptionFailed', { message: error.message }), 'error');
             }
