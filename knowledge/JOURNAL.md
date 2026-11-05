@@ -1206,3 +1206,19 @@ Points outside `knowledge/` are only reported. `CLAUDE.md` still lists "Dependen
 project tree, the footers of `about.html` and `help.html` and the about dialog in `index.html` use
 the middle dot as separator, and the knowledge file names do not follow the lowercase naming of the
 Promptotyping convention. The operator points in IMPROVEMENTS are unchanged.
+
+
+## Session 44: Empty States and Project Rules (2026-11-05)
+
+The operator approved the two open findings from Session 43; both are implemented with Playwright
+specs that fail without the change.
+
+- Empty states. The empty viewer has the "Load Demo" and "Load IIIF" buttons that DESIGN-SYSTEM 6.1
+  specifies. The three dismissible hint bars were visible exactly while their panel's empty state
+  was and repeated it, so their content moved into the empty states and the bars, their dismissal
+  flags and the "show panel hints" setting were removed. The editor empty state names the pencil
+  icon, because narrow editor panels hide the "Transcribe" label. Checked at 1440 px in DE and EN
+  and at 390 px, where the "Desktop recommended" notice stays as decided.
+- Project rules. Edition model, XML schema, auto-validate and the per-project validation prompt
+  are gone from the rules dialog. Projects and rule files with these fields still load, and saving
+  keeps only the Markdown transcription rules.

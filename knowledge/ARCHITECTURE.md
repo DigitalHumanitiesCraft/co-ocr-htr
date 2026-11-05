@@ -448,21 +448,18 @@ The i18n system provides switchable DE/EN translations for all UI text.
 
 ## Project Rules
 
-Projects can define transcription and validation rules that are persisted in IndexedDB.
+Projects can define Markdown transcription rules that are persisted in IndexedDB.
 
 **Schema (IndexedDB v2):**
 ```
 rules: {
-  editionModel: 'diplomatic' | 'normalized' | 'critical',
-  xmlSchema: 'page-xml-2019' | 'tei-p5',
   transcription: {
     markdown: string   // Free-form Markdown transcription rules
-  },
-  validation: {
-    autoValidate, customPrompt
   }
 }
 ```
+
+Projects saved before November 2026 may also carry `editionModel`, `xmlSchema` and `validation`. They still load; the dialog no longer offers them, and saving it drops them.
 
 **Transcription Rules (Markdown Editor):**
 - Free-form Markdown textarea replaces the former 5 structured fields (scriptType, language, period, paleographicHints, specialCharacters)
@@ -471,7 +468,7 @@ rules: {
 - Markdown is passed directly to LLM prompts as context (LLMs understand Markdown natively)
 - Backward compatibility: old structured format auto-migrated to Markdown on first read
 
-**Effect:** Only the Markdown transcription rules reach the prompts. Edition model, XML schema, auto-validate and the custom validation prompt of the rules are stored and exported, but no code path reads them (open item in [IMPROVEMENTS](IMPROVEMENTS.md)).
+**Effect:** The Markdown transcription rules reach the prompts. The former fields for edition model, XML schema, auto-validate and a validation prompt were removed because no code read them.
 
 **Integration:**
 - Rules dialog accessible from project list (gear icon)

@@ -143,20 +143,14 @@ Four object stores for persistent data:
   createdAt: '2026-01-20T...',
   updatedAt: '2026-02-14T...',
   rules: {                          // Added in IDB v2 (nullable)
-    editionModel: 'diplomatic',     // 'diplomatic' | 'normalized' | 'critical'
-    xmlSchema: 'page-xml-2019',     // 'page-xml-2019' | 'tei-p5'
     transcription: {
       markdown: '## Script Type\nKurrent\n\n## Language\nGerman\n\n## Period\n19th century'
-    },
-    validation: {
-      autoValidate: true,
-      customPrompt: ''
     }
   }
 }
 ```
 
-Of these fields only `transcription.markdown` is applied, as `state.data.transcriptionRulesMarkdown`; the others are stored and exported without effect ([IMPROVEMENTS](IMPROVEMENTS.md)).
+`transcription.markdown` is applied as `state.data.transcriptionRulesMarkdown`. Older records may still hold `editionModel`, `xmlSchema` and `validation`; they load unchanged and are dropped when the rules are saved again.
 
 ### i18n Translation Schema
 
