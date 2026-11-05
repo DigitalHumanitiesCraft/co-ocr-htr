@@ -1126,3 +1126,29 @@ curates the knowledge base against the code. Each fix has a test that fails with
 Open: the live knowledge page fetches `knowledge/*.md`, which GitHub Pages turns into HTML because
 `docs/` has no `.nojekyll`. Whether the page and the journal stay public is undecided. The remaining
 audit findings are listed in IMPROVEMENTS.
+
+
+## Session 41: Self-Decidable Fixes and Operator Decisions (2026-11-05)
+
+The remaining audit findings were sorted into reversible technical fixes and points that need the
+operator. The technical ones are implemented, each with a test that fails without it; the others
+are researched in IMPROVEMENTS with two options, a recommendation and evidence.
+
+- Gates. `npm run lint` covers all of `docs/`, with Node globals for scripts, configs and Playwright
+  specs. A shared Playwright fixture blocks `config.local.js` and every LLM host, because the e2e
+  server serves `docs/` where real keys may sit.
+- Security. The Gemini key travels in the `x-goog-api-key` header instead of the URL. Two unused
+  batch overlay methods that interpolated file names unescaped are removed.
+- Export. TEI encodes `[?]` as `<unclear/>`, PAGE-XML writes back the source `conf`, Markdown table
+  cells escape `|` and `<`.
+- Editor and language. The diff view and change count align lines instead of comparing positions,
+  undo shortcuts stay inside the editor, `<html lang>` follows the UI language, and plural strings
+  use `Intl.PluralRules` (the appended English "s" had produced "2 Zeiles").
+- Accessibility and status. Skip link target, separator values, the LLM toggle's name, keyboard
+  access to the model indicator, and a status dot that reflects whether a key exists. The LLM
+  review toggle is checked again once a key is configured.
+- Upload. Broken PAGE-XML gives one translated error, a PAGE-XML describing another image warns,
+  IIIF Presentation 3 labels resolve, and TIFF is no longer advertised.
+
+Open: the operator decisions listed in IMPROVEMENTS, among them the public knowledge page, vendoring
+the CDN scripts and the settings without effect.

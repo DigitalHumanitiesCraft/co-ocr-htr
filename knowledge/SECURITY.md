@@ -41,13 +41,11 @@ coOCR/HTR is a **purely client-side web application** without a backend. This ar
 1. User enters key (Settings Dialog)
 2. Key is stored in memory for immediate use
 3. Optional: user enables persistence checkbox -> key is also written to IndexedDB, unencrypted
-4. Key is sent with every API call (request header; Gemini still as URL query parameter)
+4. Key is sent with every API call in a request header (Gemini: `x-goog-api-key`), never in the URL
 5. Saving the dialog with the checkbox unticked deletes a previously persisted key
 6. Close tab -> memory copy gone; IndexedDB copy remains only if persistence was enabled
 7. Reload page -> persisted keys are restored into memory if present
 ```
-
-The Gemini key in the query string can appear in proxy logs and browser history tools. Moving it to the `x-goog-api-key` header is listed in [IMPROVEMENTS.md](IMPROVEMENTS.md).
 
 ### Known Risks
 
@@ -141,7 +139,7 @@ Two inputs are under outside control and must be treated as hostile:
 
 ### Escaping
 
-Every untrusted string passes through `escapeHtml()` in `utils/textFormatting.js` before it is interpolated into `innerHTML`. The editor shows text in a `textarea`, and the XML exports escape through `ExportService.escapeXml()`, which also drops characters XML 1.0 forbids. A Playwright sweep in November 2026 fed script and event-handler payloads through PAGE-XML, file names and mocked LLM answers and found no rendered markup. The Markdown export passes text through unchanged, so a downstream Markdown renderer would display embedded HTML.
+Every untrusted string passes through `escapeHtml()` in `utils/textFormatting.js` before it is interpolated into `innerHTML`. The editor shows text in a `textarea`, and the XML exports escape through `ExportService.escapeXml()`, which also drops characters XML 1.0 forbids. A Playwright sweep in November 2026 fed script and event-handler payloads through PAGE-XML, file names and mocked LLM answers and found no rendered markup. The Markdown export escapes `<` and `|` in table cells, so a downstream Markdown renderer shows embedded markup as text.
 
 ## Local Development
 

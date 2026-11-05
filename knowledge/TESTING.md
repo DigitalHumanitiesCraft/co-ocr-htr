@@ -12,7 +12,7 @@ npm run lint          # ESLint over js/, tests/ and sw.js
 npm run test:e2e      # Playwright specs
 ```
 
-The Playwright configuration in `docs/playwright.config.js` serves `docs/` itself. On a developer machine that folder may hold a gitignored `config.local.js` with real API keys, which the app loads on start. The specs mock every LLM call, so no key leaves the browser, but a run against a copy of `docs/` without that file is the safer default. No CI workflow is configured, so both layers run locally before a commit.
+The Playwright configuration in `docs/playwright.config.js` serves `docs/` itself, where a developer machine may hold a gitignored `config.local.js` with real API keys. Every spec therefore imports `test` from `tests/e2e/fixtures.js`, which answers that file with 404 and aborts all requests to LLM providers; `safety-net.spec.js` checks both. `npm run lint` covers the whole `docs/` folder, including scripts, configs and specs. No CI workflow is configured, so both layers run locally before a commit.
 
 ## Unit tests
 
@@ -30,9 +30,9 @@ Every defect fix adds a test that fails without the fix.
 
 ## End-to-end tests
 
-The Playwright specs load a demo sample or inject state into `appState`, then check the human-in-the-loop flow (validate, apply, diff, undo, export), the thinking panel, the narrow-screen layout and keyboard selection of the export format. LLM responses are mocked or injected, never requested from a provider.
+The Playwright specs load a demo sample or inject state into `appState`, then check the human-in-the-loop flow (validate, apply, diff, undo, export), the thinking panel, the narrow-screen layout, keyboard selection of the export format, and keyboard access and accessible names of the controls an accessibility audit flagged. LLM responses are mocked or injected, never requested from a provider.
 
-Still without automated coverage are the upload paths (file picker, drag and drop, IIIF dialog), the viewer with OpenSeadragon, batch operations over all pages, offline behaviour and an accessibility audit. A useful next set of specs walks the five steps of the status bar with mocked providers, including the error responses 401, 429 and 500 and an empty answer.
+Still without automated coverage are the upload paths (file picker, drag and drop, IIIF dialog), the viewer with OpenSeadragon, batch operations over all pages, offline behaviour and a full axe-core audit. A useful next set of specs walks the five steps of the status bar with mocked providers, including the error responses 401, 429 and 500 and an empty answer.
 
 ## Known pitfall: global regex state
 
