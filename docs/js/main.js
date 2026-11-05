@@ -694,9 +694,11 @@ async function showProjectRulesDialog(projectId) {
     const project = await storage.getProject(projectId);
     if (!project) return;
 
+    // Only the Markdown transcription rules reach the prompts. Older projects may
+    // still carry editionModel, xmlSchema and validation settings; they load but
+    // are no longer offered, and saving the dialog drops them.
     const rules = project.rules || {};
     const transcription = migrateTranscriptionRules(rules.transcription);
-    const validation = rules.validation || {};
 
     const dialog = document.createElement('dialog');
     dialog.className = 'confirm-dialog glass-panel';
@@ -710,24 +712,6 @@ async function showProjectRulesDialog(projectId) {
         <div class="dialog-body" style="max-height: 60vh; overflow-y: auto;">
             <p class="dialog-subtitle">${t('dialog.rules.subtitle')}</p>
 
-            <div class="form-section">
-                <label class="form-label">${t('dialog.rules.editionModel')}</label>
-                <select id="rulesEditionModel" class="form-control">
-                    <option value="" ${!rules.editionModel ? 'selected' : ''}>-- ${t('dialog.transcribe.select')} --</option>
-                    <option value="diplomatic" ${rules.editionModel === 'diplomatic' ? 'selected' : ''}>${t('dialog.rules.diplomatic')}</option>
-                    <option value="normalized" ${rules.editionModel === 'normalized' ? 'selected' : ''}>${t('dialog.rules.normalized')}</option>
-                    <option value="critical" ${rules.editionModel === 'critical' ? 'selected' : ''}>${t('dialog.rules.critical')}</option>
-                </select>
-            </div>
-
-            <div class="form-section">
-                <label class="form-label">${t('dialog.rules.xmlSchema')}</label>
-                <select id="rulesXmlSchema" class="form-control">
-                    <option value="page-xml-2019" ${(rules.xmlSchema || 'page-xml-2019') === 'page-xml-2019' ? 'selected' : ''}>${t('dialog.rules.pageXml2019')}</option>
-                    <option value="tei-p5" ${rules.xmlSchema === 'tei-p5' ? 'selected' : ''}>${t('dialog.rules.teiP5')}</option>
-                </select>
-            </div>
-
             <fieldset class="form-fieldset">
                 <legend>
                     ${t('dialog.rules.transcription')}
@@ -740,23 +724,6 @@ async function showProjectRulesDialog(projectId) {
                 <textarea id="rulesTranscriptionMd" class="form-control" rows="12"
                     placeholder="${t('dialog.rules.markdownPlaceholder')}">${escapeHtml(transcription.markdown || '')}</textarea>
                 <div id="rulesTranscriptionPreview" class="markdown-preview" style="display: none;"></div>
-            </fieldset>
-
-            <fieldset class="form-fieldset">
-                <legend>${t('dialog.rules.validationRules')}</legend>
-
-                <div class="form-section">
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" id="rulesAutoValidate" ${validation.autoValidate !== false ? 'checked' : ''}>
-                        <span>${t('dialog.rules.autoValidate')}</span>
-                    </label>
-                </div>
-
-                <div class="form-section">
-                    <label class="form-label">${t('dialog.rules.customPrompt')}</label>
-                    <textarea id="rulesCustomPrompt" class="form-control" rows="3"
-                        placeholder="${t('dialog.rules.customPromptPlaceholder')}">${escapeHtml(validation.customPrompt || '')}</textarea>
-                </div>
             </fieldset>
         </div>
         <div class="dialog-actions">
@@ -782,22 +749,18 @@ async function showProjectRulesDialog(projectId) {
     mdFileInput.style.display = 'none';
     dialog.appendChild(mdFileInput);
 
+    const collectRules = () => ({
+        transcription: {
+            markdown: dialog.querySelector('#rulesTranscriptionMd').value.trim()
+        }
+    });
+
     dialog.addEventListener('click', async (e) => {
         const action = e.target.dataset?.action;
         if (!action) return;
 
         if (action === 'save') {
-            const newRules = {
-                editionModel: dialog.querySelector('#rulesEditionModel').value || null,
-                xmlSchema: dialog.querySelector('#rulesXmlSchema').value || 'page-xml-2019',
-                transcription: {
-                    markdown: dialog.querySelector('#rulesTranscriptionMd').value.trim()
-                },
-                validation: {
-                    autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
-                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim()
-                }
-            };
+            const newRules = collectRules();
             await storage.updateProjectRules(projectId, newRules);
             if (projectId === appState.data.project.id) {
                 appState.data.transcriptionRulesMarkdown = newRules.transcription.markdown;
@@ -806,17 +769,7 @@ async function showProjectRulesDialog(projectId) {
             dialog.close();
             dialog.remove();
         } else if (action === 'export') {
-            const currentRules = {
-                editionModel: dialog.querySelector('#rulesEditionModel').value || null,
-                xmlSchema: dialog.querySelector('#rulesXmlSchema').value || 'page-xml-2019',
-                transcription: {
-                    markdown: dialog.querySelector('#rulesTranscriptionMd').value.trim()
-                },
-                validation: {
-                    autoValidate: dialog.querySelector('#rulesAutoValidate').checked,
-                    customPrompt: dialog.querySelector('#rulesCustomPrompt').value.trim()
-                }
-            };
+            const currentRules = collectRules();
             const blob = new Blob([JSON.stringify(currentRules, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -854,17 +807,11 @@ async function showProjectRulesDialog(projectId) {
         try {
             const text = await file.text();
             const imported = JSON.parse(text);
-            // Populate form fields from imported rules (with migration for old format)
-            if (imported.editionModel) dialog.querySelector('#rulesEditionModel').value = imported.editionModel;
-            if (imported.xmlSchema) dialog.querySelector('#rulesXmlSchema').value = imported.xmlSchema;
+            // Older rule files may also carry editionModel, xmlSchema and validation;
+            // only the transcription rules are taken over
             if (imported.transcription) {
                 const migrated = migrateTranscriptionRules(imported.transcription);
                 dialog.querySelector('#rulesTranscriptionMd').value = migrated.markdown;
-            }
-            if (imported.validation) {
-                const val = imported.validation;
-                if (val.autoValidate !== undefined) dialog.querySelector('#rulesAutoValidate').checked = val.autoValidate;
-                if (val.customPrompt) dialog.querySelector('#rulesCustomPrompt').value = val.customPrompt;
             }
             dialogManager.showToast(t('dialog.rules.importSuccess'), 'success');
         } catch (err) {
