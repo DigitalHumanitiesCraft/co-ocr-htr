@@ -261,11 +261,11 @@
 }
 
 .validation-summary-item.to-review {
-  color: var(--uncertain);
+  color: var(--uncertain-text);
 }
 
 .validation-summary-item.passed {
-  color: var(--confident);
+  color: var(--confident-text);
 }
 
 /* ==========================================================================
@@ -573,12 +573,12 @@
 
 .badge-warning {
   background: rgba(var(--uncertain-rgb, 230, 162, 60), 0.15);
-  color: var(--uncertain);
+  color: var(--uncertain-text);
 }
 
 .badge-error {
   background: rgba(var(--problematic-rgb, 220, 80, 80), 0.15);
-  color: var(--problematic);
+  color: var(--problematic-text);
 }
 
 .badge-info {
@@ -639,7 +639,7 @@
 
 .issue-suggestion {
   font-size: var(--text-sm);
-  color: var(--confident);
+  color: var(--confident-text);
   font-style: italic;
 }
 
@@ -670,15 +670,15 @@
 }
 
 .issue-apply-status.status-applied {
-  color: var(--confident);
+  color: var(--confident-text);
 }
 
 .issue-apply-status.status-ambiguous {
-  color: var(--uncertain);
+  color: var(--uncertain-text);
 }
 
 .issue-apply-status.status-failed {
-  color: var(--problematic);
+  color: var(--problematic-text);
 }
 
 .issue-manual-note {
@@ -818,7 +818,7 @@
 }
 
 .thinking-error .thinking-header {
-  color: var(--problematic);
+  color: var(--problematic-text);
 }
 
 /* ==========================================================================

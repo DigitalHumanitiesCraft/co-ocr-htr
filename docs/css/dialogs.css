@@ -159,15 +159,15 @@ dialog[open] {
 }
 
 .test-status.test-success {
-  color: var(--success);
+  color: var(--confident-text);
 }
 
 .test-status.test-warning {
-  color: var(--warning);
+  color: var(--uncertain-text);
 }
 
 .test-status.test-error {
-  color: var(--error);
+  color: var(--problematic-text);
 }
 
 /* Confirm Dialog (smaller, centered) */
@@ -204,7 +204,7 @@ dialog[open] {
 
 .confirm-dialog .dialog-icon-warning {
   background: var(--warning-subtle);
-  color: var(--warning);
+  color: var(--uncertain-text);
 }
 
 .confirm-dialog .dialog-icon-info {
@@ -263,7 +263,7 @@ dialog[open] {
 }
 
 .session-value.status-success {
-  color: var(--success);
+  color: var(--confident-text);
 }
 
 .session-value.status-neutral {
@@ -342,7 +342,7 @@ dialog[open] {
 }
 
 .project-card-meta .status-success {
-  color: var(--success);
+  color: var(--confident-text);
 }
 
 .project-card-meta .status-neutral {
@@ -559,7 +559,7 @@ dialog[open] {
 }
 
 .file-preview-remove:hover {
-  color: var(--problematic);
+  color: var(--problematic-text);
 }
 
 /* ==========================================================================
@@ -791,7 +791,7 @@ dialog[open] {
 
 .batch-warning svg {
   flex-shrink: 0;
-  color: var(--uncertain);
+  color: var(--uncertain-text);
 }
 
 .batch-warning-text {
@@ -800,7 +800,7 @@ dialog[open] {
 }
 
 .batch-warning-text strong {
-  color: var(--uncertain);
+  color: var(--uncertain-text);
 }
 
 /* ==========================================================================
@@ -1226,20 +1226,20 @@ dialog[open] {
 
 .model-info-ready {
   background: rgba(90, 138, 90, 0.1);
-  color: var(--confident);
+  color: var(--confident-text);
 }
 
 .model-info-ready svg {
-  color: var(--confident);
+  color: var(--confident-text);
 }
 
 .model-info-warning {
   background: rgba(200, 160, 90, 0.1);
-  color: var(--uncertain);
+  color: var(--uncertain-text);
 }
 
 .model-info-warning svg {
-  color: var(--uncertain);
+  color: var(--uncertain-text);
 }
 
 .btn-link {
@@ -1711,7 +1711,7 @@ kbd {
 .iiif-preview-label {
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--confident);
+  color: var(--confident-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1777,7 +1777,7 @@ kbd {
   background: var(--problematic-bg);
   border: 1px solid var(--problematic);
   border-radius: var(--radius-md);
-  color: var(--problematic);
+  color: var(--problematic-text);
   font-size: var(--text-sm);
 }
 
@@ -1804,7 +1804,7 @@ kbd {
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  color: var(--confident);
+  color: var(--confident-text);
   margin-top: 2px;
 }
 
@@ -1815,7 +1815,7 @@ kbd {
 }
 
 .security-notice-content strong {
-  color: var(--confident);
+  color: var(--confident-text);
 }
 
 .security-notice-content em {

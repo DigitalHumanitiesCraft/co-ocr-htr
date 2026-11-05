@@ -12,7 +12,7 @@
 
   /* Text - Warm browns instead of cold blacks */
   --text-primary: #3d3229;         /* Dark warm brown */
-  --text-secondary: #8a7e72;       /* Medium warm gray-brown */
+  --text-secondary: #6f6459;       /* Warm gray-brown, at least 4.8:1 on all light backgrounds (WCAG AA) */
 
   /* Brand - Logo colors (identity, distinct from functional colors) */
   --brand-gold: #b89850;           /* Logo gold - warm ochre */
@@ -36,6 +36,11 @@
   --uncertain-rgb: 196, 151, 58;
   --problematic: #b85c4a;          /* Muted terracotta red */
   --problematic-rgb: 184, 92, 74;
+  /* Text variants of the status colours: the base tones serve dots, borders and
+     fills but fall below 4.5:1 as text on the light backgrounds */
+  --confident-text: #46704a;
+  --uncertain-text: #7d5f17;
+  --problematic-text: #9e4a3a;
 
   /* Legacy aliases for compatibility */
   --success: var(--confident);

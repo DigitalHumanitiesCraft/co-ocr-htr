@@ -302,7 +302,7 @@ body:has(.wip-banner:not([hidden])) .app-container {
 }
 
 .workflow-step.completed {
-  color: var(--confident);
+  color: var(--confident-text);
 }
 
 .workflow-step-number {
@@ -465,7 +465,7 @@ body:has(.wip-banner:not([hidden])) .app-container {
   border: 1px solid var(--uncertain-border);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
-  color: var(--uncertain);
+  color: var(--uncertain-text);
   font-weight: 500;
 }
 

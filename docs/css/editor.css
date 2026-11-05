@@ -130,7 +130,7 @@
 }
 
 .change-stats.has-changes {
-  color: var(--uncertain);
+  color: var(--uncertain-text);
   font-weight: 500;
 }
 
@@ -259,7 +259,7 @@
 /* Word-level diff markers */
 .diff-display del {
   background: rgba(180, 100, 90, 0.3);
-  color: var(--problematic);
+  color: var(--problematic-text);
   text-decoration: line-through;
   padding: 0 2px;
   border-radius: 2px;
@@ -267,7 +267,7 @@
 
 .diff-display ins {
   background: rgba(90, 138, 90, 0.3);
-  color: var(--confident);
+  color: var(--confident-text);
   text-decoration: none;
   padding: 0 2px;
   border-radius: 2px;

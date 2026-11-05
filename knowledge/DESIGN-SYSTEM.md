@@ -63,7 +63,7 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 | Token | Value | Usage |
 |-------|-------|-------|
 | `--text-primary` | `#3d3229` | Body text (dark warm brown) |
-| `--text-secondary` | `#8a7e72` | Labels, hints (medium gray-brown) |
+| `--text-secondary` | `#6f6459` | Labels, hints (warm gray-brown, at least 4.8:1 on all light backgrounds) |
 
 #### Brand Colors (Logo/Identity)
 
@@ -91,6 +91,8 @@ Inspired by archival/manuscript aesthetic with warm tones. The cream backgrounds
 | `--confident` | `#5a8a5a` | Certain | Validation passed, high confidence (muted forest green) |
 | `--uncertain` | `#c4973a` | Review needed | Expert should check (warm amber) |
 | `--problematic` | `#b85c4a` | Likely error | Requires correction (muted terracotta) |
+
+The base tones serve dots, borders and fills. As text they fall below the 4.5:1 that WCAG 2.2 AA requires on the light backgrounds, so text uses darker variants: `--confident-text` (`#46704a`), `--uncertain-text` (`#7d5f17`) and `--problematic-text` (`#9e4a3a`). `docs/tests/contrast.test.js` checks every text token against every background token.
 
 **Legacy aliases:** `--success`, `--warning`, `--error` map to the confidence colors for backward compatibility.
 
