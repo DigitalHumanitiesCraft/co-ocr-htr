@@ -329,8 +329,10 @@ class ValidationEngine {
             return validationResult;
         } catch (error) {
             console.error('LLM validation error:', error);
+            // No verdict: a failed call is not evidence about the text, so it must
+            // not show up as "low confidence" next to real review results.
             return {
-                confidence: 'uncertain',
+                confidence: null,
                 reasoning: `Validation failed: ${error.message}`,
                 issues: [],
                 error: error.message

@@ -509,7 +509,11 @@ class ValidationPanel {
             this.hideLoading();
             this.render(resultsWithPrompt);
 
-            dialogManager.showToast(t('toast.validationComplete'), 'success');
+            if (results.llmJudge?.error) {
+                dialogManager.showToast(t('toast.validationFailed', { message: results.llmJudge.error }), 'error', 8000);
+            } else {
+                dialogManager.showToast(t('toast.validationComplete'), 'success');
+            }
 
         } catch (error) {
             console.error('Validation error:', error);
@@ -843,6 +847,16 @@ class ValidationPanel {
                 return `<p class="text-muted text-xs">${t('dynamic.configureLLMAlt')}</p>`;
             }
             return `<p class="text-muted text-xs">${t('dynamic.runValidationLLM')}</p>`;
+        }
+
+        if (llmResult.error) {
+            this.syncIssueApplyState(null);
+            return `
+            <div class="validation-item">
+                <span class="status-dot status-error"></span>
+                <span class="item-label">${t('dynamic.llmReviewFailed')}</span>
+            </div>
+            <p class="text-muted text-xs">${escapeHtml(llmResult.error)}</p>`;
         }
 
         const statusClass = {

@@ -342,13 +342,14 @@ describe('ValidationEngine', () => {
       expect(result.confidence).toBe('confident');
     });
 
-    it('should handle LLM errors gracefully', async () => {
+    it('should report a failed LLM call as an error without a confidence verdict', async () => {
       llmService.validate.mockRejectedValue(new Error('API Error'));
 
       const result = await engine.validateWithLLM('Test text', '');
 
-      expect(result.confidence).toBe('uncertain');
+      expect(result.confidence).toBeNull();
       expect(result.error).toBe('API Error');
+      expect(engine.calculateSummary([], result).status).toBe('success');
     });
   });
 
