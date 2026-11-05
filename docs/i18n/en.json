@@ -586,7 +586,6 @@
     "iiifPageCount": "{count} page{plural}",
     "tokens": "{count} Tokens",
     "reset": "Reset",
-    "batchPageProgress": "Page {current} of {total} ({percent}%)",
     "appliedAtLine": "Applied suggestion at line {applied}.",
     "appliedAtLineRemapped": "Applied suggestion at line {applied} (requested line {requested}).",
     "applyAllTitle": "Apply all suggestions with deterministic line matching",

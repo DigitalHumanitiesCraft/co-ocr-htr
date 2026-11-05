@@ -618,48 +618,6 @@ class TranscriptionManager {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    /**
-     * Show batch progress overlay
-     */
-    showBatchProgress(current, total, filename = '') {
-        const editorPanel = document.getElementById('editorContent');
-        if (!editorPanel) return;
-
-        let overlay = document.getElementById('editorLoadingOverlay');
-
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'editorLoadingOverlay';
-            overlay.className = 'editor-loading-overlay';
-            editorPanel.style.position = 'relative';
-            editorPanel.appendChild(overlay);
-        }
-
-        const percent = Math.round((current / total) * 100);
-
-        overlay.innerHTML = `
-            <div class="loading-content">
-                <div class="loading-spinner-large"></div>
-                <span>${t('dynamic.transcribing')}</span>
-                <span class="loading-hint">${t('dynamic.batchPageProgress', { current, total, percent })}</span>
-                ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
-                <div class="batch-progress-bar">
-                    <div class="batch-progress-fill" style="width: ${percent}%"></div>
-                </div>
-            </div>
-        `;
-        overlay.hidden = false;
-    }
-
-    /**
-     * Hide batch progress overlay
-     */
-    hideBatchProgress() {
-        const overlay = document.getElementById('editorLoadingOverlay');
-        if (overlay) {
-            overlay.hidden = true;
-        }
-    }
 }
 
 // Add spinner animation CSS

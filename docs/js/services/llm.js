@@ -1239,7 +1239,7 @@ class LLMService {
 
   async _callGemini(apiKey, model, prompt, imageBase64 = null, options = {}) {
     console.log(`[Gemini] API call model=${model} thinking=${options.useThinking || false} image=${imageBase64 ? 'yes' : 'no'}`);
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const parts = [{ text: prompt }];
     if (imageBase64) {
@@ -1283,7 +1283,7 @@ class LLMService {
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(requestBody),
       signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
     });
@@ -1313,7 +1313,7 @@ class LLMService {
    */
   async _callGeminiStream(apiKey, model, prompt, imageBase64 = null, options = {}) {
     console.log(`[Gemini] Stream call model=${model} thinking=${options.useThinking || false}`);
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`;
 
     const parts = [{ text: prompt }];
     if (imageBase64) {
@@ -1343,7 +1343,7 @@ class LLMService {
     const timeoutMs = options.timeoutMs || CLOUD_TIMEOUT_MS;
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(requestBody),
       signal: AbortSignal.timeout(timeoutMs)
     });

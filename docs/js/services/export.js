@@ -22,6 +22,17 @@ const XML_ILLEGAL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g;
  * Prefix a UTF-8 BOM so editors detect the encoding. JSON gets none, because
  * RFC 8259 forbids it and strict parsers (JSON.parse) reject the file.
  */
+/**
+ * Make transcription text safe inside a Markdown table cell. A literal "|"
+ * would split the cell, and "<" would let a Markdown renderer interpret
+ * markup from the source or the LLM answer as HTML.
+ */
+function markdownCell(value) {
+    return String(value ?? '')
+        .replace(/</g, '&lt;')
+        .replace(/\|/g, '\\|');
+}
+
 function withBom(content, format) {
     return format === 'json' ? content : '﻿' + content;
 }
@@ -382,9 +393,11 @@ class ExportService {
 
             // Add text content
             const text = this.escapeXml(segment.text || '');
-            const confidence = this.mapConfidenceToNumber(segment.confidence);
+            // PAGE-XML imports carry the source conf (or null). Keep it instead of
+            // re-deriving a number from the category, which changed or invented values.
+            const confidence = 'conf' in segment ? segment.conf : this.mapConfidenceToNumber(segment.confidence);
 
-            lines.push(`        <TextEquiv${confidence ? ` conf="${confidence}"` : ''}>`);
+            lines.push(`        <TextEquiv${confidence !== null && confidence !== undefined ? ` conf="${confidence}"` : ''}>`);
             lines.push(`          <Unicode>${text}</Unicode>`);
             lines.push('        </TextEquiv>');
             lines.push('      </TextLine>');
@@ -418,8 +431,9 @@ class ExportService {
                 text = text.replace(/\[([^\]]+)\]\?/g, '<unclear>$1</unclear>');
                 text = text.replace(/\[\?([^\]]+)\]/g, '<unclear>$1</unclear>');
 
-                // [?] alone -> <gap reason="illegible"/>
-                text = text.replace(/\[\?\]/g, '<gap reason="illegible"/>');
+                // [?] alone marks the adjacent reading as uncertain, which TEI encodes
+                // as <unclear>; <gap> stays reserved for text that was not transcribed
+                text = text.replace(/\[\?\]/g, '<unclear/>');
 
                 // [illegible] or [...] -> <gap reason="illegible"/>
                 text = text.replace(/\[illegible\]/gi, '<gap reason="illegible"/>');
@@ -596,7 +610,7 @@ ${bodyLines.join('\n')}
             } else {
                 cells = [idx + 1, seg.text || ''];
             }
-            lines.push(`| ${cells.join(' | ')} |`);
+            lines.push(`| ${cells.map(markdownCell).join(' | ')} |`);
         });
 
         return lines.join('\n');

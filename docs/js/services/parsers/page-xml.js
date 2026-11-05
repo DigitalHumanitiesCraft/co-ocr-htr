@@ -154,6 +154,11 @@ class PageXMLParser {
                 lineNumber: index + 1,
                 text,
                 confidence,
+                // Source confidence as written in the file, null when absent; the
+                // export writes it back unchanged
+                conf: conf !== null && conf !== undefined && conf !== '' && Number.isFinite(Number(conf))
+                    ? Number(conf)
+                    : null,
                 bounds,
                 polygon: points,
                 // No table fields: a TextLine is running text. Guessing columns from

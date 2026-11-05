@@ -586,7 +586,6 @@
     "iiifPageCount": "{count} Seite{plural}",
     "tokens": "{count} Token",
     "reset": "Zurücksetzen",
-    "batchPageProgress": "Seite {current} von {total} ({percent}%)",
     "appliedAtLine": "Vorschlag in Zeile {applied} angewendet.",
     "appliedAtLineRemapped": "Vorschlag in Zeile {applied} angewendet (angeforderte Zeile {requested}).",
     "applyAllTitle": "Alle Vorschläge mit deterministischer Zeilenzuordnung anwenden",

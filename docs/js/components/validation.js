@@ -697,48 +697,6 @@ class ValidationPanel {
     }
 
     /**
-     * Show batch progress overlay
-     */
-    showBatchProgress(current, total, filename = '') {
-        if (!this.panel) return;
-
-        let overlay = getById('validationBatchOverlay');
-
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'validationBatchOverlay';
-            overlay.className = 'validation-loading-overlay';
-            this.panel.style.position = 'relative';
-            this.panel.appendChild(overlay);
-        }
-
-        const percent = Math.round((current / total) * 100);
-
-        overlay.innerHTML = `
-            <div class="loading-content">
-                <div class="loading-spinner"></div>
-                <span>${t('dynamic.validating')}</span>
-                <span class="loading-hint">${t('dynamic.batchPageProgress', { current, total, percent })}</span>
-                ${filename ? `<span class="loading-hint">${filename}</span>` : ''}
-                <div class="batch-progress-bar">
-                    <div class="batch-progress-fill" style="width: ${percent}%"></div>
-                </div>
-            </div>
-        `;
-        overlay.hidden = false;
-    }
-
-    /**
-     * Hide batch progress overlay
-     */
-    hideBatchProgress() {
-        const overlay = getById('validationBatchOverlay');
-        if (overlay) {
-            overlay.hidden = true;
-        }
-    }
-
-    /**
      * Set validate button loading state
      */
     setButtonLoading(loading) {

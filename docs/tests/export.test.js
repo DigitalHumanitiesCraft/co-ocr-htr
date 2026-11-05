@@ -498,7 +498,7 @@ describe('ExportService', () => {
       expect(result.content).not.toContain('<angle>');
     });
 
-    it('should convert [?] marker to gap element', () => {
+    it('should convert the uncertainty marker [?] to unclear, keeping it apart from illegible gaps', () => {
       mockState.transcription.segments = [
         { text: 'Reading with [?] unclear part' }
       ];
@@ -506,8 +506,19 @@ describe('ExportService', () => {
 
       const result = service.export('tei');
 
-      expect(result.content).toContain('<gap reason="illegible"/>');
+      expect(result.content).toContain('<unclear/>');
+      expect(result.content).not.toContain('<gap');
       expect(result.content).not.toContain('[?]');
+    });
+
+    it('should keep pipes and markup inside a Markdown table cell', () => {
+      mockState.transcription.segments = [
+        { lineNumber: 1, text: 'a | b <img src=x onerror=alert(1)>' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      const row = service.export('md').content.split('\n').find(line => line.startsWith('| 1 |'));
+      expect(row).toBe('| 1 | a \\| b &lt;img src=x onerror=alert(1)> |');
     });
 
     it('should convert [word]? marker to unclear element', () => {

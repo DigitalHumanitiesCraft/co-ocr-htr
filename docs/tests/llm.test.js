@@ -587,6 +587,16 @@ describe('LLMService', () => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
 
+    it('should send the Gemini key in a header, never in the URL', async () => {
+      globalThis.fetch = vi.fn(async () =>
+        respond(200, JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Zeile' }] } }] })));
+
+      await service.transcribe('img');
+      const [url, init] = globalThis.fetch.mock.calls[0];
+      expect(url).not.toMatch(/key=/);
+      expect(init.headers['x-goog-api-key']).toBe('test-key');
+    });
+
     it('should report an HTML error page by status, not as a JSON parser error', async () => {
       globalThis.fetch = vi.fn(async () => respond(500, '<html><body>Server Error</body></html>'));
 

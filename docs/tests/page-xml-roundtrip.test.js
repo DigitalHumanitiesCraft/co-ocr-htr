@@ -58,6 +58,21 @@ describe('PAGE-XML lines containing a pipe', () => {
   });
 });
 
+describe('PAGE-XML confidence round trip', () => {
+  it('should write back the source conf and invent none for lines without it', () => {
+    const xml = SOURCE_XML
+      .replace('<TextEquiv><Unicode>Lieber Freund', '<TextEquiv conf="0.93"><Unicode>Lieber Freund');
+    const parser = new PageXMLParser();
+    const imported = parser.parse(xml);
+    appState.setDocument({ name: 'brief.jpg', type: 'image/jpeg' }, '');
+    appState.setTranscription({ provider: 'page-xml', model: 'import', segments: imported.segments });
+
+    const exported = new ExportService().exportPageXml(appState.getState());
+    expect(exported).toContain('<TextEquiv conf="0.93">');
+    expect(exported.match(/conf="/g)).toHaveLength(1);
+  });
+});
+
 describe('PAGE-XML round trip with a line inserted in the editor', () => {
   it('should keep each text line on its own original polygon and invent none for the new line', () => {
     const parser = new PageXMLParser();

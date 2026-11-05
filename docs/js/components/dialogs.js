@@ -1434,8 +1434,9 @@ class DialogManager {
 
         try {
             if (provider === 'gemini') {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=1`;
-                const res = await fetch(url, { signal: timeout });
+                const url = `https://generativelanguage.googleapis.com/v1beta/models?pageSize=1`;
+                // Key in a header: a query parameter ends up in proxy and history logs
+                const res = await fetch(url, { signal: timeout, headers: { 'x-goog-api-key': apiKey } });
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error?.message || `HTTP ${res.status}`);
