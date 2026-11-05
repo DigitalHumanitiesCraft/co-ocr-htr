@@ -290,6 +290,60 @@ describe('ExportService', () => {
       expect(service.escapeXml("it's")).toBe("it&apos;s");
     });
 
+    it('should drop characters XML 1.0 forbids', () => {
+      expect(service.escapeXml('a\u000Bb\u0000c\u0007d')).toBe('abcd');
+      // Tab, newline and carriage return are legal and stay
+      expect(service.escapeXml('a\tb\nc\rd')).toBe('a\tb\nc\rd');
+    });
+
+    it('should keep PAGE-XML well-formed when a line holds control characters', () => {
+      mockState.transcription.segments = [
+        { lineNumber: 1, text: 'vertical\u000Btab', confidence: 'certain' }
+      ];
+      appState.getState.mockReturnValue(mockState);
+
+      for (const format of ['xml', 'tei']) {
+        const { content } = service.export(format);
+        const doc = new DOMParser().parseFromString(content, 'application/xml');
+        expect(doc.getElementsByTagName('parsererror').length).toBe(0);
+      }
+    });
+  });
+
+  describe('download', () => {
+    let captured;
+    // jsdom's Blob has no text()/arrayBuffer(), FileReader works
+    const read = (blob, method) => new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader[method](blob);
+    });
+
+    beforeEach(() => {
+      captured = null;
+      globalThis.URL.createObjectURL = vi.fn(blob => { captured = blob; return 'blob:test'; });
+      globalThis.URL.revokeObjectURL = vi.fn();
+    });
+
+    it('should pass a binary Blob through unchanged (ZIP export)', async () => {
+      const zip = new Blob(['PK\u0003\u0004zipbytes'], { type: 'application/zip' });
+      service.download(zip, 'pages.zip', 'application/zip');
+      expect(await read(captured, 'readAsText')).toBe('PK\u0003\u0004zipbytes');
+    });
+
+    it('should write JSON without BOM so JSON.parse accepts it', async () => {
+      service.download('{"a":1}', 'x.json', 'application/json');
+      const bytes = new Uint8Array(await read(captured, 'readAsArrayBuffer'));
+      // readAsText would silently strip a BOM, so check the raw bytes
+      expect(JSON.parse(new TextDecoder('utf-8', { ignoreBOM: true }).decode(bytes))).toEqual({ a: 1 });
+    });
+
+    it('should prefix text formats with a UTF-8 BOM', async () => {
+      service.download('Zeile', 'x.txt', 'text/plain');
+      const bytes = new Uint8Array(await read(captured, 'readAsArrayBuffer'));
+      expect([...bytes.slice(0, 3)]).toEqual([0xEF, 0xBB, 0xBF]);
+    });
+
     it('should handle empty/null input', () => {
       expect(service.escapeXml('')).toBe('');
       expect(service.escapeXml(null)).toBe('');

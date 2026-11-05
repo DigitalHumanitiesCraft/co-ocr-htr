@@ -156,8 +156,10 @@ class PageXMLParser {
                 confidence,
                 bounds,
                 polygon: points,
-                baseline: baselinePoints,
-                fields: this.parseTextToFields(text)
+                // No table fields: a TextLine is running text. Guessing columns from
+                // "|" or tabs turned diplomatic line separators into table cells and
+                // froze the line text against later editor edits.
+                baseline: baselinePoints
             });
         });
 
@@ -302,41 +304,6 @@ class PageXMLParser {
         return 'uncertain';
     }
 
-    /**
-     * Parse text into structured fields (for table-like data)
-     * @param {string} text - Line text
-     * @returns {object} Parsed fields
-     */
-    parseTextToFields(text) {
-        // Try to detect table structure (pipe-separated)
-        if (text.includes('|')) {
-            const cells = text.split('|').map(c => c.trim()).filter(c => c);
-            const fields = {};
-            const commonColumns = ['datum', 'name', 'beschreibung', 'betrag'];
-
-            cells.forEach((cell, index) => {
-                const key = commonColumns[index] || `col${index + 1}`;
-                fields[key] = cell;
-            });
-
-            return fields;
-        }
-
-        // Try to detect tab-separated
-        if (text.includes('\t')) {
-            const cells = text.split('\t').map(c => c.trim());
-            const fields = {};
-
-            cells.forEach((cell, index) => {
-                fields[`col${index + 1}`] = cell;
-            });
-
-            return fields;
-        }
-
-        // Single text field
-        return { text };
-    }
 
     /**
      * Find element handling namespaces

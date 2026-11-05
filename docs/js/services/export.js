@@ -13,6 +13,19 @@ import { appState } from '../state.js';
 import { alignLines } from '../utils/lineAlign.js';
 import { URL_REVOKE_DELAY } from '../utils/constants.js';
 
+// Characters XML 1.0 forbids outright. LLM output can contain them, and a single
+// one makes the whole PAGE-XML or TEI file unparseable.
+// eslint-disable-next-line no-control-regex -- matching control characters is the point
+const XML_ILLEGAL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g;
+
+/**
+ * Prefix a UTF-8 BOM so editors detect the encoding. JSON gets none, because
+ * RFC 8259 forbids it and strict parsers (JSON.parse) reject the file.
+ */
+function withBom(content, format) {
+    return format === 'json' ? content : '﻿' + content;
+}
+
 /**
  * Export Service
  */
@@ -478,7 +491,8 @@ ${bodyLines.join('\n')}
      */
     escapeXml(text) {
         if (!text) return '';
-        return text
+        return String(text)
+            .replace(XML_ILLEGAL_CHARS, '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -608,9 +622,12 @@ ${bodyLines.join('\n')}
         // Ensure UTF-8 encoding for text formats
         const isText = mimeType.startsWith('text/') || mimeType.includes('xml') || mimeType.includes('json');
         const charset = isText ? '; charset=utf-8' : '';
-        // Prepend UTF-8 BOM so editors/tools detect encoding correctly (XML spec allows BOM before <?xml)
-        const bom = isText && typeof content === 'string' ? '\uFEFF' : '';
-        const blob = new Blob([bom + content], { type: mimeType + charset });
+        // A Blob (the ZIP archive) is passed through untouched: concatenating it
+        // with a string would turn it into the text "[object Blob]".
+        const part = isText && typeof content === 'string'
+            ? withBom(content, mimeType.includes('json') ? 'json' : 'text')
+            : content;
+        const blob = new Blob([part], { type: mimeType + charset });
         const url = URL.createObjectURL(blob);
 
         const link = document.createElement('a');
@@ -717,8 +734,7 @@ ${bodyLines.join('\n')}
             const extension = this._getExtension(format);
             const filename = `${page.filename?.replace(/\.[^.]+$/, '') || `page_${i + 1}`}.${extension}`;
 
-            // Prepend UTF-8 BOM so editors detect encoding correctly
-            folder.file(filename, '\uFEFF' + content);
+            folder.file(filename, withBom(content, format));
             exportedCount++;
         }
 

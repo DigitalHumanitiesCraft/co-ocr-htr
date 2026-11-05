@@ -40,6 +40,24 @@ const SOURCE_XML = `<?xml version="1.0" encoding="UTF-8"?>
   </Page>
 </PcGts>`;
 
+describe('PAGE-XML lines containing a pipe', () => {
+  it('should export the line text unchanged instead of splitting it into table cells', () => {
+    const xml = SOURCE_XML.replace('ich schreibe Dir heute', 'ich schreibe | Dir heute');
+    const imported = new PageXMLParser().parse(xml);
+    appState.setDocument({ name: 'brief.jpg', type: 'image/jpeg' }, '');
+    appState.setTranscription({ provider: 'page-xml', model: 'import', segments: imported.segments });
+
+    const service = new ExportService();
+    const state = appState.getState();
+    expect(service.exportTxt(state).split('\n')).toEqual(
+      ['Lieber Freund', 'ich schreibe | Dir heute', 'aus Baltimore']
+    );
+    const md = service.exportMarkdown(state, false);
+    expect(md).toContain('Lieber Freund');
+    expect(md).toContain('aus Baltimore');
+  });
+});
+
 describe('PAGE-XML round trip with a line inserted in the editor', () => {
   it('should keep each text line on its own original polygon and invent none for the new line', () => {
     const parser = new PageXMLParser();

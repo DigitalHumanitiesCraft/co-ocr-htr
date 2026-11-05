@@ -192,30 +192,6 @@ describe('PageXMLParser', () => {
     });
   });
 
-  describe('parseTextToFields', () => {
-    it('should parse pipe-separated text', () => {
-      const fields = parser.parseTextToFields('28. Mai | K. Schmidt | Eisenwaren | 23 Taler');
-
-      expect(fields.datum).toBe('28. Mai');
-      expect(fields.name).toBe('K. Schmidt');
-      expect(fields.beschreibung).toBe('Eisenwaren');
-      expect(fields.betrag).toBe('23 Taler');
-    });
-
-    it('should handle tab-separated text', () => {
-      const fields = parser.parseTextToFields('value1\tvalue2\tvalue3');
-
-      expect(fields.col1).toBe('value1');
-      expect(fields.col2).toBe('value2');
-      expect(fields.col3).toBe('value3');
-    });
-
-    it('should handle plain text', () => {
-      const fields = parser.parseTextToFields('Just some plain text');
-
-      expect(fields.text).toBe('Just some plain text');
-    });
-  });
 
   describe('regions extraction', () => {
     it('should extract text regions', () => {
