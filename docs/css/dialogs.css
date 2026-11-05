@@ -1271,8 +1271,23 @@ dialog[open] {
   cursor: pointer;
 }
 
+/* Visually hidden but focusable: display:none took the radios out of the tab
+   order, so keyboard users could only export the preselected TXT format. */
+.export-format-option {
+  position: relative;
+}
+
 .export-format-option input[type="radio"] {
-  display: none;
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+
+.export-format-option input:focus-visible + .format-card {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 .format-card {

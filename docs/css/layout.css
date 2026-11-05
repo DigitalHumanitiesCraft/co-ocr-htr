@@ -632,13 +632,16 @@ body.panel-resizing .panel-resize-handle {
    ========================================================================== */
 
 @media (max-width: 1200px) {
+  /* Validation moves to a full-width row below viewer and editor. Hiding it
+     removed the Validate step on beamers and small laptops. */
   .app-container {
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: 56px minmax(0, 3fr) minmax(0, 2fr) 36px;
   }
 
-  /* Hide validation panel on smaller screens */
-  .panel:nth-child(4) {
-    display: none;
+  .app-container > .panel-col-3 {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 
   /* Hide resize handles in 2-column mode */
