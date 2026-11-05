@@ -120,6 +120,11 @@ class I18nService extends EventTarget {
      *   data-i18n-aria="key"      -> aria-label attribute
      */
     translateDOM(root = document) {
+        // Screen readers and hyphenation follow <html lang>, which stayed "en"
+        if (root === document) {
+            document.documentElement.lang = this._lang;
+        }
+
         // textContent
         root.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');

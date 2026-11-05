@@ -47,3 +47,36 @@ export function alignLines(oldLines, newLines) {
   closeGap(n, m);
   return origin;
 }
+
+/**
+ * Line diff for display: aligned rows of unchanged, modified, added and deleted
+ * lines. Built on alignLines, so one inserted line does not mark every later
+ * line as changed, as a position-by-position comparison did.
+ * @param {string[]} oldLines
+ * @param {string[]} newLines
+ * @returns {{type: 'same'|'modified'|'added'|'deleted', oldText: string, newText: string, line: number}[]}
+ */
+export function diffLines(oldLines, newLines) {
+  const origin = alignLines(oldLines, newLines);
+  const rows = [];
+  let next = 0;
+  newLines.forEach((newText, j) => {
+    const from = origin[j];
+    if (from < 0) {
+      rows.push({ type: 'added', oldText: '', newText, line: j + 1 });
+      return;
+    }
+    while (next < from) {
+      rows.push({ type: 'deleted', oldText: oldLines[next], newText: '', line: next + 1 });
+      next++;
+    }
+    const type = oldLines[from] === newText ? 'same' : 'modified';
+    rows.push({ type, oldText: oldLines[from], newText, line: j + 1 });
+    next = from + 1;
+  });
+  while (next < oldLines.length) {
+    rows.push({ type: 'deleted', oldText: oldLines[next], newText: '', line: next + 1 });
+    next++;
+  }
+  return rows;
+}

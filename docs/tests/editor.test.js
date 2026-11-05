@@ -15,6 +15,11 @@ vi.mock('../js/state.js', () => ({
   }
 }));
 
+// Echo the count so change statistics can be read without dictionaries
+vi.mock('../js/services/i18n.js', () => ({
+  t: (key, params) => (params && 'count' in params ? `${params.count} ${key}` : key)
+}));
+
 import { appState } from '../js/state.js';
 import { applySuggestionAtLine, initEditor } from '../js/editor.js';
 
@@ -141,5 +146,62 @@ describe('Editor applySuggestionAtLine', () => {
       'prima linea\ntertia linea',
       { syncSegments: true }
     );
+  });
+});
+
+describe('Editor undo/redo shortcuts', () => {
+  const press = (target, init) =>
+    target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ctrlKey: true, ...init }));
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockState.transcription.raw = 'prima linea\nsecunda linea';
+    document.body.innerHTML = `
+      <button id="btnUndo" disabled>Undo</button>
+      <button id="btnRedo" disabled>Redo</button>
+      <div id="editorContent"></div>
+      <textarea id="otherField"></textarea>
+    `;
+    initEditor();
+    applySuggestionAtLine({ line: 2, sourceText: 'secunda', suggestion: 'secvnda' });
+  });
+
+  it('redoes with Ctrl+Shift+Z, where the browser reports the key as "Z"', () => {
+    const editor = document.getElementById('transcriptionText');
+    press(editor, { key: 'z' });
+    expect(editor.value).toBe('prima linea\nsecunda linea');
+
+    press(editor, { key: 'Z', shiftKey: true });
+    expect(editor.value).toBe('prima linea\nsecvnda linea');
+  });
+
+  it('leaves Ctrl+Z in other text fields to the field itself', () => {
+    const other = document.getElementById('otherField');
+    const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ctrlKey: true, key: 'z' });
+    other.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.getElementById('transcriptionText').value).toBe('prima linea\nsecvnda linea');
+  });
+});
+
+describe('Editor change statistics', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockState.transcription.raw = 'prima linea\nsecunda linea\ntertia linea';
+    document.body.innerHTML = `
+      <button id="btnUndo" disabled>Undo</button>
+      <button id="btnRedo" disabled>Redo</button>
+      <div id="editorContent"></div>
+    `;
+    initEditor();
+  });
+
+  it('should count one inserted line as one change, not every following line', () => {
+    const editor = document.getElementById('transcriptionText');
+    editor.value = 'nova linea\n' + editor.value;
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(document.getElementById('changeStats').textContent).toMatch(/^1\b/);
   });
 });

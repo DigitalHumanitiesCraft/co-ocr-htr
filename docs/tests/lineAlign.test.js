@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { alignLines } from '../js/utils/lineAlign.js';
+import { alignLines, diffLines } from '../js/utils/lineAlign.js';
 
 describe('alignLines', () => {
   it('should map unchanged lines to themselves', () => {
@@ -29,5 +29,16 @@ describe('alignLines', () => {
   it('should handle empty inputs', () => {
     expect(alignLines([], ['a'])).toEqual([-1]);
     expect(alignLines(['a'], [])).toEqual([]);
+  });
+});
+
+describe('diffLines', () => {
+  it('should report an inserted line as added and keep later lines unchanged', () => {
+    expect(diffLines(['a', 'b'], ['x', 'a', 'b']).map(r => r.type)).toEqual(['added', 'same', 'same']);
+  });
+
+  it('should report a removed line as deleted and an edited line as modified', () => {
+    expect(diffLines(['a', 'b', 'c'], ['a', 'c']).map(r => r.type)).toEqual(['same', 'deleted', 'same']);
+    expect(diffLines(['a', 'b', 'c'], ['a', 'B', 'c']).map(r => r.type)).toEqual(['same', 'modified', 'same']);
   });
 });

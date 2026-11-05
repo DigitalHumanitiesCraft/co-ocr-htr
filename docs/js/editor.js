@@ -8,6 +8,7 @@
 import { appState } from './state.js';
 import { getById } from './utils/dom.js';
 import { escapeHtml } from './utils/textFormatting.js';
+import { diffLines } from './utils/lineAlign.js';
 import { t } from './services/i18n.js';
 
 // History for undo/redo
@@ -552,13 +553,20 @@ function updateUndoRedoButtons() {
 }
 
 function handleKeyDown(e) {
-    // Ctrl+Z = Undo
-    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+    // Other text fields (prompts, settings) keep their native undo
+    const target = e.target;
+    const inOtherField = target && target !== textarea &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+    if (inOtherField) return;
+
+    const mod = e.ctrlKey || e.metaKey;
+    // With Shift held, e.key is "Z", so compare case-insensitively
+    const key = e.key?.toLowerCase();
+
+    if (mod && key === 'z' && !e.shiftKey) {
         e.preventDefault();
         undo();
-    }
-    // Ctrl+Shift+Z or Ctrl+Y = Redo
-    if ((e.ctrlKey && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+    } else if (mod && ((e.shiftKey && key === 'z') || key === 'y')) {
         e.preventDefault();
         redo();
     }
@@ -584,17 +592,8 @@ function updateChangeStats() {
         return;
     }
 
-    // Simple line-based diff count
-    const origLines = originalText.split('\n');
-    const currLines = currentText.split('\n');
-    let changes = 0;
-
-    const maxLen = Math.max(origLines.length, currLines.length);
-    for (let i = 0; i < maxLen; i++) {
-        if (origLines[i] !== currLines[i]) {
-            changes++;
-        }
-    }
+    const changes = diffLines(originalText.split('\n'), currentText.split('\n'))
+        .filter(row => row.type !== 'same').length;
 
     statsEl.textContent = t('dynamic.linesChanged', { count: changes, plural: changes !== 1 ? 's' : '' });
     statsEl.className = 'change-stats has-changes';
@@ -618,29 +617,19 @@ function updateDiffDisplay(normalized = false) {
     diffDisplay.classList.toggle('normalized', normalized);
 
     let html = '';
-    const maxLen = Math.max(origLines.length, currLines.length);
-
-    for (let i = 0; i < maxLen; i++) {
-        const origLine = origLines[i] ?? '';
-        const currLine = currLines[i] ?? '';
-
+    for (const row of diffLines(origLines, currLines)) {
         // Normalize if requested (trim leading whitespace)
-        const displayOrig = normalized ? origLine.trimStart() : origLine;
-        const displayCurr = normalized ? currLine.trimStart() : currLine;
+        const displayOrig = normalized ? row.oldText.trimStart() : row.oldText;
+        const displayCurr = normalized ? row.newText.trimStart() : row.newText;
+        const lineNum = `<span class="diff-line-number">${row.line}</span>`;
 
-        const lineNum = `<span class="diff-line-number">${i + 1}</span>`;
-
-        if (origLine === currLine) {
-            // Unchanged line
+        if (row.type === 'same') {
             html += `<div class="diff-line">${lineNum}${escapeHtml(displayCurr) || '&nbsp;'}</div>`;
-        } else if (i >= origLines.length) {
-            // Added line
+        } else if (row.type === 'added') {
             html += `<div class="diff-line diff-added">${lineNum}${escapeHtml(displayCurr) || '&nbsp;'}</div>`;
-        } else if (i >= currLines.length) {
-            // Deleted line
+        } else if (row.type === 'deleted') {
             html += `<div class="diff-line diff-deleted">${lineNum}${escapeHtml(displayOrig) || '&nbsp;'}</div>`;
         } else {
-            // Modified line - show word-level diff
             html += `<div class="diff-line diff-modified">${lineNum}${renderWordDiff(displayOrig, displayCurr)}</div>`;
         }
     }

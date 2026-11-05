@@ -1709,7 +1709,9 @@ class DialogManager {
     /**
      * Show toast notification
      */
-    showToast(message, type = 'info', duration = 3000) {
+    showToast(message, type = 'info', duration) {
+        // Errors and warnings need time to be read and acted on
+        duration ??= (type === 'error' || type === 'warning') ? 8000 : 3000;
         if (!this.toastContainer) {
             this.toastContainer = document.getElementById('toastContainer');
             if (!this.toastContainer) {
