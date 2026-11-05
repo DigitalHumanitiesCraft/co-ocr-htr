@@ -185,6 +185,9 @@ async function initApp() {
                 includeMetadata
             });
             dialogManager.showToast(t('toast.exportedAs', { filename: result.filename }), 'success');
+            if (format === 'xml' || format === 'pagexml') {
+                warnMissingGeometry();
+            }
             updateWorkflowStep(5, 'completed');
         } catch (error) {
             console.error('Export error:', error);
@@ -1251,6 +1254,21 @@ function initGuidedWorkflow() {
 /**
  * Update workflow step state
  */
+/**
+ * After a PAGE-XML export, name the lines written without Coords. The export
+ * invents no geometry, so such a file is not schema-valid and tools like
+ * Transkribus may reject it.
+ */
+function warnMissingGeometry() {
+    const lines = exportService.linesWithoutGeometry();
+    if (lines.length === 0) return;
+    const total = appState.getState().transcription.segments?.length || lines.length;
+    const message = lines.length >= total
+        ? t('toast.pageXmlNoGeometry')
+        : t('toast.pageXmlMissingGeometry', { count: lines.length, lines: lines.join(', ') });
+    dialogManager.showToast(message, 'warning', 12000);
+}
+
 function updateWorkflowStep(stepNum, state) {
     const step = document.querySelector(`.workflow-step[data-step="${stepNum}"]`);
     if (!step) return;

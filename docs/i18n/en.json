@@ -402,6 +402,8 @@
     "ocrOnlyFallback": "OCR-only model, validation via {provider}",
     "configSaved": "Configuration saved",
     "exportedAs": "Exported as {filename}",
+    "pageXmlNoGeometry": "No line has coordinates, so the PAGE-XML lacks the Coords the schema requires. Tools such as Transkribus may reject it.",
+    "pageXmlMissingGeometry": { "one": "Line {lines} has no coordinates and was written without Coords, which the PAGE schema requires.", "other": "{count} lines ({lines}) have no coordinates and were written without Coords, which the PAGE schema requires." },
     "exportedPages": "Exported {count} pages as {filename}",
     "exportFailed": "Export failed: {message}",
     "loadedFile": "Loaded: {name}",

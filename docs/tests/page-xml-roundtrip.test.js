@@ -58,6 +58,17 @@ describe('PAGE-XML lines containing a pipe', () => {
   });
 });
 
+describe('PAGE-XML lines without geometry', () => {
+  it('should name the inserted line that will be exported without Coords', () => {
+    const imported = new PageXMLParser().parse(SOURCE_XML);
+    appState.setDocument({ name: 'brief.jpg', type: 'image/jpeg' }, '');
+    appState.setTranscription({ provider: 'page-xml', model: 'import', segments: imported.segments });
+    appState.setTranscriptionRaw('Lieber Freund\n[neu]\nich schreibe Dir heute\naus Baltimore', { syncSegments: true });
+
+    expect(new ExportService().linesWithoutGeometry(appState.getState())).toEqual([2]);
+  });
+});
+
 describe('PAGE-XML confidence round trip', () => {
   it('should write back the source conf and invent none for lines without it', () => {
     const xml = SOURCE_XML

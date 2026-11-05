@@ -61,6 +61,19 @@ class ExportService {
     }
 
     /**
+     * Line numbers that have no source geometry. The PAGE-XML export writes
+     * them without Coords, which the PAGE schema requires for TextLine, so the
+     * caller warns instead of the export inventing a position.
+     * @param {object} [state] - App state, defaults to the current state
+     * @returns {number[]}
+     */
+    linesWithoutGeometry(state = appState.getState()) {
+        return this.getConsistentSegments(state.transcription)
+            .map((seg, index) => (seg.polygon ? null : seg.lineNumber || index + 1))
+            .filter(line => line !== null);
+    }
+
+    /**
      * Export transcription in specified format
      * @param {string} format - Export format (txt, json, md)
      * @param {object} options - Export options

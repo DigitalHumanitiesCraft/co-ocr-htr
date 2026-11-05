@@ -402,6 +402,8 @@
     "ocrOnlyFallback": "Nur-OCR-Modell, Validierung über {provider}",
     "configSaved": "Konfiguration gespeichert",
     "exportedAs": "Exportiert als {filename}",
+    "pageXmlNoGeometry": "Keine Zeile hat Koordinaten, daher fehlen dem PAGE-XML die vom Schema verlangten Coords. Werkzeuge wie Transkribus lehnen die Datei womöglich ab.",
+    "pageXmlMissingGeometry": { "one": "Zeile {lines} hat keine Koordinaten und wurde ohne Coords geschrieben, die das PAGE-Schema verlangt.", "other": "{count} Zeilen ({lines}) haben keine Koordinaten und wurden ohne Coords geschrieben, die das PAGE-Schema verlangt." },
     "exportedPages": "{count} Seiten als {filename} exportiert",
     "exportFailed": "Export fehlgeschlagen: {message}",
     "loadedFile": "Geladen: {name}",
