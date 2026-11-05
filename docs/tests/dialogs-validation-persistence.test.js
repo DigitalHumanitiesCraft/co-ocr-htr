@@ -103,7 +103,13 @@ describe('Dialog validation key persistence regressions', () => {
 
     expect(llmService.setValidationProvider).toHaveBeenCalledWith('gemini', 'gemini-3-flash-preview');
     expect(llmService.setValidationApiKey).not.toHaveBeenCalled();
-    expect(storage.deleteApiKey).toHaveBeenCalledTimes(1);
     expect(storage.deleteApiKey).toHaveBeenCalledWith('gemini', true);
+  });
+
+  it('deletes the persisted transcription key when persist is unchecked', async () => {
+    await dialogManager.saveApiKeysWithValidation();
+
+    expect(storage.deleteApiKey).toHaveBeenCalledWith('mistral', false);
+    expect(storage.saveApiKey).not.toHaveBeenCalled();
   });
 });

@@ -1292,6 +1292,16 @@ class DialogManager {
             }
         }
 
+        // Unchecking "store persistently" must remove a key stored earlier, even
+        // when the field is left empty; otherwise it reloads on the next visit.
+        if (provider !== 'ollama' && !persistCheckbox?.checked) {
+            try {
+                await storage.deleteApiKey(provider, false);
+            } catch (err) {
+                console.warn('[Dialogs] Failed to delete persisted API key:', err);
+            }
+        }
+
         // Save Ollama endpoint
         if (provider === 'ollama' && endpointInput?.value) {
             settings.ollamaEndpoint = endpointInput.value;

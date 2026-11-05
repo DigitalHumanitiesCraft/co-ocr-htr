@@ -128,8 +128,8 @@
     "llmConfig": {
       "title": "LLM Configuration",
       "securityTitle": "Security Notice:",
-      "securityList1": "API Keys are not stored - entry required on each visit",
-      "securityList2": "Keys remain only in browser memory while the tab is open",
+      "securityList1": "By default API keys are not stored and must be entered on each visit",
+      "securityList2": "With “Store persistently” the key is kept unencrypted in this browser (IndexedDB) until you untick it",
       "securityList3": "Never share your API Keys with others",
       "securityList4": "For maximum security: Use Ollama locally (no API key needed)",
       "learnMore": "Learn more",
@@ -567,6 +567,7 @@
     "highConfidence": "High confidence",
     "mediumConfidence": "Medium confidence",
     "lowConfidence": "Low confidence",
+    "llmReviewFailed": "LLM review failed, no verdict",
     "unknown": "Unknown",
     "pipeline": "Pipeline",
     "paleographic": "Paleographic",

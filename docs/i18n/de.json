@@ -128,8 +128,8 @@
     "llmConfig": {
       "title": "LLM-Konfiguration",
       "securityTitle": "Sicherheitshinweis:",
-      "securityList1": "API-Schlüssel werden nicht gespeichert - Eingabe bei jedem Besuch erforderlich",
-      "securityList2": "Schlüssel verbleiben nur im Browserspeicher, solange der Tab geöffnet ist",
+      "securityList1": "Standardmäßig werden API-Schlüssel nicht gespeichert und müssen bei jedem Besuch eingegeben werden",
+      "securityList2": "Mit „Dauerhaft speichern“ bleibt der Schlüssel unverschlüsselt in diesem Browser (IndexedDB), bis Sie das Häkchen entfernen",
       "securityList3": "Geben Sie Ihre API-Schlüssel niemals an andere weiter",
       "securityList4": "Für maximale Sicherheit: Verwenden Sie Ollama lokal (kein API-Schlüssel nötig)",
       "learnMore": "Mehr erfahren",
@@ -567,6 +567,7 @@
     "highConfidence": "Hohe Konfidenz",
     "mediumConfidence": "Mittlere Konfidenz",
     "lowConfidence": "Niedrige Konfidenz",
+    "llmReviewFailed": "LLM-Prüfung fehlgeschlagen, kein Urteil",
     "unknown": "Unbekannt",
     "pipeline": "Pipeline",
     "paleographic": "Paläographisch",
