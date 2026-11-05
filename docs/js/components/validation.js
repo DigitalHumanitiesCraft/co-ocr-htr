@@ -283,7 +283,12 @@ class ValidationPanel {
         if (hasApiKey) {
             llmModeHint.textContent = t('dynamic.apiCallPerPage');
             if (llmModeItem) llmModeItem.classList.remove('disabled');
-            if (enableLLMCheckbox) enableLLMCheckbox.disabled = false;
+            if (enableLLMCheckbox?.disabled) {
+                // It was unchecked only because no key existed; restore the default,
+                // otherwise the next run silently skips the LLM review
+                enableLLMCheckbox.disabled = false;
+                enableLLMCheckbox.checked = true;
+            }
             if (customPromptDetails) customPromptDetails.style.display = '';
         } else {
             llmModeHint.textContent = t('dynamic.apiKeyRequiredShort');

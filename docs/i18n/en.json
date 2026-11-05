@@ -1,4 +1,7 @@
 {
+  "a11y": {
+    "skipToContent": "Skip to main content"
+  },
   "app": {
     "title": "coOCR/HTR Workbench",
     "demo": "DEMO",
@@ -119,7 +122,8 @@
   },
   "status": {
     "model": "Model:",
-    "apiConnected": "API Connected"
+    "apiConnected": "API Connected",
+    "apiNotConfigured": "No API key configured"
   },
   "dialog": {
     "close": "Close",

@@ -146,6 +146,9 @@ async function initApp() {
         }
     }
 
+    // Dialogs initialized on import, before keys and model were restored above
+    dialogManager.updateModelIndicatorWithValidation();
+
     // Initialize UI components
     initViewer();
     initEditor();

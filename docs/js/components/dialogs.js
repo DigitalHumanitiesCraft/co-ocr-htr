@@ -163,6 +163,13 @@ class DialogManager {
         const modelIndicator = getById('modelIndicator');
         if (modelIndicator) {
             modelIndicator.addEventListener('click', () => this.openDialog('apiKey'));
+            // role="button" on a span: Enter and Space must act like a click
+            modelIndicator.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.openDialog('apiKey');
+                }
+            });
         }
 
         // Export button
@@ -1412,6 +1419,20 @@ class DialogManager {
 
         textEl.textContent = displayName;
         indicator.title = t('dynamic.llmConfig');
+
+        // Status bar mirrors the configuration; its dot was static green
+        // and claimed a connection before any key existed
+        const statusModel = document.querySelector('#statusProvider .model-name');
+        if (statusModel) statusModel.textContent = displayName;
+        const statusDot = getById('statusIndicator');
+        if (statusDot) {
+            const ready = provider === 'ollama' || llmService.hasApiKey();
+            statusDot.classList.toggle('status-confident', ready);
+            statusDot.classList.toggle('status-uncertain', !ready);
+            const key = ready ? 'status.apiConnected' : 'status.apiNotConfigured';
+            statusDot.dataset.i18nTitle = key;
+            statusDot.title = t(key);
+        }
     }
 
     /**

@@ -97,9 +97,9 @@
     </div>
 
     <!-- Skip Link for Accessibility -->
-    <a href="#editor-panel" class="skip-link">Skip to main content</a>
+    <a href="#main-content" class="skip-link" data-i18n="a11y.skipToContent">Skip to main content</a>
 
-    <main class="app-container" id="main-content">
+    <main class="app-container" id="main-content" tabindex="-1">
 
         <!-- HEADER -->
         <header class="app-header glass">
@@ -352,7 +352,7 @@
                     </div>
                 </span>
                 <div class="flex-center gap-1 ml-auto">
-                    <span class="model-indicator" id="modelIndicator" title="LLM Configuration">
+                    <span class="model-indicator" id="modelIndicator" title="LLM Configuration" role="button" tabindex="0">
                         <span class="model-indicator-label">LLM</span>
                         <span class="model-indicator-sep">|</span>
                         <span class="model-indicator-text" id="modelIndicatorText">Gemini Flash</span>
@@ -564,10 +564,10 @@
 
         <!-- PANEL RESIZE HANDLES (positioned absolutely between panels) -->
         <div class="panel-resize-handle" role="separator" aria-orientation="vertical"
-             aria-label="Resize panels" tabindex="0"
+             aria-label="Resize panels" aria-valuemin="0" aria-valuemax="100" tabindex="0"
              data-left-col="1" data-right-col="2"></div>
         <div class="panel-resize-handle" role="separator" aria-orientation="vertical"
-             aria-label="Resize panels" tabindex="0"
+             aria-label="Resize panels" aria-valuemin="0" aria-valuemax="100" tabindex="0"
              data-left-col="2" data-right-col="3"></div>
 
         <!-- STATUS BAR -->
@@ -1085,9 +1085,9 @@
             <!-- LLM Review -->
             <div class="validate-options-section" id="llmModeItem">
                 <div class="validate-section-header">
-                    <h4 class="validate-section-title" data-i18n="validation.llmReviewTitle">LLM Review</h4>
+                    <h4 class="validate-section-title" id="enableLLMLabel" data-i18n="validation.llmReviewTitle">LLM Review</h4>
                     <label class="validate-toggle">
-                        <input type="checkbox" id="enableLLM" checked>
+                        <input type="checkbox" id="enableLLM" checked aria-labelledby="enableLLMLabel">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>

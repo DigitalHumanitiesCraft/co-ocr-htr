@@ -45,6 +45,14 @@ function saveRatios() {
 }
 
 function applyRatios() {
+    // A focusable separator must report its position (WAI-ARIA window splitter):
+    // the share of the width left of the handle, in percent
+    for (const handle of handles) {
+        const leftIdx = Number(handle.dataset.leftCol) - 1;
+        const share = ratios.slice(0, leftIdx + 1).reduce((sum, r) => sum + r, 0);
+        handle.setAttribute('aria-valuenow', String(Math.round(share * 100)));
+    }
+
     if (isTwoColumnMode()) {
         container.style.removeProperty('grid-template-columns');
         return;
