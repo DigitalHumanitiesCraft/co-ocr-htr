@@ -29,7 +29,7 @@ knowledge/
 └── JOURNAL.md             ← Development log
 ```
 
-`knowledge/` is the only place to edit. `docs/knowledge/` is a generated projection for the public page `docs/knowledge.html`, which GitHub Pages can only serve from `docs/`. It holds exactly the documents the page offers in its `data-doc` navigation, copied byte for byte. After changing one of them, run `npm run sync:knowledge` in `docs/`. The test `docs/tests/knowledge-projection.test.js` (also `npm run check:knowledge`) fails when the projection has drifted.
+`knowledge/` is the only place to edit. It is not served on the GitHub Pages site; readers reach it in the repository on GitHub, which the about and help pages link.
 
 ## Document Matrix
 

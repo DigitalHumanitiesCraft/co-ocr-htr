@@ -24,7 +24,7 @@ Unit tests target pure functions, business logic and parsers, where a test is ch
 - validation rules, LLM review and applying suggestions (`validation.test.js`, `validation-apply.test.js`, `postprocess.test.js`)
 - storage, i18n, text formatting, line alignment, samples loading and the service worker fetch strategy
 - regression tests for single component behaviours that can run in jsdom with mocked dependencies, such as key persistence in the settings dialog and the overwrite confirmation before a new transcription
-- the projection of `knowledge/` into `docs/knowledge/` (`knowledge-projection.test.js`)
+- the publication boundary: `docs/` serves no Markdown knowledge documents (`publication.test.js`)
 
 Every defect fix adds a test that fails without the fix.
 
