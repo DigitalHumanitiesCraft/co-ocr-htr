@@ -227,6 +227,15 @@
   border-radius: var(--radius-sm);
 }
 
+/* Demo and IIIF entry points (DESIGN-SYSTEM 6.1) */
+.viewer-empty-state .empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
 /* Divider */
 .viewer-empty-state .empty-state-divider {
   display: flex;

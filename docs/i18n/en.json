@@ -28,7 +28,6 @@
     "importPageXML": "Import PAGE-XML",
     "loadDemo": "Load Demo",
     "loadIIIF": "Load IIIF",
-    "hint": "Load a demo document or upload an image (JPG, PNG) or PAGE-XML.",
     "dropTitle": "Drop files here",
     "dropText": "Drag & drop images or PAGE-XML files",
     "dropFormats": "JPG, PNG, WebP, XML",
@@ -62,7 +61,6 @@
     "undoTitle": "Undo (Ctrl+Z)",
     "redo": "Redo",
     "redoTitle": "Redo (Ctrl+Shift+Z)",
-    "hint": "Click \"Transcribe\" to process the document with AI. Double-click to edit.",
     "description": "Image Description",
     "descriptionPlaceholder": "Description will appear here...",
     "descriptionCollapse": "Collapse description",
@@ -85,12 +83,14 @@
     "tooltipThinkingText": "Watch the LLM's reasoning process in real time. This helps you understand how the model approaches your document and refine your prompts accordingly.",
     "validate": "Validate",
     "validateTitle": "Validate transcription",
-    "issueCount": { "one": "{count} issue", "other": "{count} issues" },
-    "hint": "Validation checks transcription for errors and uncertainties.",
+    "issueCount": {
+      "one": "{count} issue",
+      "other": "{count} issues"
+    },
     "thinkingLabel": "LLM Thinking",
     "thinkingCollapse": "Collapse thinking panel",
     "emptyTitle": "No Validation Yet",
-    "emptyText": "Load a document and run transcription to see validation results here.",
+    "emptyText": "Validation checks a transcription for errors and uncertain readings. Transcribe a document first, then click Validate.",
     "sectionValidation": "Validation",
     "sectionLLMReview": "LLM Review",
     "ruleBasedTitle": "Validation",
@@ -279,7 +279,6 @@
       "editor": "Editor",
       "autoSave": "Auto-save session",
       "display": "Display",
-      "showHints": "Show panel hints for new users",
       "showWorkflow": "Show workflow stepper",
       "storage": "Storage",
       "loading": "Loading...",
@@ -403,7 +402,10 @@
     "configSaved": "Configuration saved",
     "exportedAs": "Exported as {filename}",
     "pageXmlNoGeometry": "No line has coordinates, so the PAGE-XML lacks the Coords the schema requires. Tools such as Transkribus may reject it.",
-    "pageXmlMissingGeometry": { "one": "Line {lines} has no coordinates and was written without Coords, which the PAGE schema requires.", "other": "{count} lines ({lines}) have no coordinates and were written without Coords, which the PAGE schema requires." },
+    "pageXmlMissingGeometry": {
+      "one": "Line {lines} has no coordinates and was written without Coords, which the PAGE schema requires.",
+      "other": "{count} lines ({lines}) have no coordinates and were written without Coords, which the PAGE schema requires."
+    },
     "exportedPages": "Exported {count} pages as {filename}",
     "exportFailed": "Export failed: {message}",
     "loadedFile": "Loaded: {name}",
@@ -503,9 +505,12 @@
     "clearSessionText": "This will remove all transcription data and start fresh."
   },
   "dynamic": {
-    "linesChanged": { "one": "{count} line changed", "other": "{count} lines changed" },
+    "linesChanged": {
+      "one": "{count} line changed",
+      "other": "{count} lines changed"
+    },
     "noTranscription": "No transcription available.",
-    "clickTranscribe": "Load a document and click \"Transcribe\".",
+    "clickTranscribe": "Create one with Transcribe (pencil icon in the editor toolbar), or upload a PAGE-XML file.",
     "structured": "Structured",
     "normalized": "Normalized",
     "diffReadonly": "Read-only - disable diff view to edit",
@@ -526,7 +531,10 @@
     "configureLLMAlt": "Configure API key for LLM Review",
     "runValidationLLM": "Run Validation to generate LLM Review",
     "noValidationIssues": "No validation issues found.",
-    "issueCount": { "one": "{count} issue", "other": "{count} issues" },
+    "issueCount": {
+      "one": "{count} issue",
+      "other": "{count} issues"
+    },
     "applyAll": "Apply All ({count})",
     "apply": "Apply",
     "showRationale": "Show rationale",
@@ -534,7 +542,10 @@
     "apiKeyRequiredShort": "API key required",
     "pageOf": "Page {current} of {total}",
     "pagesMayTakeMinutes": "{count} pages, may take several minutes",
-    "pagesCount": { "one": "{count} page", "other": "{count} pages" },
+    "pagesCount": {
+      "one": "{count} page",
+      "other": "{count} pages"
+    },
     "withTranscription": "With transcription",
     "withoutTranscription": "Without transcription",
     "transcribed": "Transcribed",
@@ -544,9 +555,18 @@
     "pages": "Pages:",
     "statusLabel": "Status:",
     "justNow": "Just now",
-    "minutesAgo": { "one": "{count} minute ago", "other": "{count} minutes ago" },
-    "hoursAgo": { "one": "{count} hour ago", "other": "{count} hours ago" },
-    "daysAgo": { "one": "{count} day ago", "other": "{count} days ago" },
+    "minutesAgo": {
+      "one": "{count} minute ago",
+      "other": "{count} minutes ago"
+    },
+    "hoursAgo": {
+      "one": "{count} hour ago",
+      "other": "{count} hours ago"
+    },
+    "daysAgo": {
+      "one": "{count} day ago",
+      "other": "{count} days ago"
+    },
     "dropFileToUpload": "Drop file to upload",
     "dropHint": "Images (JPG, PNG, WebP), PAGE-XML, or METS-XML",
     "rename": "Rename",
@@ -583,7 +603,10 @@
     "generated": "Generated {date}",
     "llmConfig": "LLM Configuration",
     "transcriptionPageCount": "{transcribed} of {total} pages have transcriptions",
-    "iiifPageCount": { "one": "{count} page", "other": "{count} pages" },
+    "iiifPageCount": {
+      "one": "{count} page",
+      "other": "{count} pages"
+    },
     "tokens": "{count} Tokens",
     "reset": "Reset",
     "appliedAtLine": "Applied suggestion at line {applied}.",

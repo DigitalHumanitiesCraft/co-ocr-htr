@@ -958,10 +958,7 @@ class DialogManager {
         if (autoSave) autoSave.checked = settings.autoSave !== false;
 
         // Display settings
-        const showHints = document.getElementById('settingShowHints');
         const showWorkflow = document.getElementById('settingShowWorkflow');
-
-        if (showHints) showHints.checked = settings.showHints !== false;
         if (showWorkflow) showWorkflow.checked = settings.showWorkflow !== false;
 
         // Apply workflow stepper visibility
@@ -978,21 +975,12 @@ class DialogManager {
         settings.autoSave = document.getElementById('settingAutoSave')?.checked ?? true;
 
         // Display settings
-        settings.showHints = document.getElementById('settingShowHints')?.checked ?? true;
         settings.showWorkflow = document.getElementById('settingShowWorkflow')?.checked ?? true;
 
         storage.saveSettings(settings);
 
         // Apply settings immediately
         this.applyWorkflowVisibility(settings.showWorkflow);
-
-        // Reset hint dismissals if hints are re-enabled
-        if (settings.showHints) {
-            delete settings.hint_viewer_dismissed;
-            delete settings.hint_editor_dismissed;
-            delete settings.hint_validation_dismissed;
-            storage.saveSettings(settings);
-        }
 
         this.showToast(t('toast.settingsSaved'), 'success');
         this.closeDialog('settings');
@@ -1004,7 +992,6 @@ class DialogManager {
     resetSettings() {
         const defaultSettings = {
             autoSave: true,
-            showHints: true,
             showWorkflow: true
         };
 

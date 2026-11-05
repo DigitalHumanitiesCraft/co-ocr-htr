@@ -15,8 +15,12 @@ const DEFAULT_SETTINGS = {
   autoSave: true
 };
 
-// Settings that no code read; removed from the dialog in November 2026
-const REMOVED_SETTINGS = ['showLineNumbers', 'highlightUncertain', 'autoValidate', 'defaultPerspective'];
+// Settings removed in November 2026: no code read the first four, and the panel
+// hints they governed last were folded into the panels' empty states
+const REMOVED_SETTINGS = [
+  'showLineNumbers', 'highlightUncertain', 'autoValidate', 'defaultPerspective',
+  'showHints', 'hint_viewer_dismissed', 'hint_editor_dismissed', 'hint_validation_dismissed'
+];
 
 /**
  * Storage Service class

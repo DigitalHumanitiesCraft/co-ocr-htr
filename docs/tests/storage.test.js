@@ -396,9 +396,11 @@ describe('StorageService', () => {
     });
 
     it('should drop stored values of removed settings on load', () => {
-      localStorage.setItem('coocr:settings', JSON.stringify({ showLineNumbers: false, autoSave: false }));
+      localStorage.setItem('coocr:settings', JSON.stringify({ showLineNumbers: false, showHints: false, hint_editor_dismissed: true, autoSave: false }));
       const settings = new StorageService().loadSettings();
       expect(settings).not.toHaveProperty('showLineNumbers');
+      expect(settings).not.toHaveProperty('showHints');
+      expect(settings).not.toHaveProperty('hint_editor_dismissed');
       expect(settings.autoSave).toBe(false);
     });
   });

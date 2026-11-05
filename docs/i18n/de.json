@@ -28,7 +28,6 @@
     "importPageXML": "PAGE-XML importieren",
     "loadDemo": "Demo laden",
     "loadIIIF": "IIIF laden",
-    "hint": "Laden Sie ein Demo-Dokument oder laden Sie ein Bild (JPG, PNG) oder PAGE-XML hoch.",
     "dropTitle": "Dateien hier ablegen",
     "dropText": "Bilder oder PAGE-XML-Dateien per Drag & Drop",
     "dropFormats": "JPG, PNG, WebP, XML",
@@ -62,7 +61,6 @@
     "undoTitle": "Rückgängig (Strg+Z)",
     "redo": "Wiederherstellen",
     "redoTitle": "Wiederherstellen (Strg+Shift+Z)",
-    "hint": "Klicken Sie auf \"Transkribieren\", um das Dokument mit KI zu verarbeiten. Doppelklick zum Bearbeiten.",
     "description": "Bildbeschreibung",
     "descriptionPlaceholder": "Beschreibung erscheint hier...",
     "descriptionCollapse": "Beschreibung einklappen",
@@ -85,12 +83,14 @@
     "tooltipThinkingText": "Beobachten Sie den Denkprozess des LLM in Echtzeit. Dies hilft Ihnen zu verstehen, wie das Modell Ihr Dokument verarbeitet, und Ihre Prompts entsprechend zu verfeinern.",
     "validate": "Validieren",
     "validateTitle": "Transkription validieren",
-    "issueCount": { "one": "{count} Problem", "other": "{count} Probleme" },
-    "hint": "Validierung prüft die Transkription auf Fehler und Unsicherheiten.",
+    "issueCount": {
+      "one": "{count} Problem",
+      "other": "{count} Probleme"
+    },
     "thinkingLabel": "LLM-Denken",
     "thinkingCollapse": "Denkpanel einklappen",
     "emptyTitle": "Noch keine Validierung",
-    "emptyText": "Laden Sie ein Dokument und führen Sie eine Transkription durch, um hier Validierungsergebnisse zu sehen.",
+    "emptyText": "Die Validierung prüft eine Transkription auf Fehler und unsichere Lesungen. Transkribieren Sie zuerst ein Dokument und klicken Sie dann auf „Validieren“.",
     "sectionValidation": "Validierung",
     "sectionLLMReview": "LLM-Review",
     "ruleBasedTitle": "Validierung",
@@ -279,7 +279,6 @@
       "editor": "Editor",
       "autoSave": "Sitzung automatisch speichern",
       "display": "Anzeige",
-      "showHints": "Panel-Hinweise für neue Benutzer anzeigen",
       "showWorkflow": "Workflow-Stepper anzeigen",
       "storage": "Speicher",
       "loading": "Laden...",
@@ -403,7 +402,10 @@
     "configSaved": "Konfiguration gespeichert",
     "exportedAs": "Exportiert als {filename}",
     "pageXmlNoGeometry": "Keine Zeile hat Koordinaten, daher fehlen dem PAGE-XML die vom Schema verlangten Coords. Werkzeuge wie Transkribus lehnen die Datei womöglich ab.",
-    "pageXmlMissingGeometry": { "one": "Zeile {lines} hat keine Koordinaten und wurde ohne Coords geschrieben, die das PAGE-Schema verlangt.", "other": "{count} Zeilen ({lines}) haben keine Koordinaten und wurden ohne Coords geschrieben, die das PAGE-Schema verlangt." },
+    "pageXmlMissingGeometry": {
+      "one": "Zeile {lines} hat keine Koordinaten und wurde ohne Coords geschrieben, die das PAGE-Schema verlangt.",
+      "other": "{count} Zeilen ({lines}) haben keine Koordinaten und wurden ohne Coords geschrieben, die das PAGE-Schema verlangt."
+    },
     "exportedPages": "{count} Seiten als {filename} exportiert",
     "exportFailed": "Export fehlgeschlagen: {message}",
     "loadedFile": "Geladen: {name}",
@@ -503,9 +505,12 @@
     "clearSessionText": "Dies entfernt alle Transkriptionsdaten und startet neu."
   },
   "dynamic": {
-    "linesChanged": { "one": "{count} Zeile geändert", "other": "{count} Zeilen geändert" },
+    "linesChanged": {
+      "one": "{count} Zeile geändert",
+      "other": "{count} Zeilen geändert"
+    },
     "noTranscription": "Keine Transkription verfügbar.",
-    "clickTranscribe": "Laden Sie ein Dokument und klicken Sie auf \"Transkribieren\".",
+    "clickTranscribe": "Erstellen Sie eine mit „Transkribieren“ (Stift-Symbol in der Editorleiste) oder laden Sie eine PAGE-XML-Datei hoch.",
     "structured": "Strukturiert",
     "normalized": "Normalisiert",
     "diffReadonly": "Nur lesen - Diff-Ansicht deaktivieren zum Bearbeiten",
@@ -526,7 +531,10 @@
     "configureLLMAlt": "API-Schlüssel für LLM-Review konfigurieren",
     "runValidationLLM": "Validierung durchführen, um LLM-Review zu generieren",
     "noValidationIssues": "Keine Validierungsprobleme gefunden.",
-    "issueCount": { "one": "{count} Problem", "other": "{count} Probleme" },
+    "issueCount": {
+      "one": "{count} Problem",
+      "other": "{count} Probleme"
+    },
     "applyAll": "Alle anwenden ({count})",
     "apply": "Anwenden",
     "showRationale": "Begründung anzeigen",
@@ -534,7 +542,10 @@
     "apiKeyRequiredShort": "API-Schlüssel erforderlich",
     "pageOf": "Seite {current} von {total}",
     "pagesMayTakeMinutes": "{count} Seiten, kann mehrere Minuten dauern",
-    "pagesCount": { "one": "{count} Seite", "other": "{count} Seiten" },
+    "pagesCount": {
+      "one": "{count} Seite",
+      "other": "{count} Seiten"
+    },
     "withTranscription": "Mit Transkription",
     "withoutTranscription": "Ohne Transkription",
     "transcribed": "Transkribiert",
@@ -544,9 +555,18 @@
     "pages": "Seiten:",
     "statusLabel": "Status:",
     "justNow": "Gerade eben",
-    "minutesAgo": { "one": "Vor {count} Minute", "other": "Vor {count} Minuten" },
-    "hoursAgo": { "one": "Vor {count} Stunde", "other": "Vor {count} Stunden" },
-    "daysAgo": { "one": "Vor {count} Tag", "other": "Vor {count} Tagen" },
+    "minutesAgo": {
+      "one": "Vor {count} Minute",
+      "other": "Vor {count} Minuten"
+    },
+    "hoursAgo": {
+      "one": "Vor {count} Stunde",
+      "other": "Vor {count} Stunden"
+    },
+    "daysAgo": {
+      "one": "Vor {count} Tag",
+      "other": "Vor {count} Tagen"
+    },
     "dropFileToUpload": "Datei zum Hochladen ablegen",
     "dropHint": "Bilder (JPG, PNG, WebP), PAGE-XML oder METS-XML",
     "rename": "Umbenennen",
@@ -583,7 +603,10 @@
     "generated": "Generiert {date}",
     "llmConfig": "LLM-Konfiguration",
     "transcriptionPageCount": "{transcribed} von {total} Seiten haben Transkriptionen",
-    "iiifPageCount": { "one": "{count} Seite", "other": "{count} Seiten" },
+    "iiifPageCount": {
+      "one": "{count} Seite",
+      "other": "{count} Seiten"
+    },
     "tokens": "{count} Token",
     "reset": "Zurücksetzen",
     "appliedAtLine": "Vorschlag in Zeile {applied} angewendet.",

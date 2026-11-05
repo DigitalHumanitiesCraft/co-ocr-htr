@@ -1122,6 +1122,22 @@ async function initSamplesMenu() {
         samplesMenu?.classList.add('visible');
     });
 
+    // Empty viewer: the two entry points DESIGN-SYSTEM 6.1 asks for, opening the
+    // same samples menu and IIIF dialog as the upload menu
+    document.getElementById('emptyLoadDemo')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        uploadDropdown?.classList.add('open');
+        uploadMenu.classList.remove('visible');
+        samplesMenu?.classList.add('visible');
+        // The menu fades in via a visibility transition and takes focus only
+        // once visible; keyboard users then continue in the list
+        setTimeout(() => samplesMenu?.querySelector('.samples-menu-item')?.focus(), 250);
+    });
+    document.getElementById('emptyLoadIIIF')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dialogManager.openDialog('iiif');
+    });
+
     // IIIF button - open IIIF dialog
     btnIIIF?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1158,33 +1174,10 @@ async function initSamplesMenu() {
 }
 
 /**
- * Initialize guided workflow features
- * - Workflow stepper updates based on app state
- * - Panel hints can be dismissed
+ * Initialize guided workflow features: the workflow stepper follows app state.
+ * Guidance for an empty panel lives in that panel's empty state.
  */
 function initGuidedWorkflow() {
-    // Panel hint dismissal
-    document.querySelectorAll('[data-dismiss-hint]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const hintId = btn.dataset.dismissHint;
-            const hint = document.getElementById(`${hintId}Hint`);
-            if (hint) {
-                hint.classList.add('hidden');
-                // Remember dismissal
-                storage.saveSettings({ [`hint_${hintId}_dismissed`]: true });
-            }
-        });
-    });
-
-    // Hide already-dismissed hints
-    ['viewer', 'editor', 'validation'].forEach(hintId => {
-        if (storage.loadSettings()?.[`hint_${hintId}_dismissed`]) {
-            const hint = document.getElementById(`${hintId}Hint`);
-            if (hint) hint.classList.add('hidden');
-        }
-    });
-
     // Workflow stepper state management
     const stepper = document.getElementById('workflowStepper');
     if (!stepper) return;
@@ -1193,17 +1186,11 @@ function initGuidedWorkflow() {
     appState.addEventListener('imageChanged', () => {
         updateWorkflowStep(1, 'completed');
         updateWorkflowStep(2, 'active');
-        // Hide viewer hint when document loaded
-        const viewerHint = document.getElementById('viewerHint');
-        if (viewerHint) viewerHint.classList.add('hidden');
     });
 
     appState.addEventListener('transcriptionComplete', () => {
         updateWorkflowStep(2, 'completed');
         updateWorkflowStep(3, 'active');
-        // Hide editor hint when transcription available
-        const editorHint = document.getElementById('editorHint');
-        if (editorHint) editorHint.classList.add('hidden');
     });
 
     appState.addEventListener('descriptionComplete', (event) => {
@@ -1217,8 +1204,6 @@ function initGuidedWorkflow() {
         // Check if transcription already exists (e.g., from PAGE-XML)
         const state = appState.getState();
         if (state.transcription?.segments?.length > 0) {
-            const editorHint = document.getElementById('editorHint');
-            if (editorHint) editorHint.classList.add('hidden');
             updateWorkflowStep(2, 'completed');
             if (state.description?.raw) {
                 updateWorkflowStep(3, 'completed');
@@ -1237,9 +1222,6 @@ function initGuidedWorkflow() {
     appState.addEventListener('validationComplete', () => {
         updateWorkflowStep(4, 'completed');
         updateWorkflowStep(5, 'active');
-        // Hide validation hint
-        const validationHint = document.getElementById('validationHint');
-        if (validationHint) validationHint.classList.add('hidden');
     });
 
     // Keep export step visible as the current action after edits
