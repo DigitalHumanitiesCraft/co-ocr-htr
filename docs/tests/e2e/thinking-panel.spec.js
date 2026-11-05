@@ -7,7 +7,7 @@
  * Uses programmatic event injection via appState to simulate
  * LLM streaming without requiring actual API calls.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 /**
  * Load the wecker-p015 sample so the validation panel area is visible.

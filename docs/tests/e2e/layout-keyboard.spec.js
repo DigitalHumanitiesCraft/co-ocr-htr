@@ -2,7 +2,7 @@
  * E2E: the Validate step stays reachable on narrow screens, and the export
  * format can be chosen with the keyboard.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 async function openApp(page) {
     await page.addInitScript(() => {

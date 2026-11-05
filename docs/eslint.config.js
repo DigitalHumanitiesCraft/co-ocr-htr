@@ -64,6 +64,24 @@ export default [
         },
     },
 
+    // Node tooling: build scripts, tool configs and Playwright specs run in Node
+    {
+        files: ['scripts/**/*.js', '*.config.js', 'tests/e2e/**/*.js'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'module',
+            globals: {
+                ...globals.node,
+            },
+        },
+        rules: {
+            'eqeqeq': ['error', 'always'],
+            'no-undef': 'error',
+            'prefer-const': 'warn',
+            'no-var': 'error',
+        },
+    },
+
     // Service worker: classic script in the worker global scope
     {
         files: ['sw.js'],
@@ -85,6 +103,6 @@ export default [
 
     // Ignore non-source files
     {
-        ignores: ['node_modules/', 'config.local.js', 'tests/e2e/'],
+        ignores: ['node_modules/', 'config.local.js', 'test-results/', 'playwright-report/', 'knowledge/'],
     },
 ];

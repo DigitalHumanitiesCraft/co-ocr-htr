@@ -7,7 +7,7 @@
  * LLM transcription, and injects validation results directly into
  * appState to test the UI interaction flows.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 /** Mock validation results injected into appState */
 const MOCK_VALIDATION_RESULTS = {
