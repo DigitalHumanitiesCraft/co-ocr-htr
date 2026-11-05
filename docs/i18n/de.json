@@ -442,6 +442,7 @@
     "networkError": "Netzwerkfehler. Bitte Verbindung prüfen.",
     "transcriptionFailed": "Transkription fehlgeschlagen: {message}",
     "emptyResponse": "Das Modell hat keinen Text geliefert (möglicherweise vom Sicherheitsfilter blockiert). Die vorhandene Transkription bleibt erhalten.",
+    "operationCancelled": "Vorgang abgebrochen. Es wurde nichts geändert.",
     "descriptionFailed": "Beschreibung fehlgeschlagen: {message}",
     "validationFailed": "Validierung fehlgeschlagen: {message}",
     "invalidApiKeyBatch": "Ungültiger API-Schlüssel. Batch abgebrochen.",

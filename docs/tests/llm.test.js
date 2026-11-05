@@ -587,6 +587,20 @@ describe('LLMService', () => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
 
+    it('should abort a pending request on cancel without a non-streaming retry', async () => {
+      globalThis.fetch = vi.fn((url, init) => new Promise((_, reject) => {
+        init.signal.addEventListener('abort', () => reject(init.signal.reason));
+      }));
+
+      const pending = service.transcribe('img', { stream: true }).catch(e => e);
+      await Promise.resolve();
+      service.cancelRequests();
+      const error = await pending;
+
+      expect(error.type).toBe('cancelled');
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+
     it('should send the Gemini key in a header, never in the URL', async () => {
       globalThis.fetch = vi.fn(async () =>
         respond(200, JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Zeile' }] } }] })));

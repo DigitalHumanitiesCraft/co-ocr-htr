@@ -442,6 +442,7 @@
     "networkError": "Network error. Please check connection.",
     "transcriptionFailed": "Transcription failed: {message}",
     "emptyResponse": "The model returned no text (possibly blocked by a safety filter). The existing transcription was kept.",
+    "operationCancelled": "Operation cancelled. Nothing was changed.",
     "descriptionFailed": "Description failed: {message}",
     "validationFailed": "Validation failed: {message}",
     "invalidApiKeyBatch": "Invalid API key. Batch aborted.",

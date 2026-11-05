@@ -335,7 +335,8 @@ class ValidationEngine {
                 confidence: null,
                 reasoning: `Validation failed: ${error.message}`,
                 issues: [],
-                error: error.message
+                error: error.message,
+                errorType: error.type || 'unknown'
             };
         }
     }

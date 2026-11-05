@@ -710,6 +710,11 @@
   color: var(--text-secondary);
 }
 
+.loading-cancel {
+  margin-top: var(--space-2);
+  pointer-events: auto;
+}
+
 /* ==========================================================================
    THINKING PANEL (LLM Reasoning Display)
    ========================================================================== */

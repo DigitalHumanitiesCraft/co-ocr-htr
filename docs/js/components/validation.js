@@ -514,7 +514,9 @@ class ValidationPanel {
             this.hideLoading();
             this.render(resultsWithPrompt);
 
-            if (results.llmJudge?.error) {
+            if (results.llmJudge?.errorType === 'cancelled') {
+                dialogManager.showToast(t('toast.operationCancelled'), 'info');
+            } else if (results.llmJudge?.error) {
                 dialogManager.showToast(t('toast.validationFailed', { message: results.llmJudge.error }), 'error', 8000);
             } else {
                 dialogManager.showToast(t('toast.validationComplete'), 'success');
@@ -739,8 +741,12 @@ class ValidationPanel {
                 <div class="loading-content">
                     <div class="loading-spinner"></div>
                     <span>${t('dynamic.validating')}</span>
+                    <button type="button" class="btn btn-secondary btn-sm loading-cancel" id="cancelValidation">${t('dialog.cancel')}</button>
                 </div>
             `;
+            // Cancels the LLM review; the rule-based results still appear
+            overlay.querySelector('#cancelValidation')
+                .addEventListener('click', () => llmService.cancelRequests());
             this.panel.style.position = 'relative';
             this.panel.appendChild(overlay);
         }

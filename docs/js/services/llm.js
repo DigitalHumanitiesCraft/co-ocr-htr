@@ -492,6 +492,8 @@ const PROVIDERS = {
 class LLMService {
   constructor() {
     this.providers = PROVIDERS;
+    // Shared cancel switch for running requests; replaced after each cancel
+    this._cancel = new AbortController();
     this.activeProvider = 'gemini';
     this.activeModel = null;
 
@@ -1285,7 +1287,7 @@ class LLMService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
+      signal: this._signal(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -1345,7 +1347,7 @@ class LLMService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(timeoutMs)
+      signal: this._signal(timeoutMs)
     });
 
     if (!response.ok) {
@@ -1455,7 +1457,7 @@ class LLMService {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(timeoutMs)
+      signal: this._signal(timeoutMs)
     });
 
     if (!response.ok) {
@@ -1557,7 +1559,7 @@ class LLMService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(timeoutMs)
+      signal: this._signal(timeoutMs)
     });
 
     if (!response.ok) {
@@ -1736,7 +1738,7 @@ class LLMService {
         max_tokens: 4096,
         temperature: 0.1
       }),
-      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
+      signal: this._signal(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -1774,7 +1776,7 @@ class LLMService {
         max_tokens: 4096,
         messages: [{ role: 'user', content }]
       }),
-      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
+      signal: this._signal(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -1818,7 +1820,7 @@ class LLMService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
+      signal: this._signal(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -1863,7 +1865,7 @@ class LLMService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS)
+      signal: this._signal(CLOUD_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -1914,7 +1916,7 @@ class LLMService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS)
+        signal: this._signal(OLLAMA_TIMEOUT_MS)
       });
 
       if (!response.ok) {
@@ -1945,7 +1947,7 @@ class LLMService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS)
+      signal: this._signal(OLLAMA_TIMEOUT_MS)
     });
 
     if (!response.ok) {
@@ -2164,6 +2166,26 @@ class LLMService {
     return 'spelling'; // Default fallback
   }
 
+  /**
+   * Request signal: aborts on timeout or when the user cancels.
+   * @param {number} timeoutMs
+   * @returns {AbortSignal}
+   */
+  _signal(timeoutMs) {
+    const timeout = AbortSignal.timeout(timeoutMs);
+    return typeof AbortSignal.any === 'function'
+      ? AbortSignal.any([timeout, this._cancel.signal])
+      : timeout;
+  }
+
+  /**
+   * Abort every request in flight (cancel button of a single-page operation).
+   */
+  cancelRequests() {
+    this._cancel.abort();
+    this._cancel = new AbortController();
+  }
+
   // ============================================
   // Error Handling
   // ============================================
@@ -2183,6 +2205,9 @@ class LLMService {
     }
     if (error.name === 'TimeoutError') {
       return new LLMError('timeout', 'Request timed out. Please try again.');
+    }
+    if (error.name === 'AbortError') {
+      return new LLMError('cancelled', t('toast.operationCancelled'));
     }
 
     // Categorize error

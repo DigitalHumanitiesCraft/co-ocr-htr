@@ -300,6 +300,8 @@ class TranscriptionManager {
                 dialogManager.showToast(t('toast.networkError'), 'error');
             } else if (error.type === 'empty') {
                 dialogManager.showToast(error.message, 'warning');
+            } else if (error.type === 'cancelled') {
+                dialogManager.showToast(error.message, 'info');
             } else {
                 dialogManager.showToast(t('toast.transcriptionFailed', { message: error.message }), 'error');
             }
@@ -329,8 +331,12 @@ class TranscriptionManager {
                         <div class="loading-spinner-large"></div>
                         <span>${t('dynamic.transcribing')}</span>
                         <span class="loading-hint">${t('dynamic.transcribingHint')}</span>
+                        <button type="button" class="btn btn-secondary btn-sm loading-cancel" id="cancelTranscription">${t('dialog.cancel')}</button>
                     </div>
                 `;
+                // A hung provider would otherwise block the editor until the timeout
+                overlay.querySelector('#cancelTranscription')
+                    .addEventListener('click', () => llmService.cancelRequests());
                 editorPanel.style.position = 'relative';
                 editorPanel.appendChild(overlay);
             }
