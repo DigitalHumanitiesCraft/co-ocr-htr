@@ -1238,3 +1238,25 @@ Playwright specs were not run in this pass.
 Reported, not changed: the stash `stash@{0}` of 2026-02-14 with local settings from a former integration branch, the
 licence question and the other operator points in IMPROVEMENTS, the middle dot in the footers of
 `about.html` and `help.html`, and the uppercase knowledge file names.
+
+## Session 46: Local Fonts and Sample Provenance (2026-11-10)
+
+A check of the public demo for the offer page of the research tools found two points in this
+repository. All three pages loaded Inter and JetBrains Mono from a font service. Both families now
+come from `docs/vendor/fonts/` as variable WOFF2 files with their licence texts; the service worker
+precaches the latin subsets under a new cache version, so returning visitors drop the old pages.
+The files were copied from other local repositories that already vendor them, see `VERSIONS.txt`.
+
+The demo samples carried neither source nor terms of use. `docs/samples/index.json` now has
+`source`, `sourceEvidence` and `rights` per sample, filled only from what files and history show:
+byte identity with the development data in `data/`, the Transkribus metadata of the Wecker
+PAGE-XML, the overlay text in the lichen scan, and the commits that added each sample. `rights` is
+"Not documented in the repository" for every sample. What only the operator can supply stands in
+IMPROVEMENTS; no sample was removed.
+
+Verified with Playwright against a local static server at 1440 and 390 px for `index.html`,
+`about.html` and `help.html`: document width equals viewport width, no console error, no request
+to another host, service worker registered with the fonts in its cache. Vitest, ESLint and the
+Playwright specs pass.
+The demo has no light colour scheme switch and follows no `prefers-color-scheme`; reported, not
+changed.

@@ -4,7 +4,7 @@
  */
 
 // Bumping the version makes browsers install this worker and drop the old cache.
-const CACHE_VERSION = 'coocr-v3';
+const CACHE_VERSION = 'coocr-v4';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -54,7 +54,11 @@ const STATIC_ASSETS = [
     './assets/logo-icon.png',
     // Vendored libraries, so viewer and ZIP export work offline
     './vendor/openseadragon/openseadragon.min.js',
-    './vendor/jszip/jszip.min.js'
+    './vendor/jszip/jszip.min.js',
+    // Fonts (latin subsets; latin-ext is fetched on demand)
+    './vendor/fonts/fonts.css',
+    './vendor/fonts/inter-latin.woff2',
+    './vendor/fonts/jetbrains-mono-latin-wght-normal.woff2'
 ];
 
 // API endpoints that should never be cached

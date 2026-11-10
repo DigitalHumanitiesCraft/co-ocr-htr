@@ -31,6 +31,19 @@ It contains the output of a ping command and is ignored by Git. Recommendation: 
 
 The field says `MIT`, which matches the global rule for code. The repository licence was changed to CC BY 4.0 after an external contribution under CC BY. Whether code stays MIT, moves to CC BY 4.0, or the contribution is separated is the operator's decision; the field then follows it.
 
+### Source and terms of use of the demo samples
+
+`docs/samples/index.json` now records per sample what files and Git history show about its origin. No sample has documented terms of use, and the repository itself is published under CC BY 4.0, which cannot cover third-party scans. Only the operator can supply the following; no sample was removed.
+
+- Flora Lichenes. Evidence: overlay "Download from The BHL ... www.biologiezentrum.at" in the image, running foot "Flora IV.". Missing: title and year of the work and the terms of the providing library. Inference, not evidence: the folder name `DTS_Flechte` and the running foot fit the lichen volume of a flora of Tyrol published in the early 20th century, which would contradict "19th c." in the sample name.
+- Gradual from Geras Monastery. Evidence: none beyond the sample name; an external contributor added the image. Missing: holding institution, shelfmark, origin of the scan, terms of use.
+- Raitbuch 2. Evidence: Tiroler Landesarchiv as holding institution, images from the DoCTA project's Transkribus export. Missing: permission of archive and project to republish the four images.
+- Antidotarium (Wecker). Evidence: Transkribus document 1164174 with PyLaia recognition of 2022. Missing: holding library, edition, origin of the scan, permission for images and transcription. `data/README.md` dates the book both to 1617 and to the 16th century.
+- HSA Letter 2261. Evidence: the development copy and its folder name. Missing: the holding institution and its terms. Inference: HSA stands for the Hugo Schuchardt Archiv, which the context placeholder in the i18n files also names. The sample description says "Handwritten letter" and "German/French", the image shows a typewritten French circular.
+- Arabic Historical Magazines. Evidence: loaded at runtime from the Internet Archive item `Historical-magazines`. Missing: the rights statement of the item, which was not retrievable in this pass.
+
+Recommendation: fill `rights` per sample, and for each sample without a usable permission decide between replacing it with a scan under an open licence and removing it.
+
 ## Not Implementing
 
 | Item | Rationale |

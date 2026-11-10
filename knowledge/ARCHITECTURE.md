@@ -114,7 +114,7 @@ docs/
 │       └── parsers/
 │           ├── page-xml.js # PAGE-XML parser
 │           └── mets-xml.js # METS-XML parser
-├── vendor/                 # OpenSeadragon and JSZip from npm, VERSIONS.txt with licences and SHA-256
+├── vendor/                 # OpenSeadragon and JSZip from npm, fonts/ (Inter, JetBrains Mono), VERSIONS.txt with licences and SHA-256
 ├── i18n/
 │   ├── en.json             # English translation dictionary
 │   └── de.json             # German translation dictionary

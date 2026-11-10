@@ -7,6 +7,9 @@
       "language": "German/Latin",
       "script": "Fraktur",
       "type": "print",
+      "source": "Page 1 of the part 'Lichenes', running foot 'Flora IV.'; the scan carries the overlay 'Download from The BHL http://www.biodiversitylibrary.org/; www.biologiezentrum.at'. Title and year of the work: not documented in the repository",
+      "sourceEvidence": "Overlay and page text in the image; file byte-identical to data/ocr-examples/DTS_Flechte/page_001.jpg; added in commit 6705017 (2026-02-04)",
+      "rights": "Not documented in the repository",
       "image": "flechte/page_001.jpg"
     },
      {
@@ -16,6 +19,9 @@
       "language": "Latin",
       "script": "Textura",
       "type": "manuscript",
+      "source": "Not documented in the repository beyond the sample name; the image has no embedded metadata and no counterpart in data/",
+      "sourceEvidence": "Added in commit b43521f (2026-02-10) by an external contributor",
+      "rights": "Not documented in the repository",
       "image": "chorbuch-geras/page_001.jpg"
     },
     {
@@ -25,6 +31,9 @@
       "language": "German (Early New High German)",
       "script": "Kurrent",
       "type": "manuscript",
+      "source": "Tiroler Landesarchiv, Innsbruck: Oberösterreichische Kammer (OÖKAM), Raitbuch 2, 1462-1464; images from the Transkribus export of the DoCTA project, fol. 0v-1r, 1v-2r, 3v-4r, 4v-5r",
+      "sourceEvidence": "data/README.md; data/docta/Raitbuch 2/doc.xml; files byte-identical to data/docta/Raitbuch 2/; added in commit 8c29be6 (2026-02-04)",
+      "rights": "Not documented in the repository",
       "pages": [
         { "id": "fol_0v-1r", "image": "raitbuch/fol_0v-1r.jpg" },
         { "id": "fol_1v-2r", "image": "raitbuch/fol_1v-2r.jpg" },
@@ -39,6 +48,9 @@
       "language": "German (Early New High German)",
       "script": "Kurrent",
       "type": "manuscript",
+      "source": "Tiroler Landesarchiv, Innsbruck: Oberösterreichische Kammer (OÖKAM), Raitbuch 2, 1462-1464; images from the Transkribus export of the DoCTA project, fol. 1v-2r",
+      "sourceEvidence": "data/README.md; data/docta/Raitbuch 2/doc.xml; files byte-identical to data/docta/Raitbuch 2/; added in commit 8c29be6 (2026-02-04)",
+      "rights": "Not documented in the repository",
       "image": "raitbuch/fol_1v-2r.jpg"
     },
     {
@@ -48,6 +60,9 @@
       "language": "Arabic",
       "script": "Arabic",
       "type": "print",
+      "source": "Internet Archive item 'Historical-magazines', loaded at runtime through its IIIF manifest; no image of it is stored in this repository",
+      "sourceEvidence": "iiifManifest URL of this entry; knowledge/JOURNAL.md, Session 23b (2026-02-03)",
+      "rights": "Not documented in the repository",
       "iiifManifest": "https://iiif.archive.org/iiif/Historical-magazines/manifest.json"
     },
     {
@@ -56,6 +71,9 @@
       "description": "Specialized medical book with PAGE-XML transcription (multi-page demo)",
       "language": "Latin",
       "type": "print",
+      "source": "Pages 10 to 15 of the Transkribus document 1164174, kept in the development data as '1617-wecker-antidotiarum-001-150_pdf'; PAGE-XML recognised with PyLaia model 37855 on 2022-09-23, page status FINAL. Holding library and edition: not documented in the repository",
+      "sourceEvidence": "Metadata element of the PAGE-XML files; files byte-identical to data/ocr-examples/1617-wecker-antidotiarum-001-150_pdf/; added in commits 69623ef and 6ab8758 (2026-01-16)",
+      "rights": "Not documented in the repository",
       "pages": [
         { "id": "p010", "image": "wecker/0010_p010.jpg", "pageXml": "wecker/0010_p010.xml" },
         { "id": "p011", "image": "wecker/0011_p011.jpg", "pageXml": "wecker/0011_p011.xml" },
@@ -71,6 +89,9 @@
       "description": "Specialized medical book - single page with PAGE-XML",
       "language": "Latin",
       "type": "print",
+      "source": "Page 15 of the Transkribus document 1164174, kept in the development data as '1617-wecker-antidotiarum-001-150_pdf'; PAGE-XML recognised with PyLaia model 37855 on 2022-09-23, page status FINAL. Holding library and edition: not documented in the repository",
+      "sourceEvidence": "Metadata element of the PAGE-XML files; files byte-identical to data/ocr-examples/1617-wecker-antidotiarum-001-150_pdf/; added in commits 69623ef and 6ab8758 (2026-01-16)",
+      "rights": "Not documented in the repository",
       "image": "wecker/0015_p015.jpg",
       "pageXml": "wecker/0015_p015.xml"
     },
@@ -80,6 +101,9 @@
       "description": "Handwritten letter - image only",
       "language": "German/French",
       "type": "letter",
+      "source": "Development copy data/ocr-examples/o_hsa_letter_2261/image.1.jpg, a typewritten French circular of 1901; the folder name points to letter 2261 of a collection abbreviated HSA. Holding institution: not documented in the repository",
+      "sourceEvidence": "File byte-identical to the development copy; added in commit bca6e21 (2026-01-16) as samples/letter, renamed in 6ab8758",
+      "rights": "Not documented in the repository",
       "image": "hsa-letter/image.jpg"
     }
   ]

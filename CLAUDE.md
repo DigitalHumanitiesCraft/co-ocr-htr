@@ -23,6 +23,7 @@ See [VISION.md](knowledge/VISION.md) for details.
 |-----------|------------|
 | Runtime | Vanilla JavaScript (ES6+) |
 | Runtime libraries | OpenSeadragon and JSZip, vendored in `docs/vendor/` (see `VERSIONS.txt`), no CDN |
+| Fonts | Inter and JetBrains Mono, served from `docs/vendor/fonts/`, no font service |
 | Dev dependencies | Vitest, Playwright, ESLint (`docs/package.json`) |
 | Storage | LocalStorage + IndexedDB (v2) |
 | API | Fetch API (Gemini, OpenAI, Anthropic, Mistral, Azure Mistral, Ollama) |
@@ -57,7 +58,7 @@ co-ocr-htr/
 │   │   ├── components/    # UI components
 │   │   ├── utils/         # Shared utilities
 │   │   └── services/      # LLM, i18n, storage, validation, export, post-processing, parsers/
-│   ├── vendor/            # OpenSeadragon, JSZip (VERSIONS.txt)
+│   ├── vendor/            # OpenSeadragon, JSZip, fonts/ (VERSIONS.txt)
 │   ├── i18n/              # Translation dictionaries (en.json, de.json)
 │   ├── samples/           # Demo documents
 │   └── tests/             # Vitest unit tests, e2e/ Playwright specs

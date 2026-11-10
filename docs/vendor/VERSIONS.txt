@@ -1,5 +1,5 @@
-Vendored third-party libraries, loaded locally instead of from a CDN at runtime.
-Each was taken unmodified from the npm registry package named below.
+Vendored third-party libraries and fonts, loaded locally instead of from a CDN at runtime.
+Each library was taken unmodified from the npm registry package named below.
 
 openseadragon/
   Package:  openseadragon 4.1.1 (npm, published 2024-04-01)
@@ -12,6 +12,16 @@ jszip/
   Files:    dist/jszip.min.js
   Licence:  MIT or GPL-3.0-or-later (dual), used under MIT, see jszip/LICENSE.markdown
   SHA-256:  7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1  jszip.min.js
+
+fonts/
+  Families: Inter (variable, weight 100 to 900, version 4.001 in the name table)
+            JetBrains Mono (variable, weight 400 to 800, version 2.211)
+  Files:    latin and latin-ext subsets as WOFF2, declared in fonts/fonts.css
+  Source:   copied unmodified on 2026-11-10 from other local repositories of the
+            maintainer that already vendor them (the subsets Google Fonts
+            distributes); nothing was downloaded for this step
+  Licence:  SIL Open Font License 1.1, see fonts/OFL-Inter.txt and
+            fonts/OFL-JetBrainsMono.txt
 
 The OpenSeadragon SVG overlay plugin is not published on npm and is no longer
 loaded. Its single use (an SVG layer that follows the viewport) is implemented

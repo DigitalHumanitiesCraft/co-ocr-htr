@@ -241,6 +241,8 @@ Available in `data/`:
 
 See [data/README.md](../data/README.md) for details.
 
+The demo samples served from `docs/samples/` are listed in `docs/samples/index.json`. Each entry carries `source` (what the repository can show about the origin), `sourceEvidence` (the files and commits that show it) and `rights` (the terms of use). The loader ignores the three fields. `rights` stays at "Not documented in the repository" until the operator supplies the terms, see [IMPROVEMENTS](IMPROVEMENTS.md).
+
 ---
 
 ## JavaScript Utility Modules
