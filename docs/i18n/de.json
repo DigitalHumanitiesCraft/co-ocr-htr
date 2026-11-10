@@ -627,6 +627,8 @@
     "title": "coOCR/HTR Workbench",
     "tagline": "Expert-in-the-Loop Verifikation und Korrektur von OCR/HTR",
     "description": "Ein browserbasiertes Werkzeug zur Verifikation und Korrektur von OCR/HTR-Transkriptionen historischer Dokumente. Laden Sie Ihr Dokument, lassen Sie es per KI transkribieren, validieren und exportieren Sie das Ergebnis.",
+    "notice": "Research Preview. coOCR/HTR ist ein Forschungsprototyp, entwickelt mit Coding-Agenten. Es ist kein fertiges oder betreutes Produkt, und seine Ergebnisse sind vor jeder Weiterverwendung zu prüfen. Rückmeldungen gehören in die",
+    "noticeLink": "Issues des Repositorys",
     "step1": "Dokumentbild oder PAGE-XML laden",
     "step2": "Mit KI-Unterstützung transkribieren",
     "step3": "Bildbeschreibungen generieren",

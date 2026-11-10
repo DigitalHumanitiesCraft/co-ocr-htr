@@ -263,6 +263,7 @@ async function showWelcomeOverlay(projects) {
             </div>
             <div class="dialog-body">
                 <p class="welcome-description">${t('welcome.description')}</p>
+                <p class="welcome-description welcome-notice">${t('welcome.notice')} <a href="https://github.com/DigitalHumanitiesCraft/co-ocr-htr/issues" target="_blank" rel="noopener">${t('welcome.noticeLink')}</a>.</p>
 
                 <div class="welcome-workflow">
                     <div class="welcome-step"><span class="welcome-step-num">1</span><span>${t('welcome.step1')}</span></div>

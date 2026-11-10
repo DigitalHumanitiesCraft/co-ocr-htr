@@ -2196,6 +2196,16 @@ textarea.form-control {
   margin: 0 0 var(--space-4) 0;
 }
 
+.welcome-description + .welcome-notice {
+  /* Padding, because a reset sets paragraph margins in dialogs to zero. */
+  padding-top: var(--space-3);
+}
+
+.welcome-notice a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .welcome-workflow {
   display: flex;
   flex-wrap: wrap;

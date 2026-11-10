@@ -508,6 +508,8 @@ Shows real-time thinking chunks from Gemini and Anthropic models that support ex
 
 First-visit onboarding dialog shown when no projects exist and welcome has not been dismissed.
 
+Below its description the dialog carries the standing notice (`welcome.notice` in both dictionaries): research preview, developed with coding agents, no finished or supported product, results need checking, feedback in the repository issues. The banner at the top of the page repeats the short form for visitors who have dismissed the dialog.
+
 **Implementation:** `showWelcomeOverlay()` in [main.js](../docs/js/main.js)
 
 **Startup Flow (`handleStartup()`):**

@@ -1260,3 +1260,21 @@ to another host, service worker registered with the fonts in its cache. Vitest, 
 Playwright specs pass.
 The demo has no light colour scheme switch and follows no `prefers-color-scheme`; reported, not
 changed.
+
+
+## Session 47: Standing Notice on the First View (2026-11-10)
+
+The operator asked that every public demo of the research tools says on its first view and in the
+first paragraph of its README that it is an experiment, what it is, what it is not and where
+feedback belongs. The README already said "Research Preview (Beta)" with a feedback link, and the
+page had a banner reading "Work in Progress". Neither said that the tool is no finished or supported
+product or that its results need checking.
+
+The repository's own word "Research Preview" stays. The full notice stands in the welcome dialog
+under the description, in German and English, because the dialog is the first view of a new
+visitor. The banner carries the short form with the link to the issues, since its fixed height
+holds one line. The README blockquote now states the same content. The service worker cache
+version was raised so that returning visitors receive the changed files.
+
+Checked with Playwright at 1440 and 390 px: the notice is inside the first view, no horizontal
+overflow, no console error. Vitest, ESLint and the Playwright specs pass.

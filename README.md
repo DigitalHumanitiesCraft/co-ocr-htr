@@ -1,6 +1,6 @@
 # coOCR/HTR
 
-> **Research Preview (Beta)** - This tool is under active development using the [Promptotyping methodology](https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin). Core features are functional, but expect rough edges. Feedback welcome via [GitHub Issues](https://github.com/DigitalHumanitiesCraft/co-ocr-htr/issues).
+> **Research Preview (Beta).** coOCR/HTR is a research prototype developed with coding agents, using the [Promptotyping methodology](https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin). It helps domain experts verify and correct OCR/HTR transcriptions of historical documents in the browser. Core features are functional and under active development. It is not a finished or supported product, and its results need checking before any reuse. Feedback belongs in the [issues of the repository](https://github.com/DigitalHumanitiesCraft/co-ocr-htr/issues).
 
 **Editor-in-the-Loop tool for OCR/HTR verification, validation, and correction.**
 

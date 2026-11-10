@@ -4,7 +4,7 @@
  */
 
 // Bumping the version makes browsers install this worker and drop the old cache.
-const CACHE_VERSION = 'coocr-v4';
+const CACHE_VERSION = 'coocr-v5';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
