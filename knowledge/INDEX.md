@@ -27,6 +27,7 @@ knowledge/
 ├── TESTING.md             ← Testing strategy (unit and e2e)
 ├── IMPLEMENTATION-PLAN.md ← Phase record of the original roadmap (complete)
 ├── JOURNAL.md             ← Development log
+├── handoff.md             ← Process inbox for received items
 └── archive/
     └── JOURNAL-full-2026-02-05.md ← Unabridged journal as of 2026-02-05
 ```
@@ -48,6 +49,7 @@ knowledge/
 | [IMPROVEMENTS](IMPROVEMENTS.md) | What is open, and what waits for the operator? | Development | ARCHITECTURE |
 | [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.md) | Which roadmap phases were built? | Development | ARCHITECTURE |
 | [JOURNAL](JOURNAL.md) | What was done? | Everyone | - |
+| [handoff](handoff.md) | Which received items wait for integration? | Development | - |
 | [SECURITY](SECURITY.md) | How is it secured? | Everyone | ARCHITECTURE |
 | [TESTING](TESTING.md) | How is it tested? | Development | ARCHITECTURE |
 

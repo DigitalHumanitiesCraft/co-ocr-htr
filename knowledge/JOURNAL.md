@@ -1222,3 +1222,19 @@ specs that fail without the change.
 - Project rules. Edition model, XML schema, auto-validate and the per-project validation prompt
   are gone from the rules dialog. Projects and rule files with these fields still load, and saving
   keeps only the Markdown transcription rules.
+
+
+## Session 45: Repository Maintenance (2026-11-10)
+
+A maintenance pass checked instructions and knowledge against the code and Git. `main` matched
+`origin/main` with a clean tree. `CLAUDE.md` now names the vendored runtime libraries
+(OpenSeadragon, JSZip) and the dev dependencies instead of "Dependencies: None", and its project
+tree follows `docs/` and `knowledge/` as they are. The new `handoff.md` gives the knowledge base
+the process inbox of the Promptotyping convention in its empty state. The live site
+(`dhcraft.org/co-ocr-htr/`, Pages from `main` `/docs`) answers 404 for the removed
+`knowledge.html`, so no knowledge page is served. Unit tests (Vitest) and ESLint pass; the
+Playwright specs were not run in this pass.
+
+Reported, not changed: the stash `stash@{0}` of 2026-02-14 with local settings from a former integration branch, the
+licence question and the other operator points in IMPROVEMENTS, the middle dot in the footers of
+`about.html` and `help.html`, and the uppercase knowledge file names.

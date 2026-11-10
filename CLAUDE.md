@@ -22,7 +22,8 @@ See [VISION.md](knowledge/VISION.md) for details.
 | Component | Technology |
 |-----------|------------|
 | Runtime | Vanilla JavaScript (ES6+) |
-| Dependencies | None (Tests: Vitest) |
+| Runtime libraries | OpenSeadragon and JSZip, vendored in `docs/vendor/` (see `VERSIONS.txt`), no CDN |
+| Dev dependencies | Vitest, Playwright, ESLint (`docs/package.json`) |
 | Storage | LocalStorage + IndexedDB (v2) |
 | API | Fetch API (Gemini, OpenAI, Anthropic, Mistral, Azure Mistral, Ollama) |
 | i18n | JSON dictionaries (DE/EN switchable) |
@@ -35,42 +36,35 @@ See [VISION.md](knowledge/VISION.md) for details.
 co-ocr-htr/
 ├── README.md              # Project overview (English)
 ├── CLAUDE.md              # This document
-├── knowledge/             # Consolidated knowledge base (Obsidian Vault)
-│   ├── INDEX.md           # Navigation, document matrix
-│   ├── VISION.md          # Project goal, success criteria
-│   ├── METHODOLOGY.md     # Scientific foundations
-│   ├── MODEL-LANDSCAPE.md # OCR/HTR model comparison
-│   ├── DESIGN-SYSTEM.md   # UI/UX specification
-│   ├── ARCHITECTURE.md    # Technical architecture
-│   ├── VALIDATION.md      # Hybrid validation
-│   ├── DATA-SCHEMA.md     # Data structures
-│   ├── IMPLEMENTATION-PLAN.md # Roadmap (completed)
-│   └── JOURNAL.md         # Development log
-├── docs/                  # GitHub Pages deployment
+├── knowledge/             # Knowledge base, never part of the Pages build
+│   ├── INDEX.md           # Navigation, document matrix (lists every document)
+│   ├── VISION.md, METHODOLOGY.md, MODEL-LANDSCAPE.md, DESIGN-SYSTEM.md
+│   ├── ARCHITECTURE.md, VALIDATION.md, DATA-SCHEMA.md, HTR-POSTPROCESSING.md
+│   ├── IMPROVEMENTS.md    # Open work and operator points
+│   ├── SECURITY.md, TESTING.md
+│   ├── IMPLEMENTATION-PLAN.md # Closed phase record of the original roadmap
+│   ├── JOURNAL.md         # Development log
+│   └── archive/           # Unabridged journal as of 2026-02-05
+├── docs/                  # GitHub Pages deployment (main, /docs)
 │   ├── index.html         # Main application
-│   ├── css/               # Modular CSS files
-│   │   ├── variables.css  # Design tokens
-│   │   ├── base.css       # Reset, typography
-│   │   ├── layout.css     # Grid, header
-│   │   ├── components.css # Buttons, cards
-│   │   ├── viewer.css     # Document viewer
-│   │   ├── editor.css     # Transcription editor
-│   │   ├── validation.css # Validation panel
-│   │   └── dialogs.css    # Modal dialogs
+│   ├── about.html, help.html # Static pages (css/pages.css)
+│   ├── sw.js, manifest.json  # PWA service worker and manifest
+│   ├── config.local.example.js # Template for the ignored config.local.js with local API keys
+│   ├── css/               # styles.css imports variables, base, layout, components,
+│   │                      # viewer, editor, validation, dialogs
 │   ├── js/
-│   │   ├── main.js        # Entry point
-│   │   ├── state.js       # Central state (EventTarget)
-│   │   ├── viewer.js      # Document viewer
-│   │   ├── editor.js      # Transcription editor
+│   │   ├── main.js, state.js, viewer.js, editor.js, ui.js, pwa.js
 │   │   ├── components/    # UI components
 │   │   ├── utils/         # Shared utilities
-│   │   └── services/      # LLM, i18n, Storage, Validation, Export
+│   │   └── services/      # LLM, i18n, storage, validation, export, post-processing, parsers/
+│   ├── vendor/            # OpenSeadragon, JSZip (VERSIONS.txt)
 │   ├── i18n/              # Translation dictionaries (en.json, de.json)
 │   ├── samples/           # Demo documents
 │   └── tests/             # Vitest unit tests, e2e/ Playwright specs
-└── data/                  # Development data (not deployed)
-    └── ocr-examples/      # Complete datasets
+└── data/                  # Development data (not deployed), see data/README.md
 ```
+
+`knowledge/INDEX.md` routes to the full document set, including IMPROVEMENTS, HTR-POSTPROCESSING, SECURITY and TESTING.
 
 ## Knowledge Base (knowledge/)
 
