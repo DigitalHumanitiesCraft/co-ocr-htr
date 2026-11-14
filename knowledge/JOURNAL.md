@@ -11,6 +11,10 @@ Chronological record of design decisions, problem analyses, and architectural ch
 
 **Participants:** Christopher Pollin, Claude Opus 4.5 (Claude Code)
 
+## Open
+
+Nothing open.
+
 ---
 
 ## 2026-01-16 | Sessions 1–3: Bootstrapping and Knowledge Consolidation
@@ -1278,3 +1282,7 @@ version was raised so that returning visitors receive the changed files.
 
 Checked with Playwright at 1440 and 390 px: the notice is inside the first view, no horizontal
 overflow, no console error. Vitest, ESLint and the Playwright specs pass.
+
+## Handoff file dissolved into the journal (2026-11-14)
+
+By decision of the operator of 2026-11-14 the knowledge base no longer keeps `handoff.md`. The journal opens with `## Open`, which holds what the next session needs to continue. The handoff file was empty, so nothing was carried over, and `## Open` reads `Nothing open.`. Accepted open work stays in [IMPROVEMENTS](IMPROVEMENTS.md). The file and its entries in `INDEX.md` are removed.
